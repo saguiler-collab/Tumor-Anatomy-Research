@@ -1,0 +1,38 @@
+{
+  "what": "The frozen GBM signature matrix and cell-size factors, vendored into this repository so the pipeline can run without rebuilding a reference from a multi-gigabyte single-cell atlas.",
+  "source_project": "TCGA-GBM deconvolution project (cancer_judging_machine)",
+  "source_path": "public/01 Deconvolution Benchmark/Astrocyte Audit/_artifacts/stage0_freeze/",
+  "frozen_at_utc": "2026-07-12T03:36:26Z",
+  "derived_from": "GBmap single-cell atlas, annotation_level_3, 100 donors, donor-balanced",
+  "n_genes": 17850,
+  "cell_types": [
+    "Tumor",
+    "Macrophage_Microglia",
+    "T_cell",
+    "NK_cell",
+    "B_cell",
+    "Endothelial",
+    "Oligodendrocyte",
+    "Astrocyte"
+  ],
+  "cell_size_divisor": "median (the L_median column)",
+  "known_limitations": [
+    "No cross-donor variance (Sigma) is included. MuSiC's entire contribution is weighting genes by their cross-donor consistency, so with this reference MuSiC degenerates to residual-weighted NNLS. The pipeline detects this and records it rather than reporting a MuSiC result that is not one.",
+    "No donor-level profiles are included, so Bisque's assay transform falls back to the cell-type marginal, which is weaker than its no-overlap mode intends.",
+    "GFAP was down-weighted when this signature was built (see source_manifest.json correction_settings). That decision is inherited, not re-made here."
+  ],
+  "files": {
+    "cell_size_factors.csv": {
+      "sha256": "8d1621fd5b7c1804defe123ac1fbc9704a3d8339a3dd6ea766803af108869667",
+      "bytes": 1202
+    },
+    "signature_matrix.tsv": {
+      "sha256": "57d0fe572e11b277f4c03d843d926c4993e5a4eae52d90729e021ff2dcfc9119",
+      "bytes": 2537570
+    },
+    "source_manifest.json": {
+      "sha256": "30017b9e6c3edd8ff2c9d9639412c2ecb6b40cccd2b632153d82fb288e1a8255",
+      "bytes": 3447
+    }
+  }
+}

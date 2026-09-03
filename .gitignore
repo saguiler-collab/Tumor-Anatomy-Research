@@ -1,0 +1,29 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+
+# Downloaded inputs and generated results are reproducible from the pipeline and
+# are far too large to version. `release/` IS committed — it is the deliverable.
+data/
+results/
+
+# Single-cell atlases are multi-GB build inputs, never outputs. Belt and braces on
+# top of data/ above, so one landing outside that tree still cannot be committed.
+*.h5ad
+*.csv.gz
+*.egg-info/
+build/
+dist/
+results_synthetic/
+release_synthetic/
+
+# Superseded runs are preserved on disk rather than deleted, but only their WRITE-UP is
+# worth versioning. The artefacts themselves are stale by definition — and in the
+# 2026-09-03 case were a mixture of two runs — so the markdown that explains why they
+# are superseded is tracked and the tables are not.
+results_superseded/*/anatomic/
+results_superseded/*/benchmark/
+results_superseded/*/estimates/
+results_superseded/*/figures/
+results_superseded/*/survival/

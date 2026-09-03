@@ -1,0 +1,117 @@
+{
+  "status": "INFO",
+  "frozen_at_utc": "2026-07-12T03:36:26.285121+00:00",
+  "roster": {
+    "CELL_TYPES": [
+      "Tumor",
+      "Macrophage_Microglia",
+      "T_cell",
+      "NK_cell",
+      "B_cell",
+      "Endothelial",
+      "Oligodendrocyte",
+      "Astrocyte"
+    ],
+    "n_types": 8,
+    "GBMAP_ANNOTATION_COLUMN": "annotation_level_3"
+  },
+  "correction_settings": {
+    "CELL_SIZE_CORRECTION_ENABLED": true,
+    "CELL_SIZE_DIVISOR": "median",
+    "DOWNWEIGHT_GENES": [
+      "GFAP"
+    ]
+  },
+  "n_genes_in_S": 17850,
+  "copied_artifacts": {
+    "signature_aligned.tsv": {
+      "exists": true,
+      "bytes": 2555421,
+      "mtime": "2026-07-11T20:41:08.426291+00:00",
+      "sha256": "ffad0fc7bf693f9aee0aca5acbbf8760b2d793ad7845ae760cc32342316775a6"
+    },
+    "cell_size_factors.csv": {
+      "exists": true,
+      "bytes": 1211,
+      "mtime": "2026-07-12T02:00:24.167608+00:00",
+      "sha256": "420e75b53c374cb193fc8acaaf5131434215569a26f223b2645297dfa7e5c000"
+    },
+    "composition_mrna.csv": {
+      "exists": true,
+      "bytes": 8892,
+      "mtime": "2026-07-12T02:02:43.457466+00:00",
+      "sha256": "2efdd1d5c2eb2c8714b27e9c77033fbd2a83de48881caff20f76da453ce03f0a"
+    },
+    "composition_cellfrac.csv": {
+      "exists": true,
+      "bytes": 20708,
+      "mtime": "2026-07-12T02:02:55.465707+00:00",
+      "sha256": "ad0856fa51225f7a06ef46f0972e5fb6df079966525e5b046afe6e86027ba1c6"
+    },
+    "composition_cellfrac_band.csv": {
+      "exists": true,
+      "bytes": 94353,
+      "mtime": "2026-07-12T02:02:55.495018+00:00",
+      "sha256": "c9d9b59318f7cb3fc6b08f2a711352a31e920c380412f47de729dfa751512750"
+    },
+    "composition_nnls.csv": {
+      "exists": false
+    },
+    "reconstruction_error.csv": {
+      "exists": false
+    }
+  },
+  "input_hashes": {
+    "gbmap_h5ad": {
+      "exists": true,
+      "bytes": 8127057404,
+      "mtime": "2026-07-10T16:59:12.960570+00:00",
+      "sha256": "(skipped: large file)"
+    },
+    "bulk_expression": {
+      "exists": true,
+      "bytes": 23633150,
+      "mtime": "2026-07-10T16:52:27.247806+00:00",
+      "sha256": "7cb9b62d75dd25c71d09cec8aa01995196436eb17c811086182f37df60da68b0"
+    },
+    "signature_matrix_raw": {
+      "exists": true,
+      "bytes": 2236526,
+      "mtime": "2026-07-11T20:25:16.317904+00:00",
+      "sha256": "0e414f8d6519d57aae8736425f3c73b9c7d2b7d80ec2e8f6ed7ca2823e41a8d8"
+    },
+    "signature_standardized": {
+      "exists": true,
+      "bytes": 2236526,
+      "mtime": "2026-07-11T20:41:04.049265+00:00",
+      "sha256": "0e414f8d6519d57aae8736425f3c73b9c7d2b7d80ec2e8f6ed7ca2823e41a8d8"
+    },
+    "bulk_aligned": {
+      "exists": true,
+      "bytes": 48336880,
+      "mtime": "2026-07-11T20:41:08.291708+00:00",
+      "sha256": "eef8a066fa6f9e3f1d8e05b4d504133c4f10cc34a63f286d0743b028b0a64d2f"
+    },
+    "pathology_ground_truth": {
+      "exists": true,
+      "bytes": 313399,
+      "mtime": "2026-07-10T14:14:21.845220+00:00",
+      "sha256": "ee1e826c384359cf7b571b659b3f9f8269d9ba46e1c466fdd8a5e5e5c6870592"
+    },
+    "donor_split": {
+      "exists": true,
+      "bytes": 1547,
+      "mtime": "2026-07-11T20:25:39.758941+00:00",
+      "sha256": "fb74903ff2347dab281851e254ec94b56fed8e616b4f757cf4eb4e9f9c930d6b"
+    }
+  },
+  "software": {
+    "python": "3.13.14",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "numpy": "2.5.0",
+    "pandas": "3.0.3",
+    "scipy": "1.18.0",
+    "sklearn": "1.9.0",
+    "h5py": "3.16.0"
+  }
+}

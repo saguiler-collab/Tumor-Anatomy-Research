@@ -1,0 +1,19 @@
+{
+  "what": "Real ground-truth evidence carried over from the predecessor TCGA-GBM project, vendored so the agreement test's yardsticks are wired to actual data rather than merely declared.",
+  "source_project": "TCGA-GBM deconvolution project (cancer_judging_machine)",
+  "contents": {
+    "benchmark_summary.csv": "Per-method, per-cell-type accuracy on 500 REAL held-out pseudobulk mixtures with known composition. This IS the protocol's yardstick 1. It covers only NNLS and SVR, which is why the agreement test currently reports it as covering too few methods for a rank correlation.",
+    "orthogonal_validation.csv": "ABSOLUTE DNA purity and methylation leukocyte correlations for ONE frozen method (v2_STAR_SVR_clean), n=120. Yardstick 2 in principle, but a single method cannot contribute to a ranking. The source project separately records ABSOLUTE purity as BLOCKED - no purity file was ever located - so this correlation cannot be recomputed for other methods here."
+  },
+  "why_this_matters": "The difference between 'we could not obtain ground truth' and 'ground truth exists but covers 2 of the 10 methods' is the difference between an unknown and a measured limitation. The agreement test reports the latter.",
+  "files": {
+    "benchmark_summary.csv": {
+      "sha256": "961b3577aba7da43264345e6ae3280cc81a19df07d84b0c44aba6abcaff814f2",
+      "bytes": 2715
+    },
+    "orthogonal_validation.csv": {
+      "sha256": "e338a17ba9f041164c5adf9d3432aea0247cf9de307ce2dcdb8097a885904707",
+      "bytes": 738
+    }
+  }
+}
