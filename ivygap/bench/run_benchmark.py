@@ -259,7 +259,11 @@ def run(expression: pd.DataFrame, meta: pd.DataFrame, prefer_r: bool = True,
     return {"summary": summary, "per_type": per_type_df, "per_niche": per_niche_df,
             "calibration": calib_df, "ties": ties_df, "decision": decision,
             "certificate": certificate, "estimates": estimates,
-            "truth": test_set.truth, "reference": reference, "genes": genes}
+            "truth": test_set.truth, "reference": reference, "genes": genes,
+            # Returned at the top level, not only inside `decision`, because callers
+            # need the split to keep later stages on the same reference the selection
+            # was made on. Reaching into decision["train_donors"] for that is a trap.
+            "train_donors": train_donors, "test_donors": test_donors}
 
 
 def main(prefer_r: bool = True, synthetic: bool = False) -> int:

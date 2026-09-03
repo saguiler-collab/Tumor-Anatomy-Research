@@ -124,16 +124,33 @@ def export_for_genes(ref_name: str, genes) -> tuple[Path, Path]:
     counts_path = config.REFERENCE_DIR / f"sc_counts_{ref_name}_{key}.csv.gz"
     meta_path = config.REFERENCE_DIR / f"sc_meta_{ref_name}.csv"
 
+    # Restricting to a signature gene set leaves some cells with zero counts across
+    # every gene kept. They carry no information about composition, and BisqueRNA
+    # refuses outright — "Zero expression in selected genes for N cells" from
+    # CountsToCPM — which sends the genuine package to the Python fallback for a reason
+    # that has nothing to do with Bisque.
+    #
+    # Dropped here rather than inside one driver, so every R method sees the same cells.
+    block = expression.loc[genes]
+    nonzero = block.sum(axis=0) > 0
+    n_dropped = int((~nonzero).sum())
+    if n_dropped:
+        block = block.loc[:, nonzero]
+        meta = meta.loc[block.columns]
+        print(f"  {n_dropped} cell(s) have zero expression across the {len(genes):,} "
+              f"exported genes and are dropped from the R export "
+              f"({block.shape[1]:,} remain)", flush=True)
+
     if not counts_path.exists():
         config.ensure_dirs()
         print(f"  writing cell-level export for {len(genes):,} genes "
-              f"x {expression.shape[1]:,} cells ...", flush=True)
+              f"x {block.shape[1]:,} cells ...", flush=True)
         # Write-then-rename. An interrupted run previously left a partial
         # sc_counts_*.csv.gz on disk, and `check()` treats existence as availability —
         # so the next run would have handed R a silently truncated reference.
         tmp_path = counts_path.with_suffix(counts_path.suffix + ".part")
         with gzip.open(tmp_path, "wt") as fh:
-            expression.loc[genes].to_csv(fh)
+            block.to_csv(fh)
         tmp_path.replace(counts_path)
     # ALWAYS rewrite the metadata, never reuse it. The counts file is cached on a gene
     # hash, but the metadata belongs to the CELL SOURCE — and a stale sc_meta left by a

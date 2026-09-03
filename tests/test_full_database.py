@@ -816,3 +816,57 @@ def test_rmethod_carries_degradation_flags():
     m = RMethod("bisque", BisqueDeconvolution(), allow_fallback=True)
     assert hasattr(m, "degenerate_") and hasattr(m, "degeneracy_reason_")
     assert m.degenerate_ is False, "must not claim degradation before it has seen data"
+
+
+def test_export_drops_cells_with_zero_expression_in_the_gene_set(tmp_path, monkeypatch):
+    """
+    Restricting the export to a signature gene set leaves some cells with zero counts
+    across every gene kept. BisqueRNA refuses outright — "Zero expression in selected
+    genes for N cells" from CountsToCPM — which sends the genuine package to the Python
+    fallback for a reason that has nothing to do with Bisque. On the real atlas this was
+    16 of 11,755 cells.
+    """
+    from ivygap import config as cfg
+    from ivygap.deconv import r_bridge
+
+    monkeypatch.setattr(cfg, "REFERENCE_DIR", tmp_path)
+    monkeypatch.setattr(cfg, "ALL_OUTPUT_DIRS", [tmp_path])
+
+    genes = [f"G{i}" for i in range(30)]
+    cells = [f"c{i}" for i in range(12)]
+    X = pd.DataFrame(np.random.default_rng(0).random((30, 12)) * 10,
+                     index=genes, columns=cells)
+    X.iloc[:, :3] = 0.0                       # three cells silent across every gene
+    meta = pd.DataFrame({"donor": ["D0"] * 12, "cell_type": ["Tumor"] * 12},
+                        index=cells)
+
+    r_bridge.set_cell_source("t", X, meta)
+    counts_path, meta_path = r_bridge.export_for_genes("t", genes)
+
+    out = pd.read_csv(counts_path, index_col=0)
+    out_meta = pd.read_csv(meta_path, index_col=0)
+
+    assert out.shape[1] == 9, "all-zero cells were not dropped"
+    assert (out.sum(axis=0) > 0).all()
+    # counts and metadata must stay aligned, or R reports "no shared cell ids"
+    assert list(out.columns) == list(out_meta.index)
+    r_bridge.clear_cell_source("t")
+
+
+def test_benchmark_returns_the_donor_split_at_the_top_level():
+    """Callers need the split to keep later stages on the reference the selection was
+    made on. Reaching into decision["train_donors"] for it is a trap — and was one."""
+    from ivygap.data.reference import build_synthetic
+    from ivygap.bench import run_benchmark
+    from ivygap import config as cfg
+    import pytest as _pytest
+
+    _pytest.MonkeyPatch().setattr(cfg, "MIN_GENES_SHARED", 20)
+    _, expression, meta = build_synthetic(n_genes=200, n_donors=6,
+                                          cells_per_type_per_donor=6)
+    bench = run_benchmark.run(expression, meta, prefer_r=False, n_test=10,
+                              n_signature_genes=10, verbose=False)
+
+    assert "train_donors" in bench and "test_donors" in bench
+    assert bench["train_donors"], "no training donors returned"
+    assert not (set(bench["train_donors"]) & set(bench["test_donors"]))
