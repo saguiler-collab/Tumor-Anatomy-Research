@@ -331,6 +331,127 @@ carry. Ranking inside the shared space keeps every gene it selects. The two runs
 therefore not on an identical gene set and their ACS values are not directly comparable —
 which is why the superseded numbers are labelled as superseded rather than compared.
 
+## Running the published packages, rather than reimplementations of them
+
+For most of this project's life, MuSiC, DWLS, Bisque and SCDC were this project's Python
+reimplementations wearing the published tools' names. Every artefact said so, but the
+leaderboard was not a comparison of the published methods. Making them actually run took
+more than installing them, and each obstacle failed in the same direction: silently,
+into the fallback.
+
+### The packages
+
+| package | obstacle | resolution |
+|---|---|---|
+| BisqueRNA | **archived from CRAN**, though `install_deps.R` said "this one IS on CRAN" | authors' GitHub |
+| DWLS | on CRAN, but depends on **MAST** (Bioconductor), which `install.packages()` cannot see — the error reads `dependency 'MAST' is not available`, like a network fault | install MAST from Bioconductor first |
+| SCDC | needs xbioc, which needs **pkgmaker**, also archived from CRAN — the chain fails at its first link | both from the maintainer's GitHub |
+| all | ~half of a first pass lost to transient `cannot download any files` | every step retries |
+
+A single attempt reports a package as unavailable when it is merely unlucky, and the
+pipeline then runs a reimplementation under the published tool's name. Retrying is not
+politeness; it is the difference between a true and a false statement in the artefacts.
+
+### MuSiC changed its interface
+
+`music_prop()` in MuSiC 1.x takes a bulk **matrix** and a `SingleCellExperiment`; 0.x
+took two `ExpressionSet`s. The old call fails with `argument "bulk.mtx" is missing`.
+`run_music.R` detects which interface is present rather than pinning a version.
+
+### The cell-level export
+
+All four drivers consume cells, not a signature matrix — `run_music.R` states it
+directly: passing pre-averaged profiles "would run the function while removing the thing
+that makes it MuSiC". So the export is what the R side actually reads, and it is where
+most of the remaining problems lived.
+
+- **Per gene set, not per reference.** Exporting all 16,758 genes x 15,311 cells takes
+  ~49 minutes and 1.1 GB gzipped, measured — and R re-reads it for every method on every
+  cohort. No method needs those genes: each receives `data.bulk`, already restricted to
+  the run's gene space, and MuSiC, Bisque and SCDC all intersect internally. Exports are
+  written per gene set and cached.
+- **Keyed on the cells as well as the genes.** Two references can share a gene set and
+  hold entirely different cells.
+- **Metadata always rewritten.** A stale `sc_meta` from a different build surfaces in R
+  as `no shared cell ids between counts and metadata`, naming neither the stale file nor
+  the cause.
+- **Written to `.part` and renamed.** An interrupted run left a truncated 11.8 MB counts
+  file where 1.1 GB was expected, and `check()` treats existence as availability — the
+  next run would have handed R a silently truncated reference.
+- **Cells with zero expression in the gene set are dropped.** BisqueRNA rejects the run
+  outright (`Zero expression in selected genes for 16 cells`, from `CountsToCPM`). Those
+  cells carry no compositional information in the space being deconvolved. 16 of 11,755
+  on the real atlas.
+
+### Donor leakage, in two places
+
+The R methods do not read the `ReferenceBundle`. They read the export, written from
+whatever cell source is registered — so the donor-held-out design has to be enforced
+there too, and it was not.
+
+1. **Inside the benchmark.** `run_benchmark` builds its reference from training donors
+   only, but the caller had registered the full atlas. MuSiC, Bisque and SCDC would have
+   seen the held-out donors' cells — the exact cells the test mixtures are pooled from —
+   while NNLS and SVR saw only the training signature. The R methods would have been
+   scored against their own reference, in the stage whose entire job is to select a
+   method.
+2. **In the ACS leaderboard.** `run_benchmark` restores the caller's full source when it
+   finishes, but stage 4 deconvolves with the training-only reference. The leaderboard
+   would have given the R methods 110 donors and the Python methods an 88-donor
+   signature.
+
+Neither is detectable by the equal-footing certificate, which hashes the
+`DeconvolutionInput`: the difference lives outside it, in module state the bridge reads.
+Both are now enforced explicitly, with tests, and the leakage assertion was seen to fail
+against the unguarded code before the guard existed.
+
+### Degradation is a property of the data, not of the implementation
+
+`run_bisque.R` passes `use.overlap = FALSE`, so the genuine BisqueRNA package is degraded
+too — but the flag was set inside the Python solver, and when R succeeded that solver
+never ran. `implementation_report.json` would have recorded `degenerate: false` for
+`R:BisqueRNA`: the same invariant violation, reappearing on the other path, and appearing
+precisely when the real package started working.
+
+`degradation_for(data)` now answers it without solving, and `RMethod` sets the flags on
+both the R-success and fallback paths. MuSiC's answer flips correctly: degenerate on the
+collapsed frozen signature, **not** degenerate on the cell-level atlas.
+
+### A fallback must say why
+
+The reason recorded was `str(exc).split("\n")[0]` — `run_music.R exited 1`, the exit code
+and nothing else. Every "this ran as a Python reimplementation" disclosure therefore
+omitted the one detail that makes it actionable. R writes `Error in <call> : <message>`,
+so that line is now lifted out. The difference is between "music fell back" and "music
+fell back because `music_prop()` wanted `bulk.mtx`".
+
+## Reading a real single-cell atlas
+
+`build_from_h5ad` called `X.toarray()` unconditionally. Core GBmap is 338,564 cells x
+27,632 genes; dense float32 is tens of TB against 9 GB of RAM. Not a slow path, an
+impossible one — and it made the atlas unusable, which in turn kept the four published
+tools, method selection and two of three yardsticks blocked.
+
+- `anndata.read_h5ad(backed="r")` does not help. It leaves only `X` on disk and eagerly
+  loads everything else, and this file carries a `layers['scaled']` matrix and a `raw/X`
+  matrix, each the size of `X`. Reading `obs`, `var` and `X` through `anndata.io`
+  primitives skips both.
+- **Cells are subsampled donor-balanced within cell type**, seeded, and recorded to
+  `reference_sampling_<name>.json`. This follows the predecessor's own documented choice
+  — `reference_frozen/PROVENANCE.json` records the frozen signature as "100 donors,
+  donor-balanced" — rather than inventing one. Balance matters beyond memory: an
+  unbalanced panel lets deeply-sequenced donors dominate every cell-type mean and skews
+  MuSiC's cross-donor variance.
+- The total is a **target, not a cap**: the trim is proportional within cell type with a
+  floor of 25 cells per type, so a rare population cannot be thinned out of existence.
+  The overshoot is reported rather than hidden.
+- **CELLxGENE indexes `var` by Ensembl id**; this project uses HGNC symbols. Matching
+  them directly yields an empty intersection, so symbols come from `feature_name`, and a
+  disjoint gene space raises rather than building on whatever survived.
+
+Measured on the real file: 338,564 cells -> 314,700 after roster mapping -> 15,311 kept
+across 110 donors and 16,758 genes, in 237 s, with `has_cross_donor_variance` True.
+
 ## The negative controls are distributions, not single draws
 
 Both controls are specified as one draw: `control_shuffled_signature` permutes the
