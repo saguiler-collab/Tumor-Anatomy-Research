@@ -260,7 +260,9 @@ def main(prefer_r: bool = True, synthetic: bool = False) -> int:
                   "Download a GBM single-cell atlas to that path, or run with "
                   "--synthetic to validate the pipeline without it.")
             return 1
-        _, expression, meta = build_from_h5ad(path)
+        _, expression, meta = build_from_h5ad(path, export=False)
+        from ivygap.deconv import r_bridge
+        r_bridge.set_cell_source("gbmap", expression, meta)
     run(expression, meta, prefer_r=prefer_r)
     return 0
 

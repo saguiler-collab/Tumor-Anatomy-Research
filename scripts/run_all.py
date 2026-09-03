@@ -242,8 +242,13 @@ def main() -> int:
             # materialised. On Core GBmap that turns a ~30,000-column read into a
             # ~16,000-column one, and a gene absent from the bulk could not have
             # contributed to a deconvolution anyway.
+            # export=False: the cell-level export is written per gene set, on demand,
+            # by the R bridge. Writing it for all 16,758 genes takes ~49 minutes and
+            # 1.1 GB, and no method ever reads beyond its own gene space.
             _, sc_expression, sc_meta = build_from_h5ad(
-                gbmap, restrict_to_genes=bulk.index)
+                gbmap, restrict_to_genes=bulk.index, export=False)
+            from ivygap.deconv import r_bridge
+            r_bridge.set_cell_source("gbmap", sc_expression, sc_meta)
             print(f"cell-level atlas: {sc_expression.shape[1]:,} cells, "
                   f"{sc_meta['donor'].nunique()} donors")
         else:

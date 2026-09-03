@@ -402,8 +402,12 @@ def export_cell_level(expression: pd.DataFrame, meta: pd.DataFrame, name: str) -
     config.ensure_dirs()
     counts_path = config.REFERENCE_DIR / f"sc_counts_{name}.csv.gz"
     meta_path = config.REFERENCE_DIR / f"sc_meta_{name}.csv"
-    with gzip.open(counts_path, "wt") as fh:
+    # Write-then-rename: an interrupted export otherwise leaves a truncated file that
+    # `r_bridge.check()` will read as an available reference.
+    tmp_path = counts_path.with_suffix(counts_path.suffix + ".part")
+    with gzip.open(tmp_path, "wt") as fh:
         expression.to_csv(fh)
+    tmp_path.replace(counts_path)
     meta.to_csv(meta_path)
     print(f"  wrote cell-level export: {counts_path.name}, {meta_path.name}")
 
