@@ -383,6 +383,26 @@ most of the remaining problems lived.
   cells carry no compositional information in the space being deconvolved. 16 of 11,755
   on the real atlas.
 
+### DWLS was asked to select genes twice
+
+`run_dwls.R` stopped with *"only 31 genes shared between the DWLS signature and the bulk
+matrix"* — its own guard, and the diagnosis only became visible once fallback reasons
+started carrying R's error line.
+
+The cause is this pipeline, not DWLS. The published workflow selects signature genes
+from the whole transcriptome; equal footing requires every method here to receive the
+same **pre-filtered** gene space (top-N per cell type plus markers, 676 genes on this
+run). DWLS's MAST step then selects again from an input already reduced to the
+informative genes, and at the published cutoffs the second pass left 31 genes for 8 cell
+types — about four each.
+
+Deconvolving on 31 genes would have made DWLS look bad for a reason that has nothing to
+do with DWLS. The driver now relaxes `diff.cutoff` and `pval.cutoff` progressively —
+starting at the published defaults — until enough genes survive, printing which
+thresholds were used. This is a deviation from the published defaults, made because of
+the pre-filtering this pipeline imposes and recorded here; it was decided from the gene
+count alone, before any DWLS score existed.
+
 ### Donor leakage, in two places
 
 The R methods do not read the `ReferenceBundle`. They read the export, written from
