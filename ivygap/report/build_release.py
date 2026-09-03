@@ -54,14 +54,12 @@ BUNDLE = [
      "Each method's ACS rank beside its ground-truth rank, with the gap. This is where "
      "the agreement test is actually legible: a large gap means a method the anatomy "
      "likes and the truth does not, or vice versa."),
-    ("benchmark/simulated_yardstick_accuracy.csv", "simulated_yardstick_accuracy.csv",
-     "Per-method accuracy on the SIMULATED yardstick. Not the protocol's yardstick 1 - "
-     "mixtures come from donor-perturbed copies of the frozen signature, not from real "
-     "cells. Read simulated_yardstick_provenance.json before using it."),
-    ("benchmark/simulated_yardstick_provenance.json",
-     "simulated_yardstick_provenance.json",
-     "What the simulated yardstick is, how hard it was made, and the explicit warning "
-     "that it must not be reported as the protocol's ground truth."),
+    # The two simulated-yardstick entries that used to sit here have been removed.
+    # `ivygap/bench/simulated_ground_truth.py` is called by nothing in the pipeline —
+    # only by its tests — so those files were listed in every manifest as "not produced
+    # this run", which reads like a failure rather than a design decision. The simulated
+    # yardstick existed as a stand-in for a real one; the donor-held-out benchmark is
+    # now real, so the stand-in is not needed. The module is kept and still tested.
     ("anatomic/acs_per_constraint.csv", "acs_per_constraint.csv",
      "Every constraint x every method: how many tumours could evaluate it and how many "
      "satisfied it. A constraint no method satisfies is evidence about the constraint, "
