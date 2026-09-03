@@ -231,6 +231,20 @@ class DeconvolutionMethod(abc.ABC):
     def _solve_all(self, data: DeconvolutionInput) -> np.ndarray:
         """Return an (n_samples, n_cell_types) array of RNA proportions."""
 
+    def degradation_for(self, data: DeconvolutionInput) -> tuple[bool, str | None]:
+        """
+        Whether this method is running degraded ON THIS DATA, and why.
+
+        Answerable without solving, because degradation is a property of the inputs, not
+        of the implementation. That distinction is load-bearing: Bisque's no-overlap mode
+        is degraded whether the genuine R package or this project's reimplementation
+        runs it, and a flag set only inside the Python solver silently disappears the
+        moment the real package starts working.
+
+        Default: not degraded. Overridden by the methods that can be.
+        """
+        return False, None
+
     def fit_predict(self, data: DeconvolutionInput) -> pd.DataFrame:
         """
         Run the method and return a samples x cell_types table of CELL fractions,

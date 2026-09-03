@@ -318,16 +318,26 @@ class RMethod(DeconvolutionMethod):
         self.uses_multiple_references = fallback.uses_multiple_references
         self.implementation_: str = "unknown"
         self.fallback_reason_: str | None = None
+        # Degradation is a property of the DATA, not of which implementation ran. Bisque
+        # is in no-overlap mode whether the genuine R package or the reimplementation
+        # solves it, so these are set on both paths — otherwise the disclosure vanishes
+        # the moment the real package starts working.
+        self.degenerate_: bool = False
+        self.degeneracy_reason_: str | None = None
 
     def _solve_all(self, data: DeconvolutionInput) -> np.ndarray:
         try:
             result = run_r_method(self.r_method, data)
             self.implementation_ = f"R:{R_PACKAGES[self.r_method]}"
             self.fallback_reason_ = None
+            self.degenerate_, self.degeneracy_reason_ = self.fallback.degradation_for(data)
             return result.to_numpy(dtype="float64")
         except (RBridgeError, subprocess.TimeoutExpired) as exc:
             if not self.allow_fallback:
                 raise
             self.implementation_ = "python-reimplementation"
             self.fallback_reason_ = _summarise_r_failure(exc)
-            return np.asarray(self.fallback._solve_all(data), dtype="float64")
+            out = np.asarray(self.fallback._solve_all(data), dtype="float64")
+            self.degenerate_ = bool(getattr(self.fallback, "degenerate_", False))
+            self.degeneracy_reason_ = getattr(self.fallback, "degeneracy_reason_", None)
+            return out

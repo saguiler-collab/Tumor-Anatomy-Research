@@ -753,3 +753,66 @@ def test_calibration_uses_the_pipelines_own_normalisation():
     assert "from ivygap.deconv.base import project_to_simplex, to_cell_fractions" in src
     assert "def project_to_simplex" not in src, "reimplemented instead of imported"
     assert "def to_cell_fractions" not in src, "reimplemented instead of imported"
+
+
+def test_degradation_is_reported_whichever_implementation_runs():
+    """
+    Degradation is a property of the DATA. Bisque is in no-overlap mode whether the
+    genuine BisqueRNA package or this project's reimplementation solves it, so a flag
+    set only inside the Python solver disappears the moment the real package starts
+    working — which is exactly when the disclosure matters most.
+    """
+    from ivygap.data.reference import (build_reference, build_synthetic,
+                                       load_frozen_reference, select_signature_genes)
+    from ivygap.deconv.base import DeconvolutionInput
+    from ivygap.deconv.reference_based import (BisqueDeconvolution,
+                                               MuSiCDeconvolution,
+                                               SCDCEnsembleDeconvolution)
+
+    _, expression, meta = build_synthetic(n_genes=200, n_donors=5,
+                                          cells_per_type_per_donor=6)
+    ref = build_reference(expression, meta, name="cells")
+    ref = ref.subset_genes(select_signature_genes(ref, n_per_type=8))
+    rng = np.random.default_rng(0)
+    P = ref.profile.to_numpy(dtype="float64")
+    cols = {}
+    for i in range(4):
+        f = rng.dirichlet(np.ones(len(config.CELL_TYPES)))
+        v = P @ f
+        cols[f"S{i}"] = v * (1e6 / v.sum())
+    bulk = pd.DataFrame(cols, index=ref.profile.index)
+    man = pd.DataFrame({"patient_id": [f"T{i}" for i in range(4)],
+                        "structure": ["CT"] * 4}, index=bulk.columns)
+    data = DeconvolutionInput(bulk=bulk, references=(ref,), manifest=man)
+
+    # answerable WITHOUT solving — that is what makes it usable on the R path
+    deg, why = BisqueDeconvolution().degradation_for(data)
+    assert deg and "no-overlap" in why
+
+    # MuSiC on a cell-level reference is NOT degenerate; on the collapsed frozen one it is
+    deg_m, _ = MuSiCDeconvolution().degradation_for(data)
+    assert not deg_m, "a donor-carrying reference gives MuSiC real variance to weight by"
+
+    frozen = load_frozen_reference()
+    fsub = frozen.subset_genes(list(frozen.profile.index)[:120])
+    fbulk = pd.DataFrame({"S0": fsub.profile.to_numpy(dtype="float64").sum(axis=1)},
+                         index=fsub.profile.index)
+    fman = pd.DataFrame({"patient_id": ["T0"], "structure": ["CT"]}, index=["S0"])
+    fdata = DeconvolutionInput(bulk=fbulk, references=(fsub,), manifest=fman)
+    deg_f, why_f = MuSiCDeconvolution().degradation_for(fdata)
+    assert deg_f and "cross-donor variance" in why_f
+
+    # SCDC ENSEMBLE with one reference
+    deg_e, why_e = SCDCEnsembleDeconvolution().degradation_for(data)
+    assert deg_e and "reduces exactly to SCDC" in why_e
+
+
+def test_rmethod_carries_degradation_flags():
+    """The wrapper must expose the flags on BOTH paths, since run_anatomic reads them
+    off whichever object it was handed."""
+    from ivygap.deconv.r_bridge import RMethod
+    from ivygap.deconv.reference_based import BisqueDeconvolution
+
+    m = RMethod("bisque", BisqueDeconvolution(), allow_fallback=True)
+    assert hasattr(m, "degenerate_") and hasattr(m, "degeneracy_reason_")
+    assert m.degenerate_ is False, "must not claim degradation before it has seen data"

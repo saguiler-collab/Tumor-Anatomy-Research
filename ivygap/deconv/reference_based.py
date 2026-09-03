@@ -132,6 +132,18 @@ class MuSiCDeconvolution(DeconvolutionMethod):
             p = p_new
         return p
 
+    def degradation_for(self, data: DeconvolutionInput) -> tuple[bool, str | None]:
+        ref = data.primary
+        degraded = not (getattr(ref, "has_cross_donor_variance", True)
+                        and ref.sigma is not None)
+        if not degraded:
+            return False, None
+        return True, (
+            f"reference {ref.name!r} carries no cross-donor variance, so MuSiC's gene "
+            f"weighting is constant and the result is arithmetically NNLS. Reported as "
+            f"degenerate rather than as a MuSiC result."
+        )
+
     def _solve_all(self, data: DeconvolutionInput) -> np.ndarray:
         ref = data.primary
         S = ref.profile.to_numpy(dtype="float64")
@@ -141,13 +153,7 @@ class MuSiCDeconvolution(DeconvolutionMethod):
         # With no cross-donor variance the weights collapse to a constant and this is
         # arithmetically NNLS. Recording that is the difference between a benchmark and
         # a leaderboard with a mislabelled row.
-        self.degenerate_ = not (getattr(ref, "has_cross_donor_variance", True)
-                                and np.isfinite(sigma).any() and (sigma > 0).any())
-        self.degeneracy_reason_ = (
-            f"reference {ref.name!r} carries no cross-donor variance, so MuSiC's gene "
-            f"weighting is constant and the result is arithmetically NNLS. Reported as "
-            f"degenerate rather than as a MuSiC result."
-        ) if self.degenerate_ else None
+        self.degenerate_, self.degeneracy_reason_ = self.degradation_for(data)
 
         return np.vstack([self._solve_one(S, sigma, B[:, j]) for j in range(B.shape[1])])
 
@@ -288,6 +294,22 @@ class BisqueDeconvolution(DeconvolutionMethod):
         self.degenerate_: bool = False
         self.degeneracy_reason_: str | None = None
 
+    def degradation_for(self, data: DeconvolutionInput) -> tuple[bool, str | None]:
+        ref = data.primary
+        reasons = ["no subjects are assayed both as bulk and as single cells, so this "
+                   "runs Bisque's documented no-overlap mode (use.overlap = FALSE); "
+                   "the assay transform is estimated from marginal distributions rather "
+                   "than from paired subjects"]
+        n_donors = len(ref.donor_profiles or {})
+        if n_donors < self.min_donors:
+            reasons.append(
+                f"the reference carries {n_donors} donor profiles "
+                f"(< min_donors={self.min_donors}), so the per-gene reference marginal "
+                f"is taken across CELL TYPES instead of across donors — a different "
+                f"quantity standing in for the one the method specifies")
+        return True, ("; ".join(reasons)
+                      + ". Reported as degraded rather than as a Bisque result.")
+
     def _solve_all(self, data: DeconvolutionInput) -> np.ndarray:
         ref = data.primary
         S = ref.profile.to_numpy(dtype="float64")
@@ -295,13 +317,9 @@ class BisqueDeconvolution(DeconvolutionMethod):
 
         # Reference-side marginal distribution per gene: across donors if we have real
         # donor-level profiles, otherwise across cell types as a coarse stand-in.
-        # Degradation 1: no subjects assayed both ways. Always true here — Ivy GAP
-        # overlaps no public GBM single-cell atlas — so this is Bisque's documented
-        # `use.overlap = FALSE` path, which is weaker than the published method.
-        reasons = ["no subjects are assayed both as bulk and as single cells, so this "
-                   "runs Bisque's documented no-overlap mode (use.overlap = FALSE); "
-                   "the assay transform is estimated from marginal distributions rather "
-                   "than from paired subjects"]
+        # Both degradations are declared in degradation_for() so they are reported
+        # identically whether this solver or the genuine R package runs.
+        self.degenerate_, self.degeneracy_reason_ = self.degradation_for(data)
 
         have_donors = bool(ref.donor_profiles) and len(ref.donor_profiles) >= self.min_donors
         if have_donors:
@@ -315,16 +333,6 @@ class BisqueDeconvolution(DeconvolutionMethod):
             # quantity that happens to have the right shape. Silently substituting it
             # would make Bisque look like it ran its no-overlap mode as published.
             donor_bulk = S
-            reasons.append(
-                f"the reference carries {len(ref.donor_profiles or {})} donor profiles "
-                f"(< min_donors={self.min_donors}), so the per-gene reference marginal "
-                f"is taken across CELL TYPES instead of across donors — a different "
-                f"quantity standing in for the one the method specifies")
-
-        self.degenerate_ = True
-        self.degeneracy_reason_ = ("; ".join(reasons)
-                                   + ". Reported as degraded rather than as a Bisque "
-                                     "result.")
 
         ref_mu = donor_bulk.mean(axis=1)
         ref_sd = donor_bulk.std(axis=1)
@@ -422,6 +430,16 @@ class SCDCEnsembleDeconvolution(SCDCDeconvolution):
         self.degenerate_: bool = False
         self.degeneracy_reason_: str | None = None
 
+    def degradation_for(self, data: DeconvolutionInput) -> tuple[bool, str | None]:
+        refs = data.references
+        if len(refs) > 1:
+            return False, None
+        return True, (
+            f"one reference supplied ({refs[0].name!r}), so there is nothing to weight "
+            f"across: SCDC ENSEMBLE reduces exactly to SCDC. Reported as degenerate "
+            f"rather than as an ENSEMBLE result."
+        )
+
     def _simplex_grid(self, n: int) -> list[np.ndarray]:
         """All points on the n-simplex at the configured resolution."""
         steps = int(round(1.0 / self.grid_step))
@@ -442,16 +460,9 @@ class SCDCEnsembleDeconvolution(SCDCDeconvolution):
                                       for j in range(B.shape[1])]))
 
         if len(refs) == 1:
-            self.degenerate_ = True
-            # The flag alone is not the disclosure. A report that prints
-            # `degeneracy_reason` — which is how every other degenerate method is
-            # surfaced — would have printed nothing here, and "scdc_ensemble" would have
-            # appeared in the leaderboard as though an ensemble had happened.
-            self.degeneracy_reason_ = (
-                f"one reference supplied ({refs[0].name!r}), so there is nothing to "
-                f"weight across: SCDC ENSEMBLE reduces exactly to SCDC. Reported as "
-                f"degenerate rather than as an ENSEMBLE result."
-            )
+            # Declared in degradation_for() so it is reported identically whether this
+            # solver or the genuine R package runs.
+            self.degenerate_, self.degeneracy_reason_ = self.degradation_for(data)
             self.ensemble_weights_ = {refs[0].name: 1.0}
             return per_ref[0]
 
