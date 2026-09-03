@@ -1,0 +1,37 @@
+{
+  "anatomic_counts_agree": true,
+  "anatomic_counts_archive": {
+    "CT": 30,
+    "IT": 24,
+    "LE": 19,
+    "MVP": 25,
+    "PAN": 24
+  },
+  "anatomic_counts_portal": {
+    "CT": 30,
+    "IT": 24,
+    "LE": 19,
+    "MVP": 25,
+    "PAN": 24
+  },
+  "archive_only": [],
+  "available": true,
+  "n_archive_samples": 270,
+  "n_portal_samples": 279,
+  "n_tumors_archive": 37,
+  "n_tumors_portal": 37,
+  "portal_only": [
+    "303748256",
+    "303748258",
+    "304357524",
+    "304703659",
+    "304703665",
+    "304950251",
+    "304950253",
+    "304950334",
+    "304950417"
+  ],
+  "reason": "",
+  "study_assignment_disagreements": [],
+  "verdict": "RECONCILED: 122 anatomic samples across 5 structures agree exactly with the portal's own table ({'CT': 30, 'IT': 24, 'LE': 19, 'MVP': 25, 'PAN': 24}), and the study assignment agrees on all 270 shared samples. 9 sample(s) exist on the live portal but not in the 2014-11-25 archive \u2014 a release skew, all in the 'Cancer Stem Cells RNA Seq' study, not a parsing error. Step 3's gate is closed."
+}

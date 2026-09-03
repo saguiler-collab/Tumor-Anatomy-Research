@@ -1,0 +1,5 @@
+yardstick,rho,p_value,ci_low,ci_high,n_methods,n_distinct,duplicate_groups,meets_threshold,ci_excludes_zero,verdict
+synthetic_mixtures,,,,,2,2.0,[],False,False,NOT COMPUTABLE: only 2 methods have both scores.
+absolute_purity,,,,,0,,,,,UNAVAILABLE: this yardstick produced no scores in this run.
+sc_pseudobulk,,,,,0,,,,,UNAVAILABLE: this yardstick produced no scores in this run.
+simulated_donor_mismatch,,,,,0,,,,,UNAVAILABLE: this yardstick produced no scores in this run.

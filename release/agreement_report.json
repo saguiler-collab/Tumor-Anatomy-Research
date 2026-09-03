@@ -1,0 +1,63 @@
+{
+  "primary_result": "Spearman rho between the ACS ranking and the ground-truth ranking of the same methods",
+  "primary_result_status": "NOT YET COMPUTABLE: none of the protocol's three ground-truth yardsticks covers enough methods for a rank correlation. Any rho below is from the SIMULATED yardstick and is a machinery check plus a preliminary reading, not the study's primary result.",
+  "yardsticks_with_real_ground_truth": [],
+  "preregistered_threshold": 0.6,
+  "preregistered_requirement": "rho >= threshold AND bootstrap CI excluding zero",
+  "min_methods_for_correlation": 6,
+  "controls_excluded_from_correlation": true,
+  "by_yardstick": [
+    {
+      "yardstick": "synthetic_mixtures",
+      "rho": null,
+      "p_value": null,
+      "ci_low": null,
+      "ci_high": null,
+      "n_methods": 2,
+      "n_distinct": 2.0,
+      "duplicate_groups": [],
+      "meets_threshold": false,
+      "ci_excludes_zero": false,
+      "verdict": "NOT COMPUTABLE: only 2 methods have both scores."
+    },
+    {
+      "yardstick": "absolute_purity",
+      "rho": null,
+      "p_value": null,
+      "ci_low": null,
+      "ci_high": null,
+      "n_methods": 0,
+      "n_distinct": null,
+      "duplicate_groups": null,
+      "meets_threshold": null,
+      "ci_excludes_zero": null,
+      "verdict": "UNAVAILABLE: this yardstick produced no scores in this run."
+    },
+    {
+      "yardstick": "sc_pseudobulk",
+      "rho": null,
+      "p_value": null,
+      "ci_low": null,
+      "ci_high": null,
+      "n_methods": 0,
+      "n_distinct": null,
+      "duplicate_groups": null,
+      "meets_threshold": null,
+      "ci_excludes_zero": null,
+      "verdict": "UNAVAILABLE: this yardstick produced no scores in this run."
+    },
+    {
+      "yardstick": "simulated_donor_mismatch",
+      "rho": null,
+      "p_value": null,
+      "ci_low": null,
+      "ci_high": null,
+      "n_methods": 0,
+      "n_distinct": null,
+      "duplicate_groups": null,
+      "meets_threshold": null,
+      "ci_excludes_zero": null,
+      "verdict": "UNAVAILABLE: this yardstick produced no scores in this run."
+    }
+  ]
+}

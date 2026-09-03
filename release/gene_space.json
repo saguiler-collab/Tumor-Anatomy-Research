@@ -1,0 +1,6 @@
+{
+  "strategy": "top 200 per cell type, plus every marker gene, ranked within the shared space",
+  "n_shared": 16007,
+  "n_selected": 1614,
+  "why": "least squares is dominated by highly expressed housekeeping genes that carry no compositional information; and nu-SVR is superlinear in rows"
+}

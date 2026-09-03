@@ -1,0 +1,7 @@
+{
+  "selected_method": null,
+  "criterion": "NO SELECTION MADE \u2014 the donor-held-out pseudobulk benchmark requires a cell-level single-cell reference, which is not present. No method is frozen by this run.",
+  "outcome_used": null,
+  "outcome_blind": true,
+  "acs_used_for_selection": false
+}

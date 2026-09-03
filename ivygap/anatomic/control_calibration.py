@@ -171,7 +171,15 @@ def calibrate(bulk: pd.DataFrame, manifest: pd.DataFrame, reference,
             }
 
     # A method must clear the hardest control, not a convenient one.
-    hardest = max(per_control, key=lambda n: per_control[n]["acs"]["p95"])
+    #
+    # ACS is quantised to multiples of 1/D (1/65 on this cohort), so two controls whose
+    # distributions are genuinely different can still share a 95th percentile exactly —
+    # it happens here. `max` would then resolve the tie by dict insertion order, which
+    # is not a decision anyone made. Break ties explicitly: higher p95, then higher
+    # mean, then name, so the choice is reproducible and inspectable.
+    hardest = max(per_control,
+                  key=lambda n: (per_control[n]["acs"]["p95"],
+                                 per_control[n]["acs"]["mean"], n))
     finite = per_control[hardest]["_finite"]
     p95 = float(np.quantile(finite, 0.95)) if finite.size else float("nan")
     report = {

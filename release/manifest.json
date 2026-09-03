@@ -1,0 +1,368 @@
+{
+  "project": "Ivy GAP GBM anatomic cell-type deconvolution",
+  "built": "2026-09-03",
+  "data_source": {
+    "bulk": "Ivy Glioblastoma Atlas Project (Allen Institute), anatomic-structure RNA-seq",
+    "url": "https://glioblastoma.alleninstitute.org/",
+    "citation": "Puchalski RB et al. Science 360:660-663 (2018). doi:10.1126/science.aaf2666",
+    "replaces": "TCGA-GBM bulk RNA-seq (the predecessor project's cohort)"
+  },
+  "run_type": "real data",
+  "synthetic_warning": null,
+  "selected_method": null,
+  "selection_criterion": "NO SELECTION MADE \u2014 the donor-held-out pseudobulk benchmark requires a cell-level single-cell reference, which is not present. No method is frozen by this run.",
+  "selection_is_outcome_blind": null,
+  "published_tool_implementations": [],
+  "survival_power": "BLOCKED: tumor_details.csv is present and joins correctly, but it publishes survival_days and NO vital-status column. Who was censored is not knowable from the release, so a C-index cannot be computed. Nothing is imputed and no prognostic claim is made.",
+  "primary_result_status": "NOT YET COMPUTABLE: none of the protocol's three ground-truth yardsticks covers enough methods for a rank correlation. Any rho below is from the SIMULATED yardstick and is a machinery check plus a preliminary reading, not the study's primary result.",
+  "yardsticks_with_real_ground_truth": [],
+  "constraint_freeze_hash": "2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a",
+  "constraint_file": {
+    "title": "The Anatomy Test \u2014 anatomic concordance constraint file",
+    "constraints": [
+      {
+        "id": "C1",
+        "kind": "pairwise",
+        "cell_type": "Tumor",
+        "structures": [
+          "CT",
+          "LE"
+        ],
+        "rationale": "Near-definitional: the leading edge is brain infiltrated at low tumour-cell density; cellular tumour is dense tumour. A method that fails C1 is not measuring tumour.",
+        "evidence": "Ivy GAP anatomic sampling criteria; H&E and ISH characterisation of LE vs CT (Puchalski et al., Science 2018).",
+        "weight": 1.0,
+        "among": []
+      },
+      {
+        "id": "C2",
+        "kind": "pairwise",
+        "cell_type": "Oligodendrocyte",
+        "structures": [
+          "LE",
+          "CT"
+        ],
+        "rationale": "The leading edge retains normal white matter and cortex; cellular tumour has displaced it.",
+        "evidence": "Histological definition of the LE sampling region as infiltrated but preserved brain parenchyma.",
+        "weight": 1.0,
+        "among": []
+      },
+      {
+        "id": "C3",
+        "kind": "pairwise",
+        "cell_type": "Endothelial",
+        "structures": [
+          "MVP",
+          "CT"
+        ],
+        "rationale": "Microvascular proliferation is defined by florid endothelial proliferation. The single strongest constraint in the set.",
+        "evidence": "WHO diagnostic criterion for MVP; Ivy GAP MVP dissection criterion.",
+        "weight": 1.0,
+        "among": []
+      },
+      {
+        "id": "C4",
+        "kind": "maximum",
+        "cell_type": "Endothelial",
+        "structures": [
+          "MVP"
+        ],
+        "rationale": "Stricter form of C3: MVP must exceed all four other structures, not just CT.",
+        "evidence": "As C3. Scored separately because it is a materially harder claim and a method can pass C3 while placing the endothelial maximum elsewhere.",
+        "weight": 1.0,
+        "among": [
+          "LE",
+          "IT",
+          "CT",
+          "MVP",
+          "PAN"
+        ]
+      },
+      {
+        "id": "C5",
+        "kind": "pairwise",
+        "cell_type": "Macrophage_Microglia",
+        "structures": [
+          "PAN",
+          "LE"
+        ],
+        "rationale": "The hypoxic peri-necrotic niche recruits myeloid cells; the leading edge does not.",
+        "evidence": "Hypoxia-driven myeloid recruitment in the pseudopalisading niche; Ivy GAP ISH of myeloid markers by structure.",
+        "weight": 1.0,
+        "among": []
+      },
+      {
+        "id": "C6",
+        "kind": "pairwise",
+        "cell_type": "Macrophage_Microglia",
+        "structures": [
+          "MVP",
+          "CT"
+        ],
+        "rationale": "The perivascular niche is a documented myeloid reservoir.",
+        "evidence": "Perivascular immune phenotype in GBM; CIBERSORTx analyses of Ivy GAP reporting myeloid accumulation in the perivascular zone.",
+        "weight": 1.0,
+        "among": []
+      },
+      {
+        "id": "C7",
+        "kind": "monotone",
+        "cell_type": "Tumor",
+        "structures": [
+          "LE",
+          "IT",
+          "CT"
+        ],
+        "rationale": "A three-step monotone chain \u2014 much harder to satisfy by chance than any single pairwise step, and scored as one unit.",
+        "evidence": "Ivy GAP sampling definitions place IT between LE and CT in tumour-cell density by construction.",
+        "weight": 2.0,
+        "among": []
+      }
+    ],
+    "exclusions": [
+      {
+        "cell_type": "T_cell",
+        "reason": "This pipeline's own synthetic benchmark puts T cells at the detection floor, so a T-cell constraint would score noise.",
+        "declared": "before any deconvolution output was examined"
+      }
+    ],
+    "untestable_by_this_signature": [
+      {
+        "fact": "Neuronal content is highest at the leading edge",
+        "why_untestable": "The seven-population roster contains no neuron column."
+      },
+      {
+        "fact": "Non-neoplastic astrocytes are enriched at the leading edge",
+        "why_untestable": "Astrocyte is a diagnostic-only sidecar, known to be unidentifiable against Tumor; a constraint on it would score the collinearity, not the biology."
+      }
+    ],
+    "structures": [
+      "LE",
+      "IT",
+      "CT",
+      "MVP",
+      "PAN"
+    ],
+    "cell_type_roster": [
+      "Tumor",
+      "Macrophage_Microglia",
+      "T_cell",
+      "NK_cell",
+      "B_cell",
+      "Endothelial",
+      "Oligodendrocyte",
+      "Astrocyte"
+    ],
+    "scoring": {
+      "unit": "constraint x tumour pair",
+      "aggregation": "weighted proportion satisfied, paired within tumour",
+      "null": "structure labels permuted within each tumour",
+      "interval": "bootstrap over tumours"
+    }
+  },
+  "constraint_coverage": {
+    "cell_types_with_constraints": [
+      "Endothelial",
+      "Macrophage_Microglia",
+      "Oligodendrocyte",
+      "Tumor"
+    ],
+    "cell_types_without_constraints": [
+      "T_cell",
+      "NK_cell",
+      "B_cell",
+      "Astrocyte"
+    ],
+    "explicitly_excluded": [
+      "T_cell"
+    ],
+    "structurally_untestable": [
+      {
+        "fact": "Neuronal content is highest at the leading edge",
+        "why_untestable": "The seven-population roster contains no neuron column."
+      },
+      {
+        "fact": "Non-neoplastic astrocytes are enriched at the leading edge",
+        "why_untestable": "Astrocyte is a diagnostic-only sidecar, known to be unidentifiable against Tumor; a constraint on it would score the collinearity, not the biology."
+      }
+    ],
+    "n_constraints": 7,
+    "total_weight": 8.0
+  },
+  "cell_types_primary": [
+    "Tumor",
+    "Macrophage_Microglia",
+    "T_cell",
+    "NK_cell",
+    "B_cell",
+    "Endothelial",
+    "Oligodendrocyte"
+  ],
+  "cell_types_sidecar": [
+    "Astrocyte"
+  ],
+  "anatomic_structures": [
+    "LE",
+    "IT",
+    "CT",
+    "MVP",
+    "PAN"
+  ],
+  "files": [
+    {
+      "public_path": "release/acs_leaderboard.csv",
+      "source_path": "results/anatomic/acs_leaderboard.csv",
+      "description": "THE LEADERBOARD. Anatomic Concordance Score per method, with a bootstrap CI over tumours and a p-value against the within-tumour label-permutation null. The two rows flagged is_control are negative controls and are what make the rest interpretable - read the control verdict in anatomic_report.json first.",
+      "sha256": "370209dd55937b0decdb20e6c616aed07b295da0218a3a909446df321e14c43e",
+      "bytes": 2837
+    },
+    {
+      "public_path": "release/agreement_test.csv",
+      "source_path": "results/anatomic/agreement_test.csv",
+      "description": "THE PRIMARY RESULT. Spearman rank correlation between the ACS ranking and the ranking from real ground truth, per yardstick, against a threshold fixed before it was computed. A yardstick marked UNAVAILABLE produced no scores in this run - that is not the same as disagreeing.",
+      "sha256": "5ce352b66108b10fd56a03b2b0fd7dbc3f0d2380e754173f32ed7d42b81822ba",
+      "bytes": 474
+    },
+    {
+      "public_path": "release/agreement_report.json",
+      "source_path": "results/anatomic/agreement_report.json",
+      "description": "The primary result with its pre-registered threshold and the requirement it was judged against (rho >= 0.60 AND a bootstrap CI excluding zero).",
+      "sha256": "6b6a6d665624f5ff90f8fafb68c4095513df9fac943bb1a1c61cfabf8181cace",
+      "bytes": 2095
+    },
+    {
+      "public_path": "release/agreement_method_ranks.csv",
+      "source_path": "results/anatomic/agreement_method_ranks.csv",
+      "description": "Each method's ACS rank beside its ground-truth rank, with the gap. This is where the agreement test is actually legible: a large gap means a method the anatomy likes and the truth does not, or vice versa.",
+      "sha256": "5cbe57a05ba18a49474ba630cd11300c06a8edd95f1cd742a2d0a8458a59d1f5",
+      "bytes": 175
+    },
+    {
+      "public_path": "release/acs_per_constraint.csv",
+      "source_path": "results/anatomic/acs_per_constraint.csv",
+      "description": "Every constraint x every method: how many tumours could evaluate it and how many satisfied it. A constraint no method satisfies is evidence about the constraint, or about the reference - read it before reading the leaderboard.",
+      "sha256": "068d25fbafb4fea417ba27f0c28de901099b3fa80a24208b281bac0c034143a6",
+      "bytes": 5809
+    },
+    {
+      "public_path": "release/constraint_file.json",
+      "source_path": "results/anatomic/constraint_file.json",
+      "description": "The frozen, pre-registered constraint file: C1-C7 with directions, weights, histological citations, the declared T-cell exclusion, and the facts this signature is structurally unable to test. Its SHA-256 is the registration hash.",
+      "sha256": "5cd18744e378334011f264998dd9912e7457d87d6bee41ae6a68b0352f6b9e70",
+      "bytes": 4483
+    },
+    {
+      "public_path": "release/anatomic_report.json",
+      "source_path": "results/anatomic/anatomic_report.json",
+      "description": "Machine-readable summary, including the control verdict and the note that ACS was never used to select a method.",
+      "sha256": "53c4f75d88afd63e2e3b19b516840bb03125a7d668b50b42a646ecad47c0c9a8",
+      "bytes": 13535
+    },
+    {
+      "public_path": "release/composition.csv",
+      "source_path": "results/anatomic/composition_by_tumor_structure.csv",
+      "description": "Composition per (tumour, anatomic structure) from the best-scoring real method. One row per tumour per structure - already collapsed, so uneven block counts cannot skew anything downstream.",
+      "sha256": "688a14c01a994ad6430fa5a08b8f037e86a82992bc7fb2fb93005546f09cfe42",
+      "bytes": 7427
+    },
+    {
+      "public_path": "release/method_selection_decision.json",
+      "source_path": "results/benchmark/method_selection_decision.json",
+      "description": "Which method was selected, on what criterion, with the full ranking - and the explicit record that survival and the anatomic labels were not used.",
+      "sha256": "0c2d6db3565945da9bceb8c18f9a1707bad6398c879ba9371b340edaaf59edd2",
+      "bytes": 296
+    },
+    {
+      "public_path": "release/gene_space.json",
+      "source_path": "results/benchmark/gene_space.json",
+      "description": "Which genes every method was given, how many were shared with the frozen signature, and why the subset was taken. Part of the equal-footing claim: the gene set is chosen once, for everyone, before any method runs.",
+      "sha256": "a7a6ae3676832b5a53c937aa5e9eb6a87cf50ee95cb764754a5d2c8c9fc2f396",
+      "bytes": 293
+    },
+    {
+      "public_path": "release/equal_footing_certificate.json",
+      "source_path": "results/anatomic/equal_footing_certificate.json",
+      "description": "Content hashes proving every method and control was given identical inputs, identical tumours and identical folds.",
+      "sha256": "6c48d913816a67e23f6def9eee7507af4b7e4b6783580ecfe74b9f2de7534db2",
+      "bytes": 1478
+    },
+    {
+      "public_path": "release/implementation_report.json",
+      "source_path": "results/anatomic/implementation_report.json",
+      "description": "For each of MuSiC, DWLS, Bisque and SCDC: whether the genuine R package ran, and if not, exactly why the Python reimplementation was used instead.",
+      "sha256": "7459a5408d39e2e2c58019ab7d1f464b1999626b823e4f6079b62e89f7427bfc",
+      "bytes": 3054
+    },
+    {
+      "public_path": "release/acs_per_tumor.csv",
+      "source_path": "results/anatomic/acs_per_tumor.csv",
+      "description": "Every method x every tumour: which constraints that tumour could evaluate and which it satisfied. The protocol asks for per-tumour results explicitly, because with 9 evaluable tumours a pooled ACS can be carried by one or two of them and the pooled number alone cannot show that.",
+      "sha256": "dbb47680eac3ab2ee234056caca496244226d903dc3488c2b801eee2151c7672",
+      "bytes": 6688
+    },
+    {
+      "public_path": "release/acs_cohort_sensitivity.csv",
+      "source_path": "results/anatomic/acs_cohort_sensitivity.csv",
+      "description": "ACS for each method when only the 122 anatomic samples are deconvolved, beside ACS when all 270 archive samples are, with the rank change. Several methods use cross-sample statistics, so this measures how much of the leaderboard is a property of the method rather than of the cohort it was handed.",
+      "sha256": "ef620d7aadad72398f3255673f5e829f9b980ae15ad00800db464f9a62809b5c",
+      "bytes": 789
+    },
+    {
+      "public_path": "release/data_reconciliation.json",
+      "source_path": "results/data_reconciliation.json",
+      "description": "Protocol step 3's gate: our parse of the frozen 2014-11-25 archive checked sample-by-sample and structure-by-structure against the Allen Institute portal's own live metadata export, which is produced independently of this pipeline.",
+      "sha256": "796d64cc11ed7efbb79bb5e021fd87c4eb50c1fef43b275b3deaa2bd212a4015",
+      "bytes": 1041
+    },
+    {
+      "public_path": "release/clinical_missingness_audit.json",
+      "source_path": "results/clinical_missingness_audit.json",
+      "description": "Whether a blank survival_days is missing at random. It is not: the blanks are strongly enriched for MGMT methylation and younger age, the two strongest favourable prognostic factors in GBM. Read before any survival number.",
+      "sha256": "b07eda5f813d91cc537ac74aec56a39823441f4a92b0527e1ee6891568ea8c5d",
+      "bytes": 846
+    },
+    {
+      "public_path": "release/full_database_acs_leaderboard.csv",
+      "source_path": "results/anatomic/full_database/acs_leaderboard.csv",
+      "description": "The leaderboard recomputed when every archive sample is deconvolved rather than only the anatomic ones. ACS is still scored on the anatomic subset alone - the ISH-cluster samples had their structure assigned from expression, so scoring them would be circular.",
+      "sha256": "c6c5244869c2333d7ab2a13a178f5ff9e9138a464853abc5aaeb1548e13028bf",
+      "bytes": 2823
+    },
+    {
+      "public_path": "release/full_database_anatomic_report.json",
+      "source_path": "results/anatomic/full_database/anatomic_report.json",
+      "description": "The full-database run's machine-readable summary, including how many samples were deconvolved versus how many were scored.",
+      "sha256": "a0e5c46981dc1bc44105c8456d2e4059d79d543cfd629687edeb512aec419161",
+      "bytes": 13575
+    },
+    {
+      "public_path": "release/survival_power.json",
+      "source_path": "results/survival/survival_power.json",
+      "description": "The canonical survival verdict. Ivy GAP publishes survival_days and no vital-status column, so who was censored is unknowable and this is BLOCKED. Nothing is imputed.",
+      "sha256": "22a8c0979a45af746097930c0b2aa5ebe3bd3e891ecbab25be79561e63051277",
+      "bytes": 732
+    },
+    {
+      "public_path": "release/survival_power_declared_policy.json",
+      "source_path": "results/survival/declared_event_policy/survival_power.json",
+      "description": "Present only if the run was explicitly asked to read recorded survival times as observed deaths. Carries the assumption, the missingness audit, and what the event count can actually detect - computed before any model was fitted.",
+      "sha256": "e60240bd2c3fa096e1314d84d4c368a31828180ba123a609c3e3ff79c84cbf8c",
+      "bytes": 3269
+    },
+    {
+      "public_path": "release/survival_metrics_declared_policy.csv",
+      "source_path": "results/survival/declared_event_policy/survival_metrics.csv",
+      "description": "Out-of-fold prognostic evaluation per method under that declared assumption. NOT the canonical result. Read survival_power_declared_policy.json first; on this many events every row is INCONCLUSIVE by design.",
+      "sha256": "6d57189fa40da0446bfa97be8cab7c863f10c59ef3e59bfb7d048c8946d06eb1",
+      "bytes": 2563
+    }
+  ],
+  "missing_from_this_build": [
+    "benchmark/simulated_yardstick_accuracy.csv",
+    "benchmark/simulated_yardstick_provenance.json",
+    "benchmark/benchmark_summary.csv",
+    "benchmark/benchmark_per_type.csv",
+    "benchmark/benchmark_per_niche.csv",
+    "benchmark/uncertainty_calibration.csv"
+  ],
+  "notes": ""
+}
