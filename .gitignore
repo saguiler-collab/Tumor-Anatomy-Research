@@ -5,8 +5,13 @@ __pycache__/
 
 # Downloaded inputs and generated results are reproducible from the pipeline and
 # are far too large to version. `release/` IS committed — it is the deliverable.
-data/
-results/
+#
+# LEADING SLASH IS LOAD-BEARING. An unanchored `data/` matches a directory named
+# `data` at ANY depth, which silently excluded the entire `ivygap/data/` Python
+# package — the loader, the clinical parser, the portal reconciler and the downloader.
+# The repository looked complete and was missing its whole data layer.
+/data/
+/results/
 
 # Single-cell atlases are multi-GB build inputs, never outputs. Belt and braces on
 # top of data/ above, so one landing outside that tree still cannot be committed.
@@ -27,3 +32,9 @@ results_superseded/*/benchmark/
 results_superseded/*/estimates/
 results_superseded/*/figures/
 results_superseded/*/survival/
+
+# Vendored third-party R package sources (MuSiC, Bisque, SCDC, DWLS), ~242 MB. They are
+# other people's code with their own licences and release channels; R/install_deps.R
+# installs from here when present and falls back to CRAN/GitHub otherwise. Committing
+# them would bloat the repo and blur whose code is whose.
+pipeline packages /

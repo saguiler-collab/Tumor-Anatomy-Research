@@ -238,7 +238,12 @@ def main() -> int:
         gbmap = config.REFERENCE_DIR / "gbmap_core.h5ad"
         if gbmap.exists():
             from ivygap.data.reference import build_from_h5ad
-            _, sc_expression, sc_meta = build_from_h5ad(gbmap)
+            # Restrict to genes the bulk actually carries BEFORE any cell is
+            # materialised. On Core GBmap that turns a ~30,000-column read into a
+            # ~16,000-column one, and a gene absent from the bulk could not have
+            # contributed to a deconvolution anyway.
+            _, sc_expression, sc_meta = build_from_h5ad(
+                gbmap, restrict_to_genes=bulk.index)
             print(f"cell-level atlas: {sc_expression.shape[1]:,} cells, "
                   f"{sc_meta['donor'].nunique()} donors")
         else:

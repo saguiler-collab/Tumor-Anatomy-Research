@@ -172,3 +172,119 @@ def test_every_method_sees_the_same_gene_space():
     a, _ = frozen_gene_space(frozen, frozen.profile.index)
     b, _ = frozen_gene_space(frozen, frozen.profile.index)
     assert a == b, "gene selection is not deterministic"
+
+
+# =============================================================================
+# reading a real single-cell atlas without densifying it
+# -----------------------------------------------------------------------------
+# `build_from_h5ad` used to call X.toarray() unconditionally. Core GBmap is 338,564
+# cells x ~30,000 genes; dense float32 is about 40 TB, against 9 GB of RAM on the
+# machine this was written for. That is not a slow path, it is an impossible one, and
+# it made the atlas — which unblocks all four published R tools, method selection and
+# two of the three yardsticks — unusable.
+# =============================================================================
+
+def _tiny_h5ad(tmp_path, n_cells=800, n_genes=120, n_donors=10):
+    import anndata
+    from scipy import sparse
+
+    rng = np.random.default_rng(0)
+    types = ["AC-like", "MES-like", "TAM-BDM", "TAM-MG", "CD4/CD8", "NK", "B cell",
+             "Endothelial", "Oligodendrocyte", "Astrocyte", "NOT-IN-THE-ROSTER"]
+    obs = pd.DataFrame(
+        {"annotation_level_3": rng.choice(types, n_cells),
+         "donor_id": rng.choice([f"D{i}" for i in range(n_donors)], n_cells)},
+        index=[f"c{i}" for i in range(n_cells)])
+    X = sparse.random(n_cells, n_genes, density=0.15, random_state=0, format="csr") * 100
+    var = pd.DataFrame(index=[f"G{i}" for i in range(n_genes)])
+    path = tmp_path / "atlas.h5ad"
+    anndata.AnnData(X=X, obs=obs, var=var).write_h5ad(path)
+    return path
+
+
+def _isolated_ref_dir(tmp_path, monkeypatch):
+    from ivygap import config as cfg
+    monkeypatch.setattr(cfg, "REFERENCE_DIR", tmp_path)
+    monkeypatch.setattr(cfg, "ALL_OUTPUT_DIRS", [tmp_path])
+
+
+def test_h5ad_is_read_without_densifying_the_whole_matrix(tmp_path, monkeypatch):
+    import json as _json
+    from ivygap.data.reference import build_from_h5ad
+
+    pytest.importorskip("anndata")
+    _isolated_ref_dir(tmp_path, monkeypatch)
+    path = _tiny_h5ad(tmp_path)
+
+    ref, expr, meta = build_from_h5ad(
+        path, name="t", max_cells_per_donor_type=5, max_total_cells=200,
+        restrict_to_genes=[f"G{i}" for i in range(80)], export=False)
+
+    samp = _json.loads((tmp_path / "reference_sampling_t.json").read_text())
+    assert samp["n_cells_in_file"] == 800
+    assert samp["n_cells_after_roster_mapping"] < 800, "unmapped types were not dropped"
+    assert samp["n_cells_kept"] <= samp["n_cells_after_roster_mapping"]
+    assert samp["n_genes_kept"] == 80 < samp["n_genes_in_file"]
+    assert expr.shape == (80, samp["n_cells_kept"])
+    # a label outside the roster must never reach the reference
+    assert "NOT-IN-THE-ROSTER" not in set(meta["cell_type"])
+    assert set(meta["cell_type"]) <= set(config.CELL_TYPES)
+
+
+def test_subsample_is_donor_balanced_and_seeded(tmp_path, monkeypatch):
+    import json as _json
+    from ivygap.data.reference import build_from_h5ad
+
+    pytest.importorskip("anndata")
+    _isolated_ref_dir(tmp_path, monkeypatch)
+    path = _tiny_h5ad(tmp_path)
+
+    cap = 4
+    _, _, meta = build_from_h5ad(path, name="t", max_cells_per_donor_type=cap,
+                                 max_total_cells=10_000, export=False)
+    counts = meta.groupby(["donor", "cell_type"], observed=True).size()
+    assert counts.max() <= cap, "the per-(donor, cell type) cap was not applied"
+
+    samp = _json.loads((tmp_path / "reference_sampling_t.json").read_text())
+    assert samp["strategy"].startswith("donor-balanced")
+    assert samp["n_donors_kept"] > 1
+
+    # deterministic: the same seed must select the same cells
+    _, _, meta2 = build_from_h5ad(path, name="t2", max_cells_per_donor_type=cap,
+                                  max_total_cells=10_000, export=False)
+    assert list(meta.index) == list(meta2.index)
+
+
+def test_atlas_reference_carries_cross_donor_variance(tmp_path, monkeypatch):
+    """
+    The point of the atlas. A collapsed signature has no cross-donor variance, which is
+    why MuSiC runs degenerate and Bisque falls back to spread across cell types. A
+    cell-level reference must restore both, or nothing downstream improves.
+    """
+    from ivygap.data.reference import build_from_h5ad
+
+    pytest.importorskip("anndata")
+    _isolated_ref_dir(tmp_path, monkeypatch)
+    path = _tiny_h5ad(tmp_path)
+
+    ref, _, _ = build_from_h5ad(path, name="t", max_cells_per_donor_type=6,
+                                max_total_cells=10_000, export=False)
+    assert ref.has_cross_donor_variance, "MuSiC would still be degenerate"
+    assert ref.donor_profiles and len(ref.donor_profiles) >= 3, \
+        "Bisque would still fall back to spread across cell types"
+
+
+def test_restrict_to_genes_rejects_a_disjoint_gene_space(tmp_path, monkeypatch):
+    """
+    The negative control. Handing in Ensembl ids when the atlas uses symbols would
+    otherwise select zero genes and fail much later with something unrecognisable.
+    """
+    from ivygap.data.reference import build_from_h5ad
+
+    pytest.importorskip("anndata")
+    _isolated_ref_dir(tmp_path, monkeypatch)
+    path = _tiny_h5ad(tmp_path)
+
+    with pytest.raises(ValueError, match="shares no gene"):
+        build_from_h5ad(path, name="t", restrict_to_genes=["ENSG00000000001"],
+                        export=False)

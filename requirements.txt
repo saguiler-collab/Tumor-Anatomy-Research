@@ -11,7 +11,11 @@ requests>=2.28           # Allen Institute downloads
 # Testing
 pytest>=7.0
 
-# Optional — only needed to build a reference from a .h5ad single-cell atlas.
-# The synthetic fixture path and the full benchmark run without it, so it is not
-# imported at module scope anywhere.
-# anndata>=0.9
+# Needed to build a reference from a .h5ad single-cell atlas. Not imported at module
+# scope anywhere, so the synthetic path, the frozen signature and the whole ACS
+# leaderboard still run without it.
+#
+# It is no longer really optional in practice: MuSiC, Bisque, DWLS and SCDC all consume
+# CELL-LEVEL data, so without an atlas they cannot run even with their R packages
+# installed, and the pipeline falls back to this project's reimplementations.
+anndata>=0.10
