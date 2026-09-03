@@ -266,3 +266,44 @@ def test_tie_detection_is_paired():
     assert not bool(out.loc["b", "tied_with_best"]), (
         "a consistent per-sample difference was lost — the bootstrap is not paired"
     )
+
+
+# =============================================================================
+# a fallback must say WHY
+# -----------------------------------------------------------------------------
+# The disclosure "this ran as a Python reimplementation" exists so a reimplementation is
+# never mistaken for the published package. Recording only "run_music.R exited 1" tells
+# a reader that R failed and nothing about the cause, which is the one detail that makes
+# the disclosure actionable.
+# =============================================================================
+
+def test_fallback_reason_names_the_r_error():
+    from ivygap.deconv.r_bridge import RBridgeError, _summarise_r_failure
+
+    exc = RBridgeError(
+        "run_music.R exited 1\n"
+        "--- stdout ---\n\n"
+        "--- stderr ---\n"
+        "Warning message:\n"
+        "package 'limma' was built under R version 4.6.1 \n"
+        "Error in music_prop(bulk.eset = bulk_eset, clusters = \"cell_type\",  : \n"
+        "  argument \"bulk.mtx\" is missing, with no default\n"
+        "Calls: music_prop -> rownames\n"
+        "Execution halted"
+    )
+    reason = _summarise_r_failure(exc)
+    assert "run_music.R exited 1" in reason, "the exit line is still useful context"
+    assert "bulk.mtx" in reason, "the actual R error was discarded"
+    # a warning must not be mistaken for the error
+    assert "limma" not in reason
+
+
+def test_fallback_reason_survives_an_error_with_no_r_diagnostic():
+    """A timeout has no 'Error in ...' line; the summary must still be the exit line
+    rather than raising or returning something empty."""
+    from ivygap.deconv.r_bridge import _summarise_r_failure
+
+    class Boom(Exception):
+        pass
+
+    assert _summarise_r_failure(Boom("timed out after 7200s")) == "timed out after 7200s"

@@ -194,6 +194,34 @@ def check(method_name: str, ref_name: str) -> Availability:
     return Availability(method_name, True, f"{pkg} available with cell-level reference")
 
 
+def _summarise_r_failure(exc: Exception) -> str:
+    """
+    A fallback reason that names the CAUSE, not just the exit code.
+
+    The first line of an RBridgeError is "run_music.R exited 1", which records that R
+    failed and nothing about why. Every artefact that discloses "this ran as a Python
+    reimplementation" then says so without the one detail that would let anyone fix it —
+    and the disclosure exists precisely so a reimplementation is never mistaken for the
+    published package.
+
+    R writes its diagnostics as "Error in <call> : <message>", so that line is lifted
+    out when present and appended to the exit line.
+    """
+    text = str(exc)
+    head = text.split("\n")[0]
+
+    lines = [ln.strip() for ln in text.splitlines()]
+    for i, ln in enumerate(lines):
+        if ln.startswith("Error"):
+            # R wraps long messages onto the following line.
+            detail = ln
+            if i + 1 < len(lines) and lines[i + 1] and not lines[i + 1].startswith(
+                    ("Error", "Calls:", "Execution halted", "---")):
+                detail = f"{detail} {lines[i + 1]}"
+            return f"{head} | {detail[:400]}"
+    return head
+
+
 class RBridgeError(RuntimeError):
     pass
 
@@ -301,5 +329,5 @@ class RMethod(DeconvolutionMethod):
             if not self.allow_fallback:
                 raise
             self.implementation_ = "python-reimplementation"
-            self.fallback_reason_ = str(exc).split("\n")[0]
+            self.fallback_reason_ = _summarise_r_failure(exc)
             return np.asarray(self.fallback._solve_all(data), dtype="float64")
