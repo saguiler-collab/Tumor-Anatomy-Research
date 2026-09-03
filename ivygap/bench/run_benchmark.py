@@ -64,6 +64,21 @@ def run(expression: pd.DataFrame, meta: pd.DataFrame, prefer_r: bool = True,
     reference = build_reference(expression[train_cells], meta.loc[train_cells],
                                 name=config.PRIMARY_REFERENCE)
 
+    # DONOR LEAKAGE GUARD. The R-backed methods do not read `reference` — they read the
+    # cell-level export, which r_bridge writes from whatever cell source is registered.
+    # If that source still holds every donor, MuSiC, Bisque and SCDC see the HELD-OUT
+    # donors' cells while NNLS, SVR and the rest see only the training signature. The
+    # mixtures are pooled from exactly those held-out cells, so the R methods would be
+    # scored against their own reference and would win for that reason alone.
+    #
+    # Registering the training-only cells here keeps the donor split intact and keeps
+    # every method on the same evidence. The previous source is restored in the finally
+    # block below, so a caller's registration is not clobbered by running a benchmark.
+    from ivygap.deconv import r_bridge
+    _prior_source = r_bridge.get_cell_source(config.PRIMARY_REFERENCE)
+    r_bridge.set_cell_source(config.PRIMARY_REFERENCE,
+                             expression[train_cells], meta.loc[train_cells])
+
     genes = [g for g in select_signature_genes(reference, n_per_type=n_signature_genes)
              if g in test_set.expression.index]
     if len(genes) < config.MIN_GENES_SHARED:
@@ -233,6 +248,13 @@ def run(expression: pd.DataFrame, meta: pd.DataFrame, prefer_r: bool = True,
                             "verdict"]].round(3).to_string())
         print(f"\nselected: {selected}")
         print(selection_basis)
+
+    # Restore whatever cell source the caller had registered, so a benchmark run does
+    # not silently leave the training-only subset in place for later stages.
+    if _prior_source is None:
+        r_bridge.clear_cell_source(config.PRIMARY_REFERENCE)
+    else:
+        r_bridge.set_cell_source(config.PRIMARY_REFERENCE, *_prior_source)
 
     return {"summary": summary, "per_type": per_type_df, "per_niche": per_niche_df,
             "calibration": calib_df, "ties": ties_df, "decision": decision,

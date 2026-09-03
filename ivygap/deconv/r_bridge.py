@@ -89,6 +89,15 @@ def has_cell_source(ref_name: str) -> bool:
     return ref_name in _CELL_SOURCE
 
 
+def get_cell_source(ref_name: str):
+    """The registered (expression, meta) for `ref_name`, or None."""
+    return _CELL_SOURCE.get(ref_name)
+
+
+def clear_cell_source(ref_name: str) -> None:
+    _CELL_SOURCE.pop(ref_name, None)
+
+
 def export_for_genes(ref_name: str, genes) -> tuple[Path, Path]:
     """
     Write (or reuse) a cell-level export restricted to `genes`.
