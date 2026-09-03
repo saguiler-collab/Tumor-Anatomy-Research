@@ -58,6 +58,7 @@ from ivygap import config
 from ivygap.anatomic import run_anatomic
 from ivygap.bench import run_benchmark
 from ivygap.data import clinical as clinical_mod
+from ivygap.deconv import r_bridge
 from ivygap.data.reference import (build_reference, build_synthetic,
                                    select_signature_genes)
 from ivygap.report import build_release
@@ -247,8 +248,8 @@ def main() -> int:
             # 1.1 GB, and no method ever reads beyond its own gene space.
             _, sc_expression, sc_meta = build_from_h5ad(
                 gbmap, restrict_to_genes=bulk.index, export=False)
-            from ivygap.deconv import r_bridge
-            r_bridge.set_cell_source("gbmap", sc_expression, sc_meta)
+            r_bridge.set_cell_source(config.PRIMARY_REFERENCE,
+                                     sc_expression, sc_meta)
             print(f"cell-level atlas: {sc_expression.shape[1]:,} cells, "
                   f"{sc_meta['donor'].nunique()} donors")
         else:
@@ -273,6 +274,30 @@ def main() -> int:
         selected = bench["decision"]["selected_method"]
         genes = [g for g in bench["genes"] if g in bulk.index]
         reference = bench["reference"].subset_genes(genes)
+
+        # EQUAL FOOTING ACROSS THE R BOUNDARY.
+        #
+        # `bench["reference"]` is built from TRAINING donors only. The Python methods
+        # read that object. The R methods do not — they read the cell-level export,
+        # written from whatever cell source is registered, and run_benchmark restores
+        # the caller's FULL source when it finishes.
+        #
+        # Left alone, stage 4 would hand MuSiC, Bisque and SCDC all 110 donors while
+        # NNLS, SVR, Elastic Net and the Bayesian methods worked from an 88-donor
+        # signature. That is not a like-for-like leaderboard, and the certificate cannot
+        # detect it because the difference is outside the DeconvolutionInput.
+        #
+        # The reference the benchmark selected on is also the reference the anatomy
+        # validates, which keeps the two stages coherent; the cell source is matched to
+        # it here rather than left at whatever the previous stage happened to leave.
+        train_cells = sc_meta.index[
+            sc_meta["donor"].astype(str).isin(bench["train_donors"])]
+        r_bridge.set_cell_source(config.PRIMARY_REFERENCE,
+                                 sc_expression.loc[genes, train_cells],
+                                 sc_meta.loc[train_cells])
+        print(f"cell source for stage 4: {len(train_cells):,} cells from "
+              f"{len(bench['train_donors'])} training donors — the same reference the "
+              f"selection was made on, for every method")
     else:
         _banner(3, "benchmark — SKIPPED (no cell-level reference)")
         print("Method selection needs known-truth mixtures, which need cells. Supply a\n"
