@@ -491,7 +491,8 @@ def test_implementation_disclosure_names_every_python_reimplementation(
         assert tool in disclosure
         rec = disclosure[tool]
 
-        if tool in R_PATH_DISABLED:
+        if tool in R_PATH_DISABLED:                       # currently empty; kept so
+            #                                              re-disabling stays disclosed
             # The R path is switched off deliberately. It must still say so, and say
             # why — an undisclosed reimplementation under a published tool's name is
             # the exact thing the invariant forbids.

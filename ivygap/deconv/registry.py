@@ -21,34 +21,18 @@ PUBLISHED_TOOLS = ("music", "dwls", "bisque", "scdc", "scdc_ensemble")
 
 #: Published tools whose genuine R package is not run here, with the reason.
 #:
-#: This is a disclosure, not a preference. DWLS's own signature builder
-#: (buildSignatureMatrixMAST) is dominated by a condition-number search over gene
-#: counts, and on this hardware it does not terminate predictably. Measured on the real
-#: 11,739-cell export:
+#: Empty, and the history is worth keeping. DWLS was disabled here after it ran past a
+#: 2,400 s budget that existed to bound it. The budget was not the problem: `subprocess.run`
+#: kills the direct child on timeout and then calls `communicate()` again with NO timeout
+#: to reap output, which never returns if the child left grandchildren holding the
+#: inherited pipe. `_run_bounded` puts the child in its own process group and kills the
+#: group, and on the real DWLS call the timeout now fires where it previously did not.
 #:
-#:     3,000 cells, cold cache      1,625 s   completed
-#:     2,000 cells, per-type cap   >2,100 s   killed, no end in sight
-#:     Seurat builder instead      >2,100 s   same — the DE step is not the cost
-#:     inside the pipeline         >5,280 s   ran past a 2,400 s subprocess timeout
-#:
-#: The last line is the deciding one: a wall-clock budget was added precisely to bound
-#: this, and it did not fire, so the R path cannot be given a predictable ceiling here.
-#: A benchmark that never finishes yields nothing, which is strictly worse than a
-#: reimplementation that is labelled as one everywhere it appears.
-#:
-#: This is not a claim about DWLS. It is a claim about running DWLS's signature build on
-#: this machine, and it is recorded so a reader knows the leaderboard's `dwls` row is
-#: this project's implementation of the algorithm rather than the published package.
-R_PATH_DISABLED: dict[str, str] = {
-    "dwls": (
-        "the genuine DWLS package is installed and runs, but its signature build "
-        "(buildSignatureMatrixMAST) has no predictable ceiling on this hardware — "
-        "measured at 1,625 s in the best case and still running past a 2,400 s "
-        "subprocess timeout in the worst. Run as this project's Python "
-        "reimplementation, which is labelled as such in every artefact. Re-enable by "
-        "removing this entry once the R path can be bounded."
-    ),
-}
+#: A synthetic reproduction of the pipe-holding child timed out correctly under BOTH
+#: paths, so the mechanism above is inferred from the real call rather than demonstrated
+#: in isolation. What is demonstrated: the same DWLS invocation that ran unbounded under
+#: subprocess.run stops at its budget under _run_bounded.
+R_PATH_DISABLED: dict[str, str] = {}
 
 
 def build_methods(prefer_r: bool = True, allow_r_fallback: bool = True

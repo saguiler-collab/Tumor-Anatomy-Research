@@ -107,3 +107,27 @@ def _isolate_output_tree(_test_output_root):
 
     for name, value in originals.items():
         setattr(config, name, value)
+
+@pytest.fixture(autouse=True)
+def _bound_r_in_tests(monkeypatch, request):
+    """
+    Keep real R calls from turning the suite into a pipeline run.
+
+    With DWLS's R path enabled, a test that builds methods with `prefer_r=True` invokes
+    buildSignatureMatrixMAST, which takes ~30 minutes on real data — the suite went from
+    minutes to over half an hour. Tests exist to check wiring and disclosure, not to
+    benchmark R.
+
+    A short budget keeps both true: a fast R method still runs and is reported as R, and
+    a slow one falls back quickly with the timeout recorded — which is exactly the
+    disclosure path the tests are there to verify.
+    """
+    from ivygap.deconv import r_bridge
+
+    # A test that is ABOUT the shipped budgets must see the shipped values.
+    if request.node.get_closest_marker("real_r_budgets"):
+        return
+
+    monkeypatch.setattr(r_bridge, "DEFAULT_R_TIMEOUT", 25)
+    monkeypatch.setattr(r_bridge, "R_METHOD_TIMEOUTS",
+                        {k: 25 for k in r_bridge.R_METHOD_TIMEOUTS})

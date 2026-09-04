@@ -309,6 +309,7 @@ def test_fallback_reason_survives_an_error_with_no_r_diagnostic():
     assert _summarise_r_failure(Boom("timed out after 7200s")) == "timed out after 7200s"
 
 
+@pytest.mark.real_r_budgets
 def test_r_methods_have_a_bounded_wall_clock_budget():
     """
     A method that never finishes produces no result at all, which is worse than a
@@ -324,6 +325,7 @@ def test_r_methods_have_a_bounded_wall_clock_budget():
         assert r_bridge.timeout_for(method) > observed_seconds * 5
 
 
+@pytest.mark.real_r_budgets
 def test_a_timeout_is_reported_as_a_budget_not_a_method_failure():
     """
     The disclosure has to distinguish "this package cannot do this" from "we did not

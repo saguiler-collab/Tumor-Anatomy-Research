@@ -26,6 +26,9 @@ test = ["pytest>=7.0"]
 include = ["ivygap*"]
 
 [tool.pytest.ini_options]
+markers = [
+  "real_r_budgets: test asserts the shipped R timeouts, not the test-bounded ones",
+]
 testpaths = ["tests"]
 # Keep the suite readable: a convergence warning per fit per sample would bury the
 # actual failures under thousands of lines.

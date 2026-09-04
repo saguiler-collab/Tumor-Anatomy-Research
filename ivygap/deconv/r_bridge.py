@@ -32,6 +32,8 @@ out is slower and completely robust, and this is not an inner loop.
 from __future__ import annotations
 
 import gzip
+import os
+import signal
 import json
 import shutil
 import subprocess
@@ -224,7 +226,10 @@ def check(method_name: str, ref_name: str) -> Availability:
 #: than a disclosed fallback. The budget is generous enough that the methods measured to
 #: complete here (MuSiC ~95 s, SCDC ~90 s, Bisque ~30 s) are nowhere near it.
 R_METHOD_TIMEOUTS: dict[str, int] = {
-    "dwls": 2400,          # 40 minutes; observed to need more, and to be unbounded
+    # 40 minutes. Measured: DWLS's signature build completed in 1,625 s at best on this
+    # data, so the budget clears a successful run with room, and bounds the case where
+    # the condition-number search does not converge.
+    "dwls": 2400,
 }
 DEFAULT_R_TIMEOUT = 3600
 
@@ -259,6 +264,42 @@ def _summarise_r_failure(exc: Exception) -> str:
                 detail = f"{detail} {lines[i + 1]}"
             return f"{head} | {detail[:400]}"
     return head
+
+
+def _run_bounded(cmd: list[str], budget: int):
+    """
+    Run `cmd` with a timeout that actually fires.
+
+    `subprocess.run(..., timeout=N)` is not sufficient here, and the failure is silent.
+    On timeout it kills the DIRECT child and then calls `communicate()` a second time,
+    with no timeout, to reap the output. If that child spawned grandchildren holding the
+    inherited stdout pipe, the second call blocks forever: the TimeoutExpired never
+    propagates and the "budget" is unbounded in practice.
+
+    That is exactly what happened to DWLS. MAST's workers keep the pipe open, so a
+    2,400 s budget was still running at 5,280 s — verified in isolation that
+    `timeout_for('dwls')` returned 2400, that the signature default was None, and that a
+    plain sleeping R child DOES time out correctly. The mechanism was fine; the pipe was
+    the problem.
+
+    So: put the child in its own process group, and on timeout kill the GROUP, which
+    reaches the grandchildren holding the pipe. Then reap with a short bounded wait.
+    """
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            text=True, start_new_session=True)
+    try:
+        out, err = proc.communicate(timeout=budget)
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):       # pragma: no cover
+            proc.kill()
+        try:
+            proc.communicate(timeout=30)
+        except subprocess.TimeoutExpired:                   # pragma: no cover
+            pass
+        raise
+    return subprocess.CompletedProcess(cmd, proc.returncode, out, err)
 
 
 class RBridgeError(RuntimeError):
@@ -310,8 +351,7 @@ def run_r_method(method_name: str, data: DeconvolutionInput,
         cfg_path.write_text(json.dumps(payload, indent=2))
 
         budget = timeout if timeout is not None else timeout_for(method_name)
-        proc = subprocess.run(["Rscript", str(script), str(cfg_path)],
-                              capture_output=True, text=True, timeout=budget)
+        proc = _run_bounded(["Rscript", str(script), str(cfg_path)], budget)
         if proc.returncode != 0:
             raise RBridgeError(
                 f"{script.name} exited {proc.returncode}\n"
