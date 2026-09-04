@@ -187,3 +187,21 @@ def test_run_lock_releases_so_a_later_run_can_take_it(tmp_path, monkeypatch):
     monkeypatch.setattr(cfg, "RESULTS_DIR", tmp_path)
     cfg.acquire_run_lock()()                  # acquire then immediately release
     cfg.acquire_run_lock()()                  # a second run must succeed
+
+
+def test_no_test_can_write_to_the_real_results_tree():
+    """
+    The guard on the guard. `conftest._isolate_output_tree` is autouse and
+    session-scoped; if it ever stops applying, a test that calls run_benchmark.run() or
+    run_anatomic.run() silently overwrites real artefacts — which is how a 10-mixture
+    fixture replaced a 200-mixture benchmark run, undetected, with every test passing.
+    """
+    from ivygap import config
+
+    project = config.PROJECT_ROOT.resolve()
+    for name in ("RESULTS_DIR", "ESTIMATES_DIR", "BENCH_DIR", "ANATOMIC_DIR",
+                 "SURVIVAL_DIR", "FIGURES_DIR", "RELEASE_DIR", "PSEUDOBULK_DIR"):
+        d = getattr(config, name).resolve()
+        assert project not in d.parents and d != project, (
+            f"config.{name} points inside the repository at {d} during a test run; "
+            f"the output-isolation fixture is not applying")
