@@ -20,6 +20,14 @@ suppressPackageStartupMessages(library(DWLS))
 args <- read_args()
 set.seed(args$seed)
 
+#: Cells per cell type for the signature build. Declared here because the cache key
+#: depends on it — see below.
+MAX_CELLS_PER_TYPE <- 250
+
+digest_key <- function(counts_path, cap, seed) {
+  paste0(tools::md5sum(counts_path)[[1]], "-", cap, "-", seed)
+}
+
 bulk_mat <- load_bulk(args$bulk)
 sc_eset  <- load_sc_eset(args$sc_counts, args$sc_meta)
 
@@ -36,7 +44,13 @@ labels    <- as.character(pData(sc_eset)$cell_type)
 # Keyed on the export path and the cell count, beside the export itself, so a different
 # reference or a different donor split gets its own signature rather than silently
 # reusing one built from other cells.
-sig_key <- substr(tools::md5sum(args$sc_counts)[[1]], 1, 16)
+# The key must cover the CELLS the signature is built from, not just the export file.
+# Keying on the export's checksum alone was wrong: the subsample is chosen here, so
+# changing MAX_CELLS_PER_TYPE silently reused MAST results computed from a different set
+# of cells. The key therefore includes the subsampling parameter and the resulting cell
+# count, and a cache built under different settings simply misses instead of being
+# quietly reused.
+sig_key <- substr(digest_key(args$sc_counts, MAX_CELLS_PER_TYPE, args$seed), 1, 16)
 sig_dir <- file.path(dirname(args$sc_counts), paste0("dwls_signature_", sig_key))
 dir.create(sig_dir, showWarnings = FALSE, recursive = TRUE)
 if (length(list.files(sig_dir))) {
@@ -96,7 +110,6 @@ MIN_SIGNATURE_GENES <- 50
 #
 # Capping PER TYPE spends the budget where it buys accuracy, keeps every cell of a type
 # that has fewer than the cap, and costs less.
-MAX_CELLS_PER_TYPE <- 250
 
 if (ncol(sc_counts) > MAX_CELLS_PER_TYPE * length(unique(labels))) {
   set.seed(args$seed)

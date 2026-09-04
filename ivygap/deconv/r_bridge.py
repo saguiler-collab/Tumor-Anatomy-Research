@@ -211,6 +211,28 @@ def check(method_name: str, ref_name: str) -> Availability:
     return Availability(method_name, True, f"{pkg} available with cell-level reference")
 
 
+#: Wall-clock budget per method, in seconds. A method that cannot finish inside its
+#: budget falls back to its Python reimplementation with the timeout recorded as the
+#: reason — the same disclosure path as any other R failure.
+#:
+#: This exists because DWLS can consume the entire run. buildSignatureMatrixMAST's cost
+#: is dominated by a condition-number search over gene counts, not by the cells or the
+#: differential-expression method, so neither subsampling nor swapping the DE step
+#: bounds it: one observed call ran for over two hours at 100% CPU without finishing.
+#:
+#: A benchmark that never finishes produces no result at all, which is strictly worse
+#: than a disclosed fallback. The budget is generous enough that the methods measured to
+#: complete here (MuSiC ~95 s, SCDC ~90 s, Bisque ~30 s) are nowhere near it.
+R_METHOD_TIMEOUTS: dict[str, int] = {
+    "dwls": 2400,          # 40 minutes; observed to need more, and to be unbounded
+}
+DEFAULT_R_TIMEOUT = 3600
+
+
+def timeout_for(method_name: str) -> int:
+    return R_METHOD_TIMEOUTS.get(method_name, DEFAULT_R_TIMEOUT)
+
+
 def _summarise_r_failure(exc: Exception) -> str:
     """
     A fallback reason that names the CAUSE, not just the exit code.
@@ -244,7 +266,8 @@ class RBridgeError(RuntimeError):
 
 
 def run_r_method(method_name: str, data: DeconvolutionInput,
-                 ref_name: str | None = None, timeout: int = 7200) -> pd.DataFrame:
+                 ref_name: str | None = None,
+                 timeout: int | None = None) -> pd.DataFrame:
     """
     Execute one R deconvolution method and return samples x cell_types RNA proportions.
 
@@ -286,8 +309,9 @@ def run_r_method(method_name: str, data: DeconvolutionInput,
         cfg_path = tmp / "args.json"
         cfg_path.write_text(json.dumps(payload, indent=2))
 
+        budget = timeout if timeout is not None else timeout_for(method_name)
         proc = subprocess.run(["Rscript", str(script), str(cfg_path)],
-                              capture_output=True, text=True, timeout=timeout)
+                              capture_output=True, text=True, timeout=budget)
         if proc.returncode != 0:
             raise RBridgeError(
                 f"{script.name} exited {proc.returncode}\n"
@@ -353,7 +377,13 @@ class RMethod(DeconvolutionMethod):
             if not self.allow_fallback:
                 raise
             self.implementation_ = "python-reimplementation"
-            self.fallback_reason_ = _summarise_r_failure(exc)
+            if isinstance(exc, subprocess.TimeoutExpired):
+                self.fallback_reason_ = (
+                    f"exceeded its {timeout_for(self.r_method)}s budget for the genuine "
+                    f"R package and was stopped; this is a wall-clock limit, not a "
+                    f"failure of the method")
+            else:
+                self.fallback_reason_ = _summarise_r_failure(exc)
             out = np.asarray(self.fallback._solve_all(data), dtype="float64")
             self.degenerate_ = bool(getattr(self.fallback, "degenerate_", False))
             self.degeneracy_reason_ = getattr(self.fallback, "degeneracy_reason_", None)

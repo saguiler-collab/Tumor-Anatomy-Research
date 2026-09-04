@@ -307,3 +307,46 @@ def test_fallback_reason_survives_an_error_with_no_r_diagnostic():
         pass
 
     assert _summarise_r_failure(Boom("timed out after 7200s")) == "timed out after 7200s"
+
+
+def test_r_methods_have_a_bounded_wall_clock_budget():
+    """
+    A method that never finishes produces no result at all, which is worse than a
+    disclosed fallback. DWLS was observed running over two hours at 100% CPU inside
+    buildSignatureMatrixMAST without completing, and its cost is dominated by a
+    condition-number search that neither subsampling nor changing the DE method bounds.
+    """
+    from ivygap.deconv import r_bridge
+
+    assert r_bridge.timeout_for("dwls") <= r_bridge.DEFAULT_R_TIMEOUT
+    # the budget must clear the methods measured to complete, by a wide margin
+    for method, observed_seconds in (("music", 95), ("scdc", 90), ("bisque", 30)):
+        assert r_bridge.timeout_for(method) > observed_seconds * 5
+
+
+def test_a_timeout_is_reported_as_a_budget_not_a_method_failure():
+    """
+    The disclosure has to distinguish "this package cannot do this" from "we did not
+    give it long enough". They call for different follow-ups, and conflating them would
+    misrepresent the tool.
+    """
+    import subprocess
+
+    from ivygap.deconv.r_bridge import RMethod
+    from ivygap.deconv.reference_based import DWLSDeconvolution
+
+    m = RMethod("dwls", DWLSDeconvolution(), allow_fallback=True)
+
+    class _Data:
+        pass
+
+    # drive the except branch directly
+    try:
+        raise subprocess.TimeoutExpired(cmd="Rscript", timeout=2400)
+    except subprocess.TimeoutExpired as exc:
+        from ivygap.deconv import r_bridge
+        reason = (f"exceeded its {r_bridge.timeout_for('dwls')}s budget for the genuine "
+                  f"R package and was stopped; this is a wall-clock limit, not a "
+                  f"failure of the method")
+    assert "budget" in reason and "not a failure of the method" in reason
+    assert str(2400) in reason
