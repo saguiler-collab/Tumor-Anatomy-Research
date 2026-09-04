@@ -33,7 +33,8 @@ import pandas as pd
 
 from ivygap import config
 from ivygap.anatomic import agreement, constraints as K
-from ivygap.anatomic import control_calibration
+from ivygap.anatomic import control_calibration, coverage as coverage_mod
+from ivygap.anatomic import registration
 from ivygap.anatomic.acs import score as acs_score, tumor_structure_means
 from ivygap.bench.equal_footing import (EqualFootingViolation, build_certificate,
                                         check_estimates_aligned, require_comparable)
@@ -70,6 +71,32 @@ def _load_yardsticks() -> tuple[dict[str, dict[str, float]], dict]:
                     "methods_covered": sorted(local),
                 }
     return scores, prov
+
+
+def _atlas_label_counts() -> dict | None:
+    """
+    The atlas's own annotation counts, read straight from the .h5ad.
+
+    Used to measure which populations the roster drops rather than assert it. Returns
+    None when no atlas is present, in which case coverage falls back to the static
+    statement in the frozen constraint file.
+    """
+    path = config.REFERENCE_DIR / "gbmap_core.h5ad"
+    if not path.exists():
+        return None
+    try:
+        import h5py
+        import numpy as np
+
+        with h5py.File(path, "r") as f:
+            grp = f["obs"]["annotation_level_3"]
+            cats = [c.decode() if isinstance(c, bytes) else str(c)
+                    for c in grp["categories"][:]]
+            codes = grp["codes"][:]
+        counts = np.bincount(codes[codes >= 0], minlength=len(cats))
+        return {cats[i]: int(counts[i]) for i in range(len(cats))}
+    except Exception:                                       # noqa: BLE001
+        return None
 
 
 def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
@@ -413,6 +440,18 @@ def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
         json.dumps(K.registration_payload(), indent=2))
     (out / "equal_footing_certificate.json").write_text(certificate.to_json())
     (out / "implementation_report.json").write_text(json.dumps(disclosure, indent=2))
+
+    # The three risks Anatomy_Test.md names that nothing was checking.
+    from ivygap.deconv import configs as configs_mod
+    configs_mod.write(all_methods, out / "method_configs.json", implementations)
+
+    reg = registration.status()
+    (out / "registration_status.json").write_text(reg.to_json())
+
+    cov = coverage_mod.reference_coverage(
+        sc_meta=getattr(references[0], "cell_meta_", None),
+        atlas_labels=_atlas_label_counts())
+    (out / "reference_coverage.json").write_text(json.dumps(cov, indent=2, default=str))
     if calibration:
         (out / "control_calibration.json").write_text(json.dumps(calibration, indent=2))
 
@@ -439,6 +478,8 @@ def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
         "best_acs_method": best_real,
         "best_acs": float(real_rows["acs"].max()) if not real_rows.empty else None,
         "control_verdict": control_verdict,
+        "registration": json.loads(reg.to_json()),
+        "reference_coverage": cov,
         "control_audit": control_audit,
         "control_calibration": calibration,
         "best_control_acs": best_control,

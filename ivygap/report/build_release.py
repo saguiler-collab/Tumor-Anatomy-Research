@@ -101,6 +101,20 @@ BUNDLE = [
     ("anatomic/implementation_report.json", "implementation_report.json",
      "For each of MuSiC, DWLS, Bisque and SCDC: whether the genuine R package ran, and "
      "if not, exactly why the Python reimplementation was used instead."),
+    ("anatomic/registration_status.json", "registration_status.json",
+     "Whether the constraint file is actually pre-registered. A hash proves the "
+     "constraints have not changed; it does not prove they were written before the "
+     "results, which is what the pre-registration claim rests on. UNREGISTERED is the "
+     "honest default and is stated as such."),
+    ("anatomic/method_configs.json", "method_configs.json",
+     "Every method's configuration as run, with anything differing from its own "
+     "defaults marked, and every declared departure from a tool's PUBLISHED defaults "
+     "listed with the reason and when it was decided. The fairness rule is defaults "
+     "with no per-method tuning, so a departure that is invisible is not defensible."),
+    ("anatomic/reference_coverage.json", "reference_coverage.json",
+     "What the cell-type roster drops from the atlas, counted. Dropped populations do "
+     "not leave the tissue, only the model, so their expression is absorbed by the "
+     "nearest retained type - and which constraints that lands on is reported."),
     ("anatomic/control_calibration.json", "control_calibration.json",
      "Each negative control scored over many independent draws, not once. The "
      "leaderboard's control rows are single draws; on real data the shuffled-signature "

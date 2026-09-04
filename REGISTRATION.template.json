@@ -1,0 +1,7 @@
+{
+  "_instructions": "Register the constraint_freeze_hash below on a public timestamping registry (OSF, Zenodo, or an OpenTimestamps proof), then fill in registry, url and registered_utc and rename this file to REGISTRATION.json. Do not fill it in without registering: the point is the external record, and a self-asserted date is worth nothing to a reviewer.",
+  "registry": "",
+  "url": "",
+  "registered_utc": "",
+  "constraint_freeze_hash": "2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a"
+}

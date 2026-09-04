@@ -306,3 +306,117 @@ def test_failed_samples_are_excluded_not_scored_as_violations():
     b = acs.score(dropped_est, dropped_mf, n_permutations=40, n_boot=40)
     assert a.acs == pytest.approx(b.acs, abs=1e-12)
     assert a.n_pairs == b.n_pairs
+
+
+# =============================================================================
+# the risks Anatomy_Test.md names, and whether anything actually checks them
+# =============================================================================
+
+def test_pre_registration_is_not_claimed_without_a_receipt():
+    """
+    Risk 1, circularity. The protocol's gate is "registration timestamp precedes every
+    result file". A hash proves the constraints have not changed since some moment; it
+    does not prove the moment came before the results. The honest default is
+    UNREGISTERED, and the project must not describe itself otherwise.
+    """
+    from ivygap.anatomic import registration
+
+    st = registration.status()
+    assert st.state in {"REGISTERED", "UNREGISTERED", "HASH_MISMATCH", "MALFORMED"}
+    if not registration.REGISTRATION_PATH.exists():
+        assert st.state == "UNREGISTERED"
+        assert not st.is_registered
+        assert "must not describe itself as pre-registered" in st.verdict
+
+
+def test_registration_detects_a_constraint_file_edited_after_registration(tmp_path,
+                                                                         monkeypatch):
+    """The fatal case, and the only one this can actually prove: the hash on record no
+    longer matches the live constraint file."""
+    import json
+
+    from ivygap.anatomic import registration
+
+    receipt = tmp_path / "REGISTRATION.json"
+    receipt.write_text(json.dumps({
+        "registry": "OSF", "url": "https://osf.io/xxxxx",
+        "registered_utc": "2020-01-01T00:00:00Z",
+        "constraint_freeze_hash": "0" * 64,          # not the live hash
+    }))
+    monkeypatch.setattr(registration, "REGISTRATION_PATH", receipt)
+
+    st = registration.status(check_results=False)
+    assert st.state == "HASH_MISMATCH"
+    assert not st.is_registered
+    assert "edited since registration" in st.verdict
+
+
+def test_registration_accepts_a_matching_receipt(tmp_path, monkeypatch):
+    """The positive control — without it the mismatch test could pass by always failing."""
+    import json
+
+    from ivygap.anatomic import constraints as K
+    from ivygap.anatomic import registration
+
+    receipt = tmp_path / "REGISTRATION.json"
+    receipt.write_text(json.dumps({
+        "registry": "OSF", "url": "https://osf.io/xxxxx",
+        "registered_utc": "2020-01-01T00:00:00Z",
+        "constraint_freeze_hash": K.freeze_hash(),
+    }))
+    monkeypatch.setattr(registration, "REGISTRATION_PATH", receipt)
+
+    st = registration.status(check_results=False)
+    assert st.state == "REGISTERED" and st.is_registered
+
+
+def test_every_method_config_is_recorded_with_its_deviations():
+    """
+    Risk 5, method setup fairness. "One shared signature, published configs for every
+    method, defaults from each tool's own documentation — no per-method tuning." The
+    shared signature was enforced; the configs were recorded nowhere, so "we used the
+    defaults" was an assertion a reader had to take on faith.
+    """
+    from ivygap.deconv import configs
+    from ivygap.deconv.controls import build_controls
+    from ivygap.deconv.registry import build_methods
+
+    methods = build_methods(prefer_r=False) + build_controls()
+    recs = configs.describe(methods)
+
+    assert len(recs) == len(methods)
+    assert {r["method"] for r in recs} == {m.name for m in methods}
+    for r in recs:
+        assert "parameters" in r and "differs_from_class_defaults" in r
+        # everything must be JSON-serialisable, or the artefact silently fails to write
+        import json as _json
+        _json.dumps(r)
+
+    # DWLS's departures from its PUBLISHED defaults must be declared, not implicit
+    dwls = next(r for r in recs if r["method"] == "dwls")
+    devs = dwls["declared_deviations_from_published_defaults"]
+    assert devs, "DWLS runs with opened cutoffs and a cell cap; both must be declared"
+    for d in devs:
+        assert d["published_default"] and d["used"] and d["why"]
+        assert "before any DWLS score existed" in d["decided"]
+
+
+def test_coverage_reports_what_the_roster_drops_from_the_measurement():
+    """
+    Risk 3, reference coverage. The claim must come from counting the atlas's labels,
+    not from an assumption about which populations are abundant — an earlier draft of
+    this module asserted neurons dominate the dropped set, and they do not.
+    """
+    from ivygap.anatomic.coverage import reference_coverage
+
+    labels = {"AC-like": 100, "MES-like": 100, "Mono": 500, "Neuron": 5, "OPC": 10}
+    cov = reference_coverage(atlas_labels=labels)
+
+    assert set(cov["atlas_labels_dropped"]) == {"Mono", "Neuron", "OPC"}
+    assert cov["n_cells_dropped"] == 515
+    assert cov["fraction_of_atlas_dropped"] == pytest.approx(515 / 715)
+    # the myeloid consequence is named because Mono is the largest dropped population
+    assert "Macrophage_Microglia" in cov["what_this_means"]
+    # and the neuron correction is stated from the count, not asserted
+    assert "only 5 neurons" in cov["what_this_means"]
+    assert "frozen and hashed" in cov["correction_to_the_frozen_constraint_file"]
