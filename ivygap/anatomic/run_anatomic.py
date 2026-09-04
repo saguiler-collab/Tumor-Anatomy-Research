@@ -209,7 +209,9 @@ def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
             disclosure.append({
                 "method": method.name,
                 "implementation": implementations[method.name],
-                "fallback_reason": getattr(method, "fallback_reason_", None),
+                "fallback_reason": (getattr(method, "fallback_reason_", None)
+                                    or getattr(method, "r_path_disabled_reason_", None)),
+                "r_path_disabled": bool(getattr(method, "r_path_disabled_reason_", None)),
                 "degenerate": bool(getattr(inner, "degenerate_", False)
                                    or getattr(method, "degenerate_", False)),
                 "degeneracy_reason": (getattr(inner, "degeneracy_reason_", None)

@@ -19,6 +19,37 @@ from .reference_based import (BisqueDeconvolution, DWLSDeconvolution,
 #: the four published tools, paired with the Python reimplementation used as fallback
 PUBLISHED_TOOLS = ("music", "dwls", "bisque", "scdc", "scdc_ensemble")
 
+#: Published tools whose genuine R package is not run here, with the reason.
+#:
+#: This is a disclosure, not a preference. DWLS's own signature builder
+#: (buildSignatureMatrixMAST) is dominated by a condition-number search over gene
+#: counts, and on this hardware it does not terminate predictably. Measured on the real
+#: 11,739-cell export:
+#:
+#:     3,000 cells, cold cache      1,625 s   completed
+#:     2,000 cells, per-type cap   >2,100 s   killed, no end in sight
+#:     Seurat builder instead      >2,100 s   same — the DE step is not the cost
+#:     inside the pipeline         >5,280 s   ran past a 2,400 s subprocess timeout
+#:
+#: The last line is the deciding one: a wall-clock budget was added precisely to bound
+#: this, and it did not fire, so the R path cannot be given a predictable ceiling here.
+#: A benchmark that never finishes yields nothing, which is strictly worse than a
+#: reimplementation that is labelled as one everywhere it appears.
+#:
+#: This is not a claim about DWLS. It is a claim about running DWLS's signature build on
+#: this machine, and it is recorded so a reader knows the leaderboard's `dwls` row is
+#: this project's implementation of the algorithm rather than the published package.
+R_PATH_DISABLED: dict[str, str] = {
+    "dwls": (
+        "the genuine DWLS package is installed and runs, but its signature build "
+        "(buildSignatureMatrixMAST) has no predictable ceiling on this hardware — "
+        "measured at 1,625 s in the best case and still running past a 2,400 s "
+        "subprocess timeout in the worst. Run as this project's Python "
+        "reimplementation, which is labelled as such in every artefact. Re-enable by "
+        "removing this entry once the R path can be bounded."
+    ),
+}
+
 
 def build_methods(prefer_r: bool = True, allow_r_fallback: bool = True
                   ) -> list[DeconvolutionMethod]:
@@ -47,6 +78,12 @@ def build_methods(prefer_r: bool = True, allow_r_fallback: bool = True
         ("scdc_ensemble", SCDCEnsembleDeconvolution()),
     ]
     for r_name, py_impl in published:
+        if prefer_r and r_name in R_PATH_DISABLED:
+            # Deliberately not wrapped: see R_PATH_DISABLED. The reason travels on the
+            # object so the disclosure reports it exactly as it reports a fallback.
+            py_impl.r_path_disabled_reason_ = R_PATH_DISABLED[r_name]
+            methods.append(py_impl)
+            continue
         methods.append(
             RMethod(r_name, py_impl, allow_fallback=allow_r_fallback)
             if prefer_r else py_impl

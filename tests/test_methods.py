@@ -350,3 +350,28 @@ def test_a_timeout_is_reported_as_a_budget_not_a_method_failure():
                   f"failure of the method")
     assert "budget" in reason and "not a failure of the method" in reason
     assert str(2400) in reason
+
+
+def test_a_disabled_r_path_is_disclosed_not_hidden():
+    """
+    DWLS's genuine package is installed and runs, but its signature build has no
+    predictable ceiling here — it ran past a 2,400 s subprocess timeout that existed
+    precisely to bound it. It is run as this project's reimplementation instead.
+
+    The invariant is that a reimplementation is never reported as the published package,
+    so the reason must travel to the artefacts exactly as a fallback reason does.
+    """
+    from ivygap.deconv.registry import R_PATH_DISABLED, build_methods
+
+    methods = {m.name: m for m in build_methods(prefer_r=True)}
+    for name, reason in R_PATH_DISABLED.items():
+        m = methods[name]
+        assert not hasattr(m, "fallback"), f"{name} should not be R-wrapped"
+        assert getattr(m, "r_path_disabled_reason_", None) == reason
+        # the reason must say what was measured, not merely that it was slow
+        assert "2,400" in reason or "2400" in reason
+        assert "reimplementation" in reason
+
+    # every other published tool still attempts R
+    for name in ("music", "bisque", "scdc", "scdc_ensemble"):
+        assert hasattr(methods[name], "fallback"), f"{name} lost its R path"
