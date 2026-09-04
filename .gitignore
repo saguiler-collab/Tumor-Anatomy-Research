@@ -38,3 +38,6 @@ results_superseded/*/survival/
 # installs from here when present and falls back to CRAN/GitHub otherwise. Committing
 # them would bloat the repo and blur whose code is whose.
 pipeline packages /
+
+# DWLS's cached MAST signature build, keyed on the cell export it came from.
+dwls_signature_*/

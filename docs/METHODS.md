@@ -403,6 +403,12 @@ thresholds were used. This is a deviation from the published defaults, made beca
 the pre-filtering this pipeline imposes and recorded here; it was decided from the gene
 count alone, before any DWLS score existed.
 
+A second deviation is for tractability. `buildSignatureMatrixMAST` fits a hurdle model
+per gene across every cell — 758 s on 11,739 cells x 676 genes — and the relaxation loop
+can call it more than once, in each of three pipeline stages. The signature is a
+per-cell-type summary, so cells are subsampled **within cell type** (protecting rare
+types) with a fixed seed, capped at 3,000, and the cap is printed into the run log.
+
 ### Donor leakage, in two places
 
 The R methods do not read the `ReferenceBundle`. They read the export, written from
