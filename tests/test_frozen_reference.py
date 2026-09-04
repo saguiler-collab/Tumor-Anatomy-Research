@@ -288,3 +288,151 @@ def test_restrict_to_genes_rejects_a_disjoint_gene_space(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match="shares no gene"):
         build_from_h5ad(path, name="t", restrict_to_genes=["ENSG00000000001"],
                         export=False)
+
+
+
+def test_atlas_reference_puts_marker_genes_in_the_right_column(tmp_path, monkeypatch):
+    """
+    The invariant that catches a scrambled reference.
+
+    `sparse_dataset[...]` returns rows in ascending file order, but the balanced sampler
+    returns cells grouped by (donor, cell type). Labelling the columns with the sampler's
+    order attached every cell's expression to a DIFFERENT cell's metadata — which
+    scrambles every per-type mean while leaving the column ORDER, every shape check and
+    every existing test intact.
+
+    It surfaced only as biology: 23 of 24 markers in the wrong column, Oligodendrocyte
+    peaking in microvascular proliferation, and a leaderboard where every real method
+    scored below a random control. A marker that does not top its own cell type is the
+    cheapest possible detector, so it is asserted directly.
+    """
+    import anndata
+    from scipy import sparse
+
+    from ivygap.data.reference import build_from_h5ad
+
+    pytest.importorskip("anndata")
+    _isolated_ref_dir(tmp_path, monkeypatch)
+
+    # one unmistakable marker per roster type, planted at high expression
+    markers = {"AC-like": "EGFR", "TAM-BDM": "CD68", "CD4/CD8": "CD3D",
+               "NK": "NKG7", "B cell": "CD79A", "Endothelial": "PECAM1",
+               "Oligodendrocyte": "PLP1", "Astrocyte": "AQP4"}
+    genes = list(markers.values()) + [f"BG{i}" for i in range(40)]
+    labels = list(markers)
+
+    rng = np.random.default_rng(0)
+    n_per = 40
+    obs_rows, blocks = [], []
+    for li, lab in enumerate(labels):
+        for k in range(n_per):
+            obs_rows.append({"annotation_level_3": lab,
+                             "donor_id": f"D{k % 5}"})
+        block = rng.random((n_per, len(genes))) * 2.0
+        block[:, genes.index(markers[lab])] += 500.0      # the marker dominates
+        blocks.append(block)
+
+    X = sparse.csr_matrix(np.vstack(blocks))
+    obs = pd.DataFrame(obs_rows, index=[f"c{i}" for i in range(len(obs_rows))])
+    var = pd.DataFrame(index=genes)
+    path = tmp_path / "planted.h5ad"
+    anndata.AnnData(X=X, obs=obs, var=var).write_h5ad(path)
+
+    ref, _, meta = build_from_h5ad(path, name="planted", max_cells_per_donor_type=6,
+                                   max_total_cells=10_000, export=False)
+
+    wrong = []
+    for label, gene in markers.items():
+        expected = config.GBMAP_CELL_TYPE_MAP[label]
+        if gene in ref.profile.index:
+            top = ref.profile.loc[gene].idxmax()
+            if top != expected:
+                wrong.append(f"{gene}: expected {expected}, highest in {top}")
+    assert not wrong, (
+        "the reference is scrambled — cell expression is attached to the wrong "
+        "metadata:\n  " + "\n  ".join(wrong))
+
+
+def test_atlas_reference_cells_keep_their_own_metadata(tmp_path, monkeypatch):
+    """
+    The same bug stated directly: a cell's expression and its label must travel
+    together. Planting one type at a distinctive level makes the pairing checkable
+    without going through the signature.
+    """
+    import anndata
+    from scipy import sparse
+
+    from ivygap.data.reference import build_from_h5ad
+
+    pytest.importorskip("anndata")
+    _isolated_ref_dir(tmp_path, monkeypatch)
+
+    genes = [f"G{i}" for i in range(30)]
+    rows, mat = [], []
+    rng = np.random.default_rng(1)
+    for i in range(160):
+        # Endothelial cells are 100x brighter than everything else
+        lab = "Endothelial" if i % 8 == 0 else "AC-like"
+        vec = rng.random(len(genes)) * (100.0 if lab == "Endothelial" else 1.0)
+        rows.append({"annotation_level_3": lab, "donor_id": f"D{i % 4}"})
+        mat.append(vec)
+
+    obs = pd.DataFrame(rows, index=[f"c{i}" for i in range(len(rows))])
+    path = tmp_path / "paired.h5ad"
+    anndata.AnnData(X=sparse.csr_matrix(np.vstack(mat)), obs=obs,
+                    var=pd.DataFrame(index=genes)).write_h5ad(path)
+
+    _, expr, meta = build_from_h5ad(path, name="paired", max_cells_per_donor_type=50,
+                                    max_total_cells=10_000, export=False)
+
+    endo = meta.index[meta["cell_type"] == "Endothelial"]
+    other = meta.index[meta["cell_type"] == "Tumor"]
+    assert len(endo) and len(other)
+    # after per-cell CPM every column sums to 1e6, so compare the SHAPE that survives:
+    # the planted type's cells must still be the ones labelled Endothelial
+    assert expr[endo].mean(axis=1).corr(expr[other].mean(axis=1)) < 0.999, \
+        "the two planted populations are indistinguishable; labels are not tracking cells"
+
+
+def test_cell_size_is_measured_before_normalisation(tmp_path, monkeypatch):
+    """
+    Normalising every cell to a common library size makes each type's mean total
+    identical by construction, so the cell-size factors come out all equal and
+    `to_cell_fractions` silently becomes the identity — RNA proportions get reported as
+    cell proportions. Observed on the real atlas: every factor exactly 1,000,000.
+
+    A tumour cell and a lymphocyte do not carry comparable amounts of mRNA, and
+    config.py names this correction as a requirement, so the factors must differ.
+    """
+    import anndata
+    from scipy import sparse
+
+    from ivygap.data.reference import build_from_h5ad
+
+    pytest.importorskip("anndata")
+    _isolated_ref_dir(tmp_path, monkeypatch)
+
+    genes = [f"G{i}" for i in range(24)]
+    rng = np.random.default_rng(0)
+    rows, mat = [], []
+    for i in range(120):
+        # Endothelial cells carry 20x the library size of the rest
+        lab = "Endothelial" if i % 4 == 0 else "AC-like"
+        scale = 20.0 if lab == "Endothelial" else 1.0
+        rows.append({"annotation_level_3": lab, "donor_id": f"D{i % 4}"})
+        mat.append(rng.random(len(genes)) * scale)
+
+    path = tmp_path / "sizes.h5ad"
+    anndata.AnnData(X=sparse.csr_matrix(np.vstack(mat)),
+                    obs=pd.DataFrame(rows, index=[f"c{i}" for i in range(len(rows))]),
+                    var=pd.DataFrame(index=genes)).write_h5ad(path)
+
+    ref, _, _ = build_from_h5ad(path, name="sizes", max_cells_per_donor_type=50,
+                                max_total_cells=10_000, export=False)
+
+    sizes = ref.cell_size.dropna()
+    assert sizes.nunique() > 1, (
+        f"every cell-size factor is identical ({sizes.iloc[0]:.0f}); the correction is "
+        f"a no-op and RNA proportions are being reported as cell proportions")
+    assert sizes["Endothelial"] > sizes["Tumor"] * 5, (
+        "the planted 20x library-size difference did not survive into the factors")

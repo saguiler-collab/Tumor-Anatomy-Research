@@ -484,13 +484,26 @@ def test_implementation_disclosure_names_every_python_reimplementation(
     out = run_anatomic.run(bulk, man, references=(ref,), prefer_r=True,
                            n_permutations=20, n_boot=20, verbose=False)
 
+    from ivygap.deconv.registry import R_PATH_DISABLED
+
     disclosure = {d["method"]: d for d in out["report"]["implementation_disclosure"]}
     for tool in ("music", "dwls", "bisque", "scdc", "scdc_ensemble"):
         assert tool in disclosure
-        assert disclosure[tool]["implementation"] in (
+        rec = disclosure[tool]
+
+        if tool in R_PATH_DISABLED:
+            # The R path is switched off deliberately. It must still say so, and say
+            # why — an undisclosed reimplementation under a published tool's name is
+            # the exact thing the invariant forbids.
+            assert rec.get("r_path_disabled") is True, \
+                f"{tool}'s R path is disabled but the disclosure does not say so"
+            assert rec["fallback_reason"], f"{tool} gives no reason for running as Python"
+            continue
+
+        assert rec["implementation"] in (
             "python-reimplementation", "R:MuSiC", "R:DWLS", "R:BisqueRNA", "R:SCDC")
-        if disclosure[tool]["implementation"] == "python-reimplementation":
-            assert disclosure[tool]["fallback_reason"], \
+        if rec["implementation"] == "python-reimplementation":
+            assert rec["fallback_reason"], \
                 f"{tool} fell back to Python without recording why"
 
     # scdc_ensemble with a single reference is scdc, and must say so under its own name

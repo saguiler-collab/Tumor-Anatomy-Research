@@ -51,7 +51,8 @@ def _collapse_to_roster(labels: pd.Series, mapping: dict[str, str]) -> pd.Series
 
 def build_reference(expression: pd.DataFrame, cell_meta: pd.DataFrame, name: str,
                     cells_per_donor_per_type: int = 500,
-                    seed: int = config.RANDOM_SEED) -> ReferenceBundle:
+                    seed: int = config.RANDOM_SEED,
+                    cell_totals: pd.Series | None = None) -> ReferenceBundle:
     """
     Core builder: cells -> ReferenceBundle.
 
@@ -141,7 +142,15 @@ def build_reference(expression: pd.DataFrame, cell_meta: pd.DataFrame, name: str
     # This is what converts an RNA proportion into a cell proportion. It must be
     # strictly positive; a type with no cells at all gets the roster median so the
     # division stays defined and the type is not silently amplified to infinity.
-    totals = expression.sum(axis=0)
+    # `cell_totals` is each cell's total counts BEFORE per-cell normalisation. It has to
+    # be supplied, because normalising every cell to a common library size makes every
+    # type's mean total identical by construction — the cell-size factors then come out
+    # all equal and `to_cell_fractions` silently becomes the identity, so RNA
+    # proportions are reported as cell proportions. That is exactly the correction this
+    # project's own config says it needs: a tumour cell and a lymphocyte do not carry
+    # comparable amounts of mRNA.
+    totals = (cell_totals.reindex(expression.columns) if cell_totals is not None
+              else expression.sum(axis=0))
     sizes = {}
     for ctype in types:
         sel = cell_meta.index[cell_meta["cell_type"] == ctype]
@@ -352,7 +361,20 @@ def build_from_h5ad(path: Path, name: str = "gbmap",
         else:
             gene_mask = dup_mask.copy()
 
-        rows = np.sort(obs["_row"].to_numpy())
+        # ALIGNMENT. `sparse_dataset[...]` returns rows in ascending file order, so the
+        # metadata has to be put in that same order before its index is used to label
+        # the columns. `_balanced_cell_sample` returns cells grouped by (donor, type),
+        # not sorted, so using its order here attaches every cell's expression to a
+        # DIFFERENT cell's donor and cell type — which scrambles every per-type mean
+        # while leaving the column ORDER and every shape check intact.
+        #
+        # Measured consequence when this was wrong: 23 of 24 marker genes landed in the
+        # wrong cell-type column, and the resulting leaderboard put every real method
+        # below a random control.
+        obs = obs.sort_values("_row")
+        rows = obs["_row"].to_numpy()
+        assert np.all(np.diff(rows) > 0), "row indices must be strictly increasing"
+
         X = sparse_dataset(f["X"])[rows]                  # only the chosen cells
         X = X[:, gene_mask]
         X = X.toarray() if hasattr(X, "toarray") else np.asarray(X)
@@ -361,9 +383,14 @@ def build_from_h5ad(path: Path, name: str = "gbmap",
     expression = pd.DataFrame(X.T, index=var_names[gene_mask],
                               columns=obs.index.to_numpy())
     del X
+    # Each cell's library size, captured BEFORE normalisation. Normalising first and
+    # measuring after would make every type's mean total 1e6 and turn the cell-size
+    # correction into a no-op.
+    raw_totals = expression.sum(axis=0)
+
     # Normalise each cell to a common total so a deeply sequenced cell does not
     # dominate its type's mean profile.
-    totals = expression.sum(axis=0).replace(0.0, np.nan)
+    totals = raw_totals.replace(0.0, np.nan)
     expression = (expression.div(totals, axis=1) * 1e6).fillna(0.0)
 
     meta = obs.drop(columns=["_row"])
@@ -380,7 +407,7 @@ def build_from_h5ad(path: Path, name: str = "gbmap",
         "donor_column": donor_column,
     })
 
-    ref = build_reference(expression, meta, name=name, **kwargs)
+    ref = build_reference(expression, meta, name=name, cell_totals=raw_totals, **kwargs)
     # ReferenceBundle is frozen by design, so the sampling record lives on disk rather
     # than on the object. That is the right place for it anyway: "which cells built this
     # reference" has to survive the process that built them.
