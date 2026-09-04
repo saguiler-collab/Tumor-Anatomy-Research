@@ -112,11 +112,46 @@ if (length(shared) < MIN_SIGNATURE_GENES) {
 }
 signature <- signature[shared, , drop = FALSE]
 
+# PER-SAMPLE ISOLATION.
+#
+# solveDampenedWLS succeeds on most mixtures and fails on some — the signature and the
+# solver are fine, but a particular sample can trim down to a degenerate system. Letting
+# one such sample abort the whole method sent DWLS to the Python fallback for the entire
+# cohort, and reported it as though the package could not run at all.
+#
+# A failed sample becomes NA, which is what the rest of this pipeline already means by a
+# failed sample: project_to_simplex turns it into NaN and the benchmark counts it in
+# n_failed_samples rather than scoring it. The count and the first error are printed, so
+# "DWLS failed on 3 of 200 samples" is visible rather than inferred.
+n_types <- ncol(signature)
+first_error <- NULL
+n_failed <- 0L
+
 props <- t(sapply(colnames(bulk_mat), function(s) {
-  trimmed <- trimData(signature, bulk_mat[shared, s])
-  solveDampenedWLS(trimmed$sig, trimmed$bulk)
+  out <- tryCatch({
+    trimmed <- trimData(signature, bulk_mat[shared, s])
+    solveDampenedWLS(trimmed$sig, trimmed$bulk)
+  }, error = function(e) {
+    if (is.null(first_error)) first_error <<- conditionMessage(e)
+    n_failed <<- n_failed + 1L
+    setNames(rep(NA_real_, n_types), colnames(signature))
+  })
+  # a solver that returns the wrong shape is also a failure, not something to reshape
+  if (length(out) != n_types) {
+    n_failed <<- n_failed + 1L
+    out <- setNames(rep(NA_real_, n_types), colnames(signature))
+  }
+  out
 }))
 rownames(props) <- colnames(bulk_mat)
+
+if (n_failed > 0) {
+  cat(sprintf("DWLS: %d of %d samples failed to solve and are NA. First error: %s\n",
+              n_failed, ncol(bulk_mat), first_error))
+  if (n_failed == ncol(bulk_mat)) {
+    stop(sprintf("DWLS failed on every sample. First error: %s", first_error))
+  }
+}
 
 write_proportions(props, args$cell_types, args$out)
 cat("DWLS complete\n")

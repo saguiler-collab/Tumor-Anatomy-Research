@@ -126,7 +126,10 @@ def run(expression: pd.DataFrame, meta: pd.DataFrame, prefer_r: bool = True,
                 note = ""
                 reason = getattr(method, "fallback_reason_", None)
                 if reason:
-                    note = f"  [fell back to Python: {reason[:60]}]"
+                    # 60 characters is not enough for an R error. "run_dwls.R exited
+                    # 1 | Error in h(simpleError(msg, call)) : e" named nothing, and the
+                    # cause had to be dug out of an artefact written much later.
+                    note = f"  [fell back to Python: {reason[:240]}]"
                 print(f"  {method.name:24s} {timings[method.name]:7.1f}s{note}")
         except Exception as exc:                          # noqa: BLE001
             # A method that fails is recorded as failed, never silently dropped: a
