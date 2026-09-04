@@ -136,6 +136,9 @@ def main() -> int:
     ap.add_argument("--permutations", type=int, default=10_000,
                     help="within-tumour label permutations for the ACS null "
                          "(the protocol specifies 10,000)")
+    ap.add_argument("--force-lock", action="store_true",
+                    help="take the results-tree lock even if another run appears to "
+                         "hold it. Only when you are certain that process is gone.")
     ap.add_argument("--control-draws", type=int, default=200,
                     help="independent permutations used to calibrate the "
                          "shuffled-signature control. The leaderboard's control row is "
@@ -165,6 +168,16 @@ def main() -> int:
         # overwrite the output of a real one.
         config.use_synthetic_paths()
     config.ensure_dirs()
+
+    # Exclusive from here on. Two runs writing one results tree is how this project lost
+    # a completed run once, and nearly did so a second time when a background run
+    # reported as killed had not actually died.
+    try:
+        release_lock = config.acquire_run_lock(force=args.force_lock)
+    except config.ResultsTreeBusy as exc:
+        print(f"ABORT: {exc}")
+        return 1
+
     prefer_r = not args.no_r
 
     if args.synthetic:
@@ -501,6 +514,7 @@ def main() -> int:
     if args.synthetic:
         print("run type                      : SYNTHETIC FIXTURE — not a finding")
     print(f"{'=' * 72}")
+    release_lock()
     return 0
 
 

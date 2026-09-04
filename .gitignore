@@ -41,3 +41,6 @@ pipeline packages /
 
 # DWLS's cached MAST signature build, keyed on the cell export it came from.
 dwls_signature_*/
+
+# The results-tree lock. Runtime state, never versioned.
+.run.lock

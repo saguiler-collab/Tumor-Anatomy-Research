@@ -141,3 +141,49 @@ def test_synthetic_runs_cannot_overwrite_real_results(monkeypatch):
     assert fresh.RAW_DIR == importlib.reload(cfg).RAW_DIR
 
     importlib.reload(cfg)          # leave the module as the suite found it
+
+
+# =============================================================================
+# one results tree, one run
+# -----------------------------------------------------------------------------
+# This project has been bitten twice. First a --synthetic fixture overwrote a completed
+# 30-minute real run. Then a background run reported as killed had not actually died —
+# only its wrapper had — and was still writing into the tree a fresh run had just
+# cleared. Labelling is not isolation, and neither is trusting a "killed" message.
+# =============================================================================
+
+def test_run_lock_blocks_a_second_run(tmp_path, monkeypatch):
+    from ivygap import config as cfg
+
+    monkeypatch.setattr(cfg, "RESULTS_DIR", tmp_path)
+    release = cfg.acquire_run_lock()
+    try:
+        with pytest.raises(cfg.ResultsTreeBusy, match="held by pid"):
+            cfg.acquire_run_lock()
+    finally:
+        release()
+
+
+def test_run_lock_is_reclaimed_when_the_holder_is_gone(tmp_path, monkeypatch):
+    """A crashed run must not block the next one forever — the lock records a pid, and
+    a pid that no longer exists is not a running process."""
+    import json
+
+    from ivygap import config as cfg
+
+    monkeypatch.setattr(cfg, "RESULTS_DIR", tmp_path)
+    # a pid that cannot be alive
+    (tmp_path / ".run.lock").write_text(json.dumps({"pid": 999999, "started": "x"}))
+
+    release = cfg.acquire_run_lock()          # must not raise
+    assert (tmp_path / ".run.lock").exists()
+    release()
+    assert not (tmp_path / ".run.lock").exists()
+
+
+def test_run_lock_releases_so_a_later_run_can_take_it(tmp_path, monkeypatch):
+    from ivygap import config as cfg
+
+    monkeypatch.setattr(cfg, "RESULTS_DIR", tmp_path)
+    cfg.acquire_run_lock()()                  # acquire then immediately release
+    cfg.acquire_run_lock()()                  # a second run must succeed

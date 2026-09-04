@@ -335,6 +335,68 @@ def use_synthetic_paths() -> None:
     ]
 
 
+class ResultsTreeBusy(RuntimeError):
+    """Another run holds the lock on this results tree."""
+
+
+def acquire_run_lock(force: bool = False):
+    """
+    Take an exclusive lock on the results tree, and return a release callable.
+
+    WHY THIS EXISTS
+    ---------------
+    This project has now been bitten twice by two runs sharing one output tree. The
+    first time, a `--synthetic` fixture overwrote a completed 30-minute real run, and
+    the numbers survived only because someone had copied them into RESULTS.md by hand;
+    `use_synthetic_paths()` was the fix for that one. The second time, a background run
+    reported as killed had not actually died — only its wrapper had — and it was still
+    deconvolving into the same `results/` a fresh run was writing to.
+
+    Labelling is not isolation, and neither is assuming a process is dead because
+    something said so. The lock records the pid and start time, and a stale lock whose
+    pid is gone is reclaimed automatically, so a crashed run does not block the next one.
+    """
+    import json as _json
+    import os
+    import time
+
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    lock = RESULTS_DIR / ".run.lock"
+
+    if lock.exists() and not force:
+        try:
+            info = _json.loads(lock.read_text())
+            pid = int(info.get("pid", -1))
+        except Exception:                                  # noqa: BLE001
+            info, pid = {}, -1
+        alive = False
+        if pid > 0:
+            try:
+                os.kill(pid, 0)
+                alive = True
+            except OSError:
+                alive = False
+        if alive:
+            raise ResultsTreeBusy(
+                f"{lock} is held by pid {pid}, started {info.get('started')}, "
+                f"writing to {RESULTS_DIR}. Two runs sharing one results tree is how "
+                f"this project lost a completed run once already. Stop that process, or "
+                f"pass --force-lock if you are certain it is gone."
+            )
+        lock.unlink(missing_ok=True)
+
+    lock.write_text(_json.dumps({
+        "pid": os.getpid(),
+        "started": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "results_dir": str(RESULTS_DIR),
+    }, indent=2))
+
+    def release() -> None:
+        lock.unlink(missing_ok=True)
+
+    return release
+
+
 def ensure_dirs() -> None:
     """Create every output directory. Safe to call repeatedly."""
     for d in ALL_OUTPUT_DIRS:
