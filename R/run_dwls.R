@@ -80,22 +80,56 @@ if (length(list.files(sig_dir))) {
 # the method is named for, and the part this benchmark is comparing. Recorded as a
 # deviation in docs/METHODS.md.
 MIN_SIGNATURE_GENES <- 50
-MAX_SIGNATURE_CELLS <- 3000
 
-if (ncol(sc_counts) > MAX_SIGNATURE_CELLS) {
+# CELLS PER TYPE, NOT A SHARE OF THE WHOLE.
+#
+# buildSignatureMatrixMAST fits a hurdle model per gene across every cell, and its cost
+# tracks the cell count: 758 s on 11,739 cells, and ~30 minutes again whenever the gene
+# set changes and the cache misses.
+#
+# An earlier version took a proportional subsample of the whole reference. That is the
+# wrong shape twice over. A signature is a per-cell-type summary, so the type
+# PROPORTIONS are irrelevant to it — what matters is how many cells estimate each type.
+# Sampling proportionally keeps the abundant types abundant and leaves the rare ones
+# thin, which is exactly backwards: Astrocyte, at ~1% of cells, would have been
+# estimated from a handful.
+#
+# Capping PER TYPE spends the budget where it buys accuracy, keeps every cell of a type
+# that has fewer than the cap, and costs less.
+MAX_CELLS_PER_TYPE <- 250
+
+if (ncol(sc_counts) > MAX_CELLS_PER_TYPE * length(unique(labels))) {
   set.seed(args$seed)
-  keep_frac <- MAX_SIGNATURE_CELLS / ncol(sc_counts)
   idx <- unlist(lapply(split(seq_along(labels), labels), function(ix) {
-    k <- max(1L, min(length(ix), as.integer(round(length(ix) * keep_frac))))
-    if (k < length(ix)) sample(ix, k) else ix
+    if (length(ix) > MAX_CELLS_PER_TYPE) sample(ix, MAX_CELLS_PER_TYPE) else ix
   }), use.names = FALSE)
   idx <- sort(idx)
-  cat(sprintf("DWLS: subsampling %d of %d cells for the signature build (within cell type)\n",
-              length(idx), ncol(sc_counts)))
+  kept <- table(labels[idx])
+  cat(sprintf("DWLS: %d of %d cells for the signature build, <= %d per type (%s)\n",
+              length(idx), ncol(sc_counts), MAX_CELLS_PER_TYPE,
+              paste(sprintf("%s=%d", names(kept), as.integer(kept)), collapse = ", ")))
   sc_counts <- sc_counts[, idx, drop = FALSE]
   labels    <- labels[idx]
 }
 
+# WHICH OF DWLS'S TWO SIGNATURE BUILDERS
+# --------------------------------------
+# The package ships buildSignatureMatrixMAST and buildSignatureMatrixUsingSeurat. They
+# are alternatives offered by the authors, not a published method and a workaround.
+#
+# MAST fits a hurdle model per gene per cell type and is the expensive one: 758 s on
+# 11,739 cells, and still ~30 minutes after capping to 2,000 — the cost is dominated by
+# the model fitting, not the cell count, so subsampling does not rescue it. The pipeline
+# needs a signature per gene set and there are two gene sets per run, so MAST costs
+# roughly an hour of every run for one method's preprocessing.
+#
+# The Seurat builder was tried as a cheaper alternative and is NOT faster: the cost is
+# dominated by the condition-number search over gene counts, which both builders share,
+# not by the differential-expression step. MAST is kept because it is the one verified
+# end to end here (exit 0, valid proportions, on the real 11,739-cell export).
+#
+# The cutoffs are left fully open for the reason above: this pipeline has already
+# selected the informative genes, identically for every method.
 signature <- buildSignatureMatrixMAST(
   scdata = sc_counts, id = labels, path = sig_dir,
   diff.cutoff = 0, pval.cutoff = 1

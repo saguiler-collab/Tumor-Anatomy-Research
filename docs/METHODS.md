@@ -404,10 +404,30 @@ the pre-filtering this pipeline imposes and recorded here; it was decided from t
 count alone, before any DWLS score existed.
 
 A second deviation is for tractability. `buildSignatureMatrixMAST` fits a hurdle model
-per gene across every cell — 758 s on 11,739 cells x 676 genes — and the relaxation loop
-can call it more than once, in each of three pipeline stages. The signature is a
-per-cell-type summary, so cells are subsampled **within cell type** (protecting rare
-types) with a fixed seed, capped at 3,000, and the cap is printed into the run log.
+per gene across every cell — 758 s on 11,739 cells — and the pipeline calls DWLS in three
+stages. The signature does not depend on the bulk, so it is cached beside the export and
+keyed on that export's checksum; a different reference or donor split gets its own.
+
+The cost is stubborn. Capping cells to 2,000 still took ~35 minutes, and DWLS's other
+signature builder (`buildSignatureMatrixUsingSeurat`) took the same — because the
+dominant cost is the condition-number search over gene counts that both builders share,
+not the differential-expression step. MAST is kept as the one verified end to end here.
+A run therefore spends roughly half an hour per gene set on this one method's
+preprocessing, and that is a property of DWLS on this hardware, not something the
+pipeline can tune away.
+
+Cells are capped **per cell type** (250), not as a share of the whole. A signature is a
+per-cell-type summary, so type proportions are irrelevant to it — what matters is how
+many cells estimate each type. A proportional subsample keeps abundant types abundant
+and leaves rare ones thin, which is backwards: Astrocyte, at ~1% of cells, would have
+been estimated from a handful. Capping per type spends the budget where it buys accuracy,
+keeps every cell of any type below the cap, and costs less. The realised counts are
+printed into the run log.
+
+A third: a sample that fails to solve becomes NA rather than aborting the method. DWLS
+built its signature successfully and then failed on particular mixtures with
+`NA/NaN argument`; one such sample was losing the whole cohort to the Python fallback.
+NA is already what this pipeline means by a failed sample, and the count is reported.
 
 ### Donor leakage, in two places
 
