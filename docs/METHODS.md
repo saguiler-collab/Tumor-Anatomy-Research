@@ -471,6 +471,70 @@ omitted the one detail that makes it actionable. R writes `Error in <call> : <me
 so that line is now lifted out. The difference is between "music fell back" and "music
 fell back because `music_prop()` wanted `bulk.mtx`".
 
+## CIBERSORTx, and what of it is reproducible here
+
+`Anatomy_Test.md` names CIBERSORTx among the methods to score. Two things about it are
+worth separating, because conflating them is how a leaderboard row becomes a false claim.
+
+**The base algorithm was already in this project.** CIBERSORT's core is nu-support-vector
+regression on standardised inputs, sweeping nu over {0.25, 0.5, 0.75}, keeping the fit
+with the lowest reconstruction error, clipping negative coefficients and renormalising.
+That is precisely what `SVRDeconvolution` does. So `svr` on this leaderboard **is** the
+published CIBERSORT algorithm, and `CIBERSORTxDeconvolution` inherits it rather than
+shipping a near-identical duplicate row.
+
+**What CIBERSORTx adds is batch correction**, and that is what the new entry implements.
+From the Methods of Newman et al. (2019), *Nat Biotechnol* 37:773, B-mode is:
+
+1. deconvolve the mixtures `M` against signature `S` to get fractions `F`;
+2. build reconstructed mixtures `M* = S F` in non-log linear space;
+3. log2-adjust `M` and `M*` and apply ComBat between them;
+4. re-estimate fractions from the adjusted mixtures in linear space.
+
+This is not decoration on this cohort. The paper states that with signature matrices from
+droplet/UMI platforms, "deconvolution may fail ... cell types that are expected to be
+present are observed to 'drop out'". This project deconvolves 2014 laser-capture bulk
+against a 10x Chromium atlas — the exact cross-platform gap the paper describes — so a
+method that models it is testing something none of the others can.
+
+The paper's floor of three mixture samples (ten recommended) is enforced: below it the
+method reports the uncorrected fit and records why.
+
+### What is deliberately not implemented
+
+- **S-mode**, which adjusts the signature rather than the mixtures and is the mode the
+  paper recommends for droplet-derived signatures. Its algorithm lives in Supplementary
+  Note 1, which is not in the PDF available here. Guessing at it would produce something
+  that is not S-mode wearing S-mode's name.
+- **The hosted CIBERSORTx service**, which is web- and licence-gated. No number in this
+  project comes from Stanford's implementation, and the leaderboard row is labelled as
+  this project's implementation of the published B-mode procedure.
+- **ComBat via `sva`**. Neither `sva` (R) nor `pycombat` (Python) is installed here, and
+  adding a Bioconductor dependency for one matrix operation is a worse trade than the
+  fifty lines the parametric adjustment actually is. It is written out in
+  `classical.py::_combat_adjust`, tested against a planted batch shift (gap 3.02 -> 0.04)
+  and against the one-batch no-op case, and labelled as a reimplementation.
+
+## EcoTyper — assessed, and out of scope for the leaderboard
+
+EcoTyper was supplied alongside the deconvolution packages. It is not scored, and the
+reason is not effort.
+
+EcoTyper recovers **cell states and multicellular ecotypes** — recurrent transcriptional
+programs within a cell type, and their co-association patterns. It does not estimate the
+roster fractions this study's constraints are written about. All seven constraints are
+ordinal claims about the abundance of a cell TYPE across anatomic structures; EcoTyper
+answers a different question, about which state a cell type is in. There is no honest way
+to score C1-C7 on its output, and inventing a mapping from states to type fractions would
+manufacture a composition it never estimated — the same error the quanTIseq driver avoids
+by returning NaN for types TIL10 cannot see.
+
+Where it would genuinely fit is a **separate analysis**: whether ecotypes differ across
+the five anatomic structures. That is a real and interesting question about Ivy GAP, and
+EcoTyper's carcinoma-discovery models could be recovered on this bulk to ask it. It is
+not the Anatomy Test, it would need its own pre-registered predictions, and folding it
+into the ACS leaderboard would misrepresent both tools.
+
 ## Reading a real single-cell atlas
 
 `build_from_h5ad` called `X.toarray()` unconditionally. Core GBmap is 338,564 cells x

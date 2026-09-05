@@ -377,3 +377,89 @@ def test_a_disabled_r_path_is_disclosed_not_hidden():
     # every other published tool still attempts R
     for name in ("music", "bisque", "scdc", "scdc_ensemble"):
         assert hasattr(methods[name], "fallback"), f"{name} lost its R path"
+
+
+# =============================================================================
+# CIBERSORTx B-mode
+# =============================================================================
+
+def test_combat_removes_a_planted_batch_shift():
+    """The batch adjustment must actually remove a batch effect, or B-mode is a no-op
+    dressed as a correction."""
+    import numpy as np
+
+    from ivygap.deconv.classical import _combat_adjust
+
+    rng = np.random.default_rng(0)
+    x = rng.normal(0, 1, (200, 20))
+    x[:, 10:] += 3.0
+    batch = np.array(["A"] * 10 + ["B"] * 10)
+
+    before = abs(x[:, :10].mean() - x[:, 10:].mean())
+    after = abs(_combat_adjust(x, batch)[:, :10].mean()
+                - _combat_adjust(x, batch)[:, 10:].mean())
+    assert before > 2.5
+    assert after < before * 0.1, f"batch gap {before:.2f} -> {after:.2f}, not removed"
+
+
+def test_combat_is_a_noop_with_one_batch():
+    """The negative control: nothing to correct means nothing changes."""
+    import numpy as np
+
+    from ivygap.deconv.classical import _combat_adjust
+
+    rng = np.random.default_rng(1)
+    x = rng.normal(0, 1, (50, 8))
+    out = _combat_adjust(x, np.array(["A"] * 8))
+    assert np.allclose(out, x)
+
+
+def test_cibersortx_respects_the_papers_sample_floor():
+    """
+    Newman et al. require at least three mixture samples for batch correction and
+    recommend ten. Below the floor the method must report the uncorrected fit and say
+    so, rather than silently 'correcting' on too little data.
+    """
+    import numpy as np
+    import pandas as pd
+
+    from ivygap import config
+    from ivygap.data.reference import load_frozen_reference
+    from ivygap.deconv.base import DeconvolutionInput
+    from ivygap.deconv.classical import CIBERSORTxDeconvolution
+
+    frozen = load_frozen_reference()
+    genes = list(frozen.profile.index)[:150]
+    ref = frozen.subset_genes(genes)
+    P = ref.profile.to_numpy(dtype="float64")
+    rng = np.random.default_rng(0)
+
+    def problem(n):
+        B = P @ np.array([rng.dirichlet(np.ones(8)) for _ in range(n)]).T
+        bulk = pd.DataFrame(B, index=genes, columns=[f"S{i}" for i in range(n)])
+        man = pd.DataFrame({"patient_id": [f"T{i}" for i in range(n)],
+                            "structure": ["CT"] * n}, index=bulk.columns)
+        return DeconvolutionInput(bulk=bulk, references=(ref,), manifest=man)
+
+    below = CIBERSORTxDeconvolution()
+    below.fit_predict(problem(2))
+    assert below.batch_corrected_ is False
+    assert "at least 3" in below.batch_skip_reason_
+
+    above = CIBERSORTxDeconvolution()
+    out = above.fit_predict(problem(6))
+    assert above.batch_corrected_ is True
+    assert above.batch_skip_reason_ is None
+    assert np.allclose(out.sum(axis=1).dropna(), 1.0, atol=1e-6)
+
+
+def test_cibersortx_shares_ciberSORTs_base_solver():
+    """
+    CIBERSORT's published core is nu-SVR on standardised inputs over nu in
+    {0.25, 0.5, 0.75}. This project's `svr` already is that, so CIBERSORTx inherits it
+    rather than shipping a near-identical duplicate row on the leaderboard.
+    """
+    from ivygap.deconv.classical import CIBERSORTxDeconvolution, SVRDeconvolution
+
+    assert issubclass(CIBERSORTxDeconvolution, SVRDeconvolution)
+    assert CIBERSORTxDeconvolution.NU_GRID == (0.25, 0.5, 0.75)

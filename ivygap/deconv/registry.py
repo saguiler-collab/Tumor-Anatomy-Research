@@ -9,7 +9,8 @@ from __future__ import annotations
 
 from .base import DeconvolutionMethod
 from .bayesian import BayesianDeconvolution, HierarchicalBayesianDeconvolution
-from .classical import NNLSDeconvolution, SVRDeconvolution
+from .classical import (CIBERSORTxDeconvolution, NNLSDeconvolution,
+                        SVRDeconvolution)
 from .elastic_net import ElasticNetDeconvolution
 from .r_bridge import RMethod, check as r_check
 from .reference_based import (BayesPrismDeconvolution, BisqueDeconvolution,
@@ -51,6 +52,12 @@ def build_methods(prefer_r: bool = True, allow_r_fallback: bool = True
     methods: list[DeconvolutionMethod] = [
         NNLSDeconvolution(),
         SVRDeconvolution(),
+        # CIBERSORTx B-mode. Its base solver IS SVRDeconvolution — CIBERSORT's published
+        # core — so this entry is the batch-correction layer on top, which is the thing
+        # the 2019 paper actually contributes and the thing this cohort needs: a 10x
+        # droplet atlas deconvolving 2014 laser-capture bulk is the exact cross-platform
+        # gap the paper says causes cell types to drop out.
+        CIBERSORTxDeconvolution(),
         ElasticNetDeconvolution(),
         BayesianDeconvolution(),
         HierarchicalBayesianDeconvolution(),
