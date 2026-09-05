@@ -12,12 +12,14 @@ from .bayesian import BayesianDeconvolution, HierarchicalBayesianDeconvolution
 from .classical import NNLSDeconvolution, SVRDeconvolution
 from .elastic_net import ElasticNetDeconvolution
 from .r_bridge import RMethod, check as r_check
-from .reference_based import (BisqueDeconvolution, DWLSDeconvolution,
-                              MuSiCDeconvolution, SCDCDeconvolution,
-                              SCDCEnsembleDeconvolution)
+from .reference_based import (BayesPrismDeconvolution, BisqueDeconvolution,
+                              DWLSDeconvolution, EPICDeconvolution,
+                              MuSiCDeconvolution, QuanTIseqDeconvolution,
+                              SCDCDeconvolution, SCDCEnsembleDeconvolution)
 
 #: the four published tools, paired with the Python reimplementation used as fallback
-PUBLISHED_TOOLS = ("music", "dwls", "bisque", "scdc", "scdc_ensemble")
+PUBLISHED_TOOLS = ("music", "dwls", "bisque", "scdc", "scdc_ensemble",
+                   "epic", "quantiseq", "bayesprism")
 
 #: Published tools whose genuine R package is not run here, with the reason.
 #:
@@ -60,6 +62,12 @@ def build_methods(prefer_r: bool = True, allow_r_fallback: bool = True
         ("bisque", BisqueDeconvolution()),
         ("scdc", SCDCDeconvolution()),
         ("scdc_ensemble", SCDCEnsembleDeconvolution()),
+        # Named in Anatomy_Test.md's method list. EPIC and quanTIseq consume a signature
+        # matrix rather than cells, so unlike the four above they can run without a
+        # cell-level export; BayesPrism consumes cells.
+        ("epic", EPICDeconvolution()),
+        ("quantiseq", QuanTIseqDeconvolution()),
+        ("bayesprism", BayesPrismDeconvolution()),
     ]
     for r_name, py_impl in published:
         if prefer_r and r_name in R_PATH_DISABLED:

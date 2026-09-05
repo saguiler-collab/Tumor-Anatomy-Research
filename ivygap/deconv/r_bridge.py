@@ -56,6 +56,9 @@ R_PACKAGES = {
     "bisque": "BisqueRNA",
     "scdc": "SCDC",
     "scdc_ensemble": "SCDC",
+    "epic": "EPIC",
+    "quantiseq": "quantiseqr",
+    "bayesprism": "BayesPrism",
 }
 
 
@@ -110,6 +113,19 @@ def export_for_genes(ref_name: str, genes) -> tuple[Path, Path]:
     import hashlib
 
     expression, meta = _CELL_SOURCE[ref_name]
+
+    # Align metadata to the cells that actually have expression. The pipeline registers
+    # matched pairs, but a caller need not, and a mismatch surfaces far away as a
+    # KeyError naming cell barcodes — which says nothing about the cause.
+    shared_cells = [c for c in expression.columns if c in meta.index]
+    if not shared_cells:
+        raise RBridgeError(
+            f"no cell ids shared between the expression and metadata registered for "
+            f"{ref_name!r} ({expression.shape[1]} cells vs {len(meta)} metadata rows)")
+    if len(shared_cells) < expression.shape[1]:
+        expression = expression[shared_cells]
+    meta = meta.loc[shared_cells]
+
     genes = [g for g in genes if g in expression.index]
     if not genes:
         raise RBridgeError(
@@ -202,6 +218,11 @@ def check(method_name: str, ref_name: str) -> Availability:
         return Availability(method_name, False, f"R package {pkg} is not installed")
     # Either a registered in-memory cell source (from which a per-gene-set export is
     # written on demand) or a pre-written full export will do.
+    # EPIC and quanTIseq consume a signature matrix, which every run already has, so
+    # they do not require a cell-level export the way MuSiC/Bisque/SCDC/BayesPrism do.
+    if method_name in SIGNATURE_ONLY_METHODS:
+        return Availability(method_name, True, f"{pkg} available (signature-based)")
+
     counts, meta = sc_export_paths(ref_name)
     if not has_cell_source(ref_name) and not (counts.exists() and meta.exists()):
         return Availability(
@@ -225,11 +246,16 @@ def check(method_name: str, ref_name: str) -> Availability:
 #: A benchmark that never finishes produces no result at all, which is strictly worse
 #: than a disclosed fallback. The budget is generous enough that the methods measured to
 #: complete here (MuSiC ~95 s, SCDC ~90 s, Bisque ~30 s) are nowhere near it.
+#: Methods that consume a reference PROFILE rather than individual cells.
+SIGNATURE_ONLY_METHODS = frozenset({"epic", "quantiseq"})
+
 R_METHOD_TIMEOUTS: dict[str, int] = {
     # 40 minutes. Measured: DWLS's signature build completed in 1,625 s at best on this
     # data, so the budget clears a successful run with room, and bounds the case where
     # the condition-number search does not converge.
     "dwls": 2400,
+    # BayesPrism's Gibbs sampler scales with cells x genes x types.
+    "bayesprism": 2400,
 }
 DEFAULT_R_TIMEOUT = 3600
 
@@ -327,7 +353,9 @@ def run_r_method(method_name: str, data: DeconvolutionInput,
     # Restrict the export to the genes the method is actually given. See the note on
     # export_for_genes: the full-reference export is ~49 minutes and 1.1 GB, and none of
     # it beyond `data.bulk`'s gene space is ever used.
-    if has_cell_source(ref_name):
+    if method_name in SIGNATURE_ONLY_METHODS:
+        counts_path = meta_path = Path("")          # unused by these drivers
+    elif has_cell_source(ref_name):
         counts_path, meta_path = export_for_genes(ref_name, list(data.bulk.index))
     else:
         counts_path, meta_path = sc_export_paths(ref_name)

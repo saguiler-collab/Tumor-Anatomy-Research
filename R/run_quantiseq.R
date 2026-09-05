@@ -37,8 +37,12 @@ bulk_mat <- load_bulk(args$bulk)
 
 # quanTIseq expects a gene-symbol x sample matrix on a linear scale, which is what this
 # pipeline carries throughout (config.NORMALIZATION = "cpm", never log).
-est <- run_quantiseq(bulk_mat, signame = "TIL10", is_arraydata = FALSE,
-                     is_tumordata = TRUE, scale_mrna = TRUE)
+# Argument names verified against quantiseqr::run_quantiseq in the installed version:
+# signature_matrix / scale_mRNA, not signame / scale_mrna. Guessing them cost a run.
+est <- run_quantiseq(as.data.frame(bulk_mat),
+                     signature_matrix = "TIL10",
+                     is_arraydata = FALSE, is_tumordata = TRUE,
+                     scale_mRNA = TRUE, method = "lsei")
 
 # quantiseqr returns a data.frame with a Sample column plus one column per population.
 rownames(est) <- est$Sample

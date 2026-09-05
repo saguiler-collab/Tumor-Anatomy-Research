@@ -635,8 +635,13 @@ def test_leaderboard_marks_degeneracy_and_ties(tmp_path, monkeypatch):
     assert bool(lb.loc["scdc_ensemble", "degenerate"])
     assert bool(lb.loc["bisque", "degenerate"])
 
-    # a tie group, when it exists, names every member including the row itself
-    tied = lb[(lb["acs_tie_group"] != "") & (~lb["is_control"])]
+    # The column must survive a CSV round-trip: an empty string reads back as NaN, so
+    # "-" marks "no tie" explicitly and every value is a string.
+    groups = lb["acs_tie_group"]
+    assert groups.notna().all(), "acs_tie_group round-tripped to NaN"
+    assert groups.map(lambda v: isinstance(v, str)).all()
+
+    tied = lb[(groups != "-") & (~lb["is_control"])]
     for m, r in tied.iterrows():
         members = r["acs_tie_group"].split(",")
         assert m in members

@@ -485,3 +485,112 @@ class SCDCEnsembleDeconvolution(SCDCDeconvolution):
 
         self.ensemble_weights_ = {r.name: float(w) for r, w in zip(refs, best_w)}
         return sum(best_w[i] * per_ref[i] for i in range(len(refs)))
+
+
+
+class EPICDeconvolution(DeconvolutionMethod):
+    """
+    EPIC: constrained least squares with an explicit "other cells" compartment.
+
+    The distinguishing property here is that EPIC does not have to spend every unit of
+    expression on a roster column. This roster drops ~7% of the atlas's cells, so a
+    method that can attribute some signal to "something I do not model" is describing
+    the data rather than being forced to misattribute it.
+
+    This Python path is the fallback; the genuine package runs through R/run_epic.R.
+    """
+
+    name = "epic"
+    family = "reference-based"
+
+    def __init__(self, other_weight: float = 1.0, **params):
+        super().__init__(other_weight=other_weight, **params)
+        self.other_weight = other_weight
+
+    def _solve_one(self, S: np.ndarray, b: np.ndarray) -> np.ndarray:
+        # An extra column standing for unmodelled populations, at the reference's mean
+        # scale so it competes on equal terms rather than soaking up everything.
+        other = S.mean(axis=1, keepdims=True) * self.other_weight
+        aug = np.hstack([S, other])
+        w, _ = nnls(aug, b)
+        return w[:-1]                       # the other-cells share is not a roster type
+
+    def _solve_all(self, data: DeconvolutionInput) -> np.ndarray:
+        S, B = self._as_arrays(data)
+        return np.vstack([self._solve_one(S, B[:, j]) for j in range(B.shape[1])])
+
+
+class QuanTIseqDeconvolution(DeconvolutionMethod):
+    """
+    quanTIseq, in the only honest form this project can give it.
+
+    quanTIseq's TIL10 signature covers immune populations. Four of this roster's eight
+    types have no quanTIseq equivalent — Tumor, Endothelial, Oligodendrocyte, Astrocyte —
+    so it can speak to C5 and C6 and to nothing else.
+
+    Those types are returned as NaN rather than zero. Zero would be a claim the method
+    never made, and would fail it on five constraints it was never shown; NaN is already
+    what this pipeline means by "not estimated", and the ACS scorer excludes such pairs
+    from numerator and denominator alike.
+    """
+
+    name = "quantiseq"
+    family = "reference-based"
+
+    #: roster types TIL10 can speak to
+    COVERED = ("T_cell", "NK_cell", "B_cell", "Macrophage_Microglia")
+
+    def _solve_all(self, data: DeconvolutionInput) -> np.ndarray:
+        S, B = self._as_arrays(data)
+        types = list(data.cell_types)
+        keep = [i for i, t in enumerate(types) if t in self.COVERED]
+
+        out = np.full((B.shape[1], len(types)), np.nan)
+        S_sub = S[:, keep]
+        for j in range(B.shape[1]):
+            w, _ = nnls(S_sub, B[:, j])
+            out[j, keep] = w
+        return out
+
+
+class BayesPrismDeconvolution(DeconvolutionMethod):
+    """
+    A Bayesian reference-updating solver, standing in for BayesPrism.
+
+    The published method's distinguishing move is that it updates the reference toward
+    the bulk instead of holding it fixed, which is the right shape for this data: a
+    modern droplet atlas against 2014 laser-capture bulk, where reference mismatch
+    dominates. This reimplementation keeps that shape — alternate between solving for
+    fractions and shrinking the reference toward what the bulk implies — and is reported
+    as a reimplementation, never as BayesPrism.
+    """
+
+    name = "bayesprism"
+    family = "bayesian"
+
+    def __init__(self, n_iter: int = 12, shrink: float = 0.25, **params):
+        super().__init__(n_iter=n_iter, shrink=shrink, **params)
+        self.n_iter = n_iter
+        self.shrink = shrink
+
+    def _solve_all(self, data: DeconvolutionInput) -> np.ndarray:
+        S0, B = self._as_arrays(data)
+        out = []
+        for j in range(B.shape[1]):
+            b = B[:, j]
+            S = S0.copy()
+            w, _ = nnls(S, b)
+            for _ in range(self.n_iter):
+                fit = S @ w
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    ratio = np.where(fit > 0, b / np.maximum(fit, 1e-12), 1.0)
+                ratio = np.clip(ratio, 0.2, 5.0)
+                # move the reference a fraction of the way toward what the bulk implies
+                S = S * (1.0 - self.shrink) + (S * ratio[:, None]) * self.shrink
+                w_new, _ = nnls(S, b)
+                if np.allclose(w_new, w, atol=1e-6):
+                    w = w_new
+                    break
+                w = w_new
+            out.append(w)
+        return np.vstack(out)

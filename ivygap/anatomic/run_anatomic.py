@@ -272,9 +272,12 @@ def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
     groups: dict[float, list[str]] = {}
     for m, v in leaderboard.loc[~leaderboard["is_control"], "acs"].items():
         groups.setdefault(round(float(v), 12), []).append(str(m))
+    # "-" rather than "" for no tie: pandas writes an empty string and reads it back as
+    # NaN, so a consumer doing .split(",") on the column gets an AttributeError on
+    # exactly the rows that are fine. An explicit sentinel round-trips.
     leaderboard["acs_tie_group"] = [
         ",".join(groups[round(float(v), 12)])
-        if (not c and len(groups.get(round(float(v), 12), [])) > 1) else ""
+        if (not c and len(groups.get(round(float(v), 12), [])) > 1) else "-"
         for v, c in zip(leaderboard["acs"], leaderboard["is_control"])
     ]
 
