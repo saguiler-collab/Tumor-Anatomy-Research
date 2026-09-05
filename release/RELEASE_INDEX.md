@@ -1,8 +1,9 @@
 # Release bundle — Ivy GAP GBM anatomic deconvolution
 
-Built 2026-09-03 · run type: **real data**
+Built 2026-09-04 · run type: **real data**
 
-**No method is frozen by this run.** Method selection requires known-truth mixtures, which require cell-level single-cell data; none was available, so the benchmark stage did not run. The ACS leaderboard below still measures real tissue, but ACS is the object under test and is never used to select.
+Selected method: **music**
+Selected on: mean absolute error on primary cell types, donor-held-out pseudobulk, aggregated donor-equally
 
 ## Files
 
@@ -14,10 +15,17 @@ Built 2026-09-03 · run type: **real data**
 - `constraint_file.json` — The frozen, pre-registered constraint file: C1-C7 with directions, weights, histological citations, the declared T-cell exclusion, and the facts this signature is structurally unable to test. Its SHA-256 is the registration hash.
 - `anatomic_report.json` — Machine-readable summary, including the control verdict and the note that ACS was never used to select a method.
 - `composition.csv` — Composition per (tumour, anatomic structure) from the best-scoring real method. One row per tumour per structure - already collapsed, so uneven block counts cannot skew anything downstream.
+- `benchmark_summary.csv` — Per-method accuracy on donor-held-out pseudobulk with known composition. This is the ground-truth ranking the agreement test correlates ACS against, and the only evidence any method is selected on.
+- `benchmark_per_type.csv` — Per method, per cell type: MAE, RMSE, bias, correlation, the fraction invented where the type is truly absent, and the limit of detection.
+- `benchmark_per_niche.csv` — The same accuracy broken down by which anatomic niche each synthetic mixture was shaped after. A method can win overall and still fail at the leading edge.
+- `uncertainty_calibration.csv` — For every method reporting credible intervals: how often the interval actually contained the truth, against a nominal 0.95. Read before quoting any interval.
 - `method_selection_decision.json` — Which method was selected, on what criterion, with the full ranking - and the explicit record that survival and the anatomic labels were not used.
-- `gene_space.json` — Which genes every method was given, how many were shared with the frozen signature, and why the subset was taken. Part of the equal-footing claim: the gene set is chosen once, for everyone, before any method runs.
 - `equal_footing_certificate.json` — Content hashes proving every method and control was given identical inputs, identical tumours and identical folds.
 - `implementation_report.json` — For each of MuSiC, DWLS, Bisque and SCDC: whether the genuine R package ran, and if not, exactly why the Python reimplementation was used instead.
+- `registration_status.json` — Whether the constraint file is actually pre-registered. A hash proves the constraints have not changed; it does not prove they were written before the results, which is what the pre-registration claim rests on. UNREGISTERED is the honest default and is stated as such.
+- `method_configs.json` — Every method's configuration as run, with anything differing from its own defaults marked, and every declared departure from a tool's PUBLISHED defaults listed with the reason and when it was decided. The fairness rule is defaults with no per-method tuning, so a departure that is invisible is not defensible.
+- `reference_coverage.json` — What the cell-type roster drops from the atlas, counted. Dropped populations do not leave the tissue, only the model, so their expression is absorbed by the nearest retained type - and which constraints that lands on is reported.
+- `control_calibration.json` — Each negative control scored over many independent draws, not once. The leaderboard's control rows are single draws; on real data the shuffled-signature control has a standard deviation of about 0.16 against a real-method spread of 0.29, so one draw cannot establish that the controls behave in either direction. Read this before reading a control row.
 - `acs_per_tumor.csv` — Every method x every tumour: which constraints that tumour could evaluate and which it satisfied. The protocol asks for per-tumour results explicitly, because with 9 evaluable tumours a pooled ACS can be carried by one or two of them and the pooled number alone cannot show that.
 - `acs_cohort_sensitivity.csv` — ACS for each method when only the 122 anatomic samples are deconvolved, beside ACS when all 270 archive samples are, with the rank change. Several methods use cross-sample statistics, so this measures how much of the leaderboard is a property of the method rather than of the cohort it was handed.
 - `data_reconciliation.json` — Protocol step 3's gate: our parse of the frozen 2014-11-25 archive checked sample-by-sample and structure-by-structure against the Allen Institute portal's own live metadata export, which is produced independently of this pipeline.
@@ -32,12 +40,7 @@ Built 2026-09-03 · run type: **real data**
 
 These stages had not produced output when the bundle was built:
 
-- `benchmark/simulated_yardstick_accuracy.csv`
-- `benchmark/simulated_yardstick_provenance.json`
-- `benchmark/benchmark_summary.csv`
-- `benchmark/benchmark_per_type.csv`
-- `benchmark/benchmark_per_niche.csv`
-- `benchmark/uncertainty_calibration.csv`
+- `benchmark/gene_space.json`
 
 ## Survival
 
@@ -45,9 +48,14 @@ BLOCKED: tumor_details.csv is present and joins correctly, but it publishes surv
 
 ## The primary result
 
-NOT YET COMPUTABLE: none of the protocol's three ground-truth yardsticks covers enough methods for a rank correlation. Any rho below is from the SIMULATED yardstick and is a machinery check plus a preliminary reading, not the study's primary result.
+AVAILABLE
 
 ## How the published tools were run
 
 | tool | genuine R package | reason |
 |---|---|---|
+| music | yes | MuSiC available with cell-level reference |
+| dwls | yes | DWLS available with cell-level reference |
+| bisque | yes | BisqueRNA available with cell-level reference |
+| scdc | yes | SCDC available with cell-level reference |
+| scdc_ensemble | yes | SCDC available with cell-level reference |

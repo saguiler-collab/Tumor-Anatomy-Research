@@ -1,0 +1,13 @@
+method,uncertainty_reported,n_intervals,coverage_95,nominal,calibration_gap,mean_ci_width,interval_score,verdict
+bayesian,True,1600.0,0.089375,0.95,-0.860625,0.03417037520800028,3.0746384762269434,SEVERELY OVERCONFIDENT — intervals are far too narrow. Do not quote them as credible intervals without this caveat.
+nnls,False,,,,,,,
+svr,False,,,,,,,
+elastic_net,False,,,,,,,
+bayesian_hierarchical,False,,,,,,,
+music,False,,,,,,,
+dwls,False,,,,,,,
+bisque,False,,,,,,,
+scdc,False,,,,,,,
+scdc_ensemble,False,,,,,,,
+control_random,False,,,,,,,
+control_shuffled_signature,False,,,,,,,

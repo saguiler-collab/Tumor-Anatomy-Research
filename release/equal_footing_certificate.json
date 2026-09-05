@@ -2,25 +2,25 @@
   "biology_freeze_hash": "2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a",
   "fold_assignment_hash": null,
   "input_hashes": {
-    "bulk": "4667a764e43730ed87188c4712a3b75767c503967e1c47f8a859a586cc321cf9",
+    "bulk": "c98fd1a6ad5ce9975b29f71814d7d9b4abb23c837249719b43f89575eaa9ebf4",
     "cell_size_correction": "True",
     "cell_types": "Tumor,Macrophage_Microglia,T_cell,NK_cell,B_cell,Endothelial,Oligodendrocyte,Astrocyte",
-    "n_genes": "1614",
+    "n_genes": "657",
     "n_samples": "122",
-    "references": "gbmap_frozen:23ead8d0df28f124"
+    "references": "gbmap:6fa50a03ee163760"
   },
   "method_implementations": {
     "bayesian": "python",
     "bayesian_hierarchical": "python",
-    "bisque": "python-reimplementation",
+    "bisque": "R:BisqueRNA",
     "control_random": "python",
     "control_shuffled_signature": "python",
-    "dwls": "python-reimplementation",
+    "dwls": "R:DWLS",
     "elastic_net": "python",
-    "music": "python-reimplementation",
+    "music": "R:MuSiC",
     "nnls": "python",
-    "scdc": "python-reimplementation",
-    "scdc_ensemble": "python-reimplementation",
+    "scdc": "R:SCDC",
+    "scdc_ensemble": "R:SCDC",
     "svr": "python"
   },
   "methods": [

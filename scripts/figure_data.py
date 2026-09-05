@@ -91,6 +91,8 @@ def collect(results: Path) -> dict:
 
     # --- per constraint and per tumour ----------------------------------------
     out["per_constraint"] = pc.to_dict(orient="records") if pc is not None else None
+    comp = _csv(anat / "composition_by_tumor_structure.csv")
+    out["composition"] = comp.to_dict(orient="records") if comp is not None else None
     pt = _csv(anat / "acs_per_tumor.csv")
     out["per_tumor"] = pt.to_dict(orient="records") if pt is not None else None
     have("evidence_matrix", pt is not None)
@@ -139,6 +141,89 @@ def collect(results: Path) -> dict:
     return out
 
 
+def trim_for_figures(d: dict) -> dict:
+    """
+    The compact object the figure page embeds.
+
+    figure_data.json carries everything, including per-method x per-tumour detail that
+    the plates summarise rather than plot point-by-point. This keeps only what a figure
+    actually draws, so the page stays small and its script stays legible.
+    """
+    lb = d.get("leaderboard") or []
+    real = [r for r in lb if not r.get("is_control")]
+    ctrl = [r for r in lb if r.get("is_control")]
+
+    cal = d.get("control_calibration") or {}
+    hardest = cal.get("hardest_control")
+    band = (cal.get("controls", {}).get(hardest, {}) or {}).get("acs") if hardest else None
+
+    out = {
+        "cohort": {
+            "n_samples_scored": (d.get("provenance", {}).get("load") or {}).get(
+                "n_anatomic_study_samples"),
+            "n_tumors_scored": (d.get("provenance", {}).get("load") or {}).get(
+                "n_anatomic_study_tumors"),
+            "n_samples_archive": (d.get("provenance", {}).get("load") or {}).get("n_samples"),
+            "structures": (d.get("provenance", {}).get("load") or {}).get("structures_found"),
+            "atlas": {
+                "cells_kept": (d.get("provenance", {}).get("atlas_sampling") or {}).get("n_cells_kept"),
+                "donors": (d.get("provenance", {}).get("atlas_sampling") or {}).get("n_donors_kept"),
+                "genes": (d.get("provenance", {}).get("atlas_sampling") or {}).get("n_genes_kept"),
+            },
+        },
+        "constraints": [
+            {"id": c["id"], "kind": c["kind"], "cell_type": c["cell_type"],
+             "structures": c["structures"], "among": c.get("among", []),
+             "weight": c["weight"], "rationale": c["rationale"]}
+            for c in (d.get("constraints") or {}).get("constraints", [])
+        ],
+        "leaderboard": [
+            {"method": r["method"], "acs": r["acs"], "ci_low": r["ci_low"],
+             "ci_high": r["ci_high"], "null_mean": r.get("null_mean"),
+             "null_p": r.get("null_p"), "is_control": bool(r.get("is_control")),
+             "degenerate": bool(r.get("degenerate")),
+             "implementation": r.get("implementation"),
+             "tie_group": r.get("acs_tie_group") or ""}
+            for r in lb
+        ],
+        "control_band": band,
+        "hardest_control": hardest,
+        "not_distinguishable": cal.get("not_distinguishable_from_noise", []),
+        "resolution": d.get("resolution"),
+        "per_constraint": d.get("per_constraint"),
+        "composition": d.get("composition"),
+        "per_tumor": d.get("per_tumor"),
+        "agreement": d.get("agreement"),
+        "agreement_ranks": d.get("agreement_ranks"),
+        "benchmark": d.get("benchmark"),
+        "selection": {k: (d.get("selection") or {}).get(k)
+                      for k in ("selected_method", "selection_basis", "criterion",
+                                "methods_tied_with_best", "n_test_mixtures",
+                                "train_donors", "test_donors")},
+        "cohort_sensitivity": d.get("cohort_sensitivity"),
+        "survival": {
+            "strict": d.get("survival_power"),
+            "declared": {k: (d.get("survival_declared") or {}).get(k)
+                         for k in ("n_patients", "n_events", "detectable_delta_c_index",
+                                   "adequately_powered", "verdict")},
+            "metrics": d.get("survival_metrics"),
+        },
+        "missingness": d.get("missingness"),
+        "registration": d.get("registration"),
+        "provenance_recon": d.get("provenance", {}).get("reconciliation"),
+        "coverage": {k: (d.get("reference_coverage") or {}).get(k)
+                     for k in ("atlas_labels_dropped", "n_cells_dropped",
+                               "fraction_of_atlas_dropped", "what_this_means",
+                               "correction_to_the_frozen_constraint_file")},
+        "implementations": d.get("implementations"),
+        "deviations": (d.get("method_configs") or {}).get(
+            "methods_with_declared_deviations", []),
+        "n_real_methods": len(real),
+        "n_controls": len(ctrl),
+    }
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--results", default=str(config.RESULTS_DIR))
@@ -149,6 +234,11 @@ def main() -> int:
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(data, indent=2, default=str))
+
+    trimmed = trim_for_figures(data)
+    tpath = out.with_name("figure_data_compact.json")
+    tpath.write_text(json.dumps(trimmed, separators=(",", ":"), default=str))
+    print(f"wrote {tpath} ({tpath.stat().st_size / 1024:.0f} KB)")
 
     print(f"wrote {out}")
     print(f"figures with data: {len(data['figures_available'])}")

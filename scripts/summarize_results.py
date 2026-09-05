@@ -44,6 +44,70 @@ def _fmt(x, nd=3):
     return str(x)
 
 
+def integrity_section(anat: Path) -> str:
+    """
+    The three risks Anatomy_Test.md names that used to be asserted rather than checked.
+    Placed before the leaderboard on purpose: whether the constraint file is actually
+    pre-registered, what the roster cannot see, and how each method was configured all
+    bear on how the numbers below should be read.
+    """
+    out = ["\n## 1a. Integrity checks\n"]
+
+    reg = _load_json(anat / "registration_status.json")
+    if reg:
+        state = reg.get("state")
+        mark = "**REGISTERED**" if state == "REGISTERED" else f"**{state}**"
+        out.append(f"**Pre-registration:** {mark}. {reg.get('verdict','')}\n")
+
+    cov = _load_json(anat / "reference_coverage.json")
+    if cov and cov.get("atlas_labels_dropped"):
+        n_drop = cov.get("n_cells_dropped")
+        frac = cov.get("fraction_of_atlas_dropped")
+        out.append(f"**Reference coverage:** the roster maps "
+                   f"{len(cov.get('atlas_labels_mapped_onto_roster', []))} of the "
+                   f"atlas's labels and drops the rest — **{n_drop:,} cells "
+                   f"({frac:.1%})**.\n")
+        out.append("| dropped population | cells |")
+        out.append("|---|---|")
+        for k, v in list(cov["atlas_labels_dropped"].items())[:8]:
+            out.append(f"| {k} | {v:,} |")
+        out.append(f"\n{cov.get('what_this_means','')}\n")
+
+    cfg = _load_json(anat / "method_configs.json")
+    if cfg:
+        dev = cfg.get("methods_with_declared_deviations", [])
+        if dev:
+            out.append(f"**Method configuration:** every method's parameters are "
+                       f"recorded in `method_configs.json`. Declared departures from "
+                       f"published defaults: **{', '.join(dev)}**.\n")
+            for rec in cfg.get("configs", []):
+                for d in rec.get("declared_deviations_from_published_defaults", []):
+                    out.append(f"- `{rec['method']}` — {d['parameter']}: "
+                               f"{d['published_default']} → {d['used']}. {d['why']} "
+                               f"*Decided {d['decided']}.*")
+            out.append("")
+        else:
+            out.append("**Method configuration:** recorded in `method_configs.json`; "
+                       "no method departs from its published defaults.\n")
+
+    impl = _load_json(anat / "implementation_report.json")
+    if impl:
+        genuine = [r["method"] for r in impl if str(r.get("implementation","")).startswith("R:")]
+        fell = [(r["method"], r.get("fallback_reason")) for r in impl
+                if r.get("implementation") == "python-reimplementation"]
+        out.append(f"**What actually ran:** {len(genuine)} published package(s) ran as "
+                   f"the genuine R implementation ({', '.join(genuine) or 'none'}).")
+        if fell:
+            out.append("\nFell back to this project's Python reimplementation:\n")
+            out.append("| method | why |")
+            out.append("|---|---|")
+            for m, why in fell:
+                out.append(f"| {m} | {str(why or 'reason not recorded')[:150]} |")
+        out.append("")
+
+    return "\n".join(out) if len(out) > 1 else ""
+
+
 def resolution_note(lb_path: Path, pc_path: Path) -> str:
     """
     How finely can ACS separate methods on this cohort at all?
@@ -257,6 +321,7 @@ def render(results_dir: Path) -> str:
     recon = _load_json(results_dir / "data_reconciliation.json")
     audit = _load_json(results_dir / "clinical_missingness_audit.json")
 
+    A(integrity_section(anat))
     A("## 2. Cohort and provenance\n")
     if rep:
         A(f"- constraint freeze hash: `{rep['constraint_freeze_hash']}`")

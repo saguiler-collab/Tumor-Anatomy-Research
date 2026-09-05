@@ -45,25 +45,103 @@
     "LE": 19
   },
   "n_permutations": 10000,
-  "best_acs_method": "scdc",
-  "best_acs": 0.8769230769230769,
-  "control_verdict": "CONTROLS PARTLY BEHAVE: the best control (0.585) is below the median real method (0.800), but it ties or beats bayesian_hierarchical and control_shuffled_signature beats its own permutation null. The constraint set separates most methods from noise and does NOT separate all of them. Reported as-is; the constraint file is NOT retuned. Note the control is a SINGLE permutation \u2014 see the control calibration artefact before reading a tie as a property of the constraints.",
+  "best_acs_method": "music",
+  "best_acs": 1.0,
+  "control_verdict": "CONTROLS BEHAVE: best control 0.400 sits below the median real method 0.954, ties no real method, and does not beat its own permutation null. The constraint set discriminates.",
+  "registration": {
+    "freeze_hash": "2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a",
+    "recorded_hash": null,
+    "registered_utc": null,
+    "registry": null,
+    "results_predating_registration": null,
+    "state": "UNREGISTERED",
+    "url": null,
+    "verdict": "UNREGISTERED: the constraint file is hashed and committed, but no public registration receipt exists. The hash proves the constraints have not changed; it does not prove they were written before the results, which is what the pre-registration claim rests on. Register 2d1fb47c98832adf... publicly (OSF takes minutes) and record the receipt in REGISTRATION.json. Until then this project must not describe itself as pre-registered."
+  },
+  "reference_coverage": {
+    "roster": [
+      "Tumor",
+      "Macrophage_Microglia",
+      "T_cell",
+      "NK_cell",
+      "B_cell",
+      "Endothelial",
+      "Oligodendrocyte",
+      "Astrocyte"
+    ],
+    "n_roster_types": 8,
+    "sidecar_types": [
+      "Astrocyte"
+    ],
+    "atlas_labels_mapped_onto_roster": [
+      "AC-like",
+      "Astrocyte",
+      "B cell",
+      "CD4/CD8",
+      "Endothelial",
+      "MES-like",
+      "NK",
+      "NPC-like",
+      "OPC-like",
+      "Oligodendrocyte",
+      "TAM-BDM",
+      "TAM-MG"
+    ],
+    "constraint_coverage": {
+      "cell_types_with_constraints": [
+        "Endothelial",
+        "Macrophage_Microglia",
+        "Oligodendrocyte",
+        "Tumor"
+      ],
+      "cell_types_without_constraints": [
+        "T_cell",
+        "NK_cell",
+        "B_cell",
+        "Astrocyte"
+      ],
+      "explicitly_excluded": [
+        "T_cell"
+      ],
+      "structurally_untestable": [
+        {
+          "fact": "Neuronal content is highest at the leading edge",
+          "why_untestable": "The seven-population roster contains no neuron column."
+        },
+        {
+          "fact": "Non-neoplastic astrocytes are enriched at the leading edge",
+          "why_untestable": "Astrocyte is a diagnostic-only sidecar, known to be unidentifiable against Tumor; a constraint on it would score the collinearity, not the biology."
+        }
+      ],
+      "n_constraints": 7,
+      "total_weight": 8.0
+    },
+    "atlas_labels_dropped": {
+      "Mono": 14215,
+      "DC": 3961,
+      "RG": 2807,
+      "Mural cell": 1418,
+      "Plasma B": 572,
+      "OPC": 496,
+      "Mast": 373,
+      "Neuron": 22
+    },
+    "n_cells_in_atlas": 338564,
+    "n_cells_dropped": 23864,
+    "fraction_of_atlas_dropped": 0.07048593471249158,
+    "n_cells_kept": 314700,
+    "what_this_means": "Populations the atlas labels but the roster drops do not disappear from the tissue, only from the model. A solver with eight columns must still explain the expression those cells contribute, so it is absorbed by whichever retained type is closest. Largest dropped populations: Mono (14,215 cells), DC (3,961 cells), RG (2,807 cells) \u2014 7.0% of the atlas in total. The dominant one is myeloid (DC, Mast, Mono), and the nearest retained column is Macrophage_Microglia \u2014 which carries C5 and C6. So the absorbed signal is concentrated on two of the seven constraints rather than spread evenly. Note the frozen constraint file lists neuronal content as untestable for want of a neuron column. That holds, but not for the reason it gives: this atlas contains only 22 neurons, so a neuron column could not have been estimated from it either. The limitation is the reference, not just the roster.",
+    "correction_to_the_frozen_constraint_file": "constraints.UNTESTABLE says neuronal content cannot be tested because 'the seven-population roster contains no neuron column'. The conclusion holds and the stated reason is incomplete: the roster does drop the atlas's Neuron label, but the atlas carries so few neurons that a neuron column could not have been estimated from it in any case. Both facts are measured above. The constraint file is frozen and hashed, so this is recorded alongside it rather than by editing it \u2014 editing it would change the freeze hash and invalidate every result computed under it."
+  },
   "control_audit": {
-    "best_control": "control_shuffled_signature",
-    "best_control_acs": 0.5846153846153846,
-    "worst_real_method": "bayesian_hierarchical",
-    "worst_real_acs": 0.5846153846153846,
-    "real_methods_tied_or_beaten_by_best_control": [
-      "bayesian_hierarchical"
-    ],
-    "controls_beating_their_own_null": [
-      "control_shuffled_signature"
-    ],
-    "constraints_the_best_control_satisfies_perfectly": [
-      "C1",
-      "C7"
-    ],
-    "weight_share_satisfied_perfectly_by_best_control": 0.36923076923076925,
+    "best_control": "control_random",
+    "best_control_acs": 0.4,
+    "worst_real_method": "bayesian",
+    "worst_real_acs": 0.7692307692307693,
+    "real_methods_tied_or_beaten_by_best_control": [],
+    "controls_beating_their_own_null": [],
+    "constraints_the_best_control_satisfies_perfectly": [],
+    "weight_share_satisfied_perfectly_by_best_control": 0.0,
     "calibration_verdict": "Against the hardest control (control_shuffled_signature, 95th percentile 0.492): every real method scores above it.",
     "not_distinguishable_from_noise": []
   },
@@ -76,125 +154,125 @@
       "control_shuffled_signature": {
         "n_draws": 200,
         "acs": {
-          "mean": 0.3726153846153846,
-          "sd": 0.07311257852919058,
-          "min": 0.18461538461538463,
-          "p05": 0.27692307692307694,
-          "median": 0.3615384615384616,
+          "mean": 0.3863076923076923,
+          "sd": 0.06564913862374575,
+          "min": 0.2153846153846154,
+          "p05": 0.2915384615384616,
+          "median": 0.38461538461538464,
           "p95": 0.49230769230769234,
-          "max": 0.6
+          "max": 0.5692307692307692
         },
         "per_constraint_satisfied_rate": {
-          "C1": 0.496875,
-          "C2": 0.4775,
-          "C3": 0.4822222222222222,
-          "C4": 0.22666666666666666,
-          "C5": 0.5125,
-          "C6": 0.47,
-          "C7": 0.17125
+          "C1": 0.52125,
+          "C2": 0.4625,
+          "C3": 0.5216666666666666,
+          "C4": 0.23444444444444446,
+          "C5": 0.5183333333333333,
+          "C6": 0.49722222222222223,
+          "C7": 0.178125
         },
         "as_run_draw": {
-          "acs": 0.5846153846153846,
-          "percentile_among_draws": 0.995
+          "acs": 0.13846153846153847,
+          "percentile_among_draws": 0.0
         }
       },
       "control_random": {
         "n_draws": 200,
         "acs": {
-          "mean": 0.38853846153846155,
-          "sd": 0.06773933602003487,
-          "min": 0.2,
-          "p05": 0.27692307692307694,
-          "median": 0.4,
+          "mean": 0.38453846153846155,
+          "sd": 0.07152281086206454,
+          "min": 0.18461538461538463,
+          "p05": 0.26153846153846155,
+          "median": 0.38461538461538464,
           "p95": 0.49230769230769234,
-          "max": 0.6
+          "max": 0.6153846153846154
         },
         "per_constraint_satisfied_rate": {
-          "C1": 0.5225,
-          "C2": 0.496875,
-          "C3": 0.5022222222222222,
-          "C4": 0.2111111111111111,
-          "C5": 0.5308333333333334,
-          "C6": 0.5083333333333333,
-          "C7": 0.1825
+          "C1": 0.5125,
+          "C2": 0.495625,
+          "C3": 0.4922222222222222,
+          "C4": 0.20833333333333334,
+          "C5": 0.535,
+          "C6": 0.505,
+          "C7": 0.179375
         },
         "as_run_draw": {
           "acs": 0.4,
-          "percentile_among_draws": 0.575
+          "percentile_among_draws": 0.63
         }
       }
     },
     "hardest_control": "control_shuffled_signature",
     "acs": {
-      "mean": 0.3726153846153846,
-      "sd": 0.07311257852919058,
-      "min": 0.18461538461538463,
-      "p05": 0.27692307692307694,
-      "median": 0.3615384615384616,
+      "mean": 0.3863076923076923,
+      "sd": 0.06564913862374575,
+      "min": 0.2153846153846154,
+      "p05": 0.2915384615384616,
+      "median": 0.38461538461538464,
       "p95": 0.49230769230769234,
-      "max": 0.6
+      "max": 0.5692307692307692
     },
     "per_constraint_satisfied_rate": {
-      "C1": 0.496875,
-      "C2": 0.4775,
-      "C3": 0.4822222222222222,
-      "C4": 0.22666666666666666,
-      "C5": 0.5125,
-      "C6": 0.47,
-      "C7": 0.17125
+      "C1": 0.52125,
+      "C2": 0.4625,
+      "C3": 0.5216666666666666,
+      "C4": 0.23444444444444446,
+      "C5": 0.5183333333333333,
+      "C6": 0.49722222222222223,
+      "C7": 0.178125
     },
     "as_run_draw": {
-      "acs": 0.5846153846153846,
-      "percentile_among_draws": 0.995
+      "acs": 0.13846153846153847,
+      "percentile_among_draws": 0.0
     },
     "methods_vs_control_distribution": {
       "nnls": {
-        "acs": 0.8,
+        "acs": 0.9846153846153847,
         "percentile_among_control_draws": 1.0,
         "distinguishable_from_a_meaningless_signature": true
       },
       "svr": {
-        "acs": 0.8,
+        "acs": 0.9846153846153847,
         "percentile_among_control_draws": 1.0,
         "distinguishable_from_a_meaningless_signature": true
       },
       "elastic_net": {
-        "acs": 0.8,
+        "acs": 0.9846153846153847,
         "percentile_among_control_draws": 1.0,
         "distinguishable_from_a_meaningless_signature": true
       },
       "bayesian": {
-        "acs": 0.6153846153846154,
+        "acs": 0.7692307692307693,
         "percentile_among_control_draws": 1.0,
         "distinguishable_from_a_meaningless_signature": true
       },
       "bayesian_hierarchical": {
-        "acs": 0.5846153846153846,
-        "percentile_among_control_draws": 0.995,
+        "acs": 0.7692307692307693,
+        "percentile_among_control_draws": 1.0,
         "distinguishable_from_a_meaningless_signature": true
       },
       "music": {
-        "acs": 0.8,
+        "acs": 1.0,
         "percentile_among_control_draws": 1.0,
         "distinguishable_from_a_meaningless_signature": true
       },
       "dwls": {
-        "acs": 0.7384615384615385,
+        "acs": 0.8769230769230769,
         "percentile_among_control_draws": 1.0,
         "distinguishable_from_a_meaningless_signature": true
       },
       "bisque": {
-        "acs": 0.8,
+        "acs": 0.9230769230769231,
         "percentile_among_control_draws": 1.0,
         "distinguishable_from_a_meaningless_signature": true
       },
       "scdc": {
-        "acs": 0.8769230769230769,
+        "acs": 0.9538461538461539,
         "percentile_among_control_draws": 1.0,
         "distinguishable_from_a_meaningless_signature": true
       },
       "scdc_ensemble": {
-        "acs": 0.8769230769230769,
+        "acs": 0.9538461538461539,
         "percentile_among_control_draws": 1.0,
         "distinguishable_from_a_meaningless_signature": true
       }
@@ -202,20 +280,25 @@
     "not_distinguishable_from_noise": [],
     "verdict": "Against the hardest control (control_shuffled_signature, 95th percentile 0.492): every real method scores above it."
   },
-  "best_control_acs": 0.5846153846153846,
-  "median_real_acs": 0.8,
+  "best_control_acs": 0.4,
+  "median_real_acs": 0.9538461538461539,
   "primary_result": {
     "synthetic_mixtures": {
-      "rho": NaN,
-      "p_value": NaN,
-      "ci_low": NaN,
-      "ci_high": NaN,
-      "n_methods": 2,
-      "n_distinct": 2.0,
-      "duplicate_groups": [],
-      "meets_threshold": false,
-      "ci_excludes_zero": false,
-      "verdict": "NOT COMPUTABLE: only 2 methods have both scores."
+      "rho": 0.8731696390689547,
+      "p_value": 0.0009687080609583895,
+      "ci_low": 0.3960590171906697,
+      "ci_high": 0.9895285072531597,
+      "n_methods": 10,
+      "n_distinct": 9.0,
+      "duplicate_groups": [
+        [
+          "scdc",
+          "scdc_ensemble"
+        ]
+      ],
+      "meets_threshold": true,
+      "ci_excludes_zero": true,
+      "verdict": "HEADLINE: ACS ranking tracks true accuracy at the pre-registered bar. Anatomic concordance is usable to choose a deconvolution method in tissue with an anatomical atlas, using no ground truth and no outcomes. NOTE: 10 methods but only 9 distinct score pairs \u2014 scdc=scdc_ensemble are degenerate duplicates. Judge the correlation on 9 points, not 10."
     },
     "absolute_purity": {
       "rho": NaN,
@@ -257,17 +340,22 @@
   "yardstick_provenance": {
     "synthetic_mixtures": {
       "available": true,
-      "source": "reference_frozen/tcga_benchmark/benchmark_summary.csv",
-      "sha256": "961b3577aba7da43264345e6ae3280cc81a19df07d84b0c44aba6abcaff814f2",
-      "n_mixtures": 500,
+      "source": "this run's own donor-held-out pseudobulk benchmark",
       "is_real_ground_truth": true,
       "methods_covered": [
+        "bayesian",
+        "bayesian_hierarchical",
+        "bisque",
+        "control_random",
+        "control_shuffled_signature",
+        "dwls",
+        "elastic_net",
+        "music",
         "nnls",
+        "scdc",
+        "scdc_ensemble",
         "svr"
-      ],
-      "methods_not_mapped": [],
-      "units": "MAE as a fraction (source reports percent; divided by 100 here)",
-      "limitation": "covers 2 method(s). A rank correlation needs at least 6. Extending it requires the cell-level single-cell data the mixtures were pooled from."
+      ]
     },
     "absolute_purity": {
       "available": false,
@@ -285,21 +373,13 @@
       "reason": "requires paired single-cell GBM data where composition is counted rather than estimated. Not present in this repository."
     }
   },
-  "pairwise_where_ranking_impossible": [
-    {
-      "yardstick": "synthetic_mixtures",
-      "method_a": "nnls",
-      "method_b": "svr",
-      "acs_prefers": "svr",
-      "truth_prefers": "svr",
-      "agree": true
-    }
-  ],
+  "pairwise_where_ranking_impossible": [],
   "implementation_disclosure": [
     {
       "method": "nnls",
       "implementation": "python",
       "fallback_reason": null,
+      "r_path_disabled": false,
       "degenerate": false,
       "degeneracy_reason": null
     },
@@ -307,6 +387,7 @@
       "method": "svr",
       "implementation": "python",
       "fallback_reason": null,
+      "r_path_disabled": false,
       "degenerate": false,
       "degeneracy_reason": null
     },
@@ -314,6 +395,7 @@
       "method": "elastic_net",
       "implementation": "python",
       "fallback_reason": null,
+      "r_path_disabled": false,
       "degenerate": false,
       "degeneracy_reason": null
     },
@@ -321,6 +403,7 @@
       "method": "bayesian",
       "implementation": "python",
       "fallback_reason": null,
+      "r_path_disabled": false,
       "degenerate": false,
       "degeneracy_reason": null
     },
@@ -328,48 +411,55 @@
       "method": "bayesian_hierarchical",
       "implementation": "python",
       "fallback_reason": null,
+      "r_path_disabled": false,
       "degenerate": false,
       "degeneracy_reason": null
     },
     {
       "method": "music",
-      "implementation": "python-reimplementation",
-      "fallback_reason": "music unavailable via R: R package MuSiC is not installed",
-      "degenerate": true,
-      "degeneracy_reason": "reference 'gbmap_frozen' carries no cross-donor variance, so MuSiC's gene weighting is constant and the result is arithmetically NNLS. Reported as degenerate rather than as a MuSiC result."
+      "implementation": "R:MuSiC",
+      "fallback_reason": null,
+      "r_path_disabled": false,
+      "degenerate": false,
+      "degeneracy_reason": null
     },
     {
       "method": "dwls",
-      "implementation": "python-reimplementation",
-      "fallback_reason": "dwls unavailable via R: R package DWLS is not installed",
+      "implementation": "R:DWLS",
+      "fallback_reason": null,
+      "r_path_disabled": false,
       "degenerate": false,
       "degeneracy_reason": null
     },
     {
       "method": "bisque",
-      "implementation": "python-reimplementation",
-      "fallback_reason": "bisque unavailable via R: R package BisqueRNA is not installed",
+      "implementation": "R:BisqueRNA",
+      "fallback_reason": null,
+      "r_path_disabled": false,
       "degenerate": true,
-      "degeneracy_reason": "no subjects are assayed both as bulk and as single cells, so this runs Bisque's documented no-overlap mode (use.overlap = FALSE); the assay transform is estimated from marginal distributions rather than from paired subjects; the reference carries 0 donor profiles (< min_donors=3), so the per-gene reference marginal is taken across CELL TYPES instead of across donors \u2014 a different quantity standing in for the one the method specifies. Reported as degraded rather than as a Bisque result."
+      "degeneracy_reason": "no subjects are assayed both as bulk and as single cells, so this runs Bisque's documented no-overlap mode (use.overlap = FALSE); the assay transform is estimated from marginal distributions rather than from paired subjects. Reported as degraded rather than as a Bisque result."
     },
     {
       "method": "scdc",
-      "implementation": "python-reimplementation",
-      "fallback_reason": "scdc unavailable via R: R package SCDC is not installed",
+      "implementation": "R:SCDC",
+      "fallback_reason": null,
+      "r_path_disabled": false,
       "degenerate": false,
       "degeneracy_reason": null
     },
     {
       "method": "scdc_ensemble",
-      "implementation": "python-reimplementation",
-      "fallback_reason": "scdc_ensemble unavailable via R: R package SCDC is not installed",
+      "implementation": "R:SCDC",
+      "fallback_reason": null,
+      "r_path_disabled": false,
       "degenerate": true,
-      "degeneracy_reason": "one reference supplied ('gbmap_frozen'), so there is nothing to weight across: SCDC ENSEMBLE reduces exactly to SCDC. Reported as degenerate rather than as an ENSEMBLE result."
+      "degeneracy_reason": "one reference supplied ('gbmap'), so there is nothing to weight across: SCDC ENSEMBLE reduces exactly to SCDC. Reported as degenerate rather than as an ENSEMBLE result."
     },
     {
       "method": "control_random",
       "implementation": "python",
       "fallback_reason": null,
+      "r_path_disabled": false,
       "degenerate": false,
       "degeneracy_reason": null
     },
@@ -377,22 +467,16 @@
       "method": "control_shuffled_signature",
       "implementation": "python",
       "fallback_reason": null,
+      "r_path_disabled": false,
       "degenerate": false,
       "degeneracy_reason": null
     }
   ],
   "degenerate_methods": [
-    "music",
     "bisque",
     "scdc_ensemble"
   ],
-  "python_reimplementations": [
-    "music",
-    "dwls",
-    "bisque",
-    "scdc",
-    "scdc_ensemble"
-  ],
+  "python_reimplementations": [],
   "failures": {},
   "note": "ACS is the object under test here, not a selection criterion. The method frozen for release is chosen by the outcome-blind pseudobulk benchmark, never by ACS."
 }

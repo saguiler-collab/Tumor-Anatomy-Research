@@ -3,6 +3,7 @@
     "method": "nnls",
     "implementation": "python",
     "fallback_reason": null,
+    "r_path_disabled": false,
     "degenerate": false,
     "degeneracy_reason": null
   },
@@ -10,6 +11,7 @@
     "method": "svr",
     "implementation": "python",
     "fallback_reason": null,
+    "r_path_disabled": false,
     "degenerate": false,
     "degeneracy_reason": null
   },
@@ -17,6 +19,7 @@
     "method": "elastic_net",
     "implementation": "python",
     "fallback_reason": null,
+    "r_path_disabled": false,
     "degenerate": false,
     "degeneracy_reason": null
   },
@@ -24,6 +27,7 @@
     "method": "bayesian",
     "implementation": "python",
     "fallback_reason": null,
+    "r_path_disabled": false,
     "degenerate": false,
     "degeneracy_reason": null
   },
@@ -31,48 +35,55 @@
     "method": "bayesian_hierarchical",
     "implementation": "python",
     "fallback_reason": null,
+    "r_path_disabled": false,
     "degenerate": false,
     "degeneracy_reason": null
   },
   {
     "method": "music",
-    "implementation": "python-reimplementation",
-    "fallback_reason": "music unavailable via R: R package MuSiC is not installed",
-    "degenerate": true,
-    "degeneracy_reason": "reference 'gbmap_frozen' carries no cross-donor variance, so MuSiC's gene weighting is constant and the result is arithmetically NNLS. Reported as degenerate rather than as a MuSiC result."
+    "implementation": "R:MuSiC",
+    "fallback_reason": null,
+    "r_path_disabled": false,
+    "degenerate": false,
+    "degeneracy_reason": null
   },
   {
     "method": "dwls",
-    "implementation": "python-reimplementation",
-    "fallback_reason": "dwls unavailable via R: R package DWLS is not installed",
+    "implementation": "R:DWLS",
+    "fallback_reason": null,
+    "r_path_disabled": false,
     "degenerate": false,
     "degeneracy_reason": null
   },
   {
     "method": "bisque",
-    "implementation": "python-reimplementation",
-    "fallback_reason": "bisque unavailable via R: R package BisqueRNA is not installed",
+    "implementation": "R:BisqueRNA",
+    "fallback_reason": null,
+    "r_path_disabled": false,
     "degenerate": true,
-    "degeneracy_reason": "no subjects are assayed both as bulk and as single cells, so this runs Bisque's documented no-overlap mode (use.overlap = FALSE); the assay transform is estimated from marginal distributions rather than from paired subjects; the reference carries 0 donor profiles (< min_donors=3), so the per-gene reference marginal is taken across CELL TYPES instead of across donors \u2014 a different quantity standing in for the one the method specifies. Reported as degraded rather than as a Bisque result."
+    "degeneracy_reason": "no subjects are assayed both as bulk and as single cells, so this runs Bisque's documented no-overlap mode (use.overlap = FALSE); the assay transform is estimated from marginal distributions rather than from paired subjects. Reported as degraded rather than as a Bisque result."
   },
   {
     "method": "scdc",
-    "implementation": "python-reimplementation",
-    "fallback_reason": "scdc unavailable via R: R package SCDC is not installed",
+    "implementation": "R:SCDC",
+    "fallback_reason": null,
+    "r_path_disabled": false,
     "degenerate": false,
     "degeneracy_reason": null
   },
   {
     "method": "scdc_ensemble",
-    "implementation": "python-reimplementation",
-    "fallback_reason": "scdc_ensemble unavailable via R: R package SCDC is not installed",
+    "implementation": "R:SCDC",
+    "fallback_reason": null,
+    "r_path_disabled": false,
     "degenerate": true,
-    "degeneracy_reason": "one reference supplied ('gbmap_frozen'), so there is nothing to weight across: SCDC ENSEMBLE reduces exactly to SCDC. Reported as degenerate rather than as an ENSEMBLE result."
+    "degeneracy_reason": "one reference supplied ('gbmap'), so there is nothing to weight across: SCDC ENSEMBLE reduces exactly to SCDC. Reported as degenerate rather than as an ENSEMBLE result."
   },
   {
     "method": "control_random",
     "implementation": "python",
     "fallback_reason": null,
+    "r_path_disabled": false,
     "degenerate": false,
     "degeneracy_reason": null
   },
@@ -80,6 +91,7 @@
     "method": "control_shuffled_signature",
     "implementation": "python",
     "fallback_reason": null,
+    "r_path_disabled": false,
     "degenerate": false,
     "degeneracy_reason": null
   }

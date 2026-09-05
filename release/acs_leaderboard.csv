@@ -1,13 +1,13 @@
 method,acs,ci_low,ci_high,n_constraint_tumor_pairs,n_tumors,null_mean,null_p,beats_null,is_control,degenerate,implementation,degeneracy_reason,acs_tie_group
-scdc,0.8769230769230769,0.7611940298507462,1.0,57,9,0.3726615384615385,9.999000099990002e-05,True,False,False,python-reimplementation,,"scdc,scdc_ensemble"
-scdc_ensemble,0.8769230769230769,0.7611940298507462,1.0,57,9,0.3726615384615385,9.999000099990002e-05,True,False,True,python-reimplementation,"one reference supplied ('gbmap_frozen'), so there is nothing to weight across: SCDC ENSEMBLE reduces exactly to SCDC. Reported as degenerate rather than as an ENSEMBLE result.","scdc,scdc_ensemble"
-nnls,0.8,0.7205882352941176,0.8695652173913043,57,9,0.3804938461538461,9.999000099990002e-05,True,False,False,python,,"nnls,svr,elastic_net,music,bisque"
-svr,0.8,0.71875,0.8833514492753622,57,9,0.36703230769230777,9.999000099990002e-05,True,False,False,python,,"nnls,svr,elastic_net,music,bisque"
-music,0.8,0.7205882352941176,0.8695652173913043,57,9,0.3804938461538461,9.999000099990002e-05,True,False,True,python-reimplementation,"reference 'gbmap_frozen' carries no cross-donor variance, so MuSiC's gene weighting is constant and the result is arithmetically NNLS. Reported as degenerate rather than as a MuSiC result.","nnls,svr,elastic_net,music,bisque"
-elastic_net,0.8,0.7205882352941176,0.8695652173913043,57,9,0.3808661538461539,9.999000099990002e-05,True,False,False,python,,"nnls,svr,elastic_net,music,bisque"
-bisque,0.8,0.7257772323515662,0.875,57,9,0.38251846153846153,9.999000099990002e-05,True,False,True,python-reimplementation,"no subjects are assayed both as bulk and as single cells, so this runs Bisque's documented no-overlap mode (use.overlap = FALSE); the assay transform is estimated from marginal distributions rather than from paired subjects; the reference carries 0 donor profiles (< min_donors=3), so the per-gene reference marginal is taken across CELL TYPES instead of across donors — a different quantity standing in for the one the method specifies. Reported as degraded rather than as a Bisque result.","nnls,svr,elastic_net,music,bisque"
-dwls,0.7384615384615385,0.6249547101449275,0.8679477265697494,57,9,0.37140923076923077,9.999000099990002e-05,True,False,False,python-reimplementation,,
-bayesian,0.6153846153846154,0.5245901639344263,0.7213114754098361,57,9,0.38176,0.0010998900109989002,True,False,False,python,,
-bayesian_hierarchical,0.5846153846153846,0.5217391304347826,0.6769354838709677,57,9,0.38178769230769233,0.0027997200279972004,True,False,False,python,,
-control_shuffled_signature,0.5846153846153846,0.48214285714285715,0.6619718309859155,57,9,0.3724569230769231,0.001999800019998,True,True,False,python,,
-control_random,0.4,0.2878787878787879,0.5303267045454544,57,9,0.3839538461538462,0.43715628437156284,False,True,False,python,,
+music,1.0,1.0,1.0,57,9,0.3701523076923077,9.999000099990002e-05,True,False,False,R:MuSiC,,
+nnls,0.9846153846153847,0.953125,1.0,57,9,0.37483692307692307,9.999000099990002e-05,True,False,False,python,,"nnls,svr,elastic_net"
+elastic_net,0.9846153846153847,0.953125,1.0,57,9,0.3752861538461539,9.999000099990002e-05,True,False,False,python,,"nnls,svr,elastic_net"
+svr,0.9846153846153847,0.953125,1.0,57,9,0.3739292307692308,9.999000099990002e-05,True,False,False,python,,"nnls,svr,elastic_net"
+scdc_ensemble,0.9538461538461539,0.9107076226012794,0.9857142857142858,57,9,0.3739892307692308,9.999000099990002e-05,True,False,True,R:SCDC,"one reference supplied ('gbmap'), so there is nothing to weight across: SCDC ENSEMBLE reduces exactly to SCDC. Reported as degenerate rather than as an ENSEMBLE result.","scdc,scdc_ensemble"
+scdc,0.9538461538461539,0.9107076226012794,0.9857142857142858,57,9,0.3739892307692308,9.999000099990002e-05,True,False,False,R:SCDC,,"scdc,scdc_ensemble"
+bisque,0.9230769230769231,0.8656716417910447,0.9830508474576272,57,9,0.37961999999999996,9.999000099990002e-05,True,False,True,R:BisqueRNA,"no subjects are assayed both as bulk and as single cells, so this runs Bisque's documented no-overlap mode (use.overlap = FALSE); the assay transform is estimated from marginal distributions rather than from paired subjects. Reported as degraded rather than as a Bisque result.",
+dwls,0.8769230769230769,0.7424242424242424,0.9852941176470589,57,9,0.3718923076923077,9.999000099990002e-05,True,False,False,R:DWLS,,
+bayesian,0.7692307692307693,0.6268656716417911,0.9206659226190474,57,9,0.38049230769230774,9.999000099990002e-05,True,False,False,python,,"bayesian,bayesian_hierarchical"
+bayesian_hierarchical,0.7692307692307693,0.6268656716417911,0.9206659226190474,57,9,0.38056923076923077,9.999000099990002e-05,True,False,False,python,,"bayesian,bayesian_hierarchical"
+control_random,0.4,0.2878787878787879,0.5303267045454544,57,9,0.3823569230769231,0.43085691430856915,False,True,False,python,,
+control_shuffled_signature,0.13846153846153847,0.058823529411764705,0.22810612597066415,57,9,0.34912461538461537,0.9991000899910009,False,True,False,python,,

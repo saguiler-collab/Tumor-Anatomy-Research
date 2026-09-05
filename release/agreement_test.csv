@@ -1,5 +1,5 @@
 yardstick,rho,p_value,ci_low,ci_high,n_methods,n_distinct,duplicate_groups,meets_threshold,ci_excludes_zero,verdict
-synthetic_mixtures,,,,,2,2.0,[],False,False,NOT COMPUTABLE: only 2 methods have both scores.
+synthetic_mixtures,0.8731696390689547,0.0009687080609583895,0.3960590171906697,0.9895285072531597,10,9.0,"[['scdc', 'scdc_ensemble']]",True,True,"HEADLINE: ACS ranking tracks true accuracy at the pre-registered bar. Anatomic concordance is usable to choose a deconvolution method in tissue with an anatomical atlas, using no ground truth and no outcomes. NOTE: 10 methods but only 9 distinct score pairs — scdc=scdc_ensemble are degenerate duplicates. Judge the correlation on 9 points, not 10."
 absolute_purity,,,,,0,,,,,UNAVAILABLE: this yardstick produced no scores in this run.
 sc_pseudobulk,,,,,0,,,,,UNAVAILABLE: this yardstick produced no scores in this run.
 simulated_donor_mismatch,,,,,0,,,,,UNAVAILABLE: this yardstick produced no scores in this run.

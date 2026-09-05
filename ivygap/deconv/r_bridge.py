@@ -338,8 +338,15 @@ def run_r_method(method_name: str, data: DeconvolutionInput,
         out_path = tmp / "proportions.csv"
         data.bulk.to_csv(bulk_path)
 
+        # Methods that consume a signature matrix rather than cells (EPIC, quanTIseq)
+        # get the same reference profile every Python method solves against, written to
+        # the same temp dir. Written for every method so the payload is one shape.
+        sig_path = tmp / "signature.csv"
+        data.primary.profile.to_csv(sig_path)
+
         payload = {
             "bulk": str(bulk_path),
+            "signature": str(sig_path),
             "sc_counts": str(counts_path),
             "sc_meta": str(meta_path),
             "out": str(out_path),

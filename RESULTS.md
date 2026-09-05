@@ -1,55 +1,86 @@
-# Results — full-database run, 2026-09-03
+# Results — the Anatomy Test, first valid full run
 
-**Cohort:** Ivy GAP. 270 archive samples deconvolved, ACS scored on the 122 H&E anatomic
-samples / 10 tumours (9 evaluable).
+**Run:** 2026-09-04 · **Cohort:** Ivy GAP, 270 archive samples deconvolved, ACS scored on
+the 122 H&E anatomic samples / 10 tumours (9 evaluable).
+**Reference:** GBmap Core, 15,311 cells across
+110 donors, 16,758 genes.
 **Constraint freeze hash:** `2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a`
-**Gene space:** 1,614 of 16,007 shared genes.
 
-Read [Anatomy_Test.md](Anatomy_Test.md) first — it is the protocol. This file reports
-what the pipeline produced and, more importantly, what it does not support.
-
-Every table below is rendered from the artefacts by
-`python scripts/summarize_results.py`. Nothing is transcribed by hand. That is
-deliberate: the previous run's numbers survived a destructive accident *only* because
-someone had copied them into a markdown file, and a number copied by hand is a number
-that can be copied wrong.
+Read [Anatomy_Test.md](Anatomy_Test.md) first — it is the protocol. Every table below is
+rendered from the artefacts by `scripts/summarize_results.py`; nothing is transcribed by
+hand.
 
 ---
 
-## 0. The headline, in five lines
+## 0. The headline
 
-1. **ACS is at its ceiling on this instrument, and the ceiling is low.** The weighted
-   denominator is 65 and the run reached all 65. Ten real methods produce **five
-   distinct scores**; five tie at exactly 0.800. Nothing about how a method is run
-   changes this.
-2. **Every real method clears the negative controls** — but only once the controls are
-   read as distributions. Against the hardest control's 95th percentile
-   (0.492), all ten are above. Against the *single pre-registered draw* (0.585),
-   one of them ties. Both facts are reported; §8 explains why the second is an artefact
-   of the seed.
-3. **Deconvolving all 270 samples does not change the ACS ranking** (Spearman 0.982).
-   Only methods that borrow strength across samples move, and Bisque moves *down*.
-4. **The agreement test is not computable, now for two independent reasons.** No
-   yardstick covers more than two methods, *and* the ACS side supplies only five
-   distinct values. Obtaining a yardstick is necessary but no longer sufficient.
-5. **Prognosis is BLOCKED, and would be INCONCLUSIVE even if it were not.** Ivy GAP
-   publishes no vital-status column. Under the most generous reading available the
-   cohort reaches 29 events against the ~80 needed, detecting at best a C-index
-   difference of 0.515 — wider than the entire interpretable range.
+**The primary result meets its pre-registered bar.**
+
+> Spearman **rho = 0.873** between the ACS ranking and the ranking from real
+> ground truth, bootstrap CI **[0.396, 0.990]**, p = 0.0010,
+> on 10 methods (9 distinct).
+> Bar fixed in advance: rho >= 0.60 **and** a CI excluding zero. Both hold.
+
+This is the protocol's first branch: *anatomic concordance is usable to choose a
+deconvolution method in tissue with an anatomical atlas, using no ground truth and no
+patient outcomes.*
+
+Four supporting facts, each of which had to hold for that sentence to mean anything:
+
+1. **The controls behave.** The hardest negative control sits at
+   0.386 (sd 0.066) over 200 draws, and every real method —
+   0.769 at worst —
+   clears its 95th percentile of 0.492. Neither control beats its own
+   permutation null.
+2. **The biology is right.** Tumour fraction rises 0.33 → 0.65 → 0.83 across leading
+   edge → infiltrating → cellular tumour; endothelium reaches 0.64 in microvascular
+   proliferation; oligodendrocyte peaks at the leading edge. Nobody told the methods
+   where the structures were.
+3. **All four published packages ran as themselves** — `R:MuSiC`, `R:DWLS`,
+   `R:BisqueRNA`, `R:SCDC` — not as this project's reimplementations.
+4. **Nothing selected on the thing being tested.** The method was frozen by an
+   outcome-blind, ACS-blind pseudobulk benchmark (88 training / 22 held-out donors,
+   200 mixtures) before the anatomy was scored. That the benchmark and the anatomy
+   independently agree on MuSiC is the result, not the method.
+
+### What this is not
+
+- **Not pre-registered.** The constraint file is hashed and committed, but no public
+  registration receipt exists, so `registration_status.json` reports UNREGISTERED. The
+  hash proves the constraints have not changed; it does not prove they predate the
+  results. Until that is fixed this is a strong internal result, not a pre-registered one.
+- **Not a prognostic finding.** See §7: 29 events against the ~80 needed.
+- **Not transferable yet.** One tissue is a case study; the protocol's step 7 is untouched.
 
 ---
 
-## 1. What ran
 
-| Protocol step | Status |
+## 1a. Integrity checks
+
+**Pre-registration:** **UNREGISTERED**. UNREGISTERED: the constraint file is hashed and committed, but no public registration receipt exists. The hash proves the constraints have not changed; it does not prove they were written before the results, which is what the pre-registration claim rests on. Register 2d1fb47c98832adf... publicly (OSF takes minutes) and record the receipt in REGISTRATION.json. Until then this project must not describe itself as pre-registered.
+
+**Reference coverage:** the roster maps 12 of the atlas's labels and drops the rest — **23,864 cells (7.0%)**.
+
+| dropped population | cells |
 |---|---|
-| 1. Restore the frozen inputs | **done** — `reference_frozen/`, hashes recorded |
-| 2. Write + timestamp the constraint file | **done in repo**, hash above. *Still not publicly registered (OSF).* |
-| 3. Ingest Ivy GAP | **done, and the gate is closed externally** — counts reconciled sample-by-sample against the Allen Institute's own live metadata export, not against the archive describing itself |
-| 4. Build + prove the scorer | **done** — known-answer fixtures pass; permutation null centred at chance |
-| 5. Score every method + controls | **done** — 12 methods, 10,000 permutations each, two cohorts, both controls calibrated over 200 draws |
-| 6. The agreement test | **NOT COMPUTABLE** — for two independent reasons, not one |
-| 7. Prove it transfers | not started |
+| Mono | 14,215 |
+| DC | 3,961 |
+| RG | 2,807 |
+| Mural cell | 1,418 |
+| Plasma B | 572 |
+| OPC | 496 |
+| Mast | 373 |
+| Neuron | 22 |
+
+Populations the atlas labels but the roster drops do not disappear from the tissue, only from the model. A solver with eight columns must still explain the expression those cells contribute, so it is absorbed by whichever retained type is closest. Largest dropped populations: Mono (14,215 cells), DC (3,961 cells), RG (2,807 cells) — 7.0% of the atlas in total. The dominant one is myeloid (DC, Mast, Mono), and the nearest retained column is Macrophage_Microglia — which carries C5 and C6. So the absorbed signal is concentrated on two of the seven constraints rather than spread evenly. Note the frozen constraint file lists neuronal content as untestable for want of a neuron column. That holds, but not for the reason it gives: this atlas contains only 22 neurons, so a neuron column could not have been estimated from it either. The limitation is the reference, not just the roster.
+
+**Method configuration:** every method's parameters are recorded in `method_configs.json`. Declared departures from published defaults: **dwls**.
+
+- `dwls` — buildSignatureMatrixMAST(diff.cutoff, pval.cutoff): diff.cutoff = 0.5, pval.cutoff = 0.01 → diff.cutoff = 0, pval.cutoff = 1 (filter fully open). Equal footing requires every method to receive the same pre-filtered gene space, so the informative genes have already been chosen identically for all methods. DWLS's own differential-expression pass is then a second filter, not a second opinion: at the published cutoffs it left 31 genes for 8 cell types and the driver refused to deconvolve on them. *Decided from the gene count, before any DWLS score existed.*
+- `dwls` — cells used for the signature build: all cells in the reference → <= 250 cells per cell type. buildSignatureMatrixMAST costs ~30 minutes per gene set on this hardware regardless of the DE method. A signature is a per-cell-type summary, so type proportions are irrelevant to it and capping per type spends the budget where it buys accuracy. *Decided from measured runtime, before any DWLS score existed.*
+- `dwls` — per-sample failure handling: an error aborts the call → a sample that fails to solve becomes NA and is counted. solveDampenedWLS fails on particular mixtures with 'NA/NaN argument'. One such sample was sending the whole cohort to the Python fallback. NA is already what this pipeline means by a failed sample and it is reported in n_failed_samples. *Decided from the failure mode, before any DWLS score existed.*
+
+**What actually ran:** 5 published package(s) ran as the genuine R implementation (music, dwls, bisque, scdc, scdc_ensemble).
 
 ## 2. Cohort and provenance
 
@@ -64,61 +95,58 @@ _from `results/anatomic/acs_leaderboard.csv`_
 
 | method | ACS | 95% CI | null mean | null p | tumours | control |
 |---|---|---|---|---|---|---|
-| scdc | 0.877 | 0.761 – 1.000 | 0.373 | 0.000 | 9 |  |
-| scdc_ensemble | 0.877 | 0.761 – 1.000 | 0.373 | 0.000 | 9 |  |
-| nnls | 0.800 | 0.721 – 0.870 | 0.380 | 0.000 | 9 |  |
-| svr | 0.800 | 0.719 – 0.883 | 0.367 | 0.000 | 9 |  |
-| music | 0.800 | 0.721 – 0.870 | 0.380 | 0.000 | 9 |  |
-| elastic_net | 0.800 | 0.721 – 0.870 | 0.381 | 0.000 | 9 |  |
-| bisque | 0.800 | 0.726 – 0.875 | 0.383 | 0.000 | 9 |  |
-| dwls | 0.738 | 0.625 – 0.868 | 0.371 | 0.000 | 9 |  |
-| bayesian | 0.615 | 0.525 – 0.721 | 0.382 | 0.001 | 9 |  |
-| bayesian_hierarchical | 0.585 | 0.522 – 0.677 | 0.382 | 0.003 | 9 |  |
-| **control_shuffled_signature** | 0.585 | 0.482 – 0.662 | 0.372 | 0.002 | 9 | **yes** |
-| **control_random** | 0.400 | 0.288 – 0.530 | 0.384 | 0.437 | 9 | **yes** |
+| music | 1.000 | 1.000 – 1.000 | 0.370 | 0.000 | 9 |  |
+| nnls | 0.985 | 0.953 – 1.000 | 0.375 | 0.000 | 9 |  |
+| elastic_net | 0.985 | 0.953 – 1.000 | 0.375 | 0.000 | 9 |  |
+| svr | 0.985 | 0.953 – 1.000 | 0.374 | 0.000 | 9 |  |
+| scdc_ensemble | 0.954 | 0.911 – 0.986 | 0.374 | 0.000 | 9 |  |
+| scdc | 0.954 | 0.911 – 0.986 | 0.374 | 0.000 | 9 |  |
+| bisque | 0.923 | 0.866 – 0.983 | 0.380 | 0.000 | 9 |  |
+| dwls | 0.877 | 0.742 – 0.985 | 0.372 | 0.000 | 9 |  |
+| bayesian | 0.769 | 0.627 – 0.921 | 0.380 | 0.000 | 9 |  |
+| bayesian_hierarchical | 0.769 | 0.627 – 0.921 | 0.381 | 0.000 | 9 |  |
+| **control_random** | 0.400 | 0.288 – 0.530 | 0.382 | 0.431 | 9 | **yes** |
+| **control_shuffled_signature** | 0.138 | 0.059 – 0.228 | 0.349 | 0.999 | 9 | **yes** |
 
 
-**Control verdict.** CONTROLS PARTLY BEHAVE: the best control (0.585) is below the median real method (0.800), but it ties or beats bayesian_hierarchical and control_shuffled_signature beats its own permutation null. The constraint set separates most methods from noise and does NOT separate all of them. Reported as-is; the constraint file is NOT retuned. Note the control is a SINGLE permutation — see the control calibration artefact before reading a tie as a property of the constraints.
+**Control verdict.** CONTROLS BEHAVE: best control 0.400 sits below the median real method 0.954, ties no real method, and does not beat its own permutation null. The constraint set discriminates.
 
 
 ### What ACS can and cannot resolve here
 
 - weighted denominator: **65** (constraint x tumour pairs, weighted)
 - so ACS takes at most **66 distinct values**, spaced **0.0154** apart
-- 12 methods scored produce **6 distinct values**; the 10 real methods produce **5**
-- tied at **0.877**: scdc, scdc_ensemble
-- tied at **0.800**: nnls, svr, music, elastic_net, bisque
-- tied at **0.585**: bayesian_hierarchical, control_shuffled_signature
-
-**This bounds the agreement test independently of any yardstick.** It needs at least 6 methods to correlate, but the ACS side supplies only **5 distinct values** across 10 real methods. Even with ground truth covering every method, a rank correlation would be computed on mostly tied ranks.
+- 12 methods scored produce **8 distinct values**; the 10 real methods produce **6**
+- tied at **0.985**: nnls, elastic_net, svr
+- tied at **0.954**: scdc_ensemble, scdc
+- tied at **0.769**: bayesian, bayesian_hierarchical
 
 
 ### Control audit (stricter than the headline verdict)
 
 _The control is a **single permutation** drawn from `config.RANDOM_SEED`. Everything in this block describes that one draw._
 
-- best control: **control_shuffled_signature = 0.585**
-- worst real method: bayesian_hierarchical = 0.585
-- real methods the best control **ties or beats**: **bayesian_hierarchical**
-- controls that **beat their own permutation null** (p < 0.05): **control_shuffled_signature**
-- constraints **this single draw** satisfies perfectly: **C1, C7** — 24 of 65 weighted units (**36.9%** of the constraint set). This is ONE permutation, not a property of the constraints; see the draw distribution below before reading anything into it.
+- best control: **control_random = 0.400**
+- worst real method: bayesian = 0.769
+- real methods the best control ties or beats: none
+- controls beating their own permutation null: none
 
 | constraint | weight | evaluable | best control satisfies |
 |---|---|---|---|
-| C1 | 1.0 | 8 | 8 |
+| C1 | 1.0 | 8 | 5 |
 | C2 | 1.0 | 8 | 3 |
-| C3 | 1.0 | 9 | 6 |
-| C4 | 1.0 | 9 | 0 |
-| C5 | 1.0 | 6 | 4 |
-| C6 | 1.0 | 9 | 1 |
-| C7 | 2.0 | 8 | 8 |
+| C3 | 1.0 | 9 | 7 |
+| C4 | 1.0 | 9 | 4 |
+| C5 | 1.0 | 6 | 2 |
+| C6 | 1.0 | 9 | 5 |
+| C7 | 2.0 | 8 | 0 |
 
 **Both controls calibrated over 200 independent draws each.** Each leaderboard control row is one draw from these.
 
 | control | mean | sd | 5–95% | the leaderboard's draw |
 |---|---|---|---|---|
-| `control_shuffled_signature` | 0.373 | 0.073 | 0.277 – 0.492 | 0.585 (100% pct) |
-| `control_random` | 0.389 | 0.068 | 0.277 – 0.492 | 0.400 (57% pct) |
+| `control_shuffled_signature` | 0.386 | 0.066 | 0.292 – 0.492 | 0.138 (0% pct) |
+| `control_random` | 0.385 | 0.072 | 0.262 – 0.492 | 0.400 (63% pct) |
 
 Methods are judged against the **hardest** control (`control_shuffled_signature`, 95th percentile **0.492**), not a convenient one.
 
@@ -128,15 +156,15 @@ Methods are judged against the **hardest** control (`control_shuffled_signature`
 
 | constraint | satisfied rate |
 |---|---|
-| C5 | 0.51 |
-| C1 | 0.50 |
-| C3 | 0.48 |
-| C2 | 0.48 |
-| C6 | 0.47 |
+| C3 | 0.52 |
+| C1 | 0.52 |
+| C5 | 0.52 |
+| C6 | 0.50 |
+| C2 | 0.46 |
 | C4 | 0.23 |
-| C7 | 0.17 |
+| C7 | 0.18 |
 
-### Per constraint — best method (`scdc`)
+### Per constraint — best method (`music`)
 
 | ID | claim | weight | tumours evaluable | satisfied |
 |---|---|---|---|---|
@@ -145,18 +173,18 @@ Methods are judged against the **hardest** control (`control_shuffled_signature`
 | C3 | Endothelial: MVP > CT | 1.0 | 9 | 9 (1.00) |
 | C4 | Endothelial: MVP is the maximum | 1.0 | 9 | 9 (1.00) |
 | C5 | Macrophage_Microglia: PAN > LE | 1.0 | 6 | 6 (1.00) |
-| C6 | Macrophage_Microglia: MVP > CT | 1.0 | 9 | 7 (0.78) |
-| C7 | Tumor: LE < IT < CT | 2.0 | 8 | 5 (0.62) |
+| C6 | Macrophage_Microglia: MVP > CT | 1.0 | 9 | 9 (1.00) |
+| C7 | Tumor: LE < IT < CT | 2.0 | 8 | 8 (1.00) |
 
 
-### Per tumour — `scdc`
+### Per tumour — `music`
 
 | tumour | constraints evaluable | satisfied | ACS | violated |
 |---|---|---|---|---|
 | 292163427 | 6 | 6 | 1.000 | — |
-| 703393 | 7 | 5 | 0.625 | C6,C7 |
-| 703493 | 7 | 5 | 0.625 | C6,C7 |
-| 705757 | 7 | 6 | 0.750 | C7 |
+| 703393 | 7 | 7 | 1.000 | — |
+| 703493 | 7 | 7 | 1.000 | — |
+| 705757 | 7 | 7 | 1.000 | — |
 | 705758 | 7 | 7 | 1.000 | — |
 | 705803 | 7 | 7 | 1.000 | — |
 | 705859 | 7 | 7 | 1.000 | — |
@@ -173,11 +201,11 @@ Methods are judged against the **hardest** control (`control_shuffled_signature`
 | elastic_net | python | no |  |
 | bayesian | python | no |  |
 | bayesian_hierarchical | python | no |  |
-| music | python-reimplementation | **yes** | reference 'gbmap_frozen' carries no cross-donor variance, so MuSiC's gene weighting is constant and the result |
-| dwls | python-reimplementation | no | dwls unavailable via R: R package DWLS is not installed |
-| bisque | python-reimplementation | **yes** | no subjects are assayed both as bulk and as single cells, so this runs Bisque's documented no-overlap mode (us |
-| scdc | python-reimplementation | no | scdc unavailable via R: R package SCDC is not installed |
-| scdc_ensemble | python-reimplementation | **yes** | one reference supplied ('gbmap_frozen'), so there is nothing to weight across: SCDC ENSEMBLE reduces exactly t |
+| music | R:MuSiC | no |  |
+| dwls | R:DWLS | no |  |
+| bisque | R:BisqueRNA | **yes** | no subjects are assayed both as bulk and as single cells, so this runs Bisque's documented no-overlap mode (us |
+| scdc | R:SCDC | no |  |
+| scdc_ensemble | R:SCDC | **yes** | one reference supplied ('gbmap'), so there is nothing to weight across: SCDC ENSEMBLE reduces exactly to SCDC. |
 | control_random | python | no |  |
 | control_shuffled_signature | python | no |  |
 
@@ -188,7 +216,7 @@ Pre-registered bar: rho >= 0.6 AND a bootstrap CI excluding zero. Minimum method
 
 | yardstick | rho | 95% CI | methods | distinct | verdict |
 |---|---|---|---|---|---|
-| synthetic_mixtures | — | — – — | 2 | 2 | NOT COMPUTABLE: only 2 methods have both scores. |
+| synthetic_mixtures | 0.873 | 0.396 – 0.990 | 10 | 9 | HEADLINE: ACS ranking tracks true accuracy at the pre-registered bar. Anatomic concordance |
 | absolute_purity | — | — – — | 0 | — | UNAVAILABLE: this yardstick produced no scores in this run. |
 | sc_pseudobulk | — | — – — | 0 | — | UNAVAILABLE: this yardstick produced no scores in this run. |
 | simulated_donor_mismatch | — | — – — | 0 | — | UNAVAILABLE: this yardstick produced no scores in this run. |
@@ -198,25 +226,25 @@ Pre-registered bar: rho >= 0.6 AND a bootstrap CI excluding zero. Minimum method
 
 | method | ACS (122 anatomic) | ACS (270 deconvolved) | delta | rank change |
 |---|---|---|---|---|
-| scdc | 0.877 | 0.877 | +0.000 | +0 |
-| scdc_ensemble | 0.877 | 0.877 | +0.000 | +0 |
-| nnls | 0.800 | 0.800 | +0.000 | -0 |
-| svr | 0.800 | 0.800 | +0.000 | -0 |
-| music | 0.800 | 0.800 | +0.000 | -0 |
-| elastic_net | 0.800 | 0.800 | +0.000 | -0 |
-| bisque | 0.800 | 0.738 | -0.062 | +2 |
-| dwls | 0.738 | 0.708 | -0.031 | +0 |
-| bayesian | 0.615 | 0.615 | +0.000 | +0 |
-| bayesian_hierarchical | 0.585 | 0.585 | +0.000 | +0 |
-| control_shuffled_signature | 0.585 | 0.585 | +0.000 | +0 |
+| music | 1.000 | 1.000 | +0.000 | +0 |
+| nnls | 0.985 | 0.985 | +0.000 | +0 |
+| elastic_net | 0.985 | 0.985 | +0.000 | +0 |
+| svr | 0.985 | 0.985 | +0.000 | +0 |
+| scdc | 0.954 | 0.954 | +0.000 | +1 |
+| scdc_ensemble | 0.954 | 0.954 | +0.000 | +1 |
+| bisque | 0.923 | 0.969 | +0.046 | -2 |
+| dwls | 0.877 | 0.738 | -0.138 | +2 |
+| bayesian | 0.769 | 0.769 | +0.000 | -0 |
+| bayesian_hierarchical | 0.769 | 0.785 | +0.015 | -2 |
 | control_random | 0.400 | 0.338 | -0.062 | +0 |
+| control_shuffled_signature | 0.138 | 0.138 | +0.000 | +0 |
 
-Spearman rho between the two ACS rankings: **0.9816**
+Spearman rho between the two ACS rankings: **0.9554**
 
 
-**Which methods moved, and why.** 9 of 12 did not move by a single unit: scdc, scdc_ensemble, nnls, svr, music, elastic_net, bayesian, bayesian_hierarchical, control_shuffled_signature. Those solve each sample independently, so what else is in the cohort cannot reach them — the zeros are exact, not rounded.
+**Which methods moved, and why.** 8 of 12 did not move by a single unit: music, nnls, elastic_net, svr, scdc, scdc_ensemble, bayesian, control_shuffled_signature. Those solve each sample independently, so what else is in the cohort cannot reach them — the zeros are exact, not rounded.
 
-The ones that moved are **bisque, dwls, control_random**. Bisque normalises the bulk with cohort-wide per-gene statistics (`B.mean(axis=1)` and `B.std(axis=1)`), so the 148 ISH-cluster samples shift the reference frame every anatomic sample is mapped through. `control_random` moves for a different and uninteresting reason: it draws one Dirichlet sample per row, so a 270-row draw is not a superset of a 122-row draw.
+The ones that moved are **bisque, dwls, bayesian_hierarchical, control_random**. Bisque normalises the bulk with cohort-wide per-gene statistics (`B.mean(axis=1)` and `B.std(axis=1)`), so the 148 ISH-cluster samples shift the reference frame every anatomic sample is mapped through. `control_random` moves for a different and uninteresting reason: it draws one Dirichlet sample per row, so a 270-row draw is not a superset of a 122-row draw.
 
 Note the direction: **adding 148 more real samples made Bisque's anatomic concordance worse**, not better. For a method that borrows strength across samples, which samples it is handed is part of the method — and Ivy GAP's two studies are not the same tissue.
 
@@ -225,22 +253,22 @@ Note the direction: **adding 148 more real samples made Bisque's anatomic concor
 
 - deconvolved **270 samples / 37 tumours**
 - ACS still scored on **122 samples / 10 tumours** — H&E-selected anatomic study only; ISH-cluster samples are excluded from scoring by construction because their structure labels were assigned using expression
-- control verdict: CONTROLS PARTLY BEHAVE: the best control (0.585) is below the median real method (0.800), but it ties or beats bayesian_hierarchical and control_shuffled_signature beats its own permutation null. The constraint set separates most methods from noise and does NOT separate all of them. Reported as-is; the constraint file is NOT retuned. Note the control is a SINGLE permutation — see the control calibration artefact before reading a tie as a property of the constraints.
+- control verdict: CONTROLS BEHAVE: best control 0.338 sits below the median real method 0.962, ties no real method, and does not beat its own permutation null. The constraint set discriminates.
 
 | method | ACS | 95% CI | null mean | null p | tumours | control |
 |---|---|---|---|---|---|---|
-| scdc | 0.877 | 0.761 – 1.000 | 0.373 | 0.000 | 9 |  |
-| scdc_ensemble | 0.877 | 0.761 – 1.000 | 0.373 | 0.000 | 9 |  |
-| nnls | 0.800 | 0.721 – 0.870 | 0.380 | 0.000 | 9 |  |
-| svr | 0.800 | 0.719 – 0.883 | 0.367 | 0.000 | 9 |  |
-| music | 0.800 | 0.721 – 0.870 | 0.380 | 0.000 | 9 |  |
-| elastic_net | 0.800 | 0.721 – 0.870 | 0.381 | 0.000 | 9 |  |
-| bisque | 0.738 | 0.657 – 0.817 | 0.366 | 0.000 | 9 |  |
-| dwls | 0.708 | 0.607 – 0.820 | 0.371 | 0.000 | 9 |  |
-| bayesian | 0.615 | 0.525 – 0.721 | 0.381 | 0.001 | 9 |  |
-| bayesian_hierarchical | 0.585 | 0.522 – 0.677 | 0.381 | 0.003 | 9 |  |
-| **control_shuffled_signature** | 0.585 | 0.482 – 0.662 | 0.372 | 0.002 | 9 | **yes** |
-| **control_random** | 0.338 | 0.217 – 0.486 | 0.389 | 0.788 | 9 | **yes** |
+| music | 1.000 | 1.000 – 1.000 | 0.370 | 0.000 | 9 |  |
+| nnls | 0.985 | 0.953 – 1.000 | 0.375 | 0.000 | 9 |  |
+| elastic_net | 0.985 | 0.953 – 1.000 | 0.374 | 0.000 | 9 |  |
+| svr | 0.985 | 0.953 – 1.000 | 0.374 | 0.000 | 9 |  |
+| bisque | 0.969 | 0.930 – 1.000 | 0.379 | 0.000 | 9 |  |
+| scdc_ensemble | 0.954 | 0.911 – 0.986 | 0.374 | 0.000 | 9 |  |
+| scdc | 0.954 | 0.911 – 0.986 | 0.374 | 0.000 | 9 |  |
+| bayesian_hierarchical | 0.785 | 0.648 – 0.925 | 0.380 | 0.000 | 9 |  |
+| bayesian | 0.769 | 0.627 – 0.921 | 0.381 | 0.000 | 9 |  |
+| dwls | 0.738 | 0.600 – 0.867 | 0.374 | 0.000 | 9 |  |
+| **control_random** | 0.338 | 0.217 – 0.486 | 0.388 | 0.779 | 9 | **yes** |
+| **control_shuffled_signature** | 0.138 | 0.059 – 0.228 | 0.349 | 0.999 | 9 | **yes** |
 
 
 ## 7. Survival
@@ -262,151 +290,49 @@ Note the direction: **adding 148 more real samples made Bisque's anatomic concor
 
 | method | C baseline | C + composition | delta | interpretation |
 |---|---|---|---|---|
-| bayesian_hierarchical | 0.484 | 0.684 | 0.200 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
-| nnls | 0.484 | 0.652 | 0.168 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
-| music | 0.484 | 0.652 | 0.168 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
-| scdc | 0.484 | 0.644 | 0.160 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
-| scdc_ensemble | 0.484 | 0.644 | 0.160 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
-| bisque | 0.484 | 0.616 | 0.131 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
-| bayesian | 0.484 | 0.589 | 0.105 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
-| svr | 0.484 | 0.585 | 0.101 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
-| elastic_net | 0.484 | 0.585 | 0.101 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
-| dwls | 0.484 | 0.437 | -0.047 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
+| svr | 0.484 | 0.564 | 0.080 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
+| nnls | 0.484 | 0.561 | 0.077 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
+| bisque | 0.484 | 0.521 | 0.037 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
+| bayesian_hierarchical | 0.484 | 0.514 | 0.029 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
+| dwls | 0.484 | 0.510 | 0.026 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
+| elastic_net | 0.484 | 0.505 | 0.021 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
+| bayesian | 0.484 | 0.503 | 0.019 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
+| music | 0.484 | 0.486 | 0.002 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
+| scdc | 0.484 | 0.482 | -0.002 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
+| scdc_ensemble | 0.484 | 0.482 | -0.002 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
 
 
 #### Exploratory: does ACS track prognostic value?
 
 Not a protocol analysis. The protocol's agreement test correlates ACS against *accuracy*, which is still not computable. This correlates it against *prognostic value* instead, which the declared-policy run makes available. It selects nothing.
 
-- Spearman(ACS, delta C-index) over 10 methods: **rho = 0.052**, p = 0.886
-- best ACS: `scdc` (ACS 0.877, delta C +0.160)
-- **worst ACS: `bayesian_hierarchical` (ACS 0.585, delta C +0.200) — which is also the best prognostic method**
+- Spearman(ACS, delta C-index) over 10 methods: **rho = 0.031**, p = 0.932
+- best ACS: `music` (ACS 1.000, delta C +0.002)
+- best prognosis: `svr` (ACS 0.985, delta C +0.080)
 
-Three independent reasons this cannot support a claim: every C-index is INCONCLUSIVE by the pre-specified power rule; ACS supplies only 5 distinct values across 10 methods, so the rank is mostly ties; and the outcome side rests on a declared assumption about censoring. It is recorded because it points the same way as the superseded run did, and because the direction is the protocol's second branch.
+Three independent reasons this cannot support a claim: every C-index is INCONCLUSIVE by the pre-specified power rule; ACS supplies only 6 distinct values across 10 methods, so the rank is mostly ties; and the outcome side rests on a declared assumption about censoring. It is recorded because it points the same way as the superseded run did, and because the direction is the protocol's second branch.
 
 
-
----
-
-## 8. The controls are single draws, and that turns out to matter
-
-Both negative controls are specified as one draw from `config.RANDOM_SEED`. The
-leaderboard's `control_shuffled_signature` row scored **0.585** — tying
-`bayesian_hierarchical` exactly and beating its own permutation null at p = 0.002.
-
-Read alone that looks like the protocol's third branch, *"negative controls score
-highly, the constraint set is too permissive."* It is not. Scored over
-**200 independent draws** on the same cohort, through the pipeline's own
-normalisation:
-
-| control | mean | sd | 5–95% | full range | the leaderboard's draw |
-|---|---|---|---|---|---|
-| `control_shuffled_signature` | 0.373 | 0.073 | 0.277 – 0.492 | 0.185 – 0.600 | 0.585 (100% pct) |
-| `control_random` | 0.389 | 0.068 | 0.277 – 0.492 | 0.200 – 0.600 | 0.400 (57% pct) |
-
-**A tie worth naming.** Both controls have a 95th percentile of exactly 0.492. That is
-not a duplicated computation — their draw sequences correlate at −0.07 and their means
-differ (0.373 vs 0.389) — it is the 1/65 lattice: ACS can only take multiples of 0.0154,
-so two genuinely different distributions centred near chance land on the same lattice
-point. This run resolved the tie by dict order and reported
-`control_shuffled_signature`; the tie-break is now explicit (p95, then mean, then name),
-which would name `control_random` instead. **The threshold, and therefore every
-conclusion below, is identical either way.**
-
-The pre-registered shuffled-signature draw is the **most extreme of 200**.
-The typical draw scores 0.373 — essentially its own permutation null
-(0.372). Judged against the hardest control's 95th percentile (0.492), **every real
-method is above it**, including `bayesian_hierarchical` at 0.585.
-
-So the tie in the leaderboard is a property of one seed, not of the constraint set.
-
-**What a meaningless signature satisfies, averaged over draws** — the number to read,
-rather than the single draw:
-
-| constraint | weight | satisfied rate |
-|---|---|---|
-| C5 | 1 | 0.51 |
-| C1 | 1 | 0.50 |
-| C3 | 1 | 0.48 |
-| C2 | 1 | 0.48 |
-| C6 | 1 | 0.47 |
-| C4 | 1 | 0.23 |
-| C7 | 2 | 0.17 |
-
-No constraint is systematically satisfiable without gene-level information, and C7 — the
-highest-weighted claim — is among the hardest for a meaningless signature, which is what
-a three-step monotone conjunction should be.
-
-### Two readings this replaces
-
-**Reading A, from the single draw:** *"C1 and C7 are structurally satisfiable by a
-signature carrying no gene-to-cell-type information (36.9% of the constraint weight)."*
-Wrong. That draw satisfied both perfectly; across draws neither is.
-
-**Reading B, from a standalone diagnostic script:** *"`bayesian` and
-`bayesian_hierarchical` are not distinguishable from a randomly permuted signature."*
-Also wrong. That script reported sd 0.156 and a 95th percentile of 0.646; the calibration
-module reports 0.073 and 0.492, and was verified
-draw-for-draw against an independent from-scratch implementation. The script has been
-replaced by one that delegates to the module — one implementation, so there is nothing
-left to disagree.
-
-**What survives both corrections** is the methodological point, and it is the reason the
-calibration exists: a control with sd 0.073, reported as a single number,
-cannot establish that the controls behave in *either* direction. Whichever way the seed
-lands, the reading is an artefact of it.
-
-Nothing here changed the constraint file, the controls' definitions, or the leaderboard
-rows. Replacing a point estimate with a distribution makes a control **harder** to beat,
-not easier — the only direction it is safe to move an instrument after seeing what it
-scored.
 
 ---
 
-## 9. Defects found and fixed in this session
+## Provenance of this document
 
-Each would have produced plausible-looking wrong numbers.
+Generated from `results/` by `scripts/summarize_results.py` and
+`scripts/figure_data.py`. The figures in
+[`results/figures/`](results/figures/) read the same artefacts.
 
-| defect | consequence had it shipped |
-|---|---|
-| **`results/` was a mixture of two runs** — synthetic-fixture scores (`IVY00`–`IVY23`, 212 samples, 500 permutations) on top of an interrupted real run | every scored artefact was synthetic while being read as real. Quarantined with evidence to `results_superseded/`, not deleted |
-| **`config.USE_SIGNATURE_GENE_SUBSET` declared, documented as load-bearing, and never read** on the frozen-signature path — the only path this project runs on | every method received all 16,007 shared genes instead of 1,614. **Every NuSVR fit hit the 200,000-iteration cap**, so no sample got a converged SVR solution, and the two cohorts would have taken 11.2 hours |
-| **Bisque set neither `degenerate_` nor `degeneracy_reason_`** while its own docstring said the caveat must travel | `implementation_report.json` recorded `degenerate: false` for a method degraded twice over — no-overlap mode, *and* a donor-profile fallback substituting spread across cell types for spread across donors |
-| SCDC ENSEMBLE set `degenerate_` with no reason | every report surfaces degeneracy by printing the reason, so `scdc_ensemble` would have appeared as though an ensemble had happened |
-| **`acs_leaderboard.csv` carried no degeneracy at all** | the headline artefact showed ten independent real methods where there are eight |
-| **`control_verdict` compared against the MEDIAN real method** | a control could tie the *worst* real method and beat its own null while the run announced "CONTROLS BEHAVE" — which is exactly what it did |
-| **both controls reported as single draws** | a seed-dependent tie read as a property of the constraint set |
-| clinical URLs all dead; one returned HTTP 200 + `text/csv` with an HTML body | survival BLOCKED for a reason that was fixable by reading the portal's own download page |
-| `tumor_details.csv` keyed on `donor_id`, expression on `tumor_id`, **neither file containing the other's key** | clinical data could not be joined to anything at all |
-| `age_in_years` ships as `"61 yrs"`; `to_numeric` yields all-NaN | the only baseline covariate in the survival model silently dropped |
-| release bundle pointed at `benchmark/` for artefacts that moved to `anatomic/` | four files silently reported as "not produced this run" |
+Superseded runs are preserved under `results_superseded/` with the reason each was
+retired. Two are worth knowing about, because both produced plausible-looking numbers:
 
----
+- A run whose reference was **scrambled** — cell expression attached to the wrong
+  cell's metadata. It put every real method below a random control and SCDC at exactly
+  0.000. Column order, shapes and 161 tests all passed; it surfaced only as biology
+  (23 of 24 marker genes in the wrong column).
+- A run whose **stage-3 artefacts were overwritten by the test suite**, which called
+  `run_benchmark.run()` against the real results tree. Stage 4 reads
+  `benchmark_summary.csv` as the ground-truth yardstick, so the primary result would
+  have been computed against a 10-mixture fixture.
 
-## 10. What would move this forward, in order
-
-1. **Publicly register the constraint file** (OSF). The hash is above; the timestamp must
-   precede any result anyone cites. Cheapest credibility in the project.
-2. **Install the R packages** (`Rscript R/install_deps.R`). All four published tools
-   currently run as this project's Python reimplementations. Every artefact says so, but
-   they are not MuSiC, DWLS, Bisque or SCDC.
-3. **Obtain a real yardstick covering ≥6 methods** — a GBM single-cell atlas at
-   `data/reference/gbmap_core.h5ad` enables both `synthetic_mixtures` and
-   `sc_pseudobulk`. Necessary but **not sufficient**: see §3's resolution note.
-4. **A second tissue (protocol step 7) is the only way to widen ACS's evidence base.**
-   Ivy GAP has ten H&E-annotated tumours and cannot supply more.
-
----
-
-## 11. What was deliberately not done
-
-- **`constraints.py` was not edited.** Not when a control tied a real method, not
-  afterwards. Freeze hash unchanged and verified.
-- **No method was tuned to raise its ACS.** One shared signature, documented defaults,
-  no per-method tuning. "Optimising ACS" in the sense of making methods score better is
-  what this study exists to *test*, not to perform.
-- **ACS selected nothing.** `method_selection_decision.json` records that no method was
-  frozen by this run, and why.
-- **No outcome selected anything.** Survival ran last, after the selection record was
-  written, and `assert_selection_frozen` verified the recorded criterion mentions no
-  outcome.
+Both are fixed, both have regression tests, and both are described in
+`docs/METHODS.md`.

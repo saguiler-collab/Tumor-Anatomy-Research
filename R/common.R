@@ -20,6 +20,14 @@ load_bulk <- function(path) {
   as.matrix(m)
 }
 
+# Signature matrix: genes x cell types. Used by the methods that consume a reference
+# PROFILE rather than cells (EPIC, quanTIseq), so they can run from the same collapsed
+# reference every Python method uses, on the same gene space.
+load_signature <- function(path) {
+  m <- read.csv(path, row.names = 1, check.names = FALSE)
+  as.matrix(m)
+}
+
 # Single-cell reference: genes x cells, plus per-cell donor and cell-type labels.
 # Cells present in one file and not the other are dropped, with a message — a silent
 # mismatch here would misattribute cells to the wrong donor.
