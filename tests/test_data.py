@@ -205,3 +205,85 @@ def test_no_test_can_write_to_the_real_results_tree():
         assert project not in d.parents and d != project, (
             f"config.{name} points inside the repository at {d} during a test run; "
             f"the output-isolation fixture is not applying")
+
+
+def test_archive_refuses_an_incomplete_run(tmp_path, monkeypatch):
+    """
+    An archive is a citable object. A partial one is worse than none, because it looks
+    like a result and cannot be recognised as incomplete later.
+    """
+    import sys
+    from pathlib import Path as _P
+
+    sys.path.insert(0, str(_P(__file__).resolve().parent.parent / "scripts"))
+    import archive_run
+
+    from ivygap import config as cfg
+    monkeypatch.setattr(archive_run, "ARCHIVE_ROOT", tmp_path / "arch")
+    empty = tmp_path / "results"
+    (empty / "anatomic").mkdir(parents=True)
+
+    with pytest.raises(SystemExit, match="incomplete"):
+        archive_run.archive(label="x", results=empty)
+
+
+def test_archive_records_a_hash_for_every_file(tmp_path, monkeypatch):
+    """Drift must be detectable rather than assumed — that is the whole point of the
+    manifest."""
+    import json
+    import sys
+    from pathlib import Path as _P
+
+    sys.path.insert(0, str(_P(__file__).resolve().parent.parent / "scripts"))
+    import archive_run
+
+    monkeypatch.setattr(archive_run, "ARCHIVE_ROOT", tmp_path / "arch")
+    src = tmp_path / "results"
+    (src / "anatomic").mkdir(parents=True)
+    (src / "anatomic" / "acs_leaderboard.csv").write_text("method,acs\nnnls,0.9\n")
+    for name, body in (("anatomic_report.json", {"constraint_freeze_hash": "abc",
+                                                 "n_samples": 122, "n_tumors": 10}),
+                       ("agreement_report.json", {"by_yardstick": []}),
+                       ("constraint_file.json", {"constraints": []})):
+        (src / "anatomic" / name).write_text(json.dumps(body))
+
+    dest = archive_run.archive(label="unit", results=src)
+    man = json.loads((dest / "MANIFEST.json").read_text())
+
+    assert man["files"], "no hashes recorded"
+    assert man["label"] == "unit"
+    assert man["constraint_freeze_hash"] == "abc"
+    # every archived file except the manifest itself carries a hash
+    for p in dest.rglob("*"):
+        if p.is_file() and p.name != "MANIFEST.json":
+            assert str(p.relative_to(dest)) in man["files"]
+    # and the archive is read-only
+    lb = dest / "results" / "anatomic" / "acs_leaderboard.csv"
+    assert not (lb.stat().st_mode & 0o200), "archived files should not be writable"
+
+
+def test_archive_verify_detects_alteration(tmp_path, monkeypatch):
+    """The negative control: a manifest that never reports drift is decoration."""
+    import json
+    import sys
+    from pathlib import Path as _P
+
+    sys.path.insert(0, str(_P(__file__).resolve().parent.parent / "scripts"))
+    import archive_run
+
+    monkeypatch.setattr(archive_run, "ARCHIVE_ROOT", tmp_path / "arch")
+    src = tmp_path / "results"
+    (src / "anatomic").mkdir(parents=True)
+    (src / "anatomic" / "acs_leaderboard.csv").write_text("method,acs\nnnls,0.9\n")
+    for name, body in (("anatomic_report.json", {"constraint_freeze_hash": "abc"}),
+                       ("agreement_report.json", {"by_yardstick": []}),
+                       ("constraint_file.json", {})):
+        (src / "anatomic" / name).write_text(json.dumps(body))
+
+    dest = archive_run.archive(results=src)
+    assert archive_run.verify(dest.name) == 0
+
+    tampered = dest / "results" / "anatomic" / "acs_leaderboard.csv"
+    tampered.chmod(0o644)
+    tampered.write_text("method,acs\nnnls,0.99\n")          # a plausible-looking edit
+    assert archive_run.verify(dest.name) == 1

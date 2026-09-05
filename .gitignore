@@ -44,3 +44,10 @@ dwls_signature_*/
 
 # The results-tree lock. Runtime state, never versioned.
 .run.lock
+
+# Archived runs ARE committed. results/ is by definition what the next run overwrites;
+# an archive is the citable snapshot, ~1 MB, with a hash for every file. This project
+# has lost a completed run twice, so the durable copy lives in git rather than only on
+# one disk. The _safety_* prefix marks an unverified mid-run copy — those are not
+# citable and are not committed.
+results_archive/_safety_*

@@ -514,6 +514,28 @@ def main() -> int:
     if args.synthetic:
         print("run type                      : SYNTHETIC FIXTURE — not a finding")
     print(f"{'=' * 72}")
+
+    # Archive before releasing the lock. results/ is by definition what the next run
+    # overwrites; the archive is the citable snapshot, read-only, with a hash for every
+    # file. This project has lost a completed run twice — once to a synthetic fixture
+    # sharing paths, once to the test suite writing into the real tree — and both fixes
+    # prevent a repeat of their own mechanism without making a finished run durable.
+    # This does.
+    if not args.synthetic:
+        try:
+            from scripts.archive_run import archive
+        except ImportError:                                  # invoked as a script
+            sys.path.insert(0, str(Path(__file__).resolve().parent))
+            from archive_run import archive
+        try:
+            dest = archive(label=f"auto · {len(anat['leaderboard'])} methods")
+            print(f"archived to {dest.relative_to(config.PROJECT_ROOT)} "
+                  f"(read-only; verify with scripts/archive_run.py --verify {dest.name})")
+        except SystemExit as exc:
+            print(f"NOT ARCHIVED: {exc}")
+        except Exception as exc:                             # noqa: BLE001
+            print(f"NOT ARCHIVED: {type(exc).__name__}: {exc}")
+
     release_lock()
     return 0
 
