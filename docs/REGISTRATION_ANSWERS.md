@@ -37,7 +37,154 @@ is void.
 
 ---
 
-## Page 3 — Research Design
+## Page 0 — Metadata
+
+### Title
+
+> The Anatomy Test: Can Tumour Anatomy Replace Ground Truth for Choosing a Cell-Type
+> Deconvolution Method?
+
+### Description
+
+> Cell-type deconvolution estimates what fraction of a bulk tissue sample each cell type
+> made up. Dozens of methods exist, they disagree with each other, and for almost any
+> real tissue there is no ground truth to adjudicate between them. In practice the field
+> falls back on an informal check — the estimates "match known biology" — which cannot
+> fail, because the pattern is judged sensible only after it has been seen.
+>
+> This study converts that informal check into a falsifiable one. Seven ordinal claims
+> about which cell types must be enriched in which anatomic structures of glioblastoma
+> were written, frozen and SHA-256 hashed before any deconvolution output was inspected.
+> Fifteen deconvolution methods and two negative controls are then scored on how well
+> they reproduce those pre-registered claims in anatomically annotated tumour tissue
+> (Ivy GAP), producing an Anatomic Concordance Score (ACS) for each.
+>
+> The experiment is whether the ACS ranking agrees with the ranking those same methods
+> receive against real, known ground truth on donor-held-out synthetic mixtures. The
+> pre-registered decision rule is Spearman rho >= 0.60 with a bootstrap interval
+> excluding zero. A result below that bar is not a failed study: it would establish that
+> reproducing known biology is not evidence that a composition estimate is numerically
+> correct, which is a finding the field currently assumes away.
+>
+> Two negative controls — random compositions, and a randomly permuted signature matrix —
+> run through the identical pipeline and are calibrated over 200 draws each. If they
+> score well, the constraint set is measuring nothing and that is reported rather than
+> corrected by retuning.
+
+### License
+
+**CC0 1.0 Universal** (public domain dedication) is appropriate — it is the OSF default
+and imposes no downstream restriction on a methods paper.
+
+### Subjects
+
+Search and select, in rough order of fit:
+- *Life Sciences* -> **Bioinformatics** (or *Computational Biology*)
+- *Medicine and Health Sciences* -> **Oncology** (and **Neoplasms** if offered)
+- *Medicine and Health Sciences* -> **Pathology**
+- *Physical Sciences and Mathematics* -> **Statistical Methodology** (or *Biostatistics*)
+
+### Tags
+
+```
+deconvolution, glioblastoma, benchmarking, ground truth, preregistration,
+Ivy GAP, anatomic concordance, cell-type composition, negative controls,
+bulk RNA-seq, single-cell reference, reproducibility
+```
+
+---
+
+## Page 1 — Overview
+
+### Research questions or hypotheses
+
+> **Q1. Does anatomy discriminate at all?** Do deconvolution methods differ measurably in
+> how well they reproduce seven pre-registered anatomic constraints, and do negative
+> controls score below real methods?
+> *Testable:* ACS is computed per method; two controls run through the identical
+> pipeline over 200 draws each. If the controls match or exceed real methods, the
+> constraint set is not measuring composition and is reported as such.
+>
+> **Q2 (PRIMARY). Does the anatomy-based ranking agree with the ground-truth ranking?**
+> *Hypothesis:* the Spearman correlation between each method's ACS and its accuracy on
+> donor-held-out synthetic mixtures is rho >= 0.60 with a bootstrap CI excluding zero.
+> *Testable, and falsifiable in a way that matters:* rho < 0.60 establishes the opposite
+> conclusion — that reproducing known biology is not evidence of numerical accuracy —
+> and is reported with equal prominence.
+>
+> **Q3. Is any single method identifiable as best?** *Hypothesis: no.* With nine
+> evaluable tumours and a weighted denominator of 65, ACS is expected to be too coarse to
+> separate adjacent methods, and any such claim is to be reported as INCONCLUSIVE unless
+> a paired bootstrap separates them.
+>
+> **Q4. Is the ranking stable across cohort definition?** Several methods use
+> cross-sample statistics, so the same sample deconvolved inside a 270-sample cohort does
+> not receive the same estimate as inside a 122-sample one. The two ACS rankings are
+> compared as a sensitivity check.
+>
+> **Q5. Can composition predict survival in this cohort?** *Pre-specified as probably
+> unanswerable.* The release publishes survival times without vital status, so censoring
+> is unknowable. This is expected to return BLOCKED, and BLOCKED is the reported answer.
+
+### Foreknowledge of data or evidence
+
+**Select: "Analyses in this plan have been conducted already. At least some of the
+analyses described in this analysis plan have been conducted by the authors making this
+a retrospective registration."**
+
+This is the only truthful option and it must be selected. Two complete analyses are
+archived. Choosing any weaker option would be a false certification, and a reviewer who
+later saw the archived runs would be entitled to discard the entire registration.
+
+### Explanation of foreknowledge and managing unintended influences
+
+> This is a retrospective registration and is labelled as one. Two complete analyses have
+> been run and are archived with a SHA-256 hash for every file
+> (`results_archive/2026-09-05T2154`, `results_archive/2026-09-06T1103`). The purpose of
+> registering now is not to claim the analyses were unseen. It is to fix the constraint
+> file, the decision rule and the analysis plan in a public, timestamped form before any
+> further runs, and to state exactly what was and was not decided in advance.
+>
+> **What genuinely predates any observation of deconvolution output:**
+>
+> 1. *The seven constraints.* Written, frozen and hashed
+>    (2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a) before any method
+>    was scored against them. The hash covers the canonical payload of the claims, so
+>    reformatting the source file does not change it while altering a claim does. It has
+>    not changed.
+> 2. *The decision rule.* rho >= 0.60 with a CI excluding zero was fixed in code before
+>    the correlation was computed, together with the explicit statement that a value below
+>    it is a publishable finding rather than a failure.
+> 3. *Two exclusions made in advance.* T cells were excluded from the constraint set
+>    because this project's own synthetic benchmark places them at the detection floor;
+>    the 148 expression-labelled samples were excluded from scoring as circular.
+>
+> **Specific actions taken to limit unintended influence:**
+>
+> - The constraint file is never edited in response to a result. Where a stated rationale
+>   was later found incomplete — the recorded reason for excluding neuronal content was
+>   the roster, when the deeper reason is that the reference atlas contains 22 neurons —
+>   the correction is published alongside the frozen file rather than applied to it,
+>   because editing would change the hash and void every result computed under it.
+> - No method receives the anatomic structure label; structure is used only in scoring,
+>   after estimates exist. An automated check verifies the manifest carries no outcome
+>   column and aborts if it does.
+> - Method selection never uses an outcome, and never uses ACS itself, since ACS is the
+>   quantity under test. Both rules are assertions in code, not conventions.
+> - Negative controls are run through the identical pipeline over 200 draws each, and the
+>   protocol commits in advance to publishing the constraint file unchanged even if the
+>   controls score well.
+> - Every run is archived read-only with per-file hashes, so any later result can be
+>   checked against what was actually produced.
+>
+> **What this registration cannot claim:** that the analysis plan was written without
+> knowledge of the results. It was not. Results reported as confirmatory will come from
+> a run executed after this registration; everything already archived is labelled as
+> pilot work.
+
+---
+
+## Page 2 — Research Design
 
 ### Study type
 
@@ -166,23 +313,43 @@ participants, no assignment, and no treatment.
 
 ---
 
-## Page 4 — Sampling
+## Page 3 — Sampling
 
-### Existing data / data collection status
+### Data collection procedures
 
-**Data already collected; analysis already begun.** Both datasets are public archival
-releases. No new data are collected and no participants are recruited.
-
-### Data source
-
-> **Ivy Glioblastoma Atlas Project (Ivy GAP)**, RNA-Seq release of 2014-11-25 (Allen
-> Institute for Brain Science; Puchalski et al., *Science* 2018). Bulk RNA-seq of
-> laser-microdissected anatomic structures from human glioblastoma.
+> **Status.** No new data are collected and no participants are recruited. Both datasets
+> are public archival releases that already existed, and analyses on them have already
+> been conducted (see the foreknowledge item). This registration fixes the plan for
+> subsequent confirmatory runs.
 >
-> **GBmap Core** single-cell atlas, 338,564 cells, used only to build the cell-type
-> reference and the synthetic mixtures — never scored.
+> **Primary dataset.** The Ivy Glioblastoma Atlas Project (Ivy GAP) RNA-Seq release of
+> 2014-11-25, Allen Institute for Brain Science (Puchalski et al., *Science* 2018). Bulk
+> RNA-seq of human glioblastoma tissue that was laser-microdissected into named anatomic
+> structures under H&E guidance by neuropathologists. The population is adult
+> glioblastoma resection specimens contributed to that project; the sampling frame is the
+> entire public release, obtained by direct download.
+>
+> **Reference dataset.** GBmap Core, a 338,564-cell single-cell atlas of glioblastoma,
+> used only to build the cell-type reference profiles and the synthetic mixtures. It is
+> never scored and contributes no anatomic claim.
+>
+> **Inclusion criteria for the scoring set**, all applied programmatically:
+> 1. the sample carries an H&E-assigned anatomic structure label (the `-reference-
+>    histology` designation), and
+> 2. that structure is one of the five pre-registered structures (LE, IT, CT, MVP, PAN),
+>    and
+> 3. the sample has expression data that joins to the manifest.
+>
+> **Exclusion, decided in advance and enforced by assertion.** The release also contains
+> 148 samples whose structure label was assigned *from expression* rather than from
+> histology. Scoring anatomic constraints on those would be circular by construction, so
+> they are excluded from ACS. They are still deconvolved, because composition is well
+> defined on them, and they support a wider sensitivity cohort — but an assertion aborts
+> the run if any of them reaches the scoring set.
+>
+> **Duration.** Not applicable; both releases are closed and static.
 
-### Sample size, and how it was arrived at
+### Sample size
 
 > Sample size is fixed by the archive; nothing was chosen. The release contains **270
 > RNA-seq samples from 37 tumours**. Of these, **122 samples across 10 tumours** carry
@@ -197,12 +364,22 @@ releases. No new data are collected and no participants are recruited.
 > The synthetic arm uses **500 pseudobulk mixtures** built from **22 held-out donors**,
 > with the reference built from the other **88**.
 
-### Stopping rule
+### Starting and stopping rules
 
-> None applicable. Both datasets are closed archival releases of fixed size; there is no
-> sequential collection and no interim analysis that could stop it.
+> **Stopping:** not applicable in the usual sense. Both datasets are closed archival
+> releases of fixed size. There is no sequential collection, no interim analysis, and no
+> decision available that could stop or extend data collection.
+>
+> **Pilot / confirmatory boundary**, which is the meaningful version of this question
+> here: everything run before this registration is pilot work and is labelled as such,
+> including two complete archived analyses. The boundary is the registration timestamp.
+> Runs executed after it are confirmatory, and because every result file carries a
+> modification time and every archive carries a per-file hash, whether a given result
+> predates the registration is checkable rather than asserted. The analysis is
+> deterministic under a fixed seed, so a confirmatory run reproduces a pilot run exactly
+> where the plan is unchanged; where it differs, the difference is the registered change.
 
-### Power / precision, stated honestly
+### Sample size rationale
 
 > This is the study's principal limitation and it is reported as a result rather than
 > buried. Nine evaluable tumours and a weighted denominator of 65 mean ACS can take only
@@ -215,7 +392,7 @@ releases. No new data are collected and no participants are recruited.
 
 ---
 
-## Page 5 — Variables
+## Page 4 — Variables
 
 ### Manipulated variables
 
@@ -240,7 +417,7 @@ releases. No new data are collected and no participants are recruited.
 > **Reported alongside, never as the headline:** a within-tumour permutation p-value per
 > method, a bootstrap interval over tumours, and the two negative controls' scores.
 
-### Indices, and one deliberate exclusion
+### Indices
 
 > The Astrocyte column is excluded from the primary accuracy metric. It is known to be
 > unidentifiable against the Tumor column in this reference, and including it would let a
@@ -250,7 +427,7 @@ releases. No new data are collected and no participants are recruited.
 
 ---
 
-## Page 6 — Analysis Plan
+## Page 5 — Analysis Plan
 
 ### Statistical models
 
@@ -290,7 +467,7 @@ releases. No new data are collected and no participants are recruited.
 > permutation p-value below 0.05 is necessary but not sufficient for any claim: a method
 > must also exceed both negative controls.
 
-### Data exclusion
+### Data inclusion and exclusion
 
 > Stated in advance and enforced in code, not by judgement:
 > - the 148 expression-labelled samples are excluded from ACS scoring (circular);
@@ -310,7 +487,7 @@ releases. No new data are collected and no participants are recruited.
 > A survival analysis is therefore reported only under an explicitly declared assumption,
 > into a separately labelled directory, and never as the headline.
 
-### Exploratory analyses
+### Other planned analysis
 
 > Everything not named above is exploratory and labelled as such, including: the wider
 > 270-sample cohort, the per-constraint and per-tumour breakdowns, the comparison of
@@ -318,7 +495,9 @@ releases. No new data are collected and no participants are recruited.
 
 ---
 
-## Page 7 — Other
+## Page 6 — Other
+
+### Context and additional information
 
 > **Prior work by the authors on this dataset.** Two complete analyses have already been
 > run and are archived with per-file hashes (`results_archive/2026-09-05T2154`,
