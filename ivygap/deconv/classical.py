@@ -11,6 +11,7 @@ asking whether Elastic Net and the Bayesian prior actually fix that failure.
 
 from __future__ import annotations
 
+import dataclasses
 import warnings
 
 import numpy as np
@@ -19,6 +20,7 @@ from scipy.optimize import nnls
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.svm import NuSVR
 
+from .. import config
 from .base import DeconvolutionInput, DeconvolutionMethod
 
 
@@ -213,14 +215,23 @@ class CIBERSORTxDeconvolution(SVRDeconvolution):
     The paper requires at least three mixture samples and recommends ten; with fewer,
     this falls back to the uncorrected fit and says so.
 
-    WHAT IS NOT IMPLEMENTED
-    -----------------------
-    S-mode, which adjusts the signature rather than the mixtures and is the mode the
-    paper actually recommends for droplet-derived signatures. Its algorithm is given in
-    Supplementary Note 1, which is not in the PDF available here, and guessing at it
-    would produce something that is not S-mode wearing its name. Nor is the hosted
-    CIBERSORTx service used: it is web/licence-gated, so no result here comes from
-    Stanford's implementation.
+    THIS IS B-MODE, AND B-MODE IS PROBABLY NOT THE RIGHT MODE HERE
+    ---------------------------------------------------------------
+    Supplementary Table 1d of the same paper records the mode the authors chose for
+    every deconvolution they ran, and the pattern is consistent: a signature derived
+    from 10x Chromium and applied to a bulk RNA-seq mixture is deconvolved in S-MODE,
+    every time. B-mode is what they use for SMART-Seq2- and microarray-derived
+    signatures. The split is mechanistic — droplet data carries a strong 3' bias and UMI
+    counting, so it sits further from bulk than full-length SMART-Seq2 does.
+
+    GBmap is 87.1% 10x (measured: 214,284 cells 3' v2, 49,262 3' v3, 31,316 5' v1, of
+    338,564; Smart-seq2 is 2.7%). So by the paper's own practice this configuration is
+    an S-mode configuration. `CIBERSORTxSModeDeconvolution` below implements it; this
+    class stays as B-mode and is reported under its own name, so the two modes can be
+    compared rather than one silently standing in for the other.
+
+    The hosted CIBERSORTx service is not used: it is web/licence-gated, so no result
+    here comes from Stanford's implementation.
     """
 
     name = "cibersortx"
@@ -271,4 +282,180 @@ class CIBERSORTxDeconvolution(SVRDeconvolution):
 
         self.batch_corrected_ = True
         self.batch_skip_reason_ = None
+        return super()._solve_all(adjusted)
+
+
+class CIBERSORTxSModeDeconvolution(SVRDeconvolution):
+    """
+    CIBERSORTx S-mode: nu-SVR against a batch-ADJUSTED SIGNATURE.
+
+    Where B-mode moves the mixtures toward the signature, S-mode moves the signature
+    toward the mixtures. The paper recommends it for signatures derived from
+    droplet/UMI platforms, which is this project's configuration — see the note on
+    `CIBERSORTxDeconvolution` and `configs.DECLARED_DEVIATIONS["cibersortx"]`.
+
+    THE ALGORITHM, from Supplementary Note 1 (p39 of the Supplementary Information)
+    ------------------------------------------------------------------------------
+    Given the signature `B` (genes x c types) and the single cells `R` those profiles
+    were built from:
+
+      1. mu = each cell type's fractional abundance in R; sigma = 2*mu.
+      2. Draw F* (c types x k artificial mixtures) from N(mu, sigma), per type.
+      3. Clip negatives in F* to 0; renormalise each mixture's column to sum 1.
+      4. Sample single cells per type according to F* and aggregate into k bulk
+         profiles in TPM space -> M*.
+      5. ComBat on M and M* jointly, in log2 space -> Madj, Madj*.
+      6. Back to linear; per gene, NNLS of Madj*[g,:] on F*.T gives that gene's row of
+         the adjusted signature -> Badj.
+      7. Estimate F from the ORIGINAL mixtures M against Badj.
+
+    Step 7 uses M and not Madj, and that is deliberate in the paper: ComBat moved M*
+    toward M's batch, so Badj is already expressed in M's space.
+
+    The paper notes step 6 needs no adaptive noise filtration, because F* is known
+    exactly and ComBat is linear in log2 space, so it preserves ordering.
+
+    WHY THIS ONE NEEDS CELLS AND B-MODE DOES NOT
+    --------------------------------------------
+    B-mode reconstructs its mixtures as S @ F.T, so a collapsed signature is enough.
+    S-mode resamples actual single cells, so without a registered cell source there is
+    nothing to build M* from. It raises rather than quietly doing something else: an
+    S-mode row computed without R would not be S-mode, and this project's rule is that
+    a method never reports under a name it did not earn.
+    """
+
+    name = "cibersortx_smode"
+    family = "least-squares"
+
+    #: Artificial mixtures to build. Step 6 is a per-gene NNLS on a (k x c) design, so
+    #: k must exceed c; the paper's fallback for k <= c is to manufacture more
+    #: pseudo-mixtures, which at 100 vs 8 types never binds here.
+    N_ARTIFICIAL = 100
+    #: Cells aggregated per artificial mixture.
+    CELLS_PER_MIXTURE = 500
+
+    def __init__(self, **params):
+        super().__init__(**params)
+        self.signature_adjusted_: bool = False
+        self.n_artificial_: int = 0
+        self.adjustment_note_: str | None = None
+
+    def _cells(self, data: DeconvolutionInput):
+        """
+        The registered single cells, aligned to the run's gene space and roster.
+
+        Read through `r_bridge`'s cell-source registry, which is what the benchmark
+        stage narrows to TRAINING donors only. Going through it rather than loading the
+        atlas directly is what keeps S-mode inside the donor-held-out design instead of
+        quietly reading the test donors' cells.
+        """
+        from ivygap.deconv.r_bridge import get_cell_source
+
+        src = get_cell_source(data.primary.name)
+        if src is None:
+            raise RuntimeError(
+                f"S-mode needs the single cells the signature was built from, and no "
+                f"cell source is registered for reference {data.primary.name!r}. "
+                f"B-mode reconstructs its mixtures from the signature alone and can run "
+                f"without them; S-mode cannot, and will not substitute B-mode under "
+                f"S-mode's name."
+            )
+        expression, meta = src
+
+        shared = [c for c in expression.columns if c in meta.index]
+        if not shared:
+            raise RuntimeError("no cell ids shared between registered expression and metadata")
+        expression, meta = expression[shared], meta.loc[shared]
+
+        genes = list(data.bulk.index)
+        missing = [g for g in genes if g not in expression.index]
+        if missing:
+            raise RuntimeError(
+                f"{len(missing)} of the run's {len(genes)} genes are absent from the "
+                f"registered cell source; S-mode's artificial mixtures must live on the "
+                f"same gene space as the real ones")
+        return expression.loc[genes], meta
+
+    def _solve_all(self, data: DeconvolutionInput) -> np.ndarray:
+        expression, meta = self._cells(data)
+        types = list(data.cell_types)
+        c = len(types)
+        rng = np.random.default_rng(config.RANDOM_SEED)
+
+        labels = meta["cell_type"].astype(str).to_numpy()
+        by_type = {t: np.flatnonzero(labels == t) for t in types}
+        empty = [t for t in types if by_type[t].size == 0]
+        if empty:
+            raise RuntimeError(
+                f"the registered cell source has no cells for {empty}; S-mode draws its "
+                f"artificial mixtures from real cells, so a type with none cannot be "
+                f"given a column in the adjusted signature")
+
+        # step 1: mu is each type's fractional abundance in R; sigma = 2*mu
+        counts = np.array([by_type[t].size for t in types], dtype="float64")
+        mu = counts / counts.sum()
+        sigma = 2.0 * mu
+
+        # steps 2-3: F* ~ N(mu, sigma), clipped at zero and renormalised per mixture
+        k = self.N_ARTIFICIAL
+        F_star = rng.normal(mu[:, None], sigma[:, None], size=(c, k))
+        np.clip(F_star, 0.0, None, out=F_star)
+        col = F_star.sum(axis=0, keepdims=True)
+        # A column can clip to all-zero. Falling back to mu keeps the mixture rather
+        # than dropping it, which would silently shrink k below what step 6 was sized for.
+        dead = (col <= 0).ravel()
+        if dead.any():
+            F_star[:, dead] = mu[:, None]
+            col = F_star.sum(axis=0, keepdims=True)
+        F_star /= col
+
+        # step 4: aggregate real cells into k bulk profiles, in TPM space
+        X = expression.to_numpy(dtype="float64")             # genes x cells
+        M_star = np.empty((X.shape[0], k), dtype="float64")
+        for j in range(k):
+            n_per = rng.multinomial(self.CELLS_PER_MIXTURE, F_star[:, j])
+            picks = [rng.choice(by_type[t], size=n, replace=True)
+                     for t, n in zip(types, n_per) if n > 0]
+            idx = np.concatenate(picks)
+            M_star[:, j] = X[:, idx].sum(axis=1)
+        tot = M_star.sum(axis=0, keepdims=True)
+        M_star = np.divide(M_star, tot, out=np.zeros_like(M_star), where=tot > 0) * 1e6
+
+        # step 5: ComBat over the two batches, in log2 space
+        _, B = self._as_arrays(data)
+        lg = lambda m: np.log2(np.clip(m, 0, None) + 1.0)
+        stacked = np.hstack([lg(B), lg(M_star)])
+        batch = np.array(["M"] * B.shape[1] + ["Mstar"] * k)
+        adj = _combat_adjust(stacked, batch)
+
+        # step 6: linear space, then a per-gene NNLS on the (k x c) design F*.T
+        M_star_adj = np.clip(np.exp2(adj[:, B.shape[1]:]) - 1.0, 0.0, None)
+        design = F_star.T                                    # k x c
+        B_adj = np.empty((M_star_adj.shape[0], c), dtype="float64")
+        for g in range(M_star_adj.shape[0]):
+            B_adj[g], _ = nnls(design, M_star_adj[g])
+
+        # A gene the adjustment zeroes out everywhere carries no signal and would make
+        # the signature rank-deficient; keep the original row for those.
+        dead_genes = ~np.isfinite(B_adj).all(axis=1) | (B_adj.sum(axis=1) <= 0)
+        S_orig = data.primary.profile.to_numpy(dtype="float64")
+        if dead_genes.any():
+            B_adj[dead_genes] = S_orig[dead_genes]
+
+        self.signature_adjusted_ = True
+        self.n_artificial_ = k
+        self.adjustment_note_ = (
+            f"signature adjusted by S-mode against {k} artificial mixtures of "
+            f"{self.CELLS_PER_MIXTURE} cells each, drawn from {X.shape[1]} registered "
+            f"cells; {int(dead_genes.sum())} gene(s) kept their original profile")
+
+        # step 7: deconvolve the ORIGINAL mixtures against the adjusted signature
+        ref_adj = dataclasses.replace(
+            data.primary,
+            profile=pd.DataFrame(B_adj, index=data.bulk.index, columns=types))
+        adjusted = DeconvolutionInput(
+            bulk=data.bulk, references=(ref_adj,) + tuple(data.references[1:]),
+            manifest=data.manifest, cell_types=data.cell_types,
+            apply_cell_size_correction=data.apply_cell_size_correction,
+            bulk_full=data.bulk_full)
         return super()._solve_all(adjusted)

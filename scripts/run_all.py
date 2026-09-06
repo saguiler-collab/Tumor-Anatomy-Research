@@ -353,7 +353,8 @@ def main() -> int:
     anat = run_anatomic.run(bulk.loc[genes, anatomic_index], manifest.loc[anatomic_index],
                             references=(reference,), prefer_r=prefer_r,
                             n_permutations=args.permutations,
-                            n_control_draws=args.control_draws)
+                            n_control_draws=args.control_draws,
+                            bulk_full=bulk.loc[:, anatomic_index])
 
     # 4b widens only the DECONVOLUTION. Scoring is still the anatomic subset — enforced
     # inside run_anatomic, not trusted to this caller — so the wider set can change a
@@ -369,6 +370,7 @@ def main() -> int:
                                      references=(reference,), prefer_r=prefer_r,
                                      n_permutations=args.permutations,
                                      deconvolve_all=True,
+                                     bulk_full=bulk,
                                      out_subdir="full_database",
                                      n_control_draws=args.control_draws)
 

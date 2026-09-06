@@ -1,0 +1,59 @@
+{
+  "adequately_powered": false,
+  "detectable_delta_c_index": 0.5147212168101124,
+  "events_per_covariate": 3.625,
+  "n_censored": 0,
+  "n_covariates": 8,
+  "n_events": 29,
+  "n_patients": 29,
+  "verdict": "UNDERPOWERED: 29 events supports detecting a C-index difference of about 0.515 at best. Differences smaller than that are reported as INCONCLUSIVE and are not used to rank methods.",
+  "event_policy": "observed-time-is-death",
+  "event_assumption": "tumor_details.csv publishes no vital-status column. Under the declared policy 'observed-time-is-death', each of the 32 recorded survival times is read as an observed death and the 10 blank rows are DROPPED (not censored, not imputed). See audit_missingness(): the blanks are not missing at random.",
+  "clinical_provenance": {
+    "available": true,
+    "n_patients": 29,
+    "n_events": 29,
+    "n_censored": 0,
+    "median_followup_days": 363.0,
+    "has_age": true,
+    "has_sex": false,
+    "event_policy": "observed-time-is-death",
+    "event_assumption": "tumor_details.csv publishes no vital-status column. Under the declared policy 'observed-time-is-death', each of the 32 recorded survival times is read as an observed death and the 10 blank rows are DROPPED (not censored, not imputed). See audit_missingness(): the blanks are not missing at random.",
+    "n_rows_in_file": 42,
+    "n_dropped_before_analysis": 13,
+    "join": {
+      "joined_via": "donor_id -> tumor_id via rna_seq_samples_details.csv",
+      "n_mapped": 37,
+      "n_unmapped": 5,
+      "unmapped_ids": [
+        "159992499",
+        "14545",
+        "292023102",
+        "159446123",
+        "180682564"
+      ],
+      "why_unmapped": "these donors have no RNA-seq sample in the archive, so they could not contribute to a composition-based analysis anyway"
+    },
+    "source_sha256": "4accada8f216868383f8514177dfcfbcc97bf707765083ef31cc7c2b12f70592"
+  },
+  "missingness_audit": {
+    "available": true,
+    "n_tumors": 42,
+    "n_time_recorded": 32,
+    "n_time_blank": 10,
+    "mgmt": {
+      "methylated_among_recorded": "9/31",
+      "methylated_among_blank": "8/9",
+      "fisher_odds_ratio": 0.05113636363636364,
+      "fisher_p": 0.0021337126600284493
+    },
+    "age": {
+      "median_recorded": 61.0,
+      "median_blank": 52.0,
+      "mannwhitney_p": 0.01527925996153356
+    },
+    "missing_at_random": false,
+    "verdict": "INFORMATIVE MISSINGNESS: a blank survival time is strongly associated with MGMT methylation (Fisher p = 0.002134), the strongest favourable prognostic factor in GBM. The blanks are concentrated among the patients most likely to have been alive at the data freeze, so dropping them biases the cohort toward short survival. Any complete-case survival estimate on this table is biased downward and must be reported as such."
+  },
+  "read_this_first": "This directory exists only because the run was explicitly asked for it. The canonical survival result is BLOCKED \u2014 see ../survival_power.json. Every number here rests on reading a recorded survival time as an observed death, and on dropping the tumours with no recorded time. Those dropped tumours are NOT missing at random: they are strongly enriched for MGMT methylation and younger age, so this cohort is biased toward short survival."
+}

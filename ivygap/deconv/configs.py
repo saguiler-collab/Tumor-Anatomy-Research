@@ -35,6 +35,65 @@ from pathlib import Path
 #: method name -> (what was changed, why, when the decision was made).
 #: Only genuine departures from a tool's documented defaults belong here.
 DECLARED_DEVIATIONS: dict[str, list[dict]] = {
+    "cibersortx": [
+        {
+            "parameter": "batch-correction mode (B-mode vs S-mode)",
+            "published_default": ("no single default; Newman et al. (2019) choose per "
+                                  "configuration. Their Supplementary Table 1d records "
+                                  "the choice for every deconvolution in the paper."),
+            "used": "B-mode",
+            "why": ("Supplementary Table 1d shows a consistent split: every signature "
+                    "derived from 10x Chromium and applied to a bulk RNA-seq mixture is "
+                    "deconvolved in S-MODE, while B-mode is used for SMART-Seq2- and "
+                    "microarray-derived signatures (LM22) against bulk. The split is "
+                    "mechanistic — droplet 10x data carries a strong 3' bias and UMI "
+                    "counting, so it sits further from bulk RNA-seq than full-length "
+                    "SMART-Seq2 does. This project's reference is GBmap, measured at "
+                    "87.1% 10x (214,284 cells 3' v2, 49,262 3' v3, 31,316 5' v1 of "
+                    "338,564) against 2.7% Smart-seq2, and the mixtures are Ivy GAP "
+                    "bulk RNA-seq. By the paper's own practice that is an S-mode "
+                    "configuration, and this implementation runs B-mode. S-mode's "
+                    "per-cell-type expression adjustment is not implemented here, so "
+                    "the row is B-mode and says so rather than claiming to be the "
+                    "mode the authors would have used."),
+            "decided": ("from Supplementary Table 1d and the atlas assay counts, both "
+                        "external to any score this project computed"),
+        },
+    ],
+    "quantiseq": [
+        {
+            "parameter": "the bulk gene space this HARNESS hands the method",
+            "published_default": "the full expression matrix",
+            "used": "the full shared space, NOT the shared marker subset",
+            "why": ("Every other method solves against this project's signature matrix, "
+                    "so the marker subset — top-N genes per cell type ranked against "
+                    "that signature, plus its markers — is the shared gene space and "
+                    "equal footing holds. quanTIseq does not solve against it: it ships "
+                    "TIL10 and ignores the signature it is handed. Ranking genes "
+                    "against a reference it never reads kept 34 of TIL10's 138 "
+                    "signature genes (24.6%), and quanTIseq answered with macrophages "
+                    "at 100% of cells in the median sample and T cells identically zero "
+                    "in all 122. On the full space it finds 136 of 138 (98.6%) and "
+                    "returns a GBM-plausible 15.7% median myeloid fraction. The subset "
+                    "was not equal footing for this method; it was mutilation. EPIC is "
+                    "also signature-only but DOES read the supplied signature, so it "
+                    "keeps the subset and is untouched by this."),
+            "decided": ("from the signature-gene recovery rate, before any quanTIseq "
+                        "ACS existed — the 2026-09-05T2154 run scored it NaN"),
+        },
+        {
+            "parameter": "cell-size (mRNA) correction",
+            "published_default": "scale_mRNA = TRUE, quanTIseq's own mRNA scaling",
+            "used": "quanTIseq's own scaling only; this project's is not applied on top",
+            "why": ("The pipeline's cell-size correction and quanTIseq's scale_mRNA are "
+                    "the same correction. Applying both would double-correct, and this "
+                    "project's version renormalises to sum 1, which on a method "
+                    "covering four immune types would assert the tumour is entirely "
+                    "immune. Keeping the published default and skipping ours leaves "
+                    "quanTIseq on its own documented scale."),
+            "decided": "from the two definitions, before any quanTIseq ACS existed",
+        },
+    ],
     "dwls": [
         {
             "parameter": "buildSignatureMatrixMAST(diff.cutoff, pval.cutoff)",

@@ -28,22 +28,55 @@ Regenerate it any time with:
 python3 -c "import sys;sys.path.insert(0,'.');from ivygap.anatomic import constraints as K;print(K.freeze_hash())"
 ```
 
-**Steps**
+> **Read this before you start — OSF is changing underneath this step.**
+>
+> OSF is retiring Projects. Announced dates: **no new projects can be created after
+> 16 November 2026**, and existing projects go **read-only on 19 February 2027**.
+> OSF's own notice states that **Registrations, Preregistrations and Preprints are
+> *unaffected*** — so the timestamp this step exists to create is not going away.
+> Only the *route* to it is.
+>
+> As of today (2026-09-05) that leaves **72 days** on the project-based route below.
+> Route A avoids projects entirely and is the one to prefer.
 
-1. Go to <https://osf.io> and sign in (free; ORCID or institutional login works).
-2. **Create new project** → name it e.g. *The Anatomy Test — anatomic concordance
-   constraint file*. Keep it **Public**.
-3. Upload two files from this repo:
-   - `ivygap/anatomic/constraints.py` — the constraints themselves
-   - `results_archive/<stamp>/results/anatomic/constraint_file.json` — the canonical
-     JSON payload the hash is computed from
-4. In the project **Wiki** or description, paste the hash above and one line:
-   *"SHA-256 of the canonical constraint payload; see constraint_file.json."*
-5. **Registrations** tab → **New registration** → *OSF Preregistration* template →
-   submit. This is the step that creates the immutable timestamp. A plain project upload
-   is not a registration.
-6. Copy the registration's DOI/URL and its UTC timestamp.
-7. Fill in `REGISTRATION.template.json` and rename it to `REGISTRATION.json`:
+**Route A — register directly, no project (preferred; unaffected by the transition)**
+
+1. Go to <https://osf.io/registries> and sign in (free; ORCID or institutional login).
+2. **Add a registration** → choose the **OSF Preregistration** template. Start from
+   scratch rather than linking a project.
+3. Put the hash in the registration narrative, where it is part of the frozen record.
+   In the summary/description field paste:
+
+   > SHA-256 of the canonical constraint payload: `2d1fb47c...807a`
+   > Constraints: seven ordinal claims about which cell types are enriched in which
+   > anatomic structures, fixed before any deconvolution output was inspected.
+
+4. Paste the **full contents** of `constraint_file.json` into a long-form field (it is
+   small). This matters: a registration created without a project may not accept
+   arbitrary file uploads, and the hash is only meaningful if the payload it hashes is
+   *in* the immutable record. Pasting the JSON makes the registration self-verifying.
+5. Submit. Submission — not saving a draft — is what mints the timestamp.
+6. Copy the registration URL and its UTC timestamp.
+
+**Route B — project first, then register (works only until 2026-11-16)**
+
+Use this only if you specifically want the two files attached as file uploads.
+
+1. <https://osf.io> → **Create new project**, name it e.g. *The Anatomy Test — anatomic
+   concordance constraint file*. Keep it **Public**.
+2. Upload `ivygap/anatomic/constraints.py` and
+   `results_archive/<stamp>/results/anatomic/constraint_file.json`.
+3. Paste the hash into the project Wiki with one line of context.
+4. **Registrations** tab → **New registration** → *OSF Preregistration* → submit.
+   A plain project upload is **not** a registration and carries no immutable timestamp.
+5. Copy the registration DOI/URL and UTC timestamp.
+
+Because projects go read-only in Feb 2027, treat anything uploaded this way as a copy,
+not as the archival home. The registration is the archival object; the repo is the
+working copy.
+
+**Then, either route** — fill in `REGISTRATION.template.json` and rename it to
+`REGISTRATION.json`:
 
 ```json
 {
@@ -67,8 +100,19 @@ file or registering the new one and marking everything before as superseded.
 **Timing matters.** Register *before* the next run, so every result file postdates the
 registration. The checker compares mtimes and will tell you if any result predates it.
 
-**Alternative if OSF is slow:** Zenodo (also DOI-minting) or an OpenTimestamps proof of
-the hash. Any public, immutable timestamp works — record which one in `registry`.
+**Alternatives, all unaffected by the OSF change.** Any public, immutable timestamp
+works — record which one you used in `registry`:
+
+| Option | Mints a DOI | Account needed | Good for |
+|---|---|---|---|
+| **Zenodo** <https://zenodo.org> | yes | yes (GitHub login works) | attaching the actual files *and* getting a DOI; the closest drop-in for Route B |
+| **OpenTimestamps** <https://opentimestamps.org> | no | no | a Bitcoin-anchored proof of the hash in about a minute, with nothing to sign up for |
+| **Software Heritage** <https://softwareheritage.org> | no (SWHID) | no | archiving the repo itself at a commit |
+
+Zenodo is the recommended second choice: drop in the same two files, and it timestamps
+and DOIs them without depending on OSF's project system at all. OpenTimestamps is worth
+doing *regardless* of which registry you pick — it costs nothing, needs no account, and
+independently proves the hash existed today.
 
 ---
 
@@ -150,8 +194,14 @@ biases the cohort toward short survival.
 
 **Steps**
 
-1. Email the Allen Institute: <https://portal.brain-map.org/contact-us> (or
-   `info@alleninstitute.org`), referencing the Ivy GAP RNA-Seq release.
+1. Contact the Allen Institute, referencing the Ivy GAP RNA-Seq release. The old
+   `portal.brain-map.org/contact-us` page now 404s; the routes that resolve today
+   (checked 2026-09-05) are:
+   - <https://community.brain-map.org/> — the Allen Brain Map community forum, and the
+     best first stop for a data question: answers are public and citable, which a
+     private email reply is not.
+   - <https://alleninstitute.org/contact-us/> — the institutional contact form.
+   - `info@alleninstitute.org` as a fallback.
 2. Ask specifically for: **vital status at last follow-up, and follow-up duration for
    patients with no recorded `survival_days`** — for the 42 tumours in
    `tumor_details.csv`.
@@ -167,7 +217,41 @@ one.
 
 ---
 
-## 5 · CIBERSORTx Supplementary Note 1 — enables S-mode
+## 5 · CIBERSORTx Supplementary Note 1 — **FOUND 2026-09-06, no longer blocking**
+
+> **This item is resolved.** The document is
+> `~/Downloads/CIBERSORTx Supplementary.pdf` (14.5 MB, 43 pages); Supplementary Note 1
+> ends on **page 39**, which states the S-mode algorithm in full. Nothing further needs
+> to be obtained. What remains is implementation, which is now unblocked.
+>
+> **S-mode, as specified on p39** — it adjusts the SIGNATURE, not the mixtures:
+>
+> 1. Take signature `B` (c cell types) and the single-cell profiles `R` (n genes x r
+>    cells) that `B` was derived from.
+> 2. Build `k` artificial mixtures `M*` from cells in `R`. Per cell type, draw mixing
+>    coefficients from `N(mu, sigma)` with `mu` = that type's fractional abundance in
+>    `R`, and `sigma = 2*mu`. (The paper reports S-mode is robust to moderate variation
+>    in these, Supp. Fig. 1k,l.)
+> 3. Clip negatives in `F*` to 0, then normalise each mixture's coefficients to sum 1.
+> 4. Sample single-cell transcriptomes per type according to `F*`, aggregate into `k`
+>    bulk profiles in **TPM space** -> `M*`.
+> 5. Apply **ComBat to `M` and `M*` together in log2 space** -> `Madj`, `Madj*`.
+> 6. Convert `Madj*` back to linear space. Run **NNLS with `Madj*` and `F*`** to
+>    reconstruct per-gene cell-type coefficients -> the adjusted signature **`Badj`**.
+>    No adaptive noise filtration is needed here: `F*` is known exactly, and ComBat is
+>    linear in log2 space so it preserves ordering.
+> 7. Estimate `F` from the ORIGINAL `M` against `Badj`, by ordinary CIBERSORTx.
+>
+> Edge case, same page: NNLS needs more mixtures than cell types (`k > c`). If `M` has
+> too few, generate extra pseudo-mixtures from `R` by repeating step 2, pairing each
+> with a randomly chosen sample of `M` before S-mode normalisation. With 8 cell types
+> and 122 or 270 mixtures this project is far past that bound, so the edge case does
+> not bind here.
+>
+> Everything S-mode needs is already in this repo: the cell-level source (`r_bridge`'s
+> registered cell source), `_combat_adjust()` in `deconv/classical.py`, and NNLS.
+
+
 
 **Why it matters here specifically.** The paper says signature matrices from
 droplet/UMI platforms cause deconvolution to fail, with cell types *"dropping out"* — and

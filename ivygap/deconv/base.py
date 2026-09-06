@@ -121,6 +121,20 @@ class DeconvolutionInput:
     manifest: pd.DataFrame
     cell_types: tuple[str, ...] = field(default=tuple(config.CELL_TYPES))
     apply_cell_size_correction: bool = True
+    #: The same samples on the FULL shared gene space, before marker selection narrowed
+    #: it. Optional, and used by exactly one kind of method: one that brings its own
+    #: published signature instead of solving against this project's reference.
+    #:
+    #: The marker subset exists to serve THIS project's signature matrix — top-N genes
+    #: per cell type ranked against it, plus its markers. For every method that solves
+    #: against that signature, it is the shared gene space and equal footing holds.
+    #: quanTIseq does not solve against it: it ships TIL10 and ignores the signature it
+    #: is handed. Ranking genes against a different reference kept 34 of TIL10's 138
+    #: signature genes, and quanTIseq answered that with macrophages at 100 percent of
+    #: cells in the median sample and T cells identically zero in all 122. On the full
+    #: space it finds 136 of 138 and returns a GBM-plausible 15.7 percent median
+    #: myeloid fraction. Handing it the subset was not equal footing; it was mutilation.
+    bulk_full: pd.DataFrame | None = None
 
     def __post_init__(self) -> None:
         if not self.references:
@@ -142,6 +156,18 @@ class DeconvolutionInput:
         missing = set(self.bulk.columns) - set(self.manifest.index)
         if missing:
             raise ValueError(f"{len(missing)} bulk samples are absent from the manifest")
+        if self.bulk_full is not None:
+            if list(self.bulk_full.columns) != list(self.bulk.columns):
+                raise ValueError(
+                    "bulk_full must carry the same samples in the same order as bulk "
+                    f"({len(self.bulk_full.columns)} vs {len(self.bulk.columns)}). It is "
+                    "a wider GENE space, never a different sample set."
+                )
+            if not set(self.bulk.index).issubset(set(self.bulk_full.index)):
+                raise ValueError(
+                    "bulk_full must be a superset of bulk's genes; it is the space "
+                    "before marker selection, not an unrelated matrix."
+                )
 
     @property
     def primary(self) -> ReferenceBundle:
@@ -172,7 +198,7 @@ class DeconvolutionInput:
 # SHARED NUMERICS
 # =============================================================================
 
-def project_to_simplex(w: np.ndarray) -> np.ndarray:
+def project_to_simplex(w: np.ndarray, covered: np.ndarray | None = None) -> np.ndarray:
     """
     Clip negatives and rescale to sum 1.
 
@@ -180,12 +206,45 @@ def project_to_simplex(w: np.ndarray) -> np.ndarray:
     meaningful composition. Returning a uniform vector would be a silent fabrication,
     so we return NaN and let the caller decide — the benchmark counts NaN rows as
     failures rather than scoring them.
+
+    PARTIAL COVERAGE (`covered`)
+    ----------------------------
+    A NaN normally means "this solve failed", and one NaN condemns the whole row: the
+    total is non-finite, so every entry comes back NaN. That is right for a method that
+    models all eight roster types and right for the failed samples DWLS reports.
+
+    It is wrong for a method that structurally does not model some of them. quanTIseq
+    estimates ten immune populations and puts everything else in an "Other" compartment
+    it does not break down, so Tumor, Endothelial, Oligodendrocyte and Astrocyte are NaN
+    by construction, in every sample, however well the method worked. Passed through the
+    branch above, those four NaNs annihilated the four columns quanTIseq DID estimate,
+    and the run recorded `R:quantiseqr` with no fallback reason — a total loss reported
+    as a success. `covered` is what keeps the two meanings apart.
+
+    Two things are deliberately NOT done on the covered path:
+
+      * The covered entries are NOT rescaled to sum 1. quanTIseq's fractions are already
+        shares of all cells, with the remainder in "Other"; rescaling four immune types
+        to sum 1 would assert the tumour is 100 percent immune. Its own scale is the
+        honest one, and ordinal constraints — which is all ACS reads — are invariant to
+        the monotone rescaling anyway.
+      * A NaN among the COVERED entries still condemns the row, because there it carries
+        its original meaning: that solve failed.
     """
     w = np.clip(np.asarray(w, dtype="float64"), 0.0, None)
-    total = w.sum()
+    if covered is None:
+        total = w.sum()
+        if not np.isfinite(total) or total <= 0:
+            return np.full_like(w, np.nan)
+        return w / total
+
+    out = np.full_like(w, np.nan)
+    sub = w[covered]
+    total = sub.sum()
     if not np.isfinite(total) or total <= 0:
-        return np.full_like(w, np.nan)
-    return w / total
+        return out
+    out[covered] = sub
+    return out
 
 
 def to_cell_fractions(rna_fractions: np.ndarray, cell_size: np.ndarray) -> np.ndarray:
@@ -220,6 +279,13 @@ class DeconvolutionMethod(abc.ABC):
     requires_r: bool = False
     #: True if the method genuinely consumes more than one reference
     uses_multiple_references: bool = False
+    #: The roster cell types this method is capable of estimating at all, or None when
+    #: it models every one of them. Set this ONLY for a method whose published design
+    #: omits a type — quanTIseq's TIL10 signature has no tumour, endothelial, glial or
+    #: astrocyte population and rolls all of them into one "Other" compartment. It is
+    #: not a place to record that a method scored badly on a type, and it is not a
+    #: licence to drop a type a method merely estimates poorly.
+    models_cell_types: frozenset[str] | None = None
 
     def __init__(self, **params):
         self.params = params
@@ -250,6 +316,10 @@ class DeconvolutionMethod(abc.ABC):
         Run the method and return a samples x cell_types table of CELL fractions,
         rows summing to 1.0, columns in `config.CELL_TYPES` order.
         """
+        # Validated BEFORE solving: a typo in the declaration would otherwise surface
+        # only after the method has spent its full runtime.
+        covered = self._covered_mask(data.cell_types)
+
         before = config.sha256_frame(data.bulk)
 
         raw = np.asarray(self._solve_all(data), dtype="float64")
@@ -268,10 +338,17 @@ class DeconvolutionMethod(abc.ABC):
             )
 
         cell_size = data.primary.cell_size.reindex(list(data.cell_types)).to_numpy()
+
+        # Cell-size correction renormalises, so on a partial-coverage method it would
+        # rescale a handful of immune types to sum 1 and assert the tumour is entirely
+        # immune. quanTIseq also already applies its own mRNA scaling (scale_mRNA=TRUE,
+        # its published default), so ours would be the second correction, not the first.
+        apply_cs = data.apply_cell_size_correction and covered is None
+
         rows = []
         for i in range(n_s):
-            w = project_to_simplex(raw[i])
-            if data.apply_cell_size_correction and np.isfinite(w).all():
+            w = project_to_simplex(raw[i], covered)
+            if apply_cs and np.isfinite(w).all():
                 w = to_cell_fractions(w, cell_size)
             rows.append(w)
 
@@ -279,6 +356,26 @@ class DeconvolutionMethod(abc.ABC):
                            columns=list(data.cell_types))
         out.index.name = "sample_id"
         return out
+
+    def _covered_mask(self, cell_types) -> np.ndarray | None:
+        """
+        Boolean mask over `cell_types`, or None when the method models all of them.
+
+        Raises if the declaration names a type outside the roster: a typo there would
+        silently widen the NaN set and quietly shrink what the method is scored on.
+        """
+        if self.models_cell_types is None:
+            return None
+        roster = list(cell_types)
+        unknown = set(self.models_cell_types) - set(roster)
+        if unknown:
+            raise ValueError(
+                f"{self.name}.models_cell_types names {sorted(unknown)}, which are not "
+                f"in the roster {roster}"
+            )
+        if not self.models_cell_types:
+            raise ValueError(f"{self.name} declares it models no cell type at all")
+        return np.array([c in self.models_cell_types for c in roster], dtype=bool)
 
     # -- helpers available to every subclass ---------------------------------
 

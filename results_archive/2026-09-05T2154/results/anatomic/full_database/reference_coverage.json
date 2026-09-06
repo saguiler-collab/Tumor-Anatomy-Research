@@ -1,0 +1,75 @@
+{
+  "roster": [
+    "Tumor",
+    "Macrophage_Microglia",
+    "T_cell",
+    "NK_cell",
+    "B_cell",
+    "Endothelial",
+    "Oligodendrocyte",
+    "Astrocyte"
+  ],
+  "n_roster_types": 8,
+  "sidecar_types": [
+    "Astrocyte"
+  ],
+  "atlas_labels_mapped_onto_roster": [
+    "AC-like",
+    "Astrocyte",
+    "B cell",
+    "CD4/CD8",
+    "Endothelial",
+    "MES-like",
+    "NK",
+    "NPC-like",
+    "OPC-like",
+    "Oligodendrocyte",
+    "TAM-BDM",
+    "TAM-MG"
+  ],
+  "constraint_coverage": {
+    "cell_types_with_constraints": [
+      "Endothelial",
+      "Macrophage_Microglia",
+      "Oligodendrocyte",
+      "Tumor"
+    ],
+    "cell_types_without_constraints": [
+      "T_cell",
+      "NK_cell",
+      "B_cell",
+      "Astrocyte"
+    ],
+    "explicitly_excluded": [
+      "T_cell"
+    ],
+    "structurally_untestable": [
+      {
+        "fact": "Neuronal content is highest at the leading edge",
+        "why_untestable": "The seven-population roster contains no neuron column."
+      },
+      {
+        "fact": "Non-neoplastic astrocytes are enriched at the leading edge",
+        "why_untestable": "Astrocyte is a diagnostic-only sidecar, known to be unidentifiable against Tumor; a constraint on it would score the collinearity, not the biology."
+      }
+    ],
+    "n_constraints": 7,
+    "total_weight": 8.0
+  },
+  "atlas_labels_dropped": {
+    "Mono": 14215,
+    "DC": 3961,
+    "RG": 2807,
+    "Mural cell": 1418,
+    "Plasma B": 572,
+    "OPC": 496,
+    "Mast": 373,
+    "Neuron": 22
+  },
+  "n_cells_in_atlas": 338564,
+  "n_cells_dropped": 23864,
+  "fraction_of_atlas_dropped": 0.07048593471249158,
+  "n_cells_kept": 314700,
+  "what_this_means": "Populations the atlas labels but the roster drops do not disappear from the tissue, only from the model. A solver with eight columns must still explain the expression those cells contribute, so it is absorbed by whichever retained type is closest. Largest dropped populations: Mono (14,215 cells), DC (3,961 cells), RG (2,807 cells) \u2014 7.0% of the atlas in total. The dominant one is myeloid (DC, Mast, Mono), and the nearest retained column is Macrophage_Microglia \u2014 which carries C5 and C6. So the absorbed signal is concentrated on two of the seven constraints rather than spread evenly. Note the frozen constraint file lists neuronal content as untestable for want of a neuron column. That holds, but not for the reason it gives: this atlas contains only 22 neurons, so a neuron column could not have been estimated from it either. The limitation is the reference, not just the roster.",
+  "correction_to_the_frozen_constraint_file": "constraints.UNTESTABLE says neuronal content cannot be tested because 'the seven-population roster contains no neuron column'. The conclusion holds and the stated reason is incomplete: the roster does drop the atlas's Neuron label, but the atlas carries so few neurons that a neuron column could not have been estimated from it in any case. Both facts are measured above. The constraint file is frozen and hashed, so this is recorded alongside it rather than by editing it \u2014 editing it would change the freeze hash and invalidate every result computed under it."
+}

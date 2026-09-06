@@ -69,8 +69,18 @@ def test_methods_cannot_mutate_shared_input(problem):
             d.bulk.iloc[0, 0] = -999.0
             return super()._solve_all(d)
 
-    with pytest.raises(RuntimeError, match="mutated"):
-        Vandal().fit_predict(data)
+    # `problem` is session-scoped, so the vandalism outlives this test. Left in place it
+    # made every LATER test read a bulk with a -999 in it: DeconvolutionInput's
+    # non-negativity check then rejected the fixture, and two test_equal_footing tests
+    # failed — but only when something reordered them after this file. The full suite
+    # passed purely because "equal_footing" sorts before "methods". Restore it.
+    original = data.bulk.iloc[0, 0]
+    try:
+        with pytest.raises(RuntimeError, match="mutated"):
+            Vandal().fit_predict(data)
+    finally:
+        data.bulk.iloc[0, 0] = original
+    assert float(data.bulk.to_numpy().min()) >= 0, "the shared fixture stayed corrupted"
 
 
 def test_bayesian_reports_credible_intervals(problem):

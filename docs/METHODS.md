@@ -331,6 +331,74 @@ carry. Ranking inside the shared space keeps every gene it selects. The two runs
 therefore not on an identical gene set and their ACS values are not directly comparable —
 which is why the superseded numbers are labelled as superseded rather than compared.
 
+### The one method the subset is wrong for, found 2026-09-05
+
+The subset is defined by ranking genes **against this project's signature matrix**. That
+makes it the shared gene space for every method that solves against that signature — all
+the least-squares and regularized methods, the Bayesian ones, MuSiC, DWLS, Bisque, SCDC,
+BayesPrism, and EPIC, which reads the signature it is handed (`args$signature`).
+
+quanTIseq does not. It ships its own TIL10 signature and ignores the one it is given, so
+genes ranked against a reference it never reads are simply the wrong genes for it.
+Measured:
+
+| gene space handed to quanTIseq | TIL10 signature genes found | what it returned |
+|---|---|---|
+| 657-gene marker subset | **34 of 138 (24.6%)** | macrophages = 100% of cells in the median sample; T cells identically 0 in all 122 |
+| full shared space | **136 of 138 (98.6%)** | median 15.7% myeloid, 1.0% T cell, ~77% in "Other" |
+
+The second column is a GBM-plausible immune composition; the first is a degenerate solve.
+Restricting quanTIseq to the subset was not equal footing, it was mutilation, so
+`DeconvolutionInput.bulk_full` carries the full space and `r_bridge.OWN_SIGNATURE_METHODS`
+routes it there. The decision is recorded in `configs.DECLARED_DEVIATIONS["quantiseq"]`
+and was made from the signature-gene recovery rate, before any quanTIseq ACS existed.
+
+`quantiseqr`'s own `scale_mRNA = TRUE` is the same correction this pipeline calls
+cell-size correction, so ours is not applied on top of it. Applying both would
+double-correct, and this project's version renormalises to sum 1 — which on a method
+covering four immune types would assert the tumour is entirely immune.
+
+## Partial coverage: a method that models only part of the roster
+
+quanTIseq estimates ten immune populations and rolls everything else into one "Other"
+compartment it does not break down. Four roster types — Tumor, Endothelial,
+Oligodendrocyte, Astrocyte — therefore have no quanTIseq equivalent, in every sample,
+however well the method worked. They are returned as **NaN, never zero**: zero is a claim
+the method never made and would fail it on constraints it was never shown.
+
+### The defect this exposed, found 2026-09-05
+
+Those four structural NaNs reached `project_to_simplex`, whose row total went non-finite,
+so it returned an all-NaN row — destroying the four columns quanTIseq **had** estimated.
+All 122 samples came back entirely NaN, and the run still recorded
+`implementation: R:quantiseqr` with `fallback_reason: null`. A total loss reported as a
+success, which is precisely what this project's evidence rules exist to catch.
+
+The fix separates the two meanings a NaN can carry:
+
+* among the types a method **does** model, NaN still means *this solve failed*, and one
+  of them still condemns the whole row — DWLS's failed samples behave exactly as before;
+* among the types it **structurally cannot** model, NaN means *not estimated*, and must
+  not touch its neighbours.
+
+A method declares the difference with `models_cell_types`, validated against the roster
+**before** the solve so a typo cannot cost a full runtime. The covered values are kept on
+the method's own scale rather than rescaled to sum 1, because quanTIseq's fractions
+already include the unreported "Other" mass; ACS reads only ordinal comparisons, which
+are invariant to that anyway. `tests/test_partial_coverage.py` covers both directions,
+including the negative control that an **undeclared** partial output is still condemned —
+otherwise the change would silently start rescuing genuinely failed solves.
+
+### It is reported, but it is not ranked
+
+ACS is a proportion of satisfied constraint-tumour pairs. quanTIseq can address C5 and C6
+and nothing else, so its denominator is a fraction of the full one, and a 2-constraint
+score does not sit on the same scale as a 7-constraint score. The leaderboard therefore
+carries `comparable` and `coverage_note` columns, sorts comparable methods first, and
+excludes partial-coverage methods from the tie groups, from the control-check median, and
+from the agreement test that produces the study's headline rho. They are reported with
+their denominator and the reason — never dropped, and never ranked as if comparable.
+
 ## Running the published packages, rather than reimplementations of them
 
 For most of this project's life, MuSiC, DWLS, Bisque and SCDC were this project's Python
@@ -514,6 +582,71 @@ method reports the uncorrected fit and records why.
   fifty lines the parametric adjustment actually is. It is written out in
   `classical.py::_combat_adjust`, tested against a planted batch shift (gap 3.02 -> 0.04)
   and against the one-batch no-op case, and labelled as a reimplementation.
+
+## S-mode, and why B-mode alone was the wrong answer here
+
+`CIBERSORTxDeconvolution` implements B-mode: it moves the MIXTURES toward the signature.
+`CIBERSORTxSModeDeconvolution` implements S-mode, which moves the SIGNATURE toward the
+mixtures. Both run, both are reported under their own names, and neither substitutes for
+the other.
+
+### Which mode the paper itself uses
+
+Supplementary Table 1d of Newman et al. (2019) records the mode chosen for every
+deconvolution in the paper. The split is consistent:
+
+| Signature platform | Mixture | Mode |
+|---|---|---|
+| 10x Chromium (3' or 5') | bulk RNA-seq | **S-mode**, in every instance |
+| SMART-Seq2 | bulk RNA-seq | B-mode |
+| LM22 (microarray) | bulk RNA-seq | B-mode |
+
+The split is mechanistic rather than arbitrary: droplet data carries a strong 3' bias and
+UMI counting, so it sits further from bulk RNA-seq than full-length SMART-Seq2 does.
+
+This project's reference is GBmap, measured from the atlas's own `assay` field at
+**87.1% 10x** — 214,284 cells 3' v2, 49,262 3' v3, 31,316 5' v1, of 338,564 — against
+9,275 Smart-seq2 cells (2.7%). The mixtures are Ivy GAP bulk RNA-seq. By the authors'
+own practice that is an S-mode configuration, and until 2026-09-06 only B-mode was
+implemented. That gap is recorded in `configs.DECLARED_DEVIATIONS["cibersortx"]`.
+
+### The algorithm, from Supplementary Note 1 (p39)
+
+Given the signature `B` and the single cells `R` it was built from:
+
+1. `mu` = each cell type's fractional abundance in `R`; `sigma = 2*mu`.
+2. Draw `F*` (types x k) from `N(mu, sigma)`, per type.
+3. Clip negatives to 0; renormalise each mixture's column to sum 1.
+4. Sample real cells per type according to `F*`, aggregate into k bulk profiles in TPM
+   space -> `M*`.
+5. ComBat on `M` and `M*` jointly in log2 space -> `Madj`, `Madj*`.
+6. Back to linear; per gene, NNLS of `Madj*[g,:]` on `F*.T` gives that gene's row of the
+   adjusted signature -> `Badj`.
+7. Estimate `F` from the **original** `M` against `Badj`.
+
+Step 7 uses `M`, not `Madj`, and that is the paper's wording: ComBat has already moved
+`M*` into `M`'s batch, so `Badj` is expressed in `M`'s space. Step 6 needs no adaptive
+noise filtration because `F*` is known exactly and ComBat is linear in log2 space, so it
+preserves ordering.
+
+Defaults here: k = 100 artificial mixtures of 500 cells each, seeded from
+`config.RANDOM_SEED` so a rerun reproduces the artefact. The paper's `k > c` requirement
+for step 6 is satisfied by a wide margin (100 against 8 types), so its pseudo-mixture
+fallback for small `k` never engages.
+
+### What it refuses to do
+
+S-mode resamples real single cells, so it needs a registered cell source; B-mode
+reconstructs `S @ F.T` and does not. Without cells, S-mode **raises** rather than falling
+back to B-mode — a B-mode result reported as S-mode would be the same category of error
+as reporting a Python reimplementation as the published package. It also refuses when a
+roster type has no cells in the reference, because `mu = 0` would leave that type absent
+from every artificial mixture and its column of `Badj` unconstrained.
+
+It reads its cells through `r_bridge`'s cell-source registry, which the benchmark stage
+narrows to TRAINING donors. That is deliberate: loading the atlas directly would put the
+held-out donors' cells into the signature adjustment and quietly break the donor-held-out
+design.
 
 ## EcoTyper — assessed, and out of scope for the leaderboard
 

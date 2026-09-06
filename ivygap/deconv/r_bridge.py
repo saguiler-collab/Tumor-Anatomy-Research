@@ -246,8 +246,28 @@ def check(method_name: str, ref_name: str) -> Availability:
 #: A benchmark that never finishes produces no result at all, which is strictly worse
 #: than a disclosed fallback. The budget is generous enough that the methods measured to
 #: complete here (MuSiC ~95 s, SCDC ~90 s, Bisque ~30 s) are nowhere near it.
+#: What gene space each R method actually received on its most recent call. Read by the
+#: run reporters so "which genes did this method see" is an artefact, not a claim.
+LAST_GENE_SPACE: dict[str, dict] = {}
+
 #: Methods that consume a reference PROFILE rather than individual cells.
 SIGNATURE_ONLY_METHODS = frozenset({"epic", "quantiseq"})
+
+#: Methods that bring their OWN published signature and ignore the one they are handed.
+#:
+#: EPIC is signature-only but reads `args$signature` — this project's reference — so the
+#: project's gene space is the right one for it and equal footing is untouched. quanTIseq
+#: reads nothing but its built-in TIL10, so genes ranked against a different reference
+#: are simply the wrong genes for it. These methods get `bulk_full` when the caller
+#: supplied it; the choice is recorded per run rather than assumed.
+OWN_SIGNATURE_METHODS = frozenset({"quantiseq"})
+
+#: Roster types each method structurally models, for the methods that model only some.
+#: Mirrors `DeconvolutionMethod.models_cell_types`; kept here so the all-NaN guard below
+#: can tell "this method does not do tumour cells" from "this method returned nothing".
+OWN_COVERAGE: dict[str, frozenset[str]] = {
+    "quantiseq": frozenset({"T_cell", "NK_cell", "B_cell", "Macrophage_Microglia"}),
+}
 
 R_METHOD_TIMEOUTS: dict[str, int] = {
     # 40 minutes. Measured: DWLS's signature build completed in 1,625 s at best on this
@@ -364,7 +384,23 @@ def run_r_method(method_name: str, data: DeconvolutionInput,
         tmp = Path(tmp)
         bulk_path = tmp / "bulk.csv"
         out_path = tmp / "proportions.csv"
-        data.bulk.to_csv(bulk_path)
+
+        bulk_for_r = data.bulk
+        gene_space_note = "shared marker subset"
+        if method_name in OWN_SIGNATURE_METHODS:
+            if data.bulk_full is not None:
+                bulk_for_r = data.bulk_full
+                gene_space_note = "full shared space (method supplies its own signature)"
+            else:
+                gene_space_note = (
+                    "shared marker subset — NO bulk_full was supplied, so this method "
+                    "ran on genes selected against a signature it does not use"
+                )
+        bulk_for_r.to_csv(bulk_path)
+        LAST_GENE_SPACE[method_name] = {
+            "n_genes": int(bulk_for_r.shape[0]),
+            "gene_space": gene_space_note,
+        }
 
         # Methods that consume a signature matrix rather than cells (EPIC, quanTIseq)
         # get the same reference profile every Python method solves against, written to
@@ -409,7 +445,47 @@ def run_r_method(method_name: str, data: DeconvolutionInput,
         raise RBridgeError(
             f"{method_name} returned no estimate for {len(missing_samples)} samples"
         )
-    return result.loc[data.samples, list(data.cell_types)].astype("float64")
+    result = result.loc[data.samples, list(data.cell_types)].astype("float64")
+    _reject_unusable(method_name, result, data, script.name)
+    return result
+
+
+def _reject_unusable(method_name: str, result: "pd.DataFrame", data, script_name: str):
+    """
+    Refuse a result that carries no estimate, however well-formed it looks.
+
+    "Exited 0" is not evidence that a method produced anything. quantiseqr exited 0,
+    wrote a well-formed 122x8 CSV with the right index and the right column names, and
+    every cell in it was NaN — and run 2026-09-05T2154 recorded that as
+    `implementation: R:quantiseqr, fallback_reason: null`. A table with no numbers in it
+    is a failure of the R path, and the caller's fallback machinery is exactly what
+    should handle it; silently ranking it is what must not happen.
+
+    Checked over the types the method actually models, so a partial-coverage method's
+    legitimately all-NaN columns do not trip it.
+    """
+    declared = OWN_COVERAGE.get(method_name)
+    modelled = ([c for c in data.cell_types if c in declared] if declared
+                else list(data.cell_types))
+    if not modelled:
+        raise RBridgeError(
+            f"{method_name} declares coverage {sorted(declared or [])}, none of which "
+            f"is in the roster {list(data.cell_types)}"
+        )
+
+    values = result[modelled].to_numpy(dtype="float64")
+    if not np.isfinite(values).any():
+        raise RBridgeError(
+            f"{script_name} exited 0 and wrote a {result.shape[0]}x{result.shape[1]} "
+            f"table, but every value across the {len(modelled)} cell type(s) it models "
+            f"is NaN or infinite. The R path produced no estimate."
+        )
+
+    # Not fatal — a method may legitimately fail particular mixtures (DWLS does) — but
+    # it is recorded, because "some samples have no estimate" must never be invisible.
+    n_dead = int((~np.isfinite(values)).all(axis=1).sum())
+    if n_dead:
+        LAST_GENE_SPACE.setdefault(method_name, {})["n_samples_without_estimate"] = n_dead
 
 
 class RMethod(DeconvolutionMethod):
@@ -432,6 +508,11 @@ class RMethod(DeconvolutionMethod):
         self.name = fallback.name
         self.family = fallback.family
         self.uses_multiple_references = fallback.uses_multiple_references
+        # Structural coverage is a property of the METHOD, not of which implementation
+        # runs it: quanTIseq has no tumour population whether quantiseqr or the
+        # reimplementation solves it. Carried over so the base class applies the same
+        # partial-coverage handling on both paths.
+        self.models_cell_types = fallback.models_cell_types
         self.implementation_: str = "unknown"
         self.fallback_reason_: str | None = None
         # Degradation is a property of the DATA, not of which implementation ran. Bisque

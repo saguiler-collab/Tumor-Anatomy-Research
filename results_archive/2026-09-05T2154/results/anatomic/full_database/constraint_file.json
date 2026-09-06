@@ -1,0 +1,142 @@
+{
+  "title": "The Anatomy Test \u2014 anatomic concordance constraint file",
+  "constraints": [
+    {
+      "id": "C1",
+      "kind": "pairwise",
+      "cell_type": "Tumor",
+      "structures": [
+        "CT",
+        "LE"
+      ],
+      "rationale": "Near-definitional: the leading edge is brain infiltrated at low tumour-cell density; cellular tumour is dense tumour. A method that fails C1 is not measuring tumour.",
+      "evidence": "Ivy GAP anatomic sampling criteria; H&E and ISH characterisation of LE vs CT (Puchalski et al., Science 2018).",
+      "weight": 1.0,
+      "among": []
+    },
+    {
+      "id": "C2",
+      "kind": "pairwise",
+      "cell_type": "Oligodendrocyte",
+      "structures": [
+        "LE",
+        "CT"
+      ],
+      "rationale": "The leading edge retains normal white matter and cortex; cellular tumour has displaced it.",
+      "evidence": "Histological definition of the LE sampling region as infiltrated but preserved brain parenchyma.",
+      "weight": 1.0,
+      "among": []
+    },
+    {
+      "id": "C3",
+      "kind": "pairwise",
+      "cell_type": "Endothelial",
+      "structures": [
+        "MVP",
+        "CT"
+      ],
+      "rationale": "Microvascular proliferation is defined by florid endothelial proliferation. The single strongest constraint in the set.",
+      "evidence": "WHO diagnostic criterion for MVP; Ivy GAP MVP dissection criterion.",
+      "weight": 1.0,
+      "among": []
+    },
+    {
+      "id": "C4",
+      "kind": "maximum",
+      "cell_type": "Endothelial",
+      "structures": [
+        "MVP"
+      ],
+      "rationale": "Stricter form of C3: MVP must exceed all four other structures, not just CT.",
+      "evidence": "As C3. Scored separately because it is a materially harder claim and a method can pass C3 while placing the endothelial maximum elsewhere.",
+      "weight": 1.0,
+      "among": [
+        "LE",
+        "IT",
+        "CT",
+        "MVP",
+        "PAN"
+      ]
+    },
+    {
+      "id": "C5",
+      "kind": "pairwise",
+      "cell_type": "Macrophage_Microglia",
+      "structures": [
+        "PAN",
+        "LE"
+      ],
+      "rationale": "The hypoxic peri-necrotic niche recruits myeloid cells; the leading edge does not.",
+      "evidence": "Hypoxia-driven myeloid recruitment in the pseudopalisading niche; Ivy GAP ISH of myeloid markers by structure.",
+      "weight": 1.0,
+      "among": []
+    },
+    {
+      "id": "C6",
+      "kind": "pairwise",
+      "cell_type": "Macrophage_Microglia",
+      "structures": [
+        "MVP",
+        "CT"
+      ],
+      "rationale": "The perivascular niche is a documented myeloid reservoir.",
+      "evidence": "Perivascular immune phenotype in GBM; CIBERSORTx analyses of Ivy GAP reporting myeloid accumulation in the perivascular zone.",
+      "weight": 1.0,
+      "among": []
+    },
+    {
+      "id": "C7",
+      "kind": "monotone",
+      "cell_type": "Tumor",
+      "structures": [
+        "LE",
+        "IT",
+        "CT"
+      ],
+      "rationale": "A three-step monotone chain \u2014 much harder to satisfy by chance than any single pairwise step, and scored as one unit.",
+      "evidence": "Ivy GAP sampling definitions place IT between LE and CT in tumour-cell density by construction.",
+      "weight": 2.0,
+      "among": []
+    }
+  ],
+  "exclusions": [
+    {
+      "cell_type": "T_cell",
+      "reason": "This pipeline's own synthetic benchmark puts T cells at the detection floor, so a T-cell constraint would score noise.",
+      "declared": "before any deconvolution output was examined"
+    }
+  ],
+  "untestable_by_this_signature": [
+    {
+      "fact": "Neuronal content is highest at the leading edge",
+      "why_untestable": "The seven-population roster contains no neuron column."
+    },
+    {
+      "fact": "Non-neoplastic astrocytes are enriched at the leading edge",
+      "why_untestable": "Astrocyte is a diagnostic-only sidecar, known to be unidentifiable against Tumor; a constraint on it would score the collinearity, not the biology."
+    }
+  ],
+  "structures": [
+    "LE",
+    "IT",
+    "CT",
+    "MVP",
+    "PAN"
+  ],
+  "cell_type_roster": [
+    "Tumor",
+    "Macrophage_Microglia",
+    "T_cell",
+    "NK_cell",
+    "B_cell",
+    "Endothelial",
+    "Oligodendrocyte",
+    "Astrocyte"
+  ],
+  "scoring": {
+    "unit": "constraint x tumour pair",
+    "aggregation": "weighted proportion satisfied, paired within tumour",
+    "null": "structure labels permuted within each tumour",
+    "interval": "bootstrap over tumours"
+  }
+}

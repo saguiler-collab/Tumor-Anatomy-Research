@@ -1,6 +1,6 @@
 # Release bundle — Ivy GAP GBM anatomic deconvolution
 
-Built 2026-09-04 · run type: **real data**
+Built 2026-09-06 · run type: **real data**
 
 Selected method: **music**
 Selected on: mean absolute error on primary cell types, donor-held-out pseudobulk, aggregated donor-equally
@@ -59,3 +59,6 @@ AVAILABLE
 | bisque | yes | BisqueRNA available with cell-level reference |
 | scdc | yes | SCDC available with cell-level reference |
 | scdc_ensemble | yes | SCDC available with cell-level reference |
+| epic | yes | EPIC available (signature-based) |
+| quantiseq | yes | quantiseqr available (signature-based) |
+| bayesprism | yes | BayesPrism available with cell-level reference |

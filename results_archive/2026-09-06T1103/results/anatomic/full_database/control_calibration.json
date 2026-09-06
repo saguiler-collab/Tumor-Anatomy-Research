@@ -1,0 +1,155 @@
+{
+  "what_this_is": "sampling distributions of the negative controls. Each leaderboard control row is ONE draw from these; nothing here changes a row, a control's definition, or the constraint file.",
+  "n_draws": 200,
+  "n_samples": 122,
+  "n_tumors": 10,
+  "controls": {
+    "control_shuffled_signature": {
+      "n_draws": 200,
+      "acs": {
+        "mean": 0.3863076923076923,
+        "sd": 0.06564913862374575,
+        "min": 0.2153846153846154,
+        "p05": 0.2915384615384616,
+        "median": 0.38461538461538464,
+        "p95": 0.49230769230769234,
+        "max": 0.5692307692307692
+      },
+      "per_constraint_satisfied_rate": {
+        "C1": 0.52125,
+        "C2": 0.4625,
+        "C3": 0.5216666666666666,
+        "C4": 0.23444444444444446,
+        "C5": 0.5183333333333333,
+        "C6": 0.49722222222222223,
+        "C7": 0.178125
+      },
+      "as_run_draw": {
+        "acs": 0.13846153846153847,
+        "percentile_among_draws": 0.0
+      }
+    },
+    "control_random": {
+      "n_draws": 200,
+      "acs": {
+        "mean": 0.38453846153846155,
+        "sd": 0.07152281086206454,
+        "min": 0.18461538461538463,
+        "p05": 0.26153846153846155,
+        "median": 0.38461538461538464,
+        "p95": 0.49230769230769234,
+        "max": 0.6153846153846154
+      },
+      "per_constraint_satisfied_rate": {
+        "C1": 0.5125,
+        "C2": 0.495625,
+        "C3": 0.4922222222222222,
+        "C4": 0.20833333333333334,
+        "C5": 0.535,
+        "C6": 0.505,
+        "C7": 0.179375
+      },
+      "as_run_draw": {
+        "acs": 0.3384615384615385,
+        "percentile_among_draws": 0.27
+      }
+    }
+  },
+  "hardest_control": "control_shuffled_signature",
+  "acs": {
+    "mean": 0.3863076923076923,
+    "sd": 0.06564913862374575,
+    "min": 0.2153846153846154,
+    "p05": 0.2915384615384616,
+    "median": 0.38461538461538464,
+    "p95": 0.49230769230769234,
+    "max": 0.5692307692307692
+  },
+  "per_constraint_satisfied_rate": {
+    "C1": 0.52125,
+    "C2": 0.4625,
+    "C3": 0.5216666666666666,
+    "C4": 0.23444444444444446,
+    "C5": 0.5183333333333333,
+    "C6": 0.49722222222222223,
+    "C7": 0.178125
+  },
+  "as_run_draw": {
+    "acs": 0.13846153846153847,
+    "percentile_among_draws": 0.0
+  },
+  "methods_vs_control_distribution": {
+    "nnls": {
+      "acs": 0.9846153846153847,
+      "percentile_among_control_draws": 1.0,
+      "distinguishable_from_a_meaningless_signature": true
+    },
+    "svr": {
+      "acs": 0.9846153846153847,
+      "percentile_among_control_draws": 1.0,
+      "distinguishable_from_a_meaningless_signature": true
+    },
+    "cibersortx": {
+      "acs": 0.9692307692307692,
+      "percentile_among_control_draws": 1.0,
+      "distinguishable_from_a_meaningless_signature": true
+    },
+    "elastic_net": {
+      "acs": 0.9846153846153847,
+      "percentile_among_control_draws": 1.0,
+      "distinguishable_from_a_meaningless_signature": true
+    },
+    "bayesian": {
+      "acs": 0.7692307692307693,
+      "percentile_among_control_draws": 1.0,
+      "distinguishable_from_a_meaningless_signature": true
+    },
+    "bayesian_hierarchical": {
+      "acs": 0.7846153846153846,
+      "percentile_among_control_draws": 1.0,
+      "distinguishable_from_a_meaningless_signature": true
+    },
+    "music": {
+      "acs": 1.0,
+      "percentile_among_control_draws": 1.0,
+      "distinguishable_from_a_meaningless_signature": true
+    },
+    "dwls": {
+      "acs": 0.7384615384615385,
+      "percentile_among_control_draws": 1.0,
+      "distinguishable_from_a_meaningless_signature": true
+    },
+    "bisque": {
+      "acs": 0.9692307692307692,
+      "percentile_among_control_draws": 1.0,
+      "distinguishable_from_a_meaningless_signature": true
+    },
+    "scdc": {
+      "acs": 0.9538461538461539,
+      "percentile_among_control_draws": 1.0,
+      "distinguishable_from_a_meaningless_signature": true
+    },
+    "scdc_ensemble": {
+      "acs": 0.9538461538461539,
+      "percentile_among_control_draws": 1.0,
+      "distinguishable_from_a_meaningless_signature": true
+    },
+    "epic": {
+      "acs": 0.9846153846153847,
+      "percentile_among_control_draws": 1.0,
+      "distinguishable_from_a_meaningless_signature": true
+    },
+    "quantiseq": {
+      "acs": 0.6,
+      "percentile_among_control_draws": 1.0,
+      "distinguishable_from_a_meaningless_signature": true
+    },
+    "bayesprism": {
+      "acs": 0.8769230769230769,
+      "percentile_among_control_draws": 1.0,
+      "distinguishable_from_a_meaningless_signature": true
+    }
+  },
+  "not_distinguishable_from_noise": [],
+  "verdict": "Against the hardest control (control_shuffled_signature, 95th percentile 0.492): every real method scores above it."
+}

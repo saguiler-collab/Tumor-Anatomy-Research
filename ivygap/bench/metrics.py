@@ -146,7 +146,8 @@ def _limit_of_detection(estimate: pd.Series, truth: pd.Series,
 
 
 def overall_metrics(estimate: pd.DataFrame, truth: pd.DataFrame,
-                    groups: pd.Series | None = None) -> dict:
+                    groups: pd.Series | None = None,
+                    covered: list[str] | None = None) -> dict:
     """
     Whole-table summary.
 
@@ -157,7 +158,23 @@ def overall_metrics(estimate: pd.DataFrame, truth: pd.DataFrame,
     est, tru = _aligned(estimate, truth)
     grp = groups.reindex(est.index).astype(str) if groups is not None else None
 
-    primary = [c for c in tru.columns if c in config.PRIMARY_CELL_TYPES]
+    # A method that structurally does not model a type returns NaN for it in every
+    # sample. Counting that as a failed SAMPLE — which is what `any(~isfinite)` over the
+    # full row does — reported quanTIseq as 200 of 200 samples failed in run
+    # 2026-09-05T2154 when it had in fact solved every one of them. Restrict every
+    # metric to the types the method actually estimates, and say which those were.
+    modelled = ([c for c in tru.columns if c in set(covered)] if covered is not None
+                else list(tru.columns))
+    if not modelled:
+        raise ValueError("`covered` excludes every column present in the truth table")
+    est_m, tru_m = est[modelled], tru[modelled]
+
+    primary = [c for c in modelled if c in config.PRIMARY_CELL_TYPES]
+    if not primary:
+        raise ValueError(
+            f"none of the modelled types {modelled} is a primary type, so mae_primary "
+            "has nothing to average over"
+        )
 
     def _agg(per_sample: pd.Series) -> float:
         """Group-equal when we know the grouping, plain mean when we do not."""
@@ -167,24 +184,30 @@ def overall_metrics(estimate: pd.DataFrame, truth: pd.DataFrame,
     def _mae(cols):
         return _agg((est[cols] - tru[cols]).abs().mean(axis=1))
 
+
     # Per-sample correlation across cell types: does the method get the *shape* of each
     # individual sample right? Averaged patient-equally like everything else.
     per_sample_r = []
-    for s in est.index:
-        e, t = est.loc[s], tru.loc[s]
+    for s in est_m.index:
+        e, t = est_m.loc[s], tru_m.loc[s]
         if np.isfinite(e).all() and e.std() > 0 and t.std() > 0:
             per_sample_r.append(stats.pearsonr(t, e)[0])
         else:
             per_sample_r.append(np.nan)
-    r_series = pd.Series(per_sample_r, index=est.index)
+    r_series = pd.Series(per_sample_r, index=est_m.index)
 
-    n_failed = int((~np.isfinite(est.to_numpy())).any(axis=1).sum())
+    n_failed = int((~np.isfinite(est_m.to_numpy())).any(axis=1).sum())
 
     return {
         "n_samples": int(len(est)),
         "n_groups": int(grp.nunique()) if grp is not None else None,
         "aggregation": "group-equal" if grp is not None else "sample-mean",
-        "mae_all_types": _mae(list(tru.columns)),
+        # Two methods scored over different type sets are not on one scale, so the set
+        # travels with the numbers rather than being inferred from them.
+        "n_types_scored": len(modelled),
+        "types_scored": ",".join(modelled),
+        "comparable": covered is None,
+        "mae_all_types": _mae(modelled),
         "mae_primary": _mae(primary),
         # Aggregate the squared error first, take the root last: rooting per sample
         # and then averaging would compute a mean of RMSEs, which is a different and
@@ -197,17 +220,34 @@ def overall_metrics(estimate: pd.DataFrame, truth: pd.DataFrame,
 
 
 def summarise_methods(estimates: dict[str, pd.DataFrame], truth: pd.DataFrame,
-                      groups: pd.Series | None = None) -> pd.DataFrame:
-    """One row per method, sorted by primary-type MAE (lower is better)."""
+                      groups: pd.Series | None = None,
+                      covered: dict[str, list[str]] | None = None) -> pd.DataFrame:
+    """
+    One row per method, sorted by primary-type MAE (lower is better).
+
+    `covered` names, per method, the roster types that method actually estimates. Only
+    a method whose published design omits a type belongs in it — see
+    `DeconvolutionMethod.models_cell_types`. Such a method's metrics are computed over
+    its own type set and flagged `comparable = False`, because an MAE over four types is
+    not the same quantity as an MAE over eight and sorting them into one column would
+    say otherwise.
+    """
+    covered = covered or {}
     rows = []
     for name, est in estimates.items():
-        m = overall_metrics(est, truth, groups)
+        m = overall_metrics(est, truth, groups, covered=covered.get(name))
         m["method"] = name
         rows.append(m)
     out = pd.DataFrame(rows).set_index("method")
     cols = ["mae_primary", "rmse_primary", "mae_all_types", "mean_per_sample_r",
-            "n_failed_samples", "n_samples", "n_groups", "aggregation"]
-    return out[[c for c in cols if c in out.columns]].sort_values("mae_primary")
+            "n_failed_samples", "n_samples", "n_groups", "aggregation",
+            "n_types_scored", "types_scored", "comparable"]
+    out = out[[c for c in cols if c in out.columns]]
+    # Comparable methods first; a partial-coverage method is not last-placed, it is
+    # unplaced, and a reader scanning the top of the table must not meet it there.
+    if "comparable" in out.columns:
+        return out.sort_values(["comparable", "mae_primary"], ascending=[False, True])
+    return out.sort_values("mae_primary")
 
 
 # =============================================================================

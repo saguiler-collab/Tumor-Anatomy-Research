@@ -96,8 +96,13 @@ def run(expression: pd.DataFrame, meta: pd.DataFrame, prefer_r: bool = True,
          "structure": test_set.niche.astype(str)},
         index=test_set.expression.columns,
     )
+    # The pseudobulk carries the full simulated gene space; `genes` narrows it to the
+    # shared marker subset for every method that solves against this project's
+    # signature. A method that brings its own signature needs its own genes — see
+    # DeconvolutionInput.bulk_full.
     data = DeconvolutionInput(bulk=test_set.expression.loc[genes],
-                              references=tuple(refs), manifest=manifest)
+                              references=tuple(refs), manifest=manifest,
+                              bulk_full=test_set.expression)
 
     if verbose:
         print(f"donors: {len(train_donors)} train / {len(test_donors)} held out")
@@ -114,10 +119,13 @@ def run(expression: pd.DataFrame, meta: pd.DataFrame, prefer_r: bool = True,
     # Controls run here as well as in the anatomic stage: the agreement test needs
     # both rankings over the same set, and a control's accuracy against KNOWN truth
     # is the calibration for what 'meaningless' scores on this benchmark.
+    coverage: dict[str, list[str]] = {}
     for method in build_methods(prefer_r=prefer_r) + build_controls():
         t0 = time.time()
         try:
             estimates[method.name] = method.fit_predict(data)
+            if getattr(method, "models_cell_types", None):
+                coverage[method.name] = sorted(method.models_cell_types)
             fitted.append(method)
             timings[method.name] = time.time() - t0
             implementations[method.name] = getattr(
@@ -147,7 +155,8 @@ def run(expression: pd.DataFrame, meta: pd.DataFrame, prefer_r: bool = True,
                                     implementations=implementations)
     require_comparable({name: certificate for name in estimates})
 
-    summary = metrics.summarise_methods(estimates, test_set.truth, groups=test_set.donors)
+    summary = metrics.summarise_methods(estimates, test_set.truth,
+                                        groups=test_set.donors, covered=coverage)
 
     per_type = []
     for name, est in estimates.items():
@@ -165,7 +174,8 @@ def run(expression: pd.DataFrame, meta: pd.DataFrame, prefer_r: bool = True,
             if len(idx) < 5:
                 continue
             m = metrics.overall_metrics(est.loc[idx], test_set.truth.loc[idx],
-                                        groups=test_set.donors.loc[idx])
+                                        groups=test_set.donors.loc[idx],
+                                        covered=coverage.get(name))
             per_niche.append({"method": name, "niche": niche, **m})
     per_niche_df = pd.DataFrame(per_niche)
 
@@ -181,7 +191,16 @@ def run(expression: pd.DataFrame, meta: pd.DataFrame, prefer_r: bool = True,
     ties_df = metrics.paired_bootstrap_ties(estimates, test_set.truth,
                                             groups=test_set.donors)
 
-    selected = str(summary.index[0])
+    # Only a method scored over the full type set can be selected. `summary` already
+    # sorts comparable methods first, but relying on sort order to enforce a scientific
+    # rule is how the rule stops holding the day someone changes the sort.
+    selectable = (summary[summary["comparable"]] if "comparable" in summary.columns
+                  else summary)
+    if selectable.empty:
+        raise RuntimeError(
+            "no method was scored over the full cell-type set, so none can be selected"
+        )
+    selected = str(selectable.index[0])
 
     tied = ([m for m in ties_df.index if bool(ties_df.loc[m, "tied_with_best"])]
             if not ties_df.empty else [selected])

@@ -1,0 +1,70 @@
+{
+  "primary_result": "Spearman rho between the ACS ranking and the ground-truth ranking of the same methods",
+  "primary_result_status": "AVAILABLE",
+  "yardsticks_with_real_ground_truth": [
+    "synthetic_mixtures"
+  ],
+  "preregistered_threshold": 0.6,
+  "preregistered_requirement": "rho >= threshold AND bootstrap CI excluding zero",
+  "min_methods_for_correlation": 6,
+  "controls_excluded_from_correlation": true,
+  "by_yardstick": [
+    {
+      "yardstick": "synthetic_mixtures",
+      "rho": 0.7497390814,
+      "p_value": 0.0031672267,
+      "ci_low": 0.3072642553,
+      "ci_high": 0.9566892062,
+      "n_methods": 13,
+      "n_distinct": 12.0,
+      "duplicate_groups": [
+        [
+          "scdc",
+          "scdc_ensemble"
+        ]
+      ],
+      "meets_threshold": true,
+      "ci_excludes_zero": true,
+      "verdict": "HEADLINE: ACS ranking tracks true accuracy at the pre-registered bar. Anatomic concordance is usable to choose a deconvolution method in tissue with an anatomical atlas, using no ground truth and no outcomes. NOTE: 13 methods but only 12 distinct score pairs \u2014 scdc=scdc_ensemble are degenerate duplicates. Judge the correlation on 12 points, not 13."
+    },
+    {
+      "yardstick": "absolute_purity",
+      "rho": null,
+      "p_value": null,
+      "ci_low": null,
+      "ci_high": null,
+      "n_methods": 0,
+      "n_distinct": null,
+      "duplicate_groups": null,
+      "meets_threshold": null,
+      "ci_excludes_zero": null,
+      "verdict": "UNAVAILABLE: this yardstick produced no scores in this run."
+    },
+    {
+      "yardstick": "sc_pseudobulk",
+      "rho": null,
+      "p_value": null,
+      "ci_low": null,
+      "ci_high": null,
+      "n_methods": 0,
+      "n_distinct": null,
+      "duplicate_groups": null,
+      "meets_threshold": null,
+      "ci_excludes_zero": null,
+      "verdict": "UNAVAILABLE: this yardstick produced no scores in this run."
+    },
+    {
+      "yardstick": "simulated_donor_mismatch",
+      "rho": null,
+      "p_value": null,
+      "ci_low": null,
+      "ci_high": null,
+      "n_methods": 0,
+      "n_distinct": null,
+      "duplicate_groups": null,
+      "meets_threshold": null,
+      "ci_excludes_zero": null,
+      "verdict": "UNAVAILABLE: this yardstick produced no scores in this run."
+    }
+  ]
+}

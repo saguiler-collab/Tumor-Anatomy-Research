@@ -1,0 +1,10 @@
+{
+  "freeze_hash": "2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a",
+  "recorded_hash": null,
+  "registered_utc": null,
+  "registry": null,
+  "results_predating_registration": null,
+  "state": "UNREGISTERED",
+  "url": null,
+  "verdict": "UNREGISTERED: the constraint file is hashed and committed, but no public registration receipt exists. The hash proves the constraints have not changed; it does not prove they were written before the results, which is what the pre-registration claim rests on. Register 2d1fb47c98832adf... publicly (OSF takes minutes) and record the receipt in REGISTRATION.json. Until then this project must not describe itself as pre-registered."
+}

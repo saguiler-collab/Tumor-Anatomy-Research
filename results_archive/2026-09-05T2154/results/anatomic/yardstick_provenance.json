@@ -1,0 +1,39 @@
+{
+  "synthetic_mixtures": {
+    "available": true,
+    "source": "this run's own donor-held-out pseudobulk benchmark",
+    "is_real_ground_truth": true,
+    "methods_covered": [
+      "bayesian",
+      "bayesian_hierarchical",
+      "bayesprism",
+      "bisque",
+      "cibersortx",
+      "control_random",
+      "control_shuffled_signature",
+      "dwls",
+      "elastic_net",
+      "epic",
+      "music",
+      "nnls",
+      "scdc",
+      "scdc_ensemble",
+      "svr"
+    ]
+  },
+  "absolute_purity": {
+    "available": false,
+    "is_real_ground_truth": true,
+    "reason": "the predecessor project recorded ABSOLUTE purity as BLOCKED \u2014 no purity file was ever located \u2014 so the correlation exists for one frozen method only and cannot be recomputed for the others.",
+    "recorded_for_one_method": {
+      "method": "v2_STAR_SVR_clean",
+      "spearman_rho": 0.7606967338768995,
+      "n": 120
+    }
+  },
+  "sc_pseudobulk": {
+    "available": false,
+    "is_real_ground_truth": true,
+    "reason": "requires paired single-cell GBM data where composition is counted rather than estimated. Not present in this repository."
+  }
+}

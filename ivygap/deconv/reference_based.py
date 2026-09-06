@@ -540,6 +540,12 @@ class QuanTIseqDeconvolution(DeconvolutionMethod):
     #: roster types TIL10 can speak to
     COVERED = ("T_cell", "NK_cell", "B_cell", "Macrophage_Microglia")
 
+    #: Declared to the base class so simplex projection treats the four unmodelled
+    #: types as structurally absent rather than as a failed solve. Without this the
+    #: four NaNs propagate and every column comes back NaN — which is exactly what
+    #: happened in the 2026-09-05T2154 run, silently.
+    models_cell_types = frozenset(COVERED)
+
     def _solve_all(self, data: DeconvolutionInput) -> np.ndarray:
         S, B = self._as_arrays(data)
         types = list(data.cell_types)

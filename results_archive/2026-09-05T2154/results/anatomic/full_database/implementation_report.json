@@ -1,0 +1,130 @@
+[
+  {
+    "method": "nnls",
+    "implementation": "python",
+    "fallback_reason": null,
+    "r_path_disabled": false,
+    "degenerate": false,
+    "degeneracy_reason": null
+  },
+  {
+    "method": "svr",
+    "implementation": "python",
+    "fallback_reason": null,
+    "r_path_disabled": false,
+    "degenerate": false,
+    "degeneracy_reason": null
+  },
+  {
+    "method": "cibersortx",
+    "implementation": "python",
+    "fallback_reason": null,
+    "r_path_disabled": false,
+    "degenerate": false,
+    "degeneracy_reason": null
+  },
+  {
+    "method": "elastic_net",
+    "implementation": "python",
+    "fallback_reason": null,
+    "r_path_disabled": false,
+    "degenerate": false,
+    "degeneracy_reason": null
+  },
+  {
+    "method": "bayesian",
+    "implementation": "python",
+    "fallback_reason": null,
+    "r_path_disabled": false,
+    "degenerate": false,
+    "degeneracy_reason": null
+  },
+  {
+    "method": "bayesian_hierarchical",
+    "implementation": "python",
+    "fallback_reason": null,
+    "r_path_disabled": false,
+    "degenerate": false,
+    "degeneracy_reason": null
+  },
+  {
+    "method": "music",
+    "implementation": "R:MuSiC",
+    "fallback_reason": null,
+    "r_path_disabled": false,
+    "degenerate": false,
+    "degeneracy_reason": null
+  },
+  {
+    "method": "dwls",
+    "implementation": "python-reimplementation",
+    "fallback_reason": "exceeded its 2400s budget for the genuine R package and was stopped; this is a wall-clock limit, not a failure of the method",
+    "r_path_disabled": false,
+    "degenerate": false,
+    "degeneracy_reason": null
+  },
+  {
+    "method": "bisque",
+    "implementation": "R:BisqueRNA",
+    "fallback_reason": null,
+    "r_path_disabled": false,
+    "degenerate": true,
+    "degeneracy_reason": "no subjects are assayed both as bulk and as single cells, so this runs Bisque's documented no-overlap mode (use.overlap = FALSE); the assay transform is estimated from marginal distributions rather than from paired subjects. Reported as degraded rather than as a Bisque result."
+  },
+  {
+    "method": "scdc",
+    "implementation": "R:SCDC",
+    "fallback_reason": null,
+    "r_path_disabled": false,
+    "degenerate": false,
+    "degeneracy_reason": null
+  },
+  {
+    "method": "scdc_ensemble",
+    "implementation": "R:SCDC",
+    "fallback_reason": null,
+    "r_path_disabled": false,
+    "degenerate": true,
+    "degeneracy_reason": "one reference supplied ('gbmap'), so there is nothing to weight across: SCDC ENSEMBLE reduces exactly to SCDC. Reported as degenerate rather than as an ENSEMBLE result."
+  },
+  {
+    "method": "epic",
+    "implementation": "R:EPIC",
+    "fallback_reason": null,
+    "r_path_disabled": false,
+    "degenerate": false,
+    "degeneracy_reason": null
+  },
+  {
+    "method": "quantiseq",
+    "implementation": "R:quantiseqr",
+    "fallback_reason": null,
+    "r_path_disabled": false,
+    "degenerate": false,
+    "degeneracy_reason": null
+  },
+  {
+    "method": "bayesprism",
+    "implementation": "python-reimplementation",
+    "fallback_reason": "exceeded its 2400s budget for the genuine R package and was stopped; this is a wall-clock limit, not a failure of the method",
+    "r_path_disabled": false,
+    "degenerate": false,
+    "degeneracy_reason": null
+  },
+  {
+    "method": "control_random",
+    "implementation": "python",
+    "fallback_reason": null,
+    "r_path_disabled": false,
+    "degenerate": false,
+    "degeneracy_reason": null
+  },
+  {
+    "method": "control_shuffled_signature",
+    "implementation": "python",
+    "fallback_reason": null,
+    "r_path_disabled": false,
+    "degenerate": false,
+    "degeneracy_reason": null
+  }
+]

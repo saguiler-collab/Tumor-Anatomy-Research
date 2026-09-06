@@ -1,0 +1,17 @@
+method,acs,ci_low,ci_high,n_constraint_tumor_pairs,n_tumors,null_mean,null_p,beats_null,is_control,degenerate,implementation,degeneracy_reason,acs_tie_group
+music,1.0,1.0,1.0,57,9,0.3701523076923077,9.999000099990002e-05,True,False,False,R:MuSiC,,-
+svr,0.9846153846153847,0.953125,1.0,57,9,0.3739292307692308,9.999000099990002e-05,True,False,False,python,,"nnls,svr,elastic_net,epic"
+nnls,0.9846153846153847,0.953125,1.0,57,9,0.37483692307692307,9.999000099990002e-05,True,False,False,python,,"nnls,svr,elastic_net,epic"
+elastic_net,0.9846153846153847,0.953125,1.0,57,9,0.37409384615384617,9.999000099990002e-05,True,False,False,python,,"nnls,svr,elastic_net,epic"
+epic,0.9846153846153847,0.953125,1.0,57,9,0.3769753846153846,9.999000099990002e-05,True,False,False,R:EPIC,,"nnls,svr,elastic_net,epic"
+bisque,0.9692307692307692,0.9295774647887324,1.0,57,9,0.3793,9.999000099990002e-05,True,False,True,R:BisqueRNA,"no subjects are assayed both as bulk and as single cells, so this runs Bisque's documented no-overlap mode (use.overlap = FALSE); the assay transform is estimated from marginal distributions rather than from paired subjects. Reported as degraded rather than as a Bisque result.","cibersortx,bisque"
+cibersortx,0.9692307692307692,0.9295774647887324,1.0,57,9,0.3735676923076923,9.999000099990002e-05,True,False,False,python,,"cibersortx,bisque"
+scdc_ensemble,0.9538461538461539,0.9107076226012794,0.9857142857142858,57,9,0.3739584615384615,9.999000099990002e-05,True,False,True,R:SCDC,"one reference supplied ('gbmap'), so there is nothing to weight across: SCDC ENSEMBLE reduces exactly to SCDC. Reported as degenerate rather than as an ENSEMBLE result.","scdc,scdc_ensemble"
+scdc,0.9538461538461539,0.9107076226012794,0.9857142857142858,57,9,0.3739584615384615,9.999000099990002e-05,True,False,False,R:SCDC,,"scdc,scdc_ensemble"
+bayesprism,0.8769230769230769,0.7857142857142857,0.967741935483871,57,9,0.37413538461538465,9.999000099990002e-05,True,False,False,python-reimplementation,,-
+bayesian_hierarchical,0.7846153846153846,0.647887323943662,0.9253731343283582,57,9,0.3800646153846154,9.999000099990002e-05,True,False,False,python,,-
+bayesian,0.7692307692307693,0.6268656716417911,0.9206659226190474,57,9,0.38060461538461543,9.999000099990002e-05,True,False,False,python,,-
+dwls,0.7384615384615385,0.5999305555555555,0.8666911764705881,57,9,0.3740661538461539,9.999000099990002e-05,True,False,False,python-reimplementation,,-
+control_random,0.3384615384615385,0.21666666666666667,0.4857142857142857,57,9,0.38802153846153853,0.7786221377862214,False,True,False,python,,-
+control_shuffled_signature,0.13846153846153847,0.058823529411764705,0.22810612597066415,57,9,0.34912461538461537,0.9991000899910009,False,True,False,python,,-
+quantiseq,,,,0,0,,,False,False,False,R:quantiseqr,,-

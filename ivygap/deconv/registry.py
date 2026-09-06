@@ -9,7 +9,8 @@ from __future__ import annotations
 
 from .base import DeconvolutionMethod
 from .bayesian import BayesianDeconvolution, HierarchicalBayesianDeconvolution
-from .classical import (CIBERSORTxDeconvolution, NNLSDeconvolution,
+from .classical import (CIBERSORTxDeconvolution, CIBERSORTxSModeDeconvolution,
+                        NNLSDeconvolution,
                         SVRDeconvolution)
 from .elastic_net import ElasticNetDeconvolution
 from .r_bridge import RMethod, check as r_check
@@ -58,6 +59,12 @@ def build_methods(prefer_r: bool = True, allow_r_fallback: bool = True
         # droplet atlas deconvolving 2014 laser-capture bulk is the exact cross-platform
         # gap the paper says causes cell types to drop out.
         CIBERSORTxDeconvolution(),
+        # CIBERSORTx S-mode. Supplementary Table 1d of the same paper shows the authors
+        # use S-mode, not B-mode, whenever a 10x-derived signature meets a bulk RNA-seq
+        # mixture — which is exactly this configuration (GBmap is 87.1% 10x). Both modes
+        # are run and reported under their own names so the comparison is visible
+        # rather than a claim; neither stands in for the other.
+        CIBERSORTxSModeDeconvolution(),
         ElasticNetDeconvolution(),
         BayesianDeconvolution(),
         HierarchicalBayesianDeconvolution(),

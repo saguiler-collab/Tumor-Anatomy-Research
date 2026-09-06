@@ -1,0 +1,53 @@
+{
+  "biology_freeze_hash": "2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a",
+  "fold_assignment_hash": null,
+  "input_hashes": {
+    "bulk": "c98fd1a6ad5ce9975b29f71814d7d9b4abb23c837249719b43f89575eaa9ebf4",
+    "cell_size_correction": "True",
+    "cell_types": "Tumor,Macrophage_Microglia,T_cell,NK_cell,B_cell,Endothelial,Oligodendrocyte,Astrocyte",
+    "n_genes": "657",
+    "n_samples": "122",
+    "references": "gbmap:6fa50a03ee163760"
+  },
+  "method_implementations": {
+    "bayesian": "python",
+    "bayesian_hierarchical": "python",
+    "bayesprism": "R:BayesPrism",
+    "bisque": "R:BisqueRNA",
+    "cibersortx": "python",
+    "control_random": "python",
+    "control_shuffled_signature": "python",
+    "dwls": "R:DWLS",
+    "elastic_net": "python",
+    "epic": "R:EPIC",
+    "music": "R:MuSiC",
+    "nnls": "python",
+    "quantiseq": "R:quantiseqr",
+    "scdc": "R:SCDC",
+    "scdc_ensemble": "R:SCDC",
+    "svr": "python"
+  },
+  "methods": [
+    "bayesian",
+    "bayesian_hierarchical",
+    "bayesprism",
+    "bisque",
+    "cibersortx",
+    "control_random",
+    "control_shuffled_signature",
+    "dwls",
+    "elastic_net",
+    "epic",
+    "music",
+    "nnls",
+    "quantiseq",
+    "scdc",
+    "scdc_ensemble",
+    "svr"
+  ],
+  "n_patients": 10,
+  "n_samples": 122,
+  "patient_ids_hash": "7a5bb5bbe8d6c80851d1ca58637e15031989540c52b68e39a28d4f886c9c7a35",
+  "sample_ids_hash": "f1ea641460bc997aaefca01d24d9172864f86a110adcacd205f9a6f88c1b98c5",
+  "samples_per_patient_hash": "371fd78eac01201ee96ed4d8fcc8327496e63c00df474f3350c1c9a564eaafaa"
+}

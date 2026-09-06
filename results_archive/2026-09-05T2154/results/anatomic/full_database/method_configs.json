@@ -1,0 +1,231 @@
+{
+  "what_this_is": "Every method's configuration as actually run, with anything differing from its own defaults marked. Declared deviations from a tool's PUBLISHED defaults are listed per method with the reason and when the decision was made \u2014 the protocol's fairness rule is defaults with no per-method tuning, so a departure that is invisible is not defensible.",
+  "n_methods": 16,
+  "methods_with_declared_deviations": [
+    "dwls"
+  ],
+  "configs": [
+    {
+      "method": "nnls",
+      "class": "NNLSDeconvolution",
+      "family": "least-squares",
+      "implementation": "python",
+      "parameters": {},
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "svr",
+      "class": "SVRDeconvolution",
+      "family": "least-squares",
+      "implementation": "python",
+      "parameters": {},
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "cibersortx",
+      "class": "CIBERSORTxDeconvolution",
+      "family": "least-squares",
+      "implementation": "python",
+      "parameters": {},
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "elastic_net",
+      "class": "ElasticNetDeconvolution",
+      "family": "regularized",
+      "implementation": "python",
+      "parameters": {
+        "alpha": null,
+        "l1_ratio": null,
+        "n_gene_folds": 3
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "bayesian",
+      "class": "BayesianDeconvolution",
+      "family": "bayesian",
+      "implementation": "python",
+      "parameters": {
+        "alpha": 0.5,
+        "n_iter": 400,
+        "n_burnin": 150,
+        "thin": 2,
+        "pseudocount_total": 1000.0,
+        "propagate_reference_uncertainty": true
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "bayesian_hierarchical",
+      "class": "HierarchicalBayesianDeconvolution",
+      "family": "bayesian",
+      "implementation": "python",
+      "parameters": {
+        "alpha": 0.5,
+        "n_iter": 400,
+        "n_burnin": 150,
+        "thin": 2,
+        "pseudocount_total": 1000.0,
+        "propagate_reference_uncertainty": true,
+        "kappa": 5.0,
+        "n_outer": 3,
+        "refine_iter": 200
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "music",
+      "class": "MuSiCDeconvolution",
+      "family": "reference-based",
+      "implementation": "R:MuSiC",
+      "parameters": {
+        "max_iter": 100,
+        "tol": 1e-05,
+        "trim_quantile": 0.99
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "dwls",
+      "class": "DWLSDeconvolution",
+      "family": "reference-based",
+      "implementation": "python-reimplementation",
+      "parameters": {
+        "max_iter": 100,
+        "tol": 1e-05,
+        "dampen_powers": [
+          1,
+          2,
+          4,
+          6,
+          8
+        ],
+        "n_subsets": 5,
+        "subset_frac": 0.5,
+        "select_max_iter": 12
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": [
+        {
+          "parameter": "buildSignatureMatrixMAST(diff.cutoff, pval.cutoff)",
+          "published_default": "diff.cutoff = 0.5, pval.cutoff = 0.01",
+          "used": "diff.cutoff = 0, pval.cutoff = 1 (filter fully open)",
+          "why": "Equal footing requires every method to receive the same pre-filtered gene space, so the informative genes have already been chosen identically for all methods. DWLS's own differential-expression pass is then a second filter, not a second opinion: at the published cutoffs it left 31 genes for 8 cell types and the driver refused to deconvolve on them.",
+          "decided": "from the gene count, before any DWLS score existed"
+        },
+        {
+          "parameter": "cells used for the signature build",
+          "published_default": "all cells in the reference",
+          "used": "<= 250 cells per cell type",
+          "why": "buildSignatureMatrixMAST costs ~30 minutes per gene set on this hardware regardless of the DE method. A signature is a per-cell-type summary, so type proportions are irrelevant to it and capping per type spends the budget where it buys accuracy.",
+          "decided": "from measured runtime, before any DWLS score existed"
+        },
+        {
+          "parameter": "per-sample failure handling",
+          "published_default": "an error aborts the call",
+          "used": "a sample that fails to solve becomes NA and is counted",
+          "why": "solveDampenedWLS fails on particular mixtures with 'NA/NaN argument'. One such sample was sending the whole cohort to the Python fallback. NA is already what this pipeline means by a failed sample and it is reported in n_failed_samples.",
+          "decided": "from the failure mode, before any DWLS score existed"
+        }
+      ]
+    },
+    {
+      "method": "bisque",
+      "class": "BisqueDeconvolution",
+      "family": "reference-based",
+      "implementation": "R:BisqueRNA",
+      "parameters": {
+        "min_donors": 3
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "scdc",
+      "class": "SCDCDeconvolution",
+      "family": "reference-based",
+      "implementation": "R:SCDC",
+      "parameters": {
+        "max_iter": 50,
+        "tol": 1e-05,
+        "outlier_z": 3.0
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "scdc_ensemble",
+      "class": "SCDCEnsembleDeconvolution",
+      "family": "reference-based",
+      "implementation": "R:SCDC",
+      "parameters": {
+        "max_iter": 50,
+        "tol": 1e-05,
+        "outlier_z": 3.0,
+        "grid_step": 0.1
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "epic",
+      "class": "EPICDeconvolution",
+      "family": "reference-based",
+      "implementation": "R:EPIC",
+      "parameters": {
+        "other_weight": 1.0
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "quantiseq",
+      "class": "QuanTIseqDeconvolution",
+      "family": "reference-based",
+      "implementation": "R:quantiseqr",
+      "parameters": {},
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "bayesprism",
+      "class": "BayesPrismDeconvolution",
+      "family": "bayesian",
+      "implementation": "python-reimplementation",
+      "parameters": {
+        "n_iter": 12,
+        "shrink": 0.25
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "control_random",
+      "class": "RandomFractionsControl",
+      "family": "negative-control",
+      "implementation": "python",
+      "parameters": {
+        "concentration": 0.7
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "control_shuffled_signature",
+      "class": "ShuffledSignatureControl",
+      "family": "negative-control",
+      "implementation": "python",
+      "parameters": {},
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    }
+  ]
+}

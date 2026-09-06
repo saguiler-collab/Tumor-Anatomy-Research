@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import json
 
+import numpy as np
 import pandas as pd
 
 from ivygap import config
@@ -38,6 +39,7 @@ from ivygap.anatomic import registration
 from ivygap.anatomic.acs import score as acs_score, tumor_structure_means
 from ivygap.bench.equal_footing import (EqualFootingViolation, build_certificate,
                                         check_estimates_aligned, require_comparable)
+from ivygap.deconv import r_bridge
 from ivygap.deconv.base import DeconvolutionInput
 from ivygap.deconv.controls import CONTROL_NAMES, build_controls
 from ivygap.deconv.registry import build_methods
@@ -103,7 +105,8 @@ def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
         prefer_r: bool = True, n_permutations: int = 10_000, n_boot: int = 2000,
         verbose: bool = True, deconvolve_all: bool = False,
         out_subdir: str | None = None,
-        n_control_draws: int = control_calibration.DEFAULT_DRAWS) -> dict:
+        n_control_draws: int = control_calibration.DEFAULT_DRAWS,
+        bulk_full: pd.DataFrame | None = None) -> dict:
     """
     Deconvolve real Ivy GAP tissue with every method plus both controls, score ACS, and
     run the agreement test.
@@ -166,6 +169,8 @@ def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
     else:
         keep = scored
     bulk, manifest = bulk[keep], manifest.loc[keep]
+    if bulk_full is not None:
+        bulk_full = bulk_full[keep]
 
     # The invariant, enforced rather than remembered: whatever was deconvolved, the ACS
     # scoring set is the H&E-selected anatomic samples and nothing else.
@@ -189,7 +194,8 @@ def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
         print(f"constraint file: {len(K.CONSTRAINTS)} constraints, "
               f"freeze hash {K.freeze_hash()[:16]}...\n")
 
-    data = DeconvolutionInput(bulk=bulk, references=references, manifest=manifest)
+    data = DeconvolutionInput(bulk=bulk, references=references, manifest=manifest,
+                              bulk_full=bulk_full)
 
     # Controls run through the identical pipeline on the identical inputs. Anything less
     # and they would not be controls for this benchmark.
@@ -216,6 +222,16 @@ def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
                                    or getattr(method, "degenerate_", False)),
                 "degeneracy_reason": (getattr(inner, "degeneracy_reason_", None)
                                       or getattr(method, "degeneracy_reason_", None)),
+                # Which roster types this method can estimate AT ALL, and which gene
+                # space it actually received. Both are part of "what was this method
+                # shown", which is half of any claim that the comparison was fair.
+                "models_cell_types": (sorted(method.models_cell_types)
+                                      if getattr(method, "models_cell_types", None)
+                                      else None),
+                "gene_space": r_bridge.LAST_GENE_SPACE.get(
+                    getattr(method, "r_method", method.name),
+                    {"n_genes": int(data.bulk.shape[0]),
+                     "gene_space": "shared marker subset"}),
             })
             if verbose:
                 tag = "  [CONTROL]" if method.name in CONTROL_NAMES else ""
@@ -267,27 +283,68 @@ def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
     leaderboard["degeneracy_reason"] = [disc.get(m, {}).get("degeneracy_reason")
                                         for m in leaderboard.index]
 
+    # COMPARABILITY. ACS is a proportion of SATISFIED constraint-tumour pairs, so two
+    # methods scored on different numbers of pairs are not on one scale. A method that
+    # structurally cannot estimate some roster types is scored only on the constraints
+    # it can address — quanTIseq's TIL10 has no tumour, endothelial or glial population,
+    # so it speaks to the two macrophage constraints and to nothing else. Ranking its
+    # 2-constraint score against a 7-constraint score would be a category error, and
+    # putting them in one sorted column invites exactly that reading.
+    #
+    # So the denominator decides: a method scored on the full pair count is comparable
+    # and belongs in the leaderboard proper; anything less is reported, with its
+    # denominator, as partial coverage. Reported, never dropped — "no method quietly
+    # missing from a ranking" is the rule, and a method that cannot be ranked still has
+    # to be visible along with the reason.
+    real_mask = ~leaderboard["is_control"]
+    pairs = leaderboard["n_constraint_tumor_pairs"].astype("float64")
+    full_denominator = float(pairs[real_mask].max()) if real_mask.any() else float("nan")
+    if not np.isfinite(full_denominator):
+        # No real method produced an evaluable pair at all. That is a broken run, not a
+        # leaderboard, and it must not be dressed up as one method being incomparable.
+        raise RuntimeError(
+            "no method was scored on a single constraint-tumour pair; the ACS scoring "
+            "set is empty and there is nothing to rank"
+        )
+    leaderboard["n_constraint_tumor_pairs_full"] = full_denominator
+    leaderboard["comparable"] = (pairs >= full_denominator) & pairs.notna()
+    leaderboard["coverage_note"] = [
+        "-" if c else
+        f"partial coverage: scored on {int(n) if pd.notna(n) else 0} of "
+        f"{int(full_denominator)} constraint-tumour pairs; not comparable to the "
+        f"ranked methods and excluded from the ranking"
+        for c, n in zip(leaderboard["comparable"], leaderboard["n_constraint_tumor_pairs"])
+    ]
+
     # Methods whose ACS is identical to another's are marked as a group, so a reader
-    # counting points for a rank correlation counts the right number.
+    # counting points for a rank correlation counts the right number. Computed among
+    # the comparable methods only — a tie across two different denominators is not one.
     groups: dict[float, list[str]] = {}
-    for m, v in leaderboard.loc[~leaderboard["is_control"], "acs"].items():
+    rankable = real_mask & leaderboard["comparable"]
+    for m, v in leaderboard.loc[rankable, "acs"].items():
         groups.setdefault(round(float(v), 12), []).append(str(m))
     # "-" rather than "" for no tie: pandas writes an empty string and reads it back as
     # NaN, so a consumer doing .split(",") on the column gets an AttributeError on
     # exactly the rows that are fine. An explicit sentinel round-trips.
     leaderboard["acs_tie_group"] = [
         ",".join(groups[round(float(v), 12)])
-        if (not c and len(groups.get(round(float(v), 12), [])) > 1) else "-"
-        for v, c in zip(leaderboard["acs"], leaderboard["is_control"])
+        if (r and len(groups.get(round(float(v), 12), [])) > 1) else "-"
+        for v, r in zip(leaderboard["acs"], rankable)
     ]
 
-    leaderboard = leaderboard.sort_values("acs", ascending=False)
+    # Comparable methods first, so the partial-coverage rows cannot be misread as the
+    # bottom of the ranking. They are not last-placed; they are not placed.
+    leaderboard = leaderboard.sort_values(["comparable", "acs"],
+                                          ascending=[False, False])
     per_constraint_df = pd.concat(per_constraint, ignore_index=True)
     per_tumor_df = pd.concat(per_tumor, ignore_index=True)
 
     # ---- the control check, stated before anything is read as a finding -----
     control_rows = leaderboard[leaderboard["is_control"]]
-    real_rows = leaderboard[~leaderboard["is_control"]]
+    # The control check compares against the methods actually in the ranking. Letting a
+    # partial-coverage method into this median would move the bar a control has to clear
+    # using a score computed on a different denominator.
+    real_rows = leaderboard[~leaderboard["is_control"] & leaderboard["comparable"]]
     best_control = float(control_rows["acs"].max()) if not control_rows.empty else float("nan")
     median_real = float(real_rows["acs"].median()) if not real_rows.empty else float("nan")
 
@@ -383,13 +440,21 @@ def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
         )
 
     # ---- 2. the experiment ---------------------------------------------------
-    acs_scores = {n: r.acs for n, r in results.items()}
+    # The agreement test asks whether ACS orders methods the way accuracy does, so it
+    # may only see methods whose ACS is on one scale. A partial-coverage method's score
+    # comes from a different denominator over a different subset of constraints; feeding
+    # it into the rank correlation would move the study's headline number using a
+    # quantity that is not the same quantity.
+    comparable_methods = set(leaderboard.index[leaderboard["comparable"]])
+    acs_scores = {n: r.acs for n, r in results.items() if n in comparable_methods}
+    excluded_from_agreement = sorted(set(results) - comparable_methods)
     yardsticks, yardstick_prov = _load_yardsticks()
     agreement_table = agreement.run_all_yardsticks(
         acs_scores, yardsticks,
         # Every yardstick here is an error metric, so lower is better throughout.
         higher_is_better={k: False for k in yardsticks},
     )
+    yardstick_prov["methods_excluded_for_partial_coverage"] = excluded_from_agreement
     (out / "yardstick_provenance.json").write_text(json.dumps(yardstick_prov, indent=2))
 
     # Where a yardstick covers too few methods to rank, a direct pairwise comparison is
