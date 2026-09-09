@@ -11,6 +11,19 @@ Deconvolution in Glioblastoma**
 the orientation: what the project is, why it exists, what it found, and what it cannot
 claim.
 
+> ### Registration status: **UNREGISTERED**
+>
+> "Pre-registered" is used throughout this repository in a specific and limited sense:
+> the constraint file was written, frozen and SHA-256 hashed **before any deconvolution
+> output was inspected**, and the hash proves it has not changed since. That is a real
+> property and it is what the design rests on.
+>
+> It is *not* the same as a public registration, which does not yet exist. Until a
+> receipt is recorded in `REGISTRATION.json`, this project must not describe itself as
+> pre-registered without qualification, and the analyses already archived are pilot work.
+> `python3 scripts/register.py --status` reports the live state, and every run embeds it
+> in its own artefacts rather than letting a reader assume.
+
 ---
 
 ## 1. The problem, in plain terms

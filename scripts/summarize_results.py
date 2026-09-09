@@ -19,6 +19,7 @@ and every table names the artefact it came from so a reader can check it.
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import json
 import sys
 from pathlib import Path
@@ -311,6 +312,72 @@ def per_tumor_table(path: Path, method: str) -> str:
     return "\n".join(lines) + "\n"
 
 
+def header_section(results_dir: Path) -> str:
+    """
+    Title, cohort line and headline, generated rather than typed.
+
+    These three were hand-written while everything below them was generated, which is
+    precisely the failure this script exists to prevent: after the 2026-09-06 rerun the
+    body reported rho = 0.733 on 13 methods while the header above it still said 0.873
+    on 10, because a human had to remember to change it and did not. Nothing here is
+    transcribed.
+    """
+    anat = results_dir / "anatomic"
+    rep = _load_json(anat / "anatomic_report.json")
+    cert = _load_json(anat / "equal_footing_certificate.json")
+    agree = _load_csv(anat / "agreement_test.csv")
+
+    out: list[str] = []
+    A = out.append
+
+    # Run date from the artefacts' own mtime, not from today.
+    stamp = None
+    probe = anat / "acs_leaderboard.csv"
+    if probe.exists():
+        stamp = dt.datetime.fromtimestamp(probe.stat().st_mtime).strftime("%Y-%m-%d")
+
+    A("# Results — the Anatomy Test\n")
+    if stamp:
+        A(f"**Run:** {stamp}  ")
+    if rep:
+        line = (f"**Cohort:** Ivy GAP, ACS scored on {rep['n_samples']} H&E anatomic "
+                f"samples / {rep['n_tumors']} tumours")
+        if rep.get("deconvolved_all_samples"):
+            line += f" ({rep['n_samples_deconvolved']} samples deconvolved)"
+        A(line + "  ")
+        A(f"**Constraint freeze hash:** `{rep['constraint_freeze_hash']}`  ")
+    if cert:
+        h = cert.get("input_hashes", {})
+        A(f"**Gene space:** {h.get('n_genes', '?')} genes · "
+          f"**reference:** {h.get('references', '?')}  ")
+    A("")
+    A("Read [Anatomy_Test.md](Anatomy_Test.md) first — it is the protocol. Everything "
+      "below is rendered from the artefacts by `scripts/summarize_results.py`; nothing "
+      "is transcribed by hand, including this header.")
+    A("")
+    A("---")
+    A("")
+    A("## 0. The headline\n")
+
+    if agree is None or len(agree) == 0:
+        A("_No agreement test was written by this run._")
+        A("")
+        return "\n".join(out)
+
+    row = agree[agree["yardstick"] == "synthetic_mixtures"]
+    row = row.iloc[0] if len(row) else agree.iloc[0]
+    A(f"> Spearman **rho = {_fmt(row['rho'], 4)}** between the ACS ranking and the "
+      f"ranking from real ground truth, bootstrap CI "
+      f"**[{_fmt(row['ci_low'])}, {_fmt(row['ci_high'])}]**, "
+      f"p = {_fmt(row['p_value'], 4)}, on {int(row['n_methods'])} methods.")
+    A(">")
+    A("> Bar fixed in advance: rho >= 0.60 **and** a CI excluding zero.")
+    A("")
+    A(str(row["verdict"]))
+    A("")
+    return "\n".join(out)
+
+
 def render(results_dir: Path) -> str:
     anat = results_dir / "anatomic"
     full = anat / "full_database"
@@ -321,6 +388,7 @@ def render(results_dir: Path) -> str:
     recon = _load_json(results_dir / "data_reconciliation.json")
     audit = _load_json(results_dir / "clinical_missingness_audit.json")
 
+    A(header_section(results_dir))
     A(integrity_section(anat))
     A("## 2. Cohort and provenance\n")
     if rep:
