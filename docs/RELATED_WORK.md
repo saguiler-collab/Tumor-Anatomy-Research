@@ -159,6 +159,66 @@ of exactly the bias the review describes, found independently in our own data.
 
 ---
 
+## 4b · Concordance test, run 2026-09-10 — and it is not a clean win
+
+`scripts/benchmark_concordance.py`. The published claim, the method set and the statistic
+were all fixed in the script before it ran, because otherwise this is trivially fakeable.
+
+**Avila Cobos 2020.** Their top tier, in our ACS ranking of 14 comparable methods:
+
+| their top tier | our ACS | our rank |
+|---|---|---|
+| MuSiC | 1.0000 | **1** |
+| nnls | 0.9846 | **2** |
+| CIBERSORT (= our `svr`) | 0.9846 | **2** |
+| SCDC | 0.9538 | 8 |
+| DWLS | 0.7385 | **14** (last) |
+
+| evaluated, not top tier | our ACS |
+|---|---|
+| EPIC | 0.9846 |
+| elastic net | 0.9846 |
+| Bisque | 0.9231 |
+
+**One-sided Mann-Whitney p = 0.5. No evidence the top tier ranks higher overall.**
+
+That is the result and it should be reported as such. Two things drive it:
+
+1. **DWLS sits last.** In the confirmatory run it ran as a Python reimplementation after
+   exceeding its wall-clock budget, so this row is not the package Avila Cobos evaluated.
+   It is kept in the statistic rather than dropped, because removing the one method
+   expected to disagree is precisely the move this design exists to prevent. But the
+   correct reading is that **this study does not test the published DWLS**, so the
+   comparison is weakened at exactly the point where it most needs to be clean.
+2. **EPIC and elastic net score 0.9846** — as high as our top tier — while sitting
+   outside Avila Cobos's top tier.
+
+**What survives.** Of the five overlapping methods, the three whose *identical published
+implementation* both studies test — MuSiC, NNLS, CIBERSORT — are our **top three**. The
+agreement is real where the comparison is clean and breaks where it is not. That is a
+narrower claim than "ACS agrees with published benchmarks", and it is the one the data
+supports.
+
+**Sturm 2019** cannot be tested statistically: only EPIC and CIBERSORT overlap in a way
+that permits a group comparison, and quanTIseq is excluded from the statistic in advance
+because its ACS is computed over 15 constraint-tumour pairs rather than 57. EPIC, which
+Sturm recommends, is at rank 2 here.
+
+### The finding underneath the finding
+
+**The two published benchmarks disagree with each other about EPIC.** Sturm recommends it
+for general-purpose deconvolution; Avila Cobos does not place it in the top tier. So there
+is no single published consensus ranking for ACS to agree with, and any paper claiming
+"our ranking matches the literature" should be asked *which* literature.
+
+That is worth stating plainly, because it also reframes what this study is for. If
+established benchmarks using real ground truth disagree with one another about a method,
+then the value of a ground-truth-free check is not that it settles the question — it is
+that it is a *cheap, independent* axis that can be applied where no ground truth exists at
+all, which is almost everywhere.
+
+---
+
 ## 5 · What these papers say we should do next
 
 - **Nguyen 2024** benchmarks 53 methods; this study has 15. The review's list is where to
