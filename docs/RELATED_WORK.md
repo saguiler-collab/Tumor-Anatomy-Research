@@ -34,10 +34,16 @@ CIBERSORT)... regression methods (RLR, FARDEEP) and support vector regression
 Ours: `nnls` and `svr` — and `svr` **is** CIBERSORT's published nu-SVR core — sit in the
 top tier at ACS 0.9846, and rank 3rd and 6th on accuracy (MAE 0.0561, 0.0610).
 
-This matters more than it looks. Avila Cobos reached that ranking with **known ground
-truth on simulated mixtures**. We reach a compatible ranking on **real tissue using no
-ground truth at all**, from pre-registered anatomy. That is the study's claim, and an
-independent group's benchmark agrees with it.
+Avila Cobos reached that ranking with **known ground truth on simulated mixtures**. We
+reach a compatible placement on **real tissue using no ground truth at all**, from
+pre-registered anatomy.
+
+**But do not overstate this — section 4b tests it formally and the overall result is
+null (p = 0.5).** What holds is narrower: the three methods whose *identical published
+implementation* both studies test — MuSiC, NNLS and CIBERSORT — are our top three. The
+agreement is real where the comparison is clean, and the formal test fails because DWLS
+is a reimplementation here and because two methods outside their top tier score as high
+as ours.
 
 **EPIC ranks highly — agrees with Sturm.**
 
