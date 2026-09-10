@@ -170,3 +170,50 @@ def test_blob_counts_comparable_separately_from_real(tmp_path):
     assert d["n_real_methods"] == 2
     assert d["n_comparable_methods"] == 1
     assert d["n_controls"] == 1
+
+
+def test_atlas_facts_are_never_the_cohorts_facts(tmp_path, monkeypatch):
+    """
+    The bug: the rendered caption read "reference 314,700 cells / 10 donors". Both were
+    the wrong quantity — 314,700 is atlas cells whose label the roster maps (the build
+    subsamples to ~15k), and 10 is Ivy GAP PATIENTS, not atlas donors (there are 110).
+    `n_patients` on the anatomic certificate describes the tissue, not the reference.
+    """
+    from ivygap import config
+
+    anat = tmp_path / "anatomic"
+    anat.mkdir(parents=True)
+    pd.DataFrame([{"method": "m", "acs": 1.0, "is_control": False, "comparable": True}]
+                 ).to_csv(anat / "acs_leaderboard.csv", index=False)
+    (anat / "equal_footing_certificate.json").write_text(json.dumps({
+        "n_patients": 10, "input_hashes": {"n_genes": "657"}}))
+    (anat / "reference_coverage.json").write_text(json.dumps({
+        "n_cells_in_atlas": 338564, "n_cells_kept": 314700}))
+
+    refdir = tmp_path / "refdir"
+    refdir.mkdir()
+    (refdir / "reference_sampling_gbmap.json").write_text(json.dumps({
+        "n_cells_kept": 15311, "n_donors_kept": 110, "n_genes_kept": 16758,
+        "n_cells_in_file": 338564, "n_cells_after_roster_mapping": 314700}))
+    monkeypatch.setattr(config, "REFERENCE_DIR", refdir)
+
+    atlas = bfd.build(tmp_path)["cohort"]["atlas"]
+    assert atlas["donors"] == 110, "atlas donors must not come from the cohort's n_patients"
+    assert atlas["cells_kept"] == 15311, "must be the built reference, not the mapped atlas"
+    assert atlas["cells_after_roster_mapping"] == 314700   # kept, but under its own name
+
+
+def test_atlas_facts_report_none_rather_than_a_wrong_number(tmp_path, monkeypatch):
+    """With no sampling record, report nothing rather than substitute a different quantity."""
+    from ivygap import config
+    anat = tmp_path / "anatomic"
+    anat.mkdir(parents=True)
+    pd.DataFrame([{"method": "m", "acs": 1.0, "is_control": False, "comparable": True}]
+                 ).to_csv(anat / "acs_leaderboard.csv", index=False)
+    (anat / "equal_footing_certificate.json").write_text(json.dumps({"n_patients": 10}))
+    empty = tmp_path / "empty"; empty.mkdir()
+    monkeypatch.setattr(config, "REFERENCE_DIR", empty)
+
+    atlas = bfd.build(tmp_path)["cohort"]["atlas"]
+    assert atlas["donors"] is None and atlas["cells_kept"] is None
+    assert "unavailable" in atlas["source"]

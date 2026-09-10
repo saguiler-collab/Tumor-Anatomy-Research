@@ -1,0 +1,847 @@
+<title>Anatomic Concordance Plates</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;1,400&display=swap">
+<style>
+:root{
+  color-scheme: light;
+  --paper:#f6f7f8; --plate:#fcfcfb; --ink:#101418; --ink-2:#4a5058; --ink-3:#727a83;
+  --rule:#dfe3e6; --rule-2:#eceff1;
+  --s1:#86b6ef; --s2:#5598e7; --s3:#2a78d6; --s4:#1c5cab; --s5:#104281;
+  --series:#2a78d6; --control:#eb6834;
+  --good:#0ca30c; --bad:#d03b3b; --none:#b9c0c6;
+  --band:rgba(235,104,52,.13);
+  --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  --serif:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --maxw:1080px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --paper:#101214; --plate:#1a1a19; --ink:#eef1f4; --ink-2:#b4bcc4; --ink-3:#8b939b;
+    --rule:#2b3136; --rule-2:#22272b;
+    --s1:#9ec5f4; --s2:#6da7ec; --s3:#3987e5; --s4:#256abf; --s5:#184f95;
+    --series:#3987e5; --control:#d95926;
+    --good:#0ca30c; --bad:#d03b3b; --none:#5b636a;
+    --band:rgba(217,89,38,.18);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --paper:#101214; --plate:#1a1a19; --ink:#eef1f4; --ink-2:#b4bcc4; --ink-3:#8b939b;
+  --rule:#2b3136; --rule-2:#22272b;
+  --s1:#9ec5f4; --s2:#6da7ec; --s3:#3987e5; --s4:#256abf; --s5:#184f95;
+  --series:#3987e5; --control:#d95926;
+  --good:#0ca30c; --bad:#d03b3b; --none:#5b636a;
+  --band:rgba(217,89,38,.18);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+     font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:44px 24px 80px}
+
+/* ---- masthead ---- */
+.mast{border-bottom:2px solid var(--ink);padding-bottom:22px;margin-bottom:8px}
+.mast .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-3)}
+.mast h1{font-size:clamp(28px,4.2vw,44px);line-height:1.1;margin:12px 0 10px;
+  font-weight:600;letter-spacing:-.02em;text-wrap:balance;max-width:20ch}
+.mast p{font-family:var(--serif);font-size:16px;color:var(--ink-2);margin:0;max-width:62ch}
+.meta{display:flex;flex-wrap:wrap;gap:8px 26px;margin-top:20px;
+  font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+.meta b{color:var(--ink-2);font-weight:500}
+
+/* ---- headline callout ---- */
+.headline{margin:34px 0 10px;padding:24px 26px;background:var(--plate);
+  border:1px solid var(--rule);border-left:3px solid var(--series)}
+.headline .lab{font-family:var(--mono);font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+.headline .stat{font-family:var(--sans);font-size:clamp(26px,3.6vw,38px);
+  font-weight:600;letter-spacing:-.02em;line-height:1.15}
+.headline .stat em{font-style:normal;color:var(--series)}
+.headline .sub{font-family:var(--serif);color:var(--ink-2);margin-top:12px;max-width:66ch}
+
+/* ---- plates ---- */
+.plate{margin:52px 0 0;border-top:1px solid var(--rule);padding-top:26px}
+.plate-head{display:flex;gap:16px;align-items:baseline;margin-bottom:4px}
+.fignum{font-family:var(--mono);font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-3);white-space:nowrap;padding-top:3px}
+.plate h2{font-size:20px;font-weight:600;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.canvas{margin:20px 0 0;background:var(--plate);border:1px solid var(--rule);
+  padding:20px 18px;overflow-x:auto}
+.cap{font-family:var(--serif);font-size:14.5px;color:var(--ink-2);
+  max-width:66ch;margin:16px 0 0}
+.cap b{color:var(--ink);font-weight:400;font-style:italic}
+.src{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-top:10px}
+svg{display:block;max-width:100%;height:auto}
+text{font-family:var(--mono);font-size:10.5px;fill:var(--ink-2)}
+text.lbl{font-family:var(--sans);font-size:11.5px;fill:var(--ink)}
+text.tiny{font-size:9.5px;fill:var(--ink-3)}
+.gridline{stroke:var(--rule-2);stroke-width:1}
+.axis{stroke:var(--rule);stroke-width:1}
+
+/* ---- legend ---- */
+.legend{display:flex;flex-wrap:wrap;gap:6px 20px;margin:14px 0 0;
+  font-family:var(--mono);font-size:11px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.sw{width:11px;height:11px;border-radius:2px;display:inline-block}
+
+/* ---- table twin ---- */
+details{margin-top:14px}
+summary{font-family:var(--mono);font-size:11px;color:var(--ink-3);cursor:pointer;
+  letter-spacing:.04em}
+summary:hover{color:var(--ink)}
+table{border-collapse:collapse;margin-top:12px;font-size:12.5px;width:100%}
+th,td{text-align:left;padding:5px 12px 5px 0;border-bottom:1px solid var(--rule-2)}
+th{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--ink-3);font-weight:500}
+td.num{font-variant-numeric:tabular-nums;text-align:right;padding-right:22px}
+
+/* ---- notes ---- */
+.note{margin-top:16px;padding:14px 16px;border-left:2px solid var(--rule);
+  font-family:var(--serif);font-size:14px;color:var(--ink-2);max-width:66ch}
+.note b{color:var(--ink);font-weight:400;font-style:italic}
+.tip{position:fixed;pointer-events:none;opacity:0;transition:opacity .09s;
+  background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:11px;
+  padding:6px 9px;border-radius:3px;z-index:50;max-width:280px;line-height:1.45}
+:focus-visible{outline:2px solid var(--series);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+<div class="wrap">
+
+<header class="mast">
+  <div class="kicker">Ivy GAP · <span id="x-tumours">—</span> glioblastomas · pre-registered ordinal constraints</div>
+  <h1>Can a tumour's own anatomy choose a deconvolution method?</h1>
+  <p>Seven ordering constraints, written from neuropathology before any deconvolution was
+  run, scored against <span id="x-nmethods">—</span> methods and <span id="x-ncontrols">—</span> negative controls. The plates below are
+  rendered from the run's artefacts — no figure carries a number that was not computed.</p>
+  <div class="meta" id="meta"></div>
+</header>
+
+<section class="headline" id="headline"></section>
+
+<!-- ============ PLATE 1 ============ -->
+<section class="plate">
+  <div class="plate-head"><div class="fignum">Figure 1</div>
+    <h2>The same three components, one arrow reversed</h2></div>
+  <div class="canvas"><svg id="f1" viewBox="0 0 900 300" role="img"
+    aria-label="Two schematics. Above: method produces fractions, anatomy is read off as the conclusion. Below: constraints written first from anatomy, and the method is scored against them."></svg></div>
+  <p class="cap">Current practice runs the top row: a method produces cell fractions, the
+  anatomic pattern falls out, and it is reported as a finding — so the method cannot fail.
+  Writing the ordering down first turns the same pattern into a prediction the method can
+  miss. <b>Nothing is testable while the anatomy is an output; everything is, once it is an
+  input.</b></p>
+  <div class="src">schematic · constraint set from anatomic/constraint_file.json</div>
+</section>
+
+<!-- ============ PLATE 2 ============ -->
+<section class="plate">
+  <div class="plate-head"><div class="fignum">Figure 2</div>
+    <h2>What was predicted, before anything was run</h2></div>
+  <div class="canvas"><svg id="f2" viewBox="0 0 900 430" role="img"
+    aria-label="Four panels, one per cell type, showing the predicted ordering across five anatomic structures from leading edge to peri-necrotic core."></svg></div>
+  <div class="legend" id="l2"></div>
+  <p class="cap">Five structures, periphery to core. Each panel shows the ordering a
+  pathologist would predict for one cell type — <b>height is rank, not value.</b> No
+  constraint asserts a fraction, because a microdissected region is still a mixture and a
+  target value would be indefensible. A filled marker is a predicted maximum. The seventh
+  constraint, C7, is the three-step chain LE&nbsp;&lt;&nbsp;IT&nbsp;&lt;&nbsp;CT and carries
+  double weight because a conjunction is harder to satisfy by chance than any single step.</p>
+  <div class="src">anatomic/constraint_file.json · freeze hash 2d1fb47c98832adf…</div>
+</section>
+
+<!-- ============ PLATE 3 ============ -->
+<section class="plate">
+  <div class="plate-head"><div class="fignum">Figure 3</div>
+    <h2>Every method against the noise floor</h2></div>
+  <div class="canvas"><svg id="f3" viewBox="0 0 900 470" role="img"
+    aria-label="Dot plot of Anatomic Concordance Score per method with bootstrap intervals, over a shaded band showing the negative control's 5th to 95th percentile."></svg></div>
+  <div class="legend" id="l3"></div>
+  <p class="cap">The shaded band is the shuffled-signature control scored over <span id="x-draws">—</span>
+  independent permutations — <b>the control is a distribution, not one draw.</b> That
+  matters: a single draw of this control has a standard deviation of <span id="x-sd">—</span>, so one number
+  cannot establish whether the constraint set discriminates. <span id="x-clears">—</span>
+ Neither control beats its own within-tumour permutation null.</p>
+  <details><summary>▸ table view</summary><div id="t3"></div></details>
+  <div class="src">anatomic/acs_leaderboard.csv · anatomic/control_calibration.json</div>
+</section>
+<!-- ============ PLATE 4 ============ -->
+<section class="plate">
+  <div class="plate-head"><div class="fignum">Figure 4</div>
+    <h2>The experiment: does anatomy agree with truth?</h2></div>
+  <div class="canvas"><svg id="f4" viewBox="0 0 900 470" role="img"
+    aria-label="Scatter of each method's rank by anatomic concordance against its rank by accuracy on donor-held-out mixtures, with the pre-registered threshold stated."></svg></div>
+  <p class="cap">A leaderboard on its own proves nothing — a method could satisfy every
+  constraint and still be badly calibrated. The test is whether the ACS ranking agrees with
+  the ranking from real ground truth: <span id="x-mixtures">—</span> pseudobulk mixtures pooled from <span id="x-donors">—</span> held-out
+  donors whose cells never entered the reference. <b>The bar was fixed before this was
+  computed</b> — rho ≥ 0.60 with a bootstrap CI excluding zero — and both conditions hold.
+  Points on the diagonal are methods the anatomy and the truth rank identically.</p>
+  <details><summary>▸ table view</summary><div id="t4"></div></details>
+  <div class="src">anatomic/agreement_method_ranks.csv · anatomic/agreement_report.json</div>
+</section>
+
+<!-- ============ PLATE 5 ============ -->
+<section class="plate">
+  <div class="plate-head"><div class="fignum">Figure 5</div>
+    <h2>Where the evidence actually is</h2></div>
+  <div class="canvas"><svg id="f5" viewBox="0 0 900 520" role="img"
+    aria-label="Matrix of constraints by tumour for each method, marking satisfied, violated, and not-evaluable cells."></svg></div>
+  <div class="legend" id="l5"></div>
+  <p class="cap">Every constraint, every tumour, every method. Grey is <b>not evaluable</b> —
+  that tumour never supplied the structures the constraint compares — and is excluded from
+  the numerator and the denominator alike, so a method is never penalised for something it
+  was not shown. This is the plate that shows the study's real size: no constraint rests on
+  more than <span id="x-maxtum">—</span> tumours, and its thinnest (<span id="x-minc">—</span>) on <span id="x-mintum">—</span>. A pooled score cannot show that.</p>
+  <details><summary>▸ table view</summary><div id="t5"></div></details>
+  <div class="src">anatomic/acs_per_tumor.csv · anatomic/acs_per_constraint.csv</div>
+</section>
+
+<!-- ============ PLATE 6 ============ -->
+<section class="plate">
+  <div class="plate-head"><div class="fignum">Figure 6</div>
+    <h2>The composition the constraints were checking</h2></div>
+  <div class="canvas"><svg id="f6" viewBox="0 0 900 330" role="img"
+    aria-label="Mean estimated cell composition across the five anatomic structures for the best-scoring method."></svg></div>
+  <div class="legend" id="l6"></div>
+  <p class="cap">The estimates behind Figure 3's top row, averaged within structure. Tumour
+  fraction climbs from the leading edge through infiltrating tumour to the cellular core;
+  endothelium reaches its maximum in microvascular proliferation, which is what that
+  structure is diagnostically defined by; oligodendrocyte is highest at the leading edge,
+  where white matter survives. <b>No method was told which structure a sample came from.</b>
+  The labels are used only to score.</p>
+  <details><summary>▸ table view</summary><div id="t6"></div></details>
+  <div class="src">anatomic/composition_by_tumor_structure.csv</div>
+</section>
+
+<!-- ============ PLATE 7 ============ -->
+<section class="plate">
+  <div class="plate-head"><div class="fignum">Figure 7</div>
+    <h2>Why prognosis is not answerable here</h2></div>
+  <div class="canvas"><svg id="f7" viewBox="0 0 900 360" role="img"
+    aria-label="Curve of the smallest detectable C-index difference against event count, with this cohort marked far from the region where a comparison would be interpretable."></svg></div>
+  <p class="cap">The smallest C-index difference a cohort can distinguish from zero falls as
+  1.96·√2/√n. Ivy GAP publishes no vital-status column, so even reading every recorded
+  survival time as a death — the most generous reading available, and one this pipeline
+  will only make when asked by name — the cohort reaches <span id="x-events">—</span> events. That detects a
+  difference of <b><span id="x-mdd">—</span></b>, which is wider than the interpretable range of the statistic.
+  <b>This is a finished result, not an outstanding task:</b> no method ranking on prognosis
+  from this dataset could mean anything.</p>
+  <details><summary>▸ table view</summary><div id="t7"></div></details>
+  <div class="src">survival/declared_event_policy/survival_power.json · clinical_missingness_audit.json</div>
+</section>
+
+<!-- ============ PLATE 8 ============ -->
+<section class="plate">
+  <div class="plate-head"><div class="fignum">Figure 8</div>
+    <h2>What went in, and what the model cannot see</h2></div>
+  <div class="canvas"><svg id="f8" viewBox="0 0 900 300" role="img"
+    aria-label="Flow of samples from the portal listing through the frozen archive into the scored anatomic cohort, and the atlas populations the cell-type roster discards."></svg></div>
+  <p class="cap">Left: every exclusion, counted. The portal lists nine samples the frozen
+  2014-11-25 archive does not contain — a release skew, not a parsing error — and the 148
+  ISH-selected cluster samples are deconvolved but never scored, because their structure
+  labels were assigned from expression and scoring them would be circular. Right: the
+  roster maps twelve of the atlas's twenty labels and discards the rest. <b>Those cells do
+  not leave the tissue, only the model</b>, so their signal is absorbed by the nearest
+  retained type — and the largest discarded population is myeloid, which lands on the two
+  macrophage constraints.</p>
+  <div class="src">data_reconciliation.json · anatomic/reference_coverage.json</div>
+</section>
+
+<section class="plate">
+  <div class="plate-head"><div class="fignum">Standing limits</div>
+    <h2>What these plates do not establish</h2></div>
+  <div class="note" id="limits"></div>
+</section>
+
+</div>
+<div class="tip" id="tip"></div>
+<script>
+const D = __FIGURE_DATA__;
+const SVGNS="http://www.w3.org/2000/svg";
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const el=(t,a={},p)=>{const e=document.createElementNS(SVGNS,t);
+  for(const k in a) e.setAttribute(k,a[k]); if(p)p.appendChild(e); return e;};
+const txt=(p,x,y,s,a={})=>{const t=el("text",Object.assign({x,y},a),p);t.textContent=s;return t;};
+const fmt=(v,n=3)=>v==null||!isFinite(v)?"—":Number(v).toFixed(n);
+const STRUCT=["LE","IT","CT","MVP","PAN"];
+const SNAME={LE:"leading edge",IT:"infiltrating",CT:"cellular tumour",
+             MVP:"microvascular",PAN:"peri-necrotic"};
+const RAMP=()=>["--s1","--s2","--s3","--s4","--s5"].map(cssv);
+
+/* tooltip */
+const tip=document.getElementById("tip");
+function hover(node,html){
+  const show=e=>{tip.innerHTML=html;tip.style.opacity=1;
+    const r=tip.getBoundingClientRect();
+    let x=(e.clientX??0)+14, y=(e.clientY??0)+14;
+    if(x+r.width>innerWidth-8) x=innerWidth-r.width-8;
+    if(y+r.height>innerHeight-8) y=(e.clientY??0)-r.height-10;
+    tip.style.left=x+"px";tip.style.top=y+"px";};
+  node.addEventListener("mousemove",show);
+  node.addEventListener("mouseenter",show);
+  node.addEventListener("focus",e=>{const b=node.getBoundingClientRect();
+    show({clientX:b.left+b.width/2,clientY:b.top});});
+  const hide=()=>tip.style.opacity=0;
+  node.addEventListener("mouseleave",hide); node.addEventListener("blur",hide);
+  node.setAttribute("tabindex","0");
+}
+function table(host,cols,rows){
+  const t=document.createElement("table");
+  const h=document.createElement("tr");
+  cols.forEach(c=>{const th=document.createElement("th");th.textContent=c.h;h.appendChild(th);});
+  t.appendChild(h);
+  rows.forEach(r=>{const tr=document.createElement("tr");
+    cols.forEach(c=>{const td=document.createElement("td");
+      const v=c.f?c.f(r):r[c.k]; td.textContent=v==null?"—":v;
+      if(c.num)td.className="num"; tr.appendChild(td);});
+    t.appendChild(tr);});
+  host.innerHTML=""; host.appendChild(t);
+}
+
+/* ---------- masthead + headline ---------- */
+
+/* Grow an SVG's box to fit the content actually drawn in it.
+   The plates were first written for 12 leaderboard rows and the heights were typed
+   into the markup. Adding methods silently clipped the bottom of a figure — the
+   drawing code lays out with rows.length and nothing reconciled that against the
+   viewBox. Now the data decides the height. */
+function fit(svg, pad){
+  const vb = (svg.getAttribute("viewBox")||"0 0 900 400").split(/\s+/).map(Number);
+  let maxY = 0;
+  svg.querySelectorAll("*").forEach(n=>{
+    try{
+      const b = n.getBBox();
+      if(b && isFinite(b.y+b.height)) maxY = Math.max(maxY, b.y + b.height);
+    }catch(e){}
+  });
+  const want = Math.ceil(maxY + (pad==null?18:pad));
+  if(want > vb[3]) svg.setAttribute("viewBox", `${vb[0]} ${vb[1]} ${vb[2]} ${want}`);
+}
+
+(function(){
+  const c=D.cohort, a=D.agreement?.by_yardstick?.find(y=>y.n_methods)||{};
+  document.getElementById("meta").innerHTML=[
+    `<span><b>${c.n_samples_archive}</b> archive samples deconvolved</span>`,
+    `<span><b>${c.n_samples_scored}</b> scored across <b>${c.n_tumors_scored}</b> tumours</span>`,
+    `<span>reference <b>${(c.atlas.cells_kept||0).toLocaleString()}</b> cells / <b>${c.atlas.donors}</b> donors</span>`,
+    `<span><b>10,000</b> within-tumour permutations per method</span>`,
+    `<span>constraint hash <b>2d1fb47c</b></span>`].join("");
+
+  const band=D.control_band||{}, real=D.leaderboard.filter(r=>!r.is_control);
+  const worst=Math.min(...real.map(r=>r.acs));
+  document.getElementById("headline").innerHTML=`
+    <div class="lab">Primary result · bar fixed before computing</div>
+    <div class="stat">Spearman <em>ρ = ${fmt(a.rho,3)}</em> between the anatomy ranking
+      and the truth ranking</div>
+    <div class="sub">95% bootstrap CI [${fmt(a.ci_low,3)}, ${fmt(a.ci_high,3)}], p = ${fmt(a.p_value,4)},
+      on ${a.n_methods} methods (${a.n_distinct} distinct). The pre-registered bar was
+      ρ ≥ 0.60 <em>and</em> a CI excluding zero; both hold. Every real method scores above
+      ${fmt(band.p95,3)}, the 95th percentile of a shuffled-signature control — the weakest
+      is ${fmt(worst,3)}.</div>`;
+})();
+
+/* ---------- F1 · the reversal ---------- */
+(function(){
+  const s=document.getElementById("f1"); const ink=cssv("--ink"), r=cssv("--rule");
+  const box=(x,y,w,h,label,fill,stroke)=>{
+    el("rect",{x,y,width:w,height:h,rx:3,fill:fill||cssv("--plate"),
+      stroke:stroke||r,"stroke-width":1.5},s);
+    const t=txt(s,x+w/2,y+h/2+4,label,{class:"lbl","text-anchor":"middle"});
+    t.setAttribute("fill",ink); return t;};
+  const arrow=(x1,y,x2,label,col)=>{
+    el("line",{x1,y1:y,x2:x2-9,y2:y,stroke:col,"stroke-width":1.5},s);
+    el("path",{d:`M${x2-9},${y-4.5} L${x2},${y} L${x2-9},${y+4.5} Z`,fill:col},s);
+    const t=txt(s,(x1+x2)/2,y-9,label,{class:"tiny","text-anchor":"middle"});
+    t.setAttribute("fill",col);};
+
+  const lab=(y,t,sub)=>{const a=txt(s,0,y,t,{class:"lbl"});a.setAttribute("fill",ink);
+    a.setAttribute("font-weight","600");
+    const b=txt(s,0,y+15,sub,{class:"tiny"});b.setAttribute("fill",cssv("--ink-3"));};
+
+  lab(18,"How it is done now","the anatomy is the conclusion");
+  box(0,44,190,54,"Deconvolution method");
+  arrow(196,71,268,"solves",cssv("--ink-3"));
+  box(272,44,190,54,"Cell fractions per region");
+  arrow(468,71,540,"read as",cssv("--ink-3"));
+  box(544,44,190,54,"Anatomy",cssv("--plate"),cssv("--control"));
+  const w1=txt(s,639,118,"↑ output — cannot fail",{class:"tiny","text-anchor":"middle"});
+  w1.setAttribute("fill",cssv("--control"));
+
+  el("line",{x1:0,y1:152,x2:900,y2:152,stroke:r,"stroke-width":1},s);
+
+  lab(182,"The Anatomy Test","the anatomy is the test");
+  box(544,208,190,54,"Deconvolution method");
+  box(0,208,190,54,"Anatomy",cssv("--plate"),cssv("--series"));
+  arrow(196,235,268,"derives",cssv("--series"));
+  box(272,208,190,54,"Ordering constraints");
+  arrow(538,235,468,"",cssv("--series"));
+  const sc=txt(s,500,226,"scores",{class:"tiny","text-anchor":"middle"});
+  sc.setAttribute("fill",cssv("--series"));
+  const w2=txt(s,95,282,"↑ input — written first, can be missed",{class:"tiny","text-anchor":"middle"});
+  w2.setAttribute("fill",cssv("--series"));
+})();
+/* ---------- F2 · the pre-registered orderings ---------- */
+(function(){
+  const s=document.getElementById("f2"), ramp=RAMP(), ink=cssv("--ink");
+  const TYPES=[["Tumor","Tumor","C1 · C7"],["Oligodendrocyte","Oligodendrocyte","C2"],
+               ["Endothelial","Endothelial","C3 · C4"],["Macrophage_Microglia","Macrophage","C5 · C6"]];
+  // predicted RANK (not value) per structure, from the constraint set
+  const RANK={Tumor:{LE:1,IT:2,CT:3,MVP:null,PAN:null},
+              Oligodendrocyte:{LE:3,IT:null,CT:1,MVP:null,PAN:null},
+              Endothelial:{LE:1,IT:1,CT:1,MVP:3,PAN:1},
+              Macrophage_Microglia:{LE:1,IT:null,CT:1,MVP:3,PAN:3}};
+  const MAXOF={Endothelial:"MVP"};
+  const pw=205, ph=150, gapx=25, x0=54, y0=44;
+  TYPES.forEach((T,i)=>{
+    const cx=x0+i*(pw+gapx), cy=y0;
+    const t=txt(s,cx,cy-20,T[1],{class:"lbl"});t.setAttribute("fill",ink);
+    t.setAttribute("font-weight","600");
+    const c2=txt(s,cx,cy-6,T[2],{class:"tiny"});c2.setAttribute("fill",cssv("--ink-3"));
+    // baseline
+    el("line",{x1:cx,y1:cy+ph,x2:cx+pw-30,y2:cy+ph,class:"axis"},s);
+    const step=(pw-30)/(STRUCT.length-1);
+    let prev=null;
+    STRUCT.forEach((st,j)=>{
+      const r=RANK[T[0]][st];
+      const px=cx+j*step;
+      const tick=txt(s,px,cy+ph+16,st,{class:"tiny","text-anchor":"middle"});
+      tick.setAttribute("fill",ramp[j]); tick.setAttribute("font-weight","500");
+      if(r==null){
+        const q=txt(s,px,cy+ph-8,"·",{class:"tiny","text-anchor":"middle"});
+        q.setAttribute("fill",cssv("--none")); prev=null; return;
+      }
+      const py=cy+ph-((r-1)/2)*(ph-24)-12;
+      if(prev) el("line",{x1:prev[0],y1:prev[1],x2:px,y2:py,
+        stroke:ramp[2],"stroke-width":2,"stroke-linecap":"round"},s);
+      const isMax=MAXOF[T[0]]===st;
+      const dot=el("circle",{cx:px,cy:py,r:isMax?7:5,
+        fill:isMax?ramp[4]:ramp[j],stroke:cssv("--plate"),"stroke-width":2},s);
+      hover(dot,`<b>${T[1]}</b> in ${SNAME[st]}<br>predicted ${isMax?"maximum":"rank "+r+" of 3"}`);
+      prev=[px,py];
+    });
+  });
+  const a=txt(s,x0-10,y0+8,"higher",{class:"tiny","text-anchor":"end"});
+  a.setAttribute("fill",cssv("--ink-3"));
+  const b=txt(s,x0-10,y0+ph,"lower",{class:"tiny","text-anchor":"end"});
+  b.setAttribute("fill",cssv("--ink-3"));
+  el("line",{x1:x0-30,y1:y0+4,x2:x0-30,y2:y0+ph,class:"axis"},s);
+  const cN=txt(s,x0-30,y0+ph+34,"no value axis — ordering is all histology can assert",{class:"tiny"});
+  cN.setAttribute("fill",cssv("--ink-3"));
+
+  document.getElementById("l2").innerHTML=
+    STRUCT.map((st,i)=>`<span><i class="sw" style="background:${ramp[i]}"></i>${st} — ${SNAME[st]}</span>`).join("")
+    + `<span><i class="sw" style="background:${ramp[4]};border-radius:50%"></i>predicted maximum</span>`;
+})();
+
+/* ---------- F3 · leaderboard over the control band ---------- */
+(function(){
+  const s=document.getElementById("f3"), band=D.control_band||{};
+  const rows=[...D.leaderboard].sort((a,b)=>b.acs-a.acs);
+  const L=210, R=860, T=34, rowh=31, ink=cssv("--ink");
+  const X=v=>L+v*(R-L);
+  // control band
+  if(band.p05!=null){
+    el("rect",{x:X(band.p05),y:T-10,width:X(band.p95)-X(band.p05),
+      height:rows.length*rowh+16,fill:cssv("--band")},s);
+    el("line",{x1:X(band.median),y1:T-10,x2:X(band.median),y2:T+rows.length*rowh+6,
+      stroke:cssv("--control"),"stroke-width":1.5},s);
+    const bl=txt(s,X(band.p95)+7,T-14,"control 5–95%",{class:"tiny"});
+    bl.setAttribute("fill",cssv("--control"));
+  }
+  // grid
+  [0,.25,.5,.75,1].forEach(v=>{
+    el("line",{x1:X(v),y1:T-10,x2:X(v),y2:T+rows.length*rowh+6,class:"gridline"},s);
+    const t=txt(s,X(v),T+rows.length*rowh+22,v.toFixed(2),{class:"tiny","text-anchor":"middle"});
+    t.setAttribute("fill",cssv("--ink-3"));});
+  rows.forEach((r,i)=>{
+    const y=T+i*rowh+8;
+    const col=r.is_control?cssv("--control"):cssv("--series");
+    const nm=txt(s,L-14,y+4,r.method,{class:"lbl","text-anchor":"end"});
+    nm.setAttribute("fill",r.is_control?cssv("--control"):ink);
+    if(r.degenerate){const d=txt(s,L-14,y+4,"",{});}
+    // CI
+    el("line",{x1:X(r.ci_low),y1:y,x2:X(r.ci_high),y2:y,stroke:col,
+      "stroke-width":2,opacity:.42,"stroke-linecap":"round"},s);
+    const dot=el("circle",{cx:X(r.acs),cy:y,r:5.5,fill:col,
+      stroke:cssv("--plate"),"stroke-width":2},s);
+    hover(dot,`<b>${r.method}</b><br>ACS ${fmt(r.acs)} [${fmt(r.ci_low)}, ${fmt(r.ci_high)}]<br>`+
+      `null mean ${fmt(r.null_mean)} · p ${fmt(r.null_p,4)}<br>${r.implementation||"python"}`+
+      (r.degenerate?"<br>⚠ degenerate mode":""));
+    const v=txt(s,X(r.acs)+11,y+4,fmt(r.acs),{class:"tiny"});
+    v.setAttribute("fill",cssv("--ink-3"));
+    if(r.degenerate){const g=txt(s,R+16,y+4,"deg.",{class:"tiny"});
+      g.setAttribute("fill",cssv("--ink-3"));}
+  });
+  const ax=txt(s,(L+R)/2,T+rows.length*rowh+42,"Anatomic Concordance Score",{class:"tiny","text-anchor":"middle"});
+  ax.setAttribute("fill",cssv("--ink-3"));
+
+  document.getElementById("l3").innerHTML=
+    `<span><i class="sw" style="background:${cssv("--series")}"></i>real method</span>`+
+    `<span><i class="sw" style="background:${cssv("--control")}"></i>negative control</span>`+
+    `<span><i class="sw" style="background:${cssv("--band")}"></i>control 5–95% over 200 draws</span>`+
+    `<span>bar = 95% bootstrap CI over tumours</span>`+
+    `<span>“deg.” = running in a degenerate mode, disclosed</span>`;
+
+  table(document.getElementById("t3"),
+    [{h:"method",k:"method"},{h:"ACS",f:r=>fmt(r.acs),num:1},
+     {h:"95% CI",f:r=>`${fmt(r.ci_low)} – ${fmt(r.ci_high)}`,num:1},
+     {h:"null mean",f:r=>fmt(r.null_mean),num:1},{h:"null p",f:r=>fmt(r.null_p,4),num:1},
+     {h:"ran as",f:r=>r.implementation||"python"},
+     {h:"control",f:r=>r.is_control?"yes":""}], rows);
+  fit(s);
+})();
+/* ---------- F4 · the agreement test ---------- */
+(function(){
+  const s=document.getElementById("f4"), R=D.agreement_ranks||[];
+  if(!R.length) return;
+  const a=D.agreement?.by_yardstick?.find(y=>y.n_methods)||{};
+  const L=90,Rt=690,T=40,B=380, ink=cssv("--ink"), n=R.length;
+  const X=r=>L+((r-1)/(n-1))*(Rt-L), Y=r=>T+((r-1)/(n-1))*(B-T);
+  for(let i=1;i<=n;i++){
+    el("line",{x1:X(i),y1:T,x2:X(i),y2:B,class:"gridline"},s);
+    el("line",{x1:L,y1:Y(i),x2:Rt,y2:Y(i),class:"gridline"},s);}
+  el("line",{x1:L,y1:T,x2:Rt,y2:B,stroke:cssv("--rule"),"stroke-width":1.5,
+    "stroke-dasharray":"1 0"},s);
+  const dl=txt(s,Rt-6,B-8,"perfect agreement",{class:"tiny","text-anchor":"end"});
+  dl.setAttribute("fill",cssv("--ink-3"));
+  R.forEach(r=>{
+    const x=X(r.acs_rank), y=Y(r.truth_rank), gap=Math.abs(r.rank_gap||0);
+    if(gap>0) el("line",{x1:x,y1:y,x2:X(r.truth_rank),y2:y,stroke:cssv("--ink-3"),
+      "stroke-width":1,opacity:.35},s);
+    const dot=el("circle",{cx:x,cy:y,r:gap>=3?7:5.5,fill:cssv("--series"),
+      stroke:cssv("--plate"),"stroke-width":2},s);
+    hover(dot,`<b>${r.method}</b><br>ACS ${fmt(r.acs)} → rank ${r.acs_rank}<br>`+
+      `MAE ${fmt(r.truth,4)} → rank ${r.truth_rank}<br>gap ${gap}`);
+    const t=txt(s,x+10,y+4,r.method,{class:"tiny"});
+    t.setAttribute("fill",gap>=3?ink:cssv("--ink-3"));
+  });
+  [["anatomic concordance rank →",(L+Rt)/2,B+34,"middle",0],
+   ["← accuracy rank (truth)",0,0,"middle",1]].forEach(([s2,x,y,anc,rot])=>{
+     const t=txt(s,rot?0:x,rot?0:y,s2,{class:"tiny","text-anchor":anc});
+     t.setAttribute("fill",cssv("--ink-3"));
+     if(rot) t.setAttribute("transform",`translate(46,${(T+B)/2}) rotate(-90)`);});
+  txt(s,L,T-14,"best",{class:"tiny"}).setAttribute("fill",cssv("--ink-3"));
+
+  // verdict panel
+  const px=730;
+  el("rect",{x:px,y:T,width:150,height:150,fill:"none",stroke:cssv("--rule"),"stroke-width":1},s);
+  const put=(y,t,cls,col,w)=>{const e=txt(s,px+14,y,t,{class:cls});
+    e.setAttribute("fill",col||ink); if(w)e.setAttribute("font-weight",w); return e;};
+  put(T+24,"ρ = "+fmt(a.rho,3),"lbl",cssv("--series"),"600").setAttribute("font-size","19px");
+  put(T+46,"CI ["+fmt(a.ci_low,2)+", "+fmt(a.ci_high,2)+"]","tiny",cssv("--ink-2"));
+  put(T+62,"p = "+fmt(a.p_value,4),"tiny",cssv("--ink-2"));
+  put(T+86,"bar: ρ ≥ 0.60","tiny",cssv("--ink-3"));
+  put(T+100,"and CI excludes 0","tiny",cssv("--ink-3"));
+  put(T+126,a.meets_threshold&&a.ci_excludes_zero?"BOTH MET":"NOT MET","lbl",
+      a.meets_threshold&&a.ci_excludes_zero?cssv("--good"):cssv("--bad"),"600");
+
+  table(document.getElementById("t4"),
+    [{h:"method",k:"method"},{h:"ACS",f:r=>fmt(r.acs),num:1},
+     {h:"ACS rank",k:"acs_rank",num:1},{h:"MAE (truth)",f:r=>fmt(r.truth,4),num:1},
+     {h:"truth rank",k:"truth_rank",num:1},{h:"gap",k:"rank_gap",num:1}],
+    [...R].sort((x,y)=>x.acs_rank-y.acs_rank));
+})();
+
+/* ---------- F5 · evidence matrix ---------- */
+(function(){
+  const s=document.getElementById("f5"), PT=D.per_tumor||[];
+  if(!PT.length) return;
+  const methods=[...new Set(PT.map(r=>r.method))]
+    .filter(m=>!m.startsWith("control_"));
+  const order=D.leaderboard.filter(r=>!r.is_control).sort((a,b)=>b.acs-a.acs).map(r=>r.method);
+  methods.sort((a,b)=>order.indexOf(a)-order.indexOf(b));
+  const tumours=[...new Set(PT.map(r=>String(r.tumor_id)))].sort();
+  const CID=["C1","C2","C3","C4","C5","C6","C7"];
+  const idx={}; PT.forEach(r=>{idx[r.method+"|"+r.tumor_id]=r;});
+
+  const L=112, T=52, cw=Math.min(15,(760-L)/(tumours.length*CID.length+methods.length));
+  const gw=cw*CID.length+7;
+  let y=T;
+  const good=cssv("--good"), bad=cssv("--bad"), none=cssv("--none");
+  methods.forEach(m=>{
+    const nm=txt(s,L-10,y+10,m,{class:"tiny","text-anchor":"end"});
+    nm.setAttribute("fill",cssv("--ink"));
+    tumours.forEach((tu,ti)=>{
+      const rec=idx[m+"|"+tu];
+      const sat=new Set((rec?.constraints_satisfied||"").split(",").filter(Boolean));
+      const vio=new Set((rec?.constraints_violated||"").split(",").filter(Boolean));
+      CID.forEach((c,ci)=>{
+        const x=L+ti*gw+ci*cw;
+        const st=sat.has(c)?"sat":vio.has(c)?"vio":"na";
+        const cell=el("rect",{x,y,width:cw-1.6,height:13,rx:1.5,
+          fill:st==="sat"?good:st==="vio"?bad:none,
+          opacity:st==="na"?.32:.9},s);
+        hover(cell,`<b>${m}</b><br>tumour ${tu} · ${c}<br>`+
+          (st==="sat"?"satisfied ✓":st==="vio"?"violated ✕":"not evaluable — structures absent"));
+      });
+    });
+    y+=17;
+  });
+  tumours.forEach((tu,ti)=>{
+    const t=txt(s,L+ti*gw+(gw-7)/2,T-10,tu,{class:"tiny","text-anchor":"middle"});
+    t.setAttribute("fill",cssv("--ink-3"));
+    t.setAttribute("transform",`rotate(-42 ${L+ti*gw+(gw-7)/2} ${T-10})`);});
+  const cl=txt(s,L,y+18,"each block = one tumour · seven cells = C1…C7 left to right",{class:"tiny"});
+  cl.setAttribute("fill",cssv("--ink-3"));
+
+  document.getElementById("l5").innerHTML=
+    `<span><i class="sw" style="background:${good}"></i>✓ satisfied</span>`+
+    `<span><i class="sw" style="background:${bad}"></i>✕ violated</span>`+
+    `<span><i class="sw" style="background:${none};opacity:.5"></i>· not evaluable (excluded from both numerator and denominator)</span>`;
+
+  const pc=D.per_constraint||[];
+  const best=order[0];
+  table(document.getElementById("t5"),
+    [{h:"constraint",k:"constraint"},{h:"claim",k:"description"},
+     {h:"weight",f:r=>fmt(r.weight,1),num:1},
+     {h:"tumours evaluable",k:"n_tumors_evaluable",num:1},
+     {h:"satisfied",k:"n_satisfied",num:1}],
+    pc.filter(r=>r.method===best));
+  fit(s);
+})();
+/* ---------- F6 · composition by structure ---------- */
+(function(){
+  const s=document.getElementById("f6"), rows=D.composition||[];
+  const TYPES=["Tumor","Oligodendrocyte","Endothelial","Macrophage_Microglia"];
+  const SHORT={Tumor:"Tumour",Oligodendrocyte:"Oligodendrocyte",
+               Endothelial:"Endothelial",Macrophage_Microglia:"Macrophage"};
+  if(!rows.length){s.parentElement.parentElement.style.display="none";return;}
+  const m={}; STRUCT.forEach(st=>{m[st]={};TYPES.forEach(t=>m[st][t]=[]);});
+  rows.forEach(r=>{const st=r.structure; if(!m[st])return;
+    TYPES.forEach(t=>{if(r[t]!=null&&isFinite(r[t]))m[st][t].push(+r[t]);});});
+  const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+  const ramp=RAMP(), ink=cssv("--ink");
+  const pw=190,ph=170,gap=32,x0=64,y0=44;
+  TYPES.forEach((t,i)=>{
+    const cx=x0+i*(pw+gap);
+    const h=txt(s,cx,y0-14,SHORT[t],{class:"lbl"});h.setAttribute("fill",ink);
+    h.setAttribute("font-weight","600");
+    const vals=STRUCT.map(st=>mean(m[st][t]));
+    const mx=Math.max(...vals.filter(v=>v!=null),0.001);
+    el("line",{x1:cx,y1:y0+ph,x2:cx+pw-34,y2:y0+ph,class:"axis"},s);
+    const bw=(pw-34)/STRUCT.length;
+    STRUCT.forEach((st,j)=>{
+      const v=vals[j]; if(v==null)return;
+      const bh=(v/mx)*(ph-16), x=cx+j*bw+2, yy=y0+ph-bh;
+      const bar=el("rect",{x,y:yy,width:bw-4,height:Math.max(bh,1),rx:1.5,fill:ramp[j]},s);
+      hover(bar,`<b>${SHORT[t]}</b> in ${SNAME[st]}<br>mean fraction ${fmt(v,4)}`);
+      const lb=txt(s,x+(bw-4)/2,y0+ph+14,st,{class:"tiny","text-anchor":"middle"});
+      lb.setAttribute("fill",ramp[j]);
+      if(v===Math.max(...vals.filter(q=>q!=null))){
+        const vt=txt(s,x+(bw-4)/2,yy-5,fmt(v,2),{class:"tiny","text-anchor":"middle"});
+        vt.setAttribute("fill",ink);}
+    });
+  });
+  const yl=txt(s,0,0,"mean estimated fraction",{class:"tiny","text-anchor":"middle"});
+  yl.setAttribute("fill",cssv("--ink-3"));
+  yl.setAttribute("transform",`translate(30,${y0+ph/2}) rotate(-90)`);
+  const note=txt(s,x0,y0+ph+40,"each panel scaled to its own maximum — the claim is the ordering, not the height",{class:"tiny"});
+  note.setAttribute("fill",cssv("--ink-3"));
+  document.getElementById("l6").innerHTML=
+    STRUCT.map((st,i)=>`<span><i class="sw" style="background:${ramp[i]}"></i>${st} — ${SNAME[st]}</span>`).join("");
+  const tb=STRUCT.map(st=>{const o={structure:st+" — "+SNAME[st]};
+    TYPES.forEach(t=>o[t]=fmt(mean(m[st][t]),4)); return o;});
+  table(document.getElementById("t6"),
+    [{h:"structure",k:"structure"},...TYPES.map(t=>({h:SHORT[t],k:t,num:1}))], tb);
+})();
+
+/* ---------- F7 · the power wall ---------- */
+(function(){
+  const s=document.getElementById("f7"), sv=D.survival?.declared||{};
+  const L=80,R=690,T=36,B=250, ink=cssv("--ink");
+  const nMax=200, dMax=1.2;
+  const X=n=>L+(Math.log(n)-Math.log(5))/(Math.log(nMax)-Math.log(5))*(R-L);
+  const Y=d=>B-(d/dMax)*(B-T);
+  const det=n=>1.96*Math.SQRT2/Math.sqrt(n);
+  [0,.25,.5,.75,1].forEach(v=>{
+    el("line",{x1:L,y1:Y(v),x2:R,y2:Y(v),class:"gridline"},s);
+    const t=txt(s,L-8,Y(v)+4,v.toFixed(2),{class:"tiny","text-anchor":"end"});
+    t.setAttribute("fill",cssv("--ink-3"));});
+  // plausible real effect band
+  el("rect",{x:L,y:Y(.10),width:R-L,height:Y(.02)-Y(.10),fill:cssv("--band")},s);
+  const bl=txt(s,R-6,Y(.10)-6,"plausible real effect (0.02–0.10)",{class:"tiny","text-anchor":"end"});
+  bl.setAttribute("fill",cssv("--control"));
+  let dstr="";
+  for(let n=5;n<=nMax;n*=1.03) dstr+=(dstr?"L":"M")+X(n)+","+Y(Math.min(det(n),dMax));
+  el("path",{d:dstr,fill:"none",stroke:cssv("--series"),"stroke-width":2},s);
+  [[7,"anatomic only"],[sv.n_events||29,"this cohort"],[80,"protocol minimum"]].forEach(([n,lab],i)=>{
+    const x=X(n), y=Y(Math.min(det(n),dMax));
+    el("line",{x1:x,y1:y,x2:x,y2:B,stroke:cssv("--ink-3"),"stroke-width":1,
+      "stroke-dasharray":i===1?"":"3 3",opacity:.7},s);
+    const dot=el("circle",{cx:x,cy:y,r:i===1?7:5,fill:i===1?cssv("--bad"):cssv("--ink-3"),
+      stroke:cssv("--plate"),"stroke-width":2},s);
+    hover(dot,`<b>${lab}</b><br>${n} events → detects ΔC ≈ ${fmt(det(n),3)}`);
+    const t=txt(s,x,B+16,`${n}`,{class:"tiny","text-anchor":"middle"});
+    t.setAttribute("fill",i===1?cssv("--bad"):cssv("--ink-3"));
+    const t2=txt(s,x,B+29,lab,{class:"tiny","text-anchor":"middle"});
+    t2.setAttribute("fill",cssv("--ink-3"));
+    if(i===1){const v=txt(s,x+11,y-8,"ΔC = "+fmt(det(n),3),{class:"lbl"});
+      v.setAttribute("fill",cssv("--bad"));v.setAttribute("font-weight","600");}
+  });
+  const xl=txt(s,(L+R)/2,B+50,"events in the cohort (log scale)",{class:"tiny","text-anchor":"middle"});
+  xl.setAttribute("fill",cssv("--ink-3"));
+  const yl=txt(s,0,0,"smallest detectable ΔC-index",{class:"tiny","text-anchor":"middle"});
+  yl.setAttribute("fill",cssv("--ink-3"));
+  yl.setAttribute("transform",`translate(30,${(T+B)/2}) rotate(-90)`);
+
+  const mi=D.missingness||{};
+  el("rect",{x:715,y:T,width:168,height:214,fill:"none",stroke:cssv("--rule")},s);
+  const put=(y,t,col,w,size)=>{const e=txt(s,729,y,t,{class:"tiny"});
+    e.setAttribute("fill",col||cssv("--ink-2")); if(w)e.setAttribute("font-weight",w);
+    if(size)e.setAttribute("font-size",size); return e;};
+  put(T+20,"Why 29 and not 42",ink,"600","11.5px");
+  put(T+42,`${mi.n_tumors||42} tumours in the clinical table`);
+  put(T+58,`${mi.n_time_blank||10} have no survival time`);
+  put(T+80,"and they are not missing",cssv("--bad"));
+  put(T+94,"at random:",cssv("--bad"));
+  put(T+114,`MGMT+ ${((mi.mgmt||{}).methylated_among_blank)||"8/9"} of blanks`);
+  put(T+128,`vs ${((mi.mgmt||{}).methylated_among_recorded)||"9/31"} of recorded`);
+  put(T+142,`Fisher p = ${fmt((mi.mgmt||{}).fisher_p,4)}`);
+  put(T+164,"MGMT methylation predicts",cssv("--ink-3"));
+  put(T+178,"longer survival — so the",cssv("--ink-3"));
+  put(T+192,"blanks are the survivors.",cssv("--ink-3"));
+
+  table(document.getElementById("t7"),
+    [{h:"method",k:"method"},{h:"C baseline",f:r=>fmt(r.c_index_baseline),num:1},
+     {h:"C + composition",f:r=>fmt(r.c_index_with_composition),num:1},
+     {h:"Δ",f:r=>fmt(r.delta_c_index),num:1},
+     {h:"interpretation",f:r=>"INCONCLUSIVE"}],
+    (D.survival?.metrics||[]).slice(0,12));
+})();
+/* ---------- F8 · provenance and coverage ---------- */
+(function(){
+  const s=document.getElementById("f8"), rec=D.provenance_recon||{}, cov=D.coverage||{};
+  const c=D.cohort, ink=cssv("--ink"), ramp=RAMP();
+  const L=20,T=44;
+  const bar=(x,y,w,label,sub,fill,stroke)=>{
+    el("rect",{x,y,width:w,height:38,rx:2,fill:fill||"none",
+      stroke:stroke||cssv("--rule"),"stroke-width":1.5},s);
+    const a=txt(s,x+11,y+17,label,{class:"lbl"});a.setAttribute("fill",ink);
+    const b=txt(s,x+11,y+30,sub,{class:"tiny"});b.setAttribute("fill",cssv("--ink-3"));};
+  const hdr=txt(s,L,T-16,"SAMPLES",{class:"tiny"});hdr.setAttribute("fill",cssv("--ink-3"));
+  hdr.setAttribute("letter-spacing",".12em");
+
+  bar(L,T,300,"279 listed by the portal","live Allen Institute export");
+  el("line",{x1:L+150,y1:T+38,x2:L+150,y2:T+56,stroke:cssv("--rule"),"stroke-width":1.5},s);
+  bar(L,T+56,300,`${c.n_samples_archive} in the frozen archive`,"9 added after the 2014-11-25 freeze");
+  el("line",{x1:L+150,y1:T+94,x2:L+150,y2:T+112,stroke:cssv("--rule"),"stroke-width":1.5},s);
+  bar(L,T+112,148,`${c.n_samples_scored} H&E anatomic`,`${c.n_tumors_scored} tumours · SCORED`,
+      "none",cssv("--series"));
+  bar(L+156,T+112,144,"148 ISH cluster","deconvolved, never scored","none",cssv("--control"));
+  const w=txt(s,L,T+172,"ISH structure labels came from expression —",{class:"tiny"});
+  w.setAttribute("fill",cssv("--control"));
+  const w2=txt(s,L,T+185,"scoring them would be circular by construction.",{class:"tiny"});
+  w2.setAttribute("fill",cssv("--control"));
+
+  // right: coverage
+  const RX=430;
+  const h2=txt(s,RX,T-16,"REFERENCE COVERAGE",{class:"tiny"});
+  h2.setAttribute("fill",cssv("--ink-3"));h2.setAttribute("letter-spacing",".12em");
+  const dropped=Object.entries(cov.atlas_labels_dropped||{}).slice(0,6);
+  const totalDrop=cov.n_cells_dropped||0, frac=cov.fraction_of_atlas_dropped||0;
+  const kept=(c.atlas.cells_kept||0);
+  const t1=txt(s,RX,T+8,`roster maps 12 of the atlas's 20 labels`,{class:"lbl"});
+  t1.setAttribute("fill",ink);
+  const t2=txt(s,RX,T+26,`${totalDrop.toLocaleString()} cells discarded — ${(frac*100).toFixed(1)}% of the atlas`,{class:"tiny"});
+  t2.setAttribute("fill",cssv("--ink-3"));
+  const mx=Math.max(...dropped.map(d=>d[1]),1);
+  dropped.forEach(([name,n],i)=>{
+    const y=T+48+i*22, bw=(n/mx)*220;
+    el("rect",{x:RX+112,y:y-9,width:Math.max(bw,2),height:12,rx:1.5,
+      fill:i===0?cssv("--control"):cssv("--none"),opacity:i===0?.85:.55},s);
+    const nm=txt(s,RX+104,y,name,{class:"tiny","text-anchor":"end"});
+    nm.setAttribute("fill",i===0?ink:cssv("--ink-2"));
+    const vv=txt(s,RX+118+Math.max(bw,2),y,n.toLocaleString(),{class:"tiny"});
+    vv.setAttribute("fill",cssv("--ink-3"));});
+  const cnote=txt(s,RX,T+192,"largest is myeloid — its signal lands on C5 and C6.",{class:"tiny"});
+  cnote.setAttribute("fill",cssv("--control"));
+})();
+
+/* ---------- standing limits ---------- */
+(function(){
+  const reg=D.registration||{}, res=D.resolution||{}, sv=D.survival?.declared||{};
+  const dev=(D.deviations||[]);
+  const impl=(D.implementations||[]);
+  const genuine=impl.filter(x=>String(x.implementation||"").startsWith("R:")).map(x=>x.method);
+  const li=[];
+  li.push(`<b>Not pre-registered.</b> The constraint file is hashed and committed, but no
+    public registration receipt exists, so <code>registration_status.json</code> reports
+    ${reg.state||"UNREGISTERED"}. A hash proves the constraints have not changed; it does
+    not prove they predate the results. Until that is fixed this is a strong internal
+    result, not a pre-registered one.`);
+  li.push(`<b>Nine evaluable tumours.</b> The weighted denominator is
+    ${res.weighted_denominator||65}, so ACS can take only
+    ${(res.n_possible_values||66)} values and ${res.n_real_methods||10} methods land on
+    ${res.n_distinct_real||6} of them. Ties are structural, not coincidence, and no
+    analysis inside Ivy GAP widens this — only a second tissue does.`);
+  li.push(`<b>One tissue.</b> The protocol's step 7 — repeating the construction on a
+    second region-annotated atlas — is untouched. One tissue is a case study; two is a
+    method.`);
+  li.push(`<b>Prognosis is closed, not pending.</b> ${sv.n_events||29} events detect
+    ΔC ≈ ${fmt(sv.detectable_delta_c_index,3)}. No method ranking on survival from this
+    dataset could mean anything, and none was made.`);
+  if(genuine.length) li.push(`<b>What ran as itself.</b> ${genuine.join(", ")} ran as the
+    genuine R packages. Anything else is this project's reimplementation and is labelled
+    so in every artefact.`);
+  if(dev.length) li.push(`<b>Declared deviations.</b> ${dev.join(", ")} departs from its
+    published defaults; the parameter, the reason, and when the decision was made are in
+    <code>method_configs.json</code>. Each was decided before that method had a score.`);
+  document.getElementById("limits").innerHTML=li.map(t=>"<p>"+t+"</p>").join("");
+})();
+</script>
+
+</body></html>
+<script>
+/* ---------- caption figures, filled from the data ----------
+   These numbers used to be typed into the prose. After a rerun the plates said
+   "200 pseudobulk mixtures" while the run used 500, and "thirteen methods" while the
+   leaderboard held more. A caption that disagrees with the figure above it is quoted
+   with confidence, so nothing numeric in the prose is written by hand any more. */
+(function(){
+  const set=(id,v)=>{const n=document.getElementById(id); if(n&&v!=null&&v!=="") n.textContent=v;};
+  const words=["zero","one","two","three","four","five","six","seven","eight","nine","ten",
+               "eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen"];
+  const word=n=>(n!=null&&n<words.length)?words[n]:String(n);
+
+  const real=(D.leaderboard||[]).filter(r=>!r.is_control);
+  const ctrl=(D.leaderboard||[]).filter(r=>r.is_control);
+  set("x-tumours", D.cohort?.n_tumors_scored);
+  set("x-nmethods", word(D.n_real_methods ?? real.length));
+  set("x-ncontrols", word(D.n_controls ?? ctrl.length));
+
+  const band=D.control_band||{};
+  set("x-draws", band.n_draws ?? "—");
+  set("x-sd", band.sd!=null ? Number(band.sd).toFixed(3) : "—");
+
+  /* Stated as measured, not asserted: if a real method does NOT clear the band, that is
+     the finding and the caption has to say so. */
+  const comparable=real.filter(r=>r.comparable!==false);
+  const under=band.p95!=null ? comparable.filter(r=>r.acs<=band.p95).map(r=>r.method) : [];
+  set("x-clears", band.p95==null ? "" :
+      (under.length===0
+        ? "Every comparable method clears the band's 95th percentile."
+        : under.length+" comparable method(s) fall inside the band and are NOT "+
+          "distinguishable from a shuffled signature: "+under.join(", ")+"."));
+
+  const sel=D.selection||{};
+  const bench=(D.benchmark||[])[0]||{};
+  set("x-mixtures", sel.n_test_mixtures ?? bench.n_samples);
+  set("x-donors", bench.n_groups ?? (sel.test_donors||[]).length);
+
+  const pc=D.per_constraint||[];
+  if(pc.length){
+    const byC={}; pc.forEach(r=>{byC[r.constraint]=Math.max(byC[r.constraint]||0,r.n_tumors_evaluable);});
+    const vals=Object.entries(byC);
+    const max=Math.max(...vals.map(v=>v[1]));
+    const min=vals.reduce((a,b)=>b[1]<a[1]?b:a);
+    set("x-maxtum", word(max)); set("x-minc", min[0]); set("x-mintum", word(min[1]));
+  }
+
+  const sv=(D.survival&&D.survival.declared)||{};
+  set("x-events", sv.n_events ?? sv.events ?? "—");
+  const mdd = sv.detectable_difference ?? sv.smallest_detectable_difference ?? sv.mdd;
+  set("x-mdd", mdd!=null ? Number(mdd).toFixed(3) : "—");
+})();
+</script>

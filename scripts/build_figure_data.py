@@ -31,6 +31,8 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from ivygap import config  # noqa: E402
+
 
 def _json(path: Path):
     try:
@@ -66,6 +68,50 @@ def _clean(o):
     if isinstance(o, float) and (math.isnan(o) or math.isinf(o)):
         return None
     return o
+
+
+def _atlas_facts(results: Path, cov: dict, cert: dict) -> dict:
+    """
+    What the REFERENCE is, kept distinct from what the cohort is.
+
+    Three different numbers were being conflated here, and the rendered caption said
+    "reference 314,700 cells / 10 donors", which is wrong twice over:
+
+      * 314,700 is how many atlas cells have a label the roster maps — not the
+        reference that was built. The build subsamples, donor-balanced, to 15,311.
+      * 10 is the number of Ivy GAP PATIENTS in the anatomic cohort. The atlas has 110
+        donors. `n_patients` on the anatomic certificate describes the tissue, not the
+        reference, and reading it as an atlas count silently swaps one for the other.
+
+    The build records its own numbers in `reference_sampling_<name>.json`. That file
+    lives beside the atlas rather than in the results tree, so an archived run may not
+    carry it; when it is missing this reports None rather than substituting a number
+    that means something else.
+    """
+    sampling = None
+    for cand in [results / "reference_sampling.json",
+                 *sorted(config.REFERENCE_DIR.glob("reference_sampling_*.json"))]:
+        if cand.exists():
+            sampling = _json(cand)
+            if sampling:
+                break
+
+    if sampling:
+        return {
+            "cells_kept": sampling.get("n_cells_kept"),
+            "donors": sampling.get("n_donors_kept"),
+            "genes": sampling.get("n_genes_kept"),
+            "cells_in_file": sampling.get("n_cells_in_file"),
+            "cells_after_roster_mapping": sampling.get("n_cells_after_roster_mapping"),
+            "source": "reference_sampling",
+        }
+    return {
+        "cells_kept": None, "donors": None,
+        "genes": (cert.get("input_hashes") or {}).get("n_genes"),
+        "cells_in_file": cov.get("n_cells_in_atlas"),
+        "cells_after_roster_mapping": cov.get("n_cells_kept"),
+        "source": "unavailable — reference_sampling_*.json not found",
+    }
 
 
 def build(results: Path) -> dict:
@@ -150,11 +196,7 @@ def build(results: Path) -> dict:
             "n_tumors_scored": rep.get("n_tumors"),
             "n_samples_archive": rep.get("n_samples_deconvolved") or recon.get("n_archive_samples"),
             "structures": rep.get("structures"),
-            "atlas": {
-                "cells_kept": cov.get("n_cells_kept"),
-                "donors": cert.get("n_patients"),
-                "genes": cert.get("input_hashes", {}).get("n_genes"),
-            },
+            "atlas": _atlas_facts(results, cov, cert),
         },
         "constraints": (_json(anat / "constraint_file.json") or {}).get("constraints"),
         "leaderboard": _clean(lb.to_dict("records")),
