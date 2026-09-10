@@ -1,0 +1,178 @@
+# Related work — where this study agrees, disagrees, and what is new
+
+Five papers, read 2026-09-10, compared against the confirmatory run
+(`results_archive/2026-09-10T2039`). Full citations in `sources/SOURCES.md`.
+
+The short version: **every prior benchmark ranks methods against known ground truth.
+This study asks whether methods can be ranked without any.** That is the gap, and one of
+the reviews below names it explicitly.
+
+---
+
+## 1 · The papers
+
+| | what it is |
+|---|---|
+| **Avila Cobos et al. 2020**, *Nat Commun* 11:5650 | Benchmarks deconvolution pipelines on simulated pseudobulk. doi:10.1038/s41467-020-19015-1 |
+| **Sturm et al. 2019**, *Bioinformatics* 35:i436 | Benchmarks immune-cell quantification for immuno-oncology; produced `immunedeconv`. doi:10.1093/bioinformatics/btz363 |
+| **Nguyen et al. 2024**, *Nucleic Acids Res* 52:4761 | "Fourteen years of cellular deconvolution" — reviews and benchmarks **53 methods** across 283 cell types, 30 tissues, 63 individuals. doi:10.1093/nar/gkae267 |
+| **Gaspard-Boulinc et al. 2025**, *Nat Rev Genet* 26:828 | Deconvolution for **spatial** transcriptomics. doi:10.1038/s41576-025-00845-y |
+| **Liu, Qian & Ma 2025**, *bioRxiv* | **DNA-methylation-based** deconvolution of the brain-tumour microenvironment. doi:10.1101/2025.01.19.633794 |
+
+*(The file `Nguyen et al., 2014.pdf` is misnamed — it is the 2024 NAR review.)*
+
+---
+
+## 2 · Where our results agree with theirs
+
+**Least-squares and SVR methods rank near the top — confirmed twice over.**
+
+Avila Cobos: *"the five best bulk deconvolution methods (OLS, nnls, RLR, FARDEEP, and
+CIBERSORT)... regression methods (RLR, FARDEEP) and support vector regression
+(CIBERSORT) consistently showed the smallest RMSE and highest Pearson correlation."*
+
+Ours: `nnls` and `svr` — and `svr` **is** CIBERSORT's published nu-SVR core — sit in the
+top tier at ACS 0.9846, and rank 3rd and 6th on accuracy (MAE 0.0561, 0.0610).
+
+This matters more than it looks. Avila Cobos reached that ranking with **known ground
+truth on simulated mixtures**. We reach a compatible ranking on **real tissue using no
+ground truth at all**, from pre-registered anatomy. That is the study's claim, and an
+independent group's benchmark agrees with it.
+
+**EPIC ranks highly — agrees with Sturm.**
+
+Sturm: *"due to a robust overall performance, we recommend EPIC and quanTIseq for general
+purpose deconvolution."* Ours: EPIC at ACS 0.9846, tied for second.
+
+**Linear scale, not log — agrees with Avila Cobos.**
+
+Avila Cobos: *"the most relevant factors affecting the deconvolution results are: (i) the
+data transformation, with linear transformation outperforming the others."* This project
+normalises to CPM and never log-transforms for deconvolution, because the mixing model is
+additive on the linear scale. Independently arrived at, independently confirmed.
+
+**Reference completeness matters — agrees with Avila Cobos.**
+
+Avila Cobos: *"failure to include cell types in the reference"* degrades results. This
+project measures exactly that and reports it: `reference_coverage.json` records that the
+eight-type roster drops **7.0% of the atlas**, that the largest dropped population is
+myeloid, and that the absorbed signal therefore concentrates on C5 and C6 rather than
+spreading evenly.
+
+---
+
+## 3 · Where our results disagree, and why
+
+### DWLS: they rank it best among scRNA-reference methods; we rank it last
+
+Avila Cobos: *"DWLS performed best among the deconvolution methods that use scRNA-seq
+data as input."* Ours: DWLS is **last among real methods** — ACS 0.7385, MAE 0.0763.
+
+**This is not a contradiction, and the reason is recorded in our own artefacts.** In the
+confirmatory run DWLS ran as `python-reimplementation` in **both** anatomic stages, having
+exceeded its 2,400 s budget for the genuine R package. Our DWLS row is not the DWLS Avila
+Cobos evaluated.
+
+The honest statement is therefore: *this study does not test the published DWLS on the
+anatomic cohort.* It is disclosed per method rather than absorbed, which is why the
+discrepancy is explainable at all. Anyone comparing the two rankings must not read our
+DWLS row as evidence about the package.
+
+A second, independent factor: DWLS is built for **rare** cell types, damping the
+dominance of highly expressed genes belonging to abundant populations. This roster is
+dominated by tumour cells at roughly 50–60% of every sample. That is close to the
+opposite of the regime DWLS was designed for.
+
+### quanTIseq: Sturm recommends it; we cannot rank it
+
+Sturm recommends quanTIseq for general-purpose deconvolution. Ours reports it at ACS
+0.600 on **15 constraint–tumour pairs** rather than 57, flagged `comparable = False`, and
+excluded from the ranking, the tie groups and the primary correlation.
+
+**Different question, not a different answer.** Sturm's benchmark is immuno-oncology —
+immune cells in tumours. quanTIseq ships TIL10, which models ten immune populations and
+rolls everything else into "Other". Our roster is eight types including Tumor,
+Endothelial, Oligodendrocyte and Astrocyte, four of which quanTIseq does not model at
+all, in any sample, however well it worked.
+
+So quanTIseq is being asked a question it was not built to answer. Reporting it with its
+own denominator and refusing to rank it is the correct handling, and it is what
+`comparable = False` exists for.
+
+---
+
+## 4 · What is original here
+
+### The gap, named by the field's own review
+
+Nguyen et al. 2024 enumerate five validation strategies. Four require known ground truth —
+simulation, purified samples, flow cytometry, matched scRNA-seq. Of the fifth:
+
+> *"The fifth approach relies on **domain experts to interpret the deconvolution results**
+> to indirectly assess the performance of deconvolution methods."*
+
+That is exactly the practice this project argues is unfalsifiable: the expert looks at the
+output and judges whether it is sensible, **after** seeing it. A method cannot fail such a
+check, because any result can be rationalised once observed.
+
+**This study's contribution is to convert that fifth approach into a test.** The expert
+expectation is written down first, frozen, cryptographically hashed
+(`2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a`) and publicly
+registered (<https://osf.io/dm2t8>) before any deconvolution output is inspected. The
+same judgement then becomes a prediction a method can miss.
+
+To our knowledge no prior deconvolution benchmark pre-registers its expectations.
+
+### And a criticism of the standard approach that this design answers
+
+The same review says of simulation-based benchmarking — the dominant strategy, and this
+project's own accuracy arm:
+
+> *"simulation is subjected to bias because simulated data is generated based on some
+> assumptions which are usually identical with the assumptions made in designing the
+> approach. **Presumably, any algorithm would be the best, when applied to data that was
+> simulated based on the same set of assumptions.**"*
+
+This is a serious charge against the field's default yardstick, and this study should
+quote it rather than avoid it, because the design has an answer: **anatomic concordance
+does not depend on the simulator's assumptions.** It is measured on real microdissected
+tissue against claims derived from histology. The two arms fail in different ways, which
+is why correlating them is informative — and it is why our own observation that the
+pseudobulk arm cannot reward CIBERSORTx S-mode (see `OPEN_DEFECTS.md` D5) is an instance
+of exactly the bias the review describes, found independently in our own data.
+
+### Four things that are unusual even among careful benchmarks
+
+1. **Negative controls run through the identical pipeline, calibrated over 200 draws.**
+   Random compositions and a shuffled signature matrix. The protocol commits in advance to
+   publishing the constraint file unchanged even if the controls score well. None of the
+   five papers above runs a shuffled-signature control this way.
+2. **The null is not a coin flip.** Cell fractions are compositional and samples nest
+   within tumours, so significance comes from permuting structure labels *within* each
+   tumour, 10,000 draws.
+3. **A registered failure branch.** rho < 0.60 was pre-committed to mean that reproducing
+   known biology is *not* evidence of numerical accuracy — reported with equal prominence.
+4. **The yardstick itself is checked.** Ivy GAP's own ISH independently supports C3
+   (ESM1, p = 0.005), C4 (ESM1, p = 0.021) and C6 (CD163, p = 0.0085), from data that
+   never touched a deconvolution method. Benchmarks validate methods; this validates the
+   measuring stick.
+
+---
+
+## 5 · What these papers say we should do next
+
+- **Nguyen 2024** benchmarks 53 methods; this study has 15. The review's list is where to
+  find methods that differ in *kind* — the 14 comparable methods here produce only 8
+  distinct ACS values, so another least-squares variant adds nothing.
+- **Gaspard-Boulinc 2025** covers spatial deconvolution. Relevant if the second tissue
+  becomes Visium rather than Allen bulk: it would keep the GBM constraint file unchanged,
+  at the cost of a 55-micron spot being a handful of cells rather than a tissue block.
+- **Liu, Qian & Ma 2025** deconvolve the brain-tumour microenvironment from **DNA
+  methylation** — an orthogonal modality that shares no failure mode with RNA-based
+  deconvolution. That makes it a candidate third yardstick alongside ABSOLUTE purity, and
+  it is specifically about brain tumours.
+- **Avila Cobos 2020** and **Sturm 2019** both publish per-method rankings. Correlating
+  our ACS ranking against theirs would ask the study's own question with *someone else's*
+  ground truth on *someone else's* tissue. It needs no new data. See
+  `docs/EXTERNAL_CHECKLIST.md` section F2 — and note it must be pre-specified which
+  methods and which published metric, before looking, or it is cherry-picking.

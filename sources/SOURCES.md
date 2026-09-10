@@ -229,3 +229,55 @@ for ground truth in method selection — because there is no prior work establis
 That is the question the study asks. The literature above supplies the tissue, the
 reference, the methods under test, and the neuropathology the constraints restate; none
 of it supplies the answer.
+
+---
+
+## 7 · Benchmarks and reviews this study is positioned against
+
+Read 2026-09-10; compared against the confirmatory run in `docs/RELATED_WORK.md`. All
+DOIs Crossref-verified.
+
+> Avila Cobos F, Alquicira-Hernandez J, Powell JE, Mestdagh P, De Preter K. Benchmarking
+> of cell type deconvolution pipelines for transcriptomics data. *Nat Commun* 11:5650
+> (2020). doi:[10.1038/s41467-020-19015-1](https://doi.org/10.1038/s41467-020-19015-1)
+
+Ranks OLS, NNLS, RLR, FARDEEP and CIBERSORT as the best bulk methods and DWLS as best
+among scRNA-reference methods, on simulated pseudobulk. Our top tier agrees on NNLS and
+CIBERSORT; our DWLS row disagrees and **must not be read as evidence about the package**,
+because it ran as a Python reimplementation after exceeding its wall-clock budget.
+
+> Sturm G, Finotello F, Petitprez F, Zhang JD, Baumbach J, Fridman WH, List M, Aneichyk T.
+> Comprehensive evaluation of transcriptome-based cell-type quantification methods for
+> immuno-oncology. *Bioinformatics* 35:i436 (2019).
+> doi:[10.1093/bioinformatics/btz363](https://doi.org/10.1093/bioinformatics/btz363)
+
+Recommends EPIC and quanTIseq for general-purpose deconvolution. EPIC is in our top tier.
+quanTIseq is not rankable here — TIL10 models four of this project's eight roster types,
+so it is reported with its own denominator and flagged `comparable = False`. A different
+question, not a different answer.
+
+> Nguyen H, Nguyen H, Tran D, Draghici S, Nguyen T. Fourteen years of cellular
+> deconvolution: methodology, applications, technical evaluation and outstanding
+> challenges. *Nucleic Acids Res* 52:4761–4783 (2024).
+> doi:[10.1093/nar/gkae267](https://doi.org/10.1093/nar/gkae267)
+
+The most important reference for positioning this study. It enumerates five validation
+strategies, four requiring known ground truth, and describes the fifth as relying on
+"domain experts to interpret the deconvolution results" — the unfalsifiable practice this
+project converts into a pre-registered test. It also states that simulation-based
+benchmarking is biased toward methods sharing the simulator's assumptions, which is a
+criticism of this project's own accuracy arm and should be quoted rather than avoided.
+
+> Gaspard-Boulinc LC, Gortana L, Walter T, et al. Cell-type deconvolution methods for
+> spatial transcriptomics. *Nat Rev Genet* 26:828–846 (2025).
+> doi:[10.1038/s41576-025-00845-y](https://doi.org/10.1038/s41576-025-00845-y)
+
+Relevant if the second tissue becomes spatial rather than Allen bulk.
+
+> Liu F, Qian J, Ma C. DNA methylation-based cell type deconvolution reveals the distinct
+> cell composition in brain tumor microenvironment. *bioRxiv* (2025).
+> doi:[10.1101/2025.01.19.633794](https://doi.org/10.1101/2025.01.19.633794)
+
+Deconvolution of the brain-tumour microenvironment from DNA methylation — an orthogonal
+modality sharing no failure mode with RNA-based deconvolution, and specifically about
+brain tumours. A candidate third yardstick alongside ABSOLUTE purity.

@@ -324,6 +324,7 @@ identifies the best method"*. The second sentence is not supported and is not ma
 | `docs/EXTERNAL_ACTIONS.md` | The five things that must be done outside this repo. |
 | `docs/OPEN_DEFECTS.md` | **Known-wrong things, still open.** Read before trusting an accuracy number. |
 | `docs/EXTERNAL_CHECKLIST.md` | Everything that must happen outside this repo, ranked by what it buys. |
+| `docs/RELATED_WORK.md` | Where this agrees and disagrees with published benchmarks, and what is new. |
 | `docs/SECOND_TISSUE.md` | The second tissue: constraints drafted, ordering, and the open platform decision. |
 | `docs/REGISTRATION_ANSWERS.md` | Field-by-field text for the OSF registration. |
 | `results_archive/` | Read-only, hash-verified snapshots of completed runs. |
