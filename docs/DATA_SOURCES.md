@@ -315,3 +315,101 @@ The trade is deliberate. TCGA's orthogonal assays validate *two* quantities (pur
 leukocyte fraction) on one sample per patient. Ivy GAP's histology validates the
 *direction* of several cell types across five niches, paired within patient — and every
 method is scored on the identical set of directional questions.
+
+---
+
+## Datasets identified but not yet used
+
+Researched 2026-09-10. None of these has been downloaded or read; each is recorded here
+with what it would buy and what it would cost, so the decision is made deliberately
+rather than by whichever file arrives first. Citations are in `sources/SOURCES.md`, all
+DOIs Crossref-verified.
+
+### Siletti et al. 2023 — Human Brain Cell Atlas v1.0
+
+**Would supply:** the single-cell reference the second tissue needs.
+
+The GBM roster has no neuron column and one cannot be added from GBmap, which contains
+**22 neurons** (`results/anatomic/reference_coverage.json`). Normal cortex is mostly
+neurons, so a normal-brain run is impossible without a different reference. This is that
+reference.
+
+| | |
+|---|---|
+| Source | CELLxGENE collection `283d65eb-dd53-496d-adb7-7570c7caa443` |
+| Publication | Siletti K, et al. *Science* (2023) |
+| All neurons | 2,480,956 cells · 32.9 GB h5ad |
+| All non-neuronal | 888,263 cells · 4.7 GB |
+| Per-supercluster | e.g. Oligodendrocyte 490,246 cells · 2.5 GB |
+| Assay | **10x 3′ v3** |
+
+The assay line matters more than the cell counts: it is the same platform family as
+GBmap, so this project's CPM normalisation, its gene-space handling and its B-mode/S-mode
+reasoning all carry over unchanged. The per-supercluster files also mean the 33 GB neuron
+archive is not required — a donor-balanced reference can be built from the smaller ones.
+
+### Allen Human Brain Atlas — bulk expression by region
+
+**Would supply:** the second tissue's bulk arm. Fetcher written and tested:
+`scripts/fetch_allen.py`. No API key required.
+
+| product | donors | size | platform | weighted denominator at 7/donor |
+|---|---|---|---|---|
+| Microarray | **6** | 1.57 GB | microarray | **42** |
+| RNA-seq | 2 | 44 MB | RNA-seq | 14 |
+
+Ivy GAP's weighted denominator is 65, so the RNA-seq product would be *materially weaker
+than the cohort that already exists* and would not answer the question a second tissue is
+for. The microarray product is comparable in power but crosses a platform boundary. The
+trade is a study-design decision and is recorded in `docs/SECOND_TISSUE.md` rather than
+settled here.
+
+**Structure ontology.** Region names come from `graph_id 10` ("Human Brain Atlas", 1,839
+structures), whose depth-1 split is `Br / GM | WM | SS` — the grey/white distinction the
+brain constraints turn on is the ontology's own, not one imposed on it. Note that
+`ontology_id 1` is the **mouse** graph; querying it returns mouse cortical labels, which
+is a mistake this project made once and fixed.
+
+### Neftel et al. 2019 — GBM single-cell atlas
+
+**Would supply:** a second GBM reference, and with it the single highest-value fix
+available short of a second tissue.
+
+`scdc_ensemble` currently runs **degenerate** — "one reference supplied ('gbmap'), so
+there is nothing to weight across: SCDC ENSEMBLE reduces exactly to SCDC." A published
+tool is running with its entire contribution switched off, disclosed but crippled.
+
+A second reference would make SCDC ENSEMBLE a genuine method, and would additionally
+support a robustness claim this project cannot currently make: **is the ACS ranking stable
+across references, not merely across cohorts?** The cohort-sensitivity check already
+exists (`acs_cohort_sensitivity.csv`); a reference-sensitivity check does not, for want of
+a second reference.
+
+doi:10.1016/j.cell.2019.06.024 — already cited in this file for cross-reference weighting.
+
+### CELLxGENE
+
+The platform both single-cell atlases are obtained through. Its `var` is indexed by
+**Ensembl id** where this project uses HGNC symbols, which is why gene-symbol mapping is
+explicit in `reference.py` rather than assumed.
+
+Megill C, et al. *bioRxiv* (2021), doi:10.1101/2021.04.05.438318.
+
+### Deliberately not pursued
+
+**More least-squares deconvolution methods.** The 13 comparable methods already produce
+only **8 distinct ACS values**, with four tied at 0.9846 (NNLS, SVR, Elastic Net, EPIC) on
+a scale with 66 possible values. Another variant of the same family would land in that tie
+group and reduce the rank correlation's resolution rather than improve it.
+
+Methods that differ in *kind* would add information — a reference-free method such as
+CDSeq, which uses no signature matrix at all, or a deep-learning method such as Scaden.
+Those would spread across the accuracy range instead of clustering.
+
+**The hosted CIBERSORTx service.** Web- and licence-gated. Both modes are implemented
+here from the paper and its Supplementary Note 1, and no result in this project comes
+from Stanford's servers.
+
+**ABSOLUTE purity for TCGA-GBM.** Still wanted as an orthogonal yardstick that never
+touches RNA (`docs/EXTERNAL_ACTIONS.md` item 3, Carter et al. 2012, doi:10.1038/nbt.2203).
+Not obtained.

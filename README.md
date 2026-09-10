@@ -322,6 +322,8 @@ identifies the best method"*. The second sentence is not supported and is not ma
 | `docs/METHODS.md` | Every method and every deviation from a published algorithm. |
 | `docs/DATA_SOURCES.md` | What the archive contains, verified against the release. |
 | `docs/EXTERNAL_ACTIONS.md` | The five things that must be done outside this repo. |
+| `docs/OPEN_DEFECTS.md` | **Known-wrong things, still open.** Read before trusting an accuracy number. |
+| `docs/SECOND_TISSUE.md` | The second tissue: constraints drafted, ordering, and the open platform decision. |
 | `docs/REGISTRATION_ANSWERS.md` | Field-by-field text for the OSF registration. |
 | `results_archive/` | Read-only, hash-verified snapshots of completed runs. |
 | `scripts/run_all.py` | The whole pipeline, six stages. |
