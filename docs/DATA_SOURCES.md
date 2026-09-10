@@ -460,3 +460,32 @@ annotated by position along that gradient. That is a spatially-resolved single-c
 of the same axis the Ivy GAP constraints describe, and it could support an independent
 check on the constraints themselves rather than on the methods. Recorded here as an
 opportunity, not a plan.
+
+### The blocker on Neftel: GSE131928 ships no cell-type labels
+
+Verified 2026-09-10. The GEO release contains expression matrices and a submission
+metadata template. It contains **no cell-type annotation**. The bundled reanalysis repo
+(`scRNA_GBM_Neftel2019-main`) confirms this by construction — its pipeline *derives* the
+labels: QC and doublet filtering, Harmony batch correction, clustering, marker-gene
+scoring, inferCNV, then malignant classification and Neftel-state scoring.
+
+A deconvolution reference is a matrix of per-cell-type expression profiles. Without
+labels there is nothing to profile, so the 1.5 GB download is not yet usable.
+
+**Two ways forward, and they are not equivalent.**
+
+*Preferred — obtain the authors' annotations.* Neftel's annotated data is distributed
+through the Broad Single Cell Portal rather than through GEO. Author-supplied labels keep
+the reference independent of this project.
+
+*Not preferred — annotate it here.* Running the reanalysis pipeline would work, but it
+would put **this project's clustering and marker-threshold choices inside a reference
+used to judge deconvolution methods**. That is not circular in the ACS sense — the
+constraints are still independent — but it means the "second reference" would carry our
+decisions rather than being an independent check on them, which is most of the value a
+second reference was wanted for. If it is done, it must be declared prominently, and the
+annotation choices recorded with the same discipline as the constraint file.
+
+**Consequence for D2.** `scdc_ensemble` cannot be un-degenerated until annotated cell
+types exist for a second multi-donor reference. Neither file currently on disk satisfies
+that: Neftel has 21 donors and no labels; Albiach has labels and one donor.
