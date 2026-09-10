@@ -69,12 +69,22 @@ These are internal defects, listed because resolving them may need external mate
 
 ## D · Independent validation — makes the yardstick itself checkable
 
-- [ ] **Rebuild the ISH constraint check** against `gene_expression_details.csv`, paired
-      within `sub_block_id`, all rows, per marker, with a within-unit permutation null.
+- [x] **ISH constraint check — DONE 2026-09-10.** `scripts/ish_constraint_check.py`,
+      paired within `sub_block_id`, all 18,778 rows, per marker, 2,000-draw within-block
+      permutation null. **8 of 17 marker-constraint tests reach p < 0.05.**
 
-  The first attempt used 11% of the data, pooled across specimens, and pooled markers that
-  disagree with each other. Its output is in `results/ish_constraint_check.json` and
-  **must not be cited**. The correct input was on disk the whole time.
+  ESM1 supports C3 (MVP > CT) at 1.000 over 8 blocks / 6 donors, p = 0.005, and C4
+  (MVP is the maximum) at 0.750, p = 0.021. CD163 supports C6 (MVP > CT) at 1.000 over
+  7 blocks, p = 0.0085. So the endothelial and perivascular-myeloid claims — the
+  strongest in the set on neuropathology — now have independent measured support from
+  data that never touched a deconvolution method.
+
+  Three limits, all reported rather than smoothed: C1 and C7 are **marker-dependent**
+  (CD44 agrees at 0.900 over 137 blocks, SOX2 and PTPRZ1 disagree at 0.000 and 0.056 —
+  all three are real tumour markers and none measures tumour cell *density*); C5 has one
+  evaluable block; C2 is unmeasurable, no myelin marker exists in the panel and OLIG2 was
+  refused because in glioma it marks tumour cells and OPCs. Sample sizes for the
+  endothelial and myeloid results are 6-8 blocks, which is thin and must be said.
 
   *Buys:* constraints resting on measurement rather than expert expectation. Note the
   panel is a cancer-biology screen, not a cell-type panel: C3/C4 (endothelial) are well
@@ -124,6 +134,49 @@ These are internal defects, listed because resolving them may need external mate
       paper and its Supplementary Note 1.
 
 ---
+
+## F2 · Two validations that need no new tissue — added 2026-09-10
+
+- [ ] **Concordance with published independent benchmarks.** ← *cheapest high-impact item on this page*
+
+  Two peer-reviewed benchmarks already ranked many of these same methods against real
+  ground truth, on different tissues, by different authors:
+
+  > Avila Cobos F, Alquicira-Hernandez J, Powell JE, Mestdagh P, De Preter K.
+  > Benchmarking of cell type deconvolution pipelines for transcriptomics data.
+  > *Nat Commun* 11:5650 (2020). doi:[10.1038/s41467-020-19015-1](https://doi.org/10.1038/s41467-020-19015-1)
+
+  > Sturm G, Finotello F, Petitprez F, et al. Comprehensive evaluation of
+  > transcriptome-based cell-type quantification methods for immuno-oncology.
+  > *Bioinformatics* 35:i436 (2019). doi:[10.1093/bioinformatics/btz363](https://doi.org/10.1093/bioinformatics/btz363)
+
+  The question this answers is the study's own question, asked once more with someone
+  else's data: **does the ACS ranking agree with a ranking produced independently, by
+  other people, on other tissue, against real ground truth?** Agreement is external
+  validation of ACS that costs one afternoon and no new data. Disagreement is equally
+  informative and equally publishable.
+
+  Method overlap is partial — the published benchmarks cover CIBERSORT, EPIC, quanTIseq,
+  MuSiC, DWLS, Bisque and SCDC to varying degrees — so this is a rank correlation over
+  whatever overlaps, with the overlap stated. It must be pre-specified which methods and
+  which published metric are used, before looking, or it becomes cherry-picking.
+
+- [ ] **Spatial transcriptomics as a third tissue.** Visium spots are small enough that a
+      pathologist annotates regions on the same section, so anatomic labels and expression
+      come from the same physical tissue rather than from adjacent blocks.
+
+  > Ravi VM, Will P, Kueckelhaus J, et al. Spatially resolved multi-omics deciphers
+  > bidirectional tumor-host interdependence in glioblastoma. *Cancer Cell* 40:639 (2022).
+  > doi:[10.1016/j.ccell.2022.05.009](https://doi.org/10.1016/j.ccell.2022.05.009)
+
+  *Buys:* a second GBM cohort without leaving glioblastoma, so the GBM constraint file
+  applies unchanged — no new constraint set, no new registration, no roster change. That
+  makes it cheaper than the Allen brain route, though it is a different modality and the
+  deconvolution unit becomes a spot rather than a microdissected block.
+
+  *Costs:* spot-level deconvolution has its own literature and its own failure modes, and
+  a Visium spot is 55 microns — a handful of cells, not a tissue block. Whether ACS is
+  even well defined at that scale needs thinking through before any data is downloaded.
 
 ## G · Publication hygiene
 

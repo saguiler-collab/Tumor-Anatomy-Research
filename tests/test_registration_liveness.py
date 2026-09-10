@@ -117,6 +117,11 @@ def test_http_codes_map_to_the_right_states(code, expect):
     assert R.LIVENESS[code][0] == expect
 
 
+@pytest.mark.real_network
 def test_a_non_osf_url_is_not_guessed_at():
+    """
+    Exercises the REAL check_url_live, which the conftest guard otherwise stubs. Needs no
+    network: a non-OSF URL returns before any request is made, which is the point.
+    """
     state, why = R.check_url_live("https://example.com/whatever")
     assert state is None and "not an OSF" in why

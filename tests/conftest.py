@@ -131,3 +131,24 @@ def _bound_r_in_tests(monkeypatch, request):
     monkeypatch.setattr(r_bridge, "DEFAULT_R_TIMEOUT", 25)
     monkeypatch.setattr(r_bridge, "R_METHOD_TIMEOUTS",
                         {k: 25 for k in r_bridge.R_METHOD_TIMEOUTS})
+
+
+@pytest.fixture(autouse=True)
+def _no_network_liveness(monkeypatch, request):
+    """
+    Keep the registration liveness check off the network in tests.
+
+    `status()` calls the OSF API by default, which is what makes it catch a withdrawn
+    registration in a real run. In a test that turns a unit test into a network test:
+    it fails offline, it fails when OSF is slow, and it made
+    `test_registration_accepts_a_matching_receipt` fail the moment the check was added,
+    because that test's placeholder URL (osf.io/xxxxx) correctly resolves to UNREACHABLE.
+
+    Tests that are ABOUT liveness stub `check_url_live` themselves, which overrides this.
+    """
+    from ivygap.anatomic import registration
+
+    if request.node.get_closest_marker("real_network"):
+        return
+    monkeypatch.setattr(registration, "check_url_live",
+                        lambda url, timeout=15.0: (None, "network disabled in tests"))

@@ -366,7 +366,10 @@ def test_registration_accepts_a_matching_receipt(tmp_path, monkeypatch):
     }))
     monkeypatch.setattr(registration, "REGISTRATION_PATH", receipt)
 
-    st = registration.status(check_results=False)
+    # check_live=False: this test is about the HASH path, and osf.io/xxxxx is a
+    # placeholder that correctly resolves to UNREACHABLE. Liveness has its own tests in
+    # test_registration_liveness.py.
+    st = registration.status(check_results=False, check_live=False)
     assert st.state == "REGISTERED" and st.is_registered
 
 

@@ -1,6 +1,6 @@
 # Results — the Anatomy Test
 
-**Run:** 2026-09-06  
+**Run:** 2026-09-10  
 **Cohort:** Ivy GAP, ACS scored on 122 H&E anatomic samples / 10 tumours  
 **Constraint freeze hash:** `2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a`  
 **Gene space:** 657 genes · **reference:** gbmap:6fa50a03ee163760  
@@ -11,16 +11,16 @@ Read [Anatomy_Test.md](Anatomy_Test.md) first — it is the protocol. Everything
 
 ## 0. The headline
 
-> Spearman **rho = 0.7330** between the ACS ranking and the ranking from real ground truth, bootstrap CI **[0.271, 0.944]**, p = 0.0044, on 13 methods.
+> Spearman **rho = 0.7501** between the ACS ranking and the ranking from real ground truth, bootstrap CI **[0.328, 0.957]**, p = 0.0020, on 14 methods.
 >
 > Bar fixed in advance: rho >= 0.60 **and** a CI excluding zero.
 
-HEADLINE: ACS ranking tracks true accuracy at the pre-registered bar. Anatomic concordance is usable to choose a deconvolution method in tissue with an anatomical atlas, using no ground truth and no outcomes. NOTE: 13 methods but only 12 distinct score pairs — scdc=scdc_ensemble are degenerate duplicates. Judge the correlation on 12 points, not 13.
+HEADLINE: ACS ranking tracks true accuracy at the pre-registered bar. Anatomic concordance is usable to choose a deconvolution method in tissue with an anatomical atlas, using no ground truth and no outcomes. NOTE: 14 methods but only 13 distinct score pairs — scdc=scdc_ensemble are degenerate duplicates. Judge the correlation on 13 points, not 14.
 
 
 ## 1a. Integrity checks
 
-**Pre-registration:** **UNREGISTERED**. UNREGISTERED: the constraint file is hashed and committed, but no public registration receipt exists. The hash proves the constraints have not changed; it does not prove they were written before the results, which is what the pre-registration claim rests on. Register 2d1fb47c98832adf... publicly (OSF takes minutes) and record the receipt in REGISTRATION.json. Until then this project must not describe itself as pre-registered.
+**Pre-registration:** **REGISTERED**. REGISTERED, but 25 result file(s) are OLDER than the registration. The protocol's gate is that the registration precedes every result. Those files were produced before the constraints were registered and must be regenerated or labelled superseded.
 
 **Reference coverage:** the roster maps 12 of the atlas's labels and drops the rest — **23,864 cells (7.0%)**.
 
@@ -37,8 +37,9 @@ HEADLINE: ACS ranking tracks true accuracy at the pre-registered bar. Anatomic c
 
 Populations the atlas labels but the roster drops do not disappear from the tissue, only from the model. A solver with eight columns must still explain the expression those cells contribute, so it is absorbed by whichever retained type is closest. Largest dropped populations: Mono (14,215 cells), DC (3,961 cells), RG (2,807 cells) — 7.0% of the atlas in total. The dominant one is myeloid (DC, Mast, Mono), and the nearest retained column is Macrophage_Microglia — which carries C5 and C6. So the absorbed signal is concentrated on two of the seven constraints rather than spread evenly. Note the frozen constraint file lists neuronal content as untestable for want of a neuron column. That holds, but not for the reason it gives: this atlas contains only 22 neurons, so a neuron column could not have been estimated from it either. The limitation is the reference, not just the roster.
 
-**Method configuration:** every method's parameters are recorded in `method_configs.json`. Declared departures from published defaults: **dwls, quantiseq**.
+**Method configuration:** every method's parameters are recorded in `method_configs.json`. Declared departures from published defaults: **cibersortx, dwls, quantiseq**.
 
+- `cibersortx` — batch-correction mode (B-mode vs S-mode): no single default; Newman et al. (2019) choose per configuration. Their Supplementary Table 1d records the choice for every deconvolution in the paper. → B-mode. Supplementary Table 1d shows a consistent split: every signature derived from 10x Chromium and applied to a bulk RNA-seq mixture is deconvolved in S-MODE, while B-mode is used for SMART-Seq2- and microarray-derived signatures (LM22) against bulk. The split is mechanistic — droplet 10x data carries a strong 3' bias and UMI counting, so it sits further from bulk RNA-seq than full-length SMART-Seq2 does. This project's reference is GBmap, measured at 87.1% 10x (214,284 cells 3' v2, 49,262 3' v3, 31,316 5' v1 of 338,564) against 2.7% Smart-seq2, and the mixtures are Ivy GAP bulk RNA-seq. By the paper's own practice that is an S-mode configuration, and this implementation runs B-mode. S-mode's per-cell-type expression adjustment is not implemented here, so the row is B-mode and says so rather than claiming to be the mode the authors would have used. *Decided from Supplementary Table 1d and the atlas assay counts, both external to any score this project computed.*
 - `dwls` — buildSignatureMatrixMAST(diff.cutoff, pval.cutoff): diff.cutoff = 0.5, pval.cutoff = 0.01 → diff.cutoff = 0, pval.cutoff = 1 (filter fully open). Equal footing requires every method to receive the same pre-filtered gene space, so the informative genes have already been chosen identically for all methods. DWLS's own differential-expression pass is then a second filter, not a second opinion: at the published cutoffs it left 31 genes for 8 cell types and the driver refused to deconvolve on them. *Decided from the gene count, before any DWLS score existed.*
 - `dwls` — cells used for the signature build: all cells in the reference → <= 250 cells per cell type. buildSignatureMatrixMAST costs ~30 minutes per gene set on this hardware regardless of the DE method. A signature is a per-cell-type summary, so type proportions are irrelevant to it and capping per type spends the budget where it buys accuracy. *Decided from measured runtime, before any DWLS score existed.*
 - `dwls` — per-sample failure handling: an error aborts the call → a sample that fails to solve becomes NA and is counted. solveDampenedWLS fails on particular mixtures with 'NA/NaN argument'. One such sample was sending the whole cohort to the Python fallback. NA is already what this pipeline means by a failed sample and it is reported in n_failed_samples. *Decided from the failure mode, before any DWLS score existed.*
@@ -73,6 +74,7 @@ _from `results/anatomic/acs_leaderboard.csv`_
 | elastic_net | 0.985 | 0.953 – 1.000 | 0.375 | 0.000 | 9 |  |
 | epic | 0.985 | 0.953 – 1.000 | 0.377 | 0.000 | 9 |  |
 | cibersortx | 0.969 | 0.930 – 1.000 | 0.374 | 0.000 | 9 |  |
+| cibersortx_smode | 0.969 | 0.906 – 1.000 | 0.376 | 0.000 | 9 |  |
 | scdc | 0.954 | 0.911 – 0.986 | 0.374 | 0.000 | 9 |  |
 | scdc_ensemble | 0.954 | 0.911 – 0.986 | 0.374 | 0.000 | 9 |  |
 | bisque | 0.923 | 0.866 – 0.983 | 0.380 | 0.000 | 9 |  |
@@ -85,15 +87,16 @@ _from `results/anatomic/acs_leaderboard.csv`_
 | quantiseq | 0.600 | 0.333 – 0.882 | 0.502 | 0.309 | 9 |  |
 
 
-**Control verdict.** CONTROLS BEHAVE: best control 0.400 sits below the median real method 0.954, ties no real method, and does not beat its own permutation null. The constraint set discriminates.
+**Control verdict.** CONTROLS BEHAVE: best control 0.400 sits below the median real method 0.962, ties no real method, and does not beat its own permutation null. The constraint set discriminates.
 
 
 ### What ACS can and cannot resolve here
 
 - weighted denominator: **65** (constraint x tumour pairs, weighted)
 - so ACS takes at most **66 distinct values**, spaced **0.0154** apart
-- 16 methods scored produce **11 distinct values**; the 14 real methods produce **9**
+- 17 methods scored produce **11 distinct values**; the 15 real methods produce **9**
 - tied at **0.985**: nnls, svr, elastic_net, epic
+- tied at **0.969**: cibersortx, cibersortx_smode
 - tied at **0.954**: scdc, scdc_ensemble
 - tied at **0.769**: bayesian, bayesian_hierarchical
 
@@ -175,6 +178,7 @@ Methods are judged against the **hardest** control (`control_shuffled_signature`
 | nnls | python | no |  |
 | svr | python | no |  |
 | cibersortx | python | no |  |
+| cibersortx_smode | python | no |  |
 | elastic_net | python | no |  |
 | bayesian | python | no |  |
 | bayesian_hierarchical | python | no |  |
@@ -196,7 +200,7 @@ Pre-registered bar: rho >= 0.6 AND a bootstrap CI excluding zero. Minimum method
 
 | yardstick | rho | 95% CI | methods | distinct | verdict |
 |---|---|---|---|---|---|
-| synthetic_mixtures | 0.733 | 0.271 – 0.944 | 13 | 12 | HEADLINE: ACS ranking tracks true accuracy at the pre-registered bar. Anatomic concordance |
+| synthetic_mixtures | 0.750 | 0.328 – 0.957 | 14 | 13 | HEADLINE: ACS ranking tracks true accuracy at the pre-registered bar. Anatomic concordance |
 | absolute_purity | — | — – — | 0 | — | UNAVAILABLE: this yardstick produced no scores in this run. |
 | sc_pseudobulk | — | — – — | 0 | — | UNAVAILABLE: this yardstick produced no scores in this run. |
 | simulated_donor_mismatch | — | — – — | 0 | — | UNAVAILABLE: this yardstick produced no scores in this run. |
@@ -207,26 +211,27 @@ Pre-registered bar: rho >= 0.6 AND a bootstrap CI excluding zero. Minimum method
 | method | ACS (122 anatomic) | ACS (270 deconvolved) | delta | rank change |
 |---|---|---|---|---|
 | music | 1.000 | 1.000 | +0.000 | +0 |
+| svr | 0.985 | 0.985 | +0.000 | +0 |
 | nnls | 0.985 | 0.985 | +0.000 | +0 |
 | elastic_net | 0.985 | 0.985 | +0.000 | +0 |
 | epic | 0.985 | 0.985 | +0.000 | +0 |
-| svr | 0.985 | 0.985 | +0.000 | +0 |
+| cibersortx_smode | 0.969 | 0.969 | +0.000 | +0 |
 | cibersortx | 0.969 | 0.969 | +0.000 | +0 |
-| scdc | 0.954 | 0.954 | +0.000 | +1 |
 | scdc_ensemble | 0.954 | 0.954 | +0.000 | +1 |
-| bisque | 0.923 | 0.969 | +0.046 | -2 |
+| scdc | 0.954 | 0.954 | +0.000 | +1 |
+| bisque | 0.923 | 0.969 | +0.046 | -3 |
 | bayesprism | 0.877 | 0.877 | +0.000 | +0 |
-| bayesian_hierarchical | 0.769 | 0.785 | +0.015 | -0 |
 | bayesian | 0.769 | 0.769 | +0.000 | +0 |
+| bayesian_hierarchical | 0.769 | 0.785 | +0.015 | -0 |
 | dwls | 0.738 | 0.738 | +0.000 | +0 |
 | quantiseq | 0.600 | 0.600 | +0.000 | +0 |
 | control_random | 0.400 | 0.338 | -0.062 | +0 |
 | control_shuffled_signature | 0.138 | 0.138 | +0.000 | +0 |
 
-Spearman rho between the two ACS rankings: **0.9865**
+Spearman rho between the two ACS rankings: **0.9850**
 
 
-**Which methods moved, and why.** 13 of 16 did not move by a single unit: music, nnls, elastic_net, epic, svr, cibersortx, scdc, scdc_ensemble, bayesprism, bayesian, dwls, quantiseq, control_shuffled_signature. Those solve each sample independently, so what else is in the cohort cannot reach them — the zeros are exact, not rounded.
+**Which methods moved, and why.** 14 of 17 did not move by a single unit: music, svr, nnls, elastic_net, epic, cibersortx_smode, cibersortx, scdc_ensemble, scdc, bayesprism, bayesian, dwls, quantiseq, control_shuffled_signature. Those solve each sample independently, so what else is in the cohort cannot reach them — the zeros are exact, not rounded.
 
 The ones that moved are **bisque, bayesian_hierarchical, control_random**. Bisque normalises the bulk with cohort-wide per-gene statistics (`B.mean(axis=1)` and `B.std(axis=1)`), so the 148 ISH-cluster samples shift the reference frame every anatomic sample is mapped through. `control_random` moves for a different and uninteresting reason: it draws one Dirichlet sample per row, so a 270-row draw is not a superset of a 122-row draw.
 
@@ -247,6 +252,7 @@ Note the direction: **adding 148 more real samples made Bisque's anatomic concor
 | elastic_net | 0.985 | 0.953 – 1.000 | 0.374 | 0.000 | 9 |  |
 | epic | 0.985 | 0.953 – 1.000 | 0.377 | 0.000 | 9 |  |
 | cibersortx | 0.969 | 0.930 – 1.000 | 0.374 | 0.000 | 9 |  |
+| cibersortx_smode | 0.969 | 0.906 – 1.000 | 0.377 | 0.000 | 9 |  |
 | bisque | 0.969 | 0.930 – 1.000 | 0.379 | 0.000 | 9 |  |
 | scdc | 0.954 | 0.911 – 0.986 | 0.374 | 0.000 | 9 |  |
 | scdc_ensemble | 0.954 | 0.911 – 0.986 | 0.374 | 0.000 | 9 |  |
@@ -282,6 +288,7 @@ Note the direction: **adding 148 more real samples made Bisque's anatomic concor
 | nnls | 0.484 | 0.561 | 0.077 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
 | bisque | 0.484 | 0.521 | 0.037 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
 | bayesian_hierarchical | 0.484 | 0.514 | 0.029 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
+| cibersortx_smode | 0.484 | 0.512 | 0.027 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
 | dwls | 0.484 | 0.510 | 0.026 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
 | bayesprism | 0.484 | 0.509 | 0.025 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
 | elastic_net | 0.484 | 0.505 | 0.021 | INCONCLUSIVE (cohort supports detecting ~0.515; not used for ranking) |
@@ -298,9 +305,9 @@ Note the direction: **adding 148 more real samples made Bisque's anatomic concor
 
 Not a protocol analysis. The protocol's agreement test correlates ACS against *accuracy*, which is still not computable. This correlates it against *prognostic value* instead, which the declared-policy run makes available. It selects nothing.
 
-- Spearman(ACS, delta C-index) over 14 methods: **rho = 0.140**, p = 0.632
+- Spearman(ACS, delta C-index) over 15 methods: **rho = 0.168**, p = 0.549
 - best ACS: `music` (ACS 1.000, delta C +0.002)
 - best prognosis: `svr` (ACS 0.985, delta C +0.080)
 
-Three independent reasons this cannot support a claim: every C-index is INCONCLUSIVE by the pre-specified power rule; ACS supplies only 9 distinct values across 14 methods, so the rank is mostly ties; and the outcome side rests on a declared assumption about censoring. It is recorded because it points the same way as the superseded run did, and because the direction is the protocol's second branch.
+Three independent reasons this cannot support a claim: every C-index is INCONCLUSIVE by the pre-specified power rule; ACS supplies only 9 distinct values across 15 methods, so the rank is mostly ties; and the outcome side rests on a declared assumption about censoring. It is recorded because it points the same way as the superseded run did, and because the direction is the protocol's second branch.
 

@@ -1,6 +1,6 @@
 # Release bundle — Ivy GAP GBM anatomic deconvolution
 
-Built 2026-09-06 · run type: **real data**
+Built 2026-09-10 · run type: **real data**
 
 Selected method: **music**
 Selected on: mean absolute error on primary cell types, donor-held-out pseudobulk, aggregated donor-equally

@@ -1,0 +1,268 @@
+{
+  "what_this_is": "Ivy GAP ISH expression energy checked against the pre-registered constraints. EXPLORATORY \u2014 the constraints are frozen and registered and do not move on this result.",
+  "source": "data/raw/ivygap/gene_expression_details.csv",
+  "constraint_freeze_hash": "2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a",
+  "n_rows": 18778,
+  "n_genes": 480,
+  "n_sub_blocks": 899,
+  "n_donors": 42,
+  "markers_declared_before_reading_values": {
+    "Endothelial": [
+      "ESM1",
+      "CD34",
+      "KDR",
+      "CAV1"
+    ],
+    "Macrophage_Microglia": [
+      "CD163",
+      "LAPTM5"
+    ],
+    "Tumor": [
+      "SOX2",
+      "PTPRZ1",
+      "EGFR",
+      "CD44",
+      "BIRC5",
+      "TOP2A"
+    ]
+  },
+  "design": "paired within sub-block; averaged within donor then across donors; per marker, never pooled; null permutes structure labels within sub-block",
+  "not_checkable": {
+    "C2": "Oligodendrocyte: LE > CT cannot be checked. Ivy GAP's ISH panel contains no myelin or oligodendrocyte-lineage marker \u2014 MBP, PLP1, MOG, MAG, CNP, SOX10, MOBP and CLDN11 are all absent. OLIG2 IS present and is deliberately not used: in glioma it is expressed by the tumour cells themselves and by OPCs, so scoring an oligodendrocyte claim on it would measure tumour content and report it as oligodendrocyte content."
+  },
+  "per_marker": [
+    {
+      "constraint": "C1",
+      "cell_type": "Tumor",
+      "marker": "SOX2",
+      "claim": "Tumor: CT > LE",
+      "donor_equal_rate": 0.0,
+      "n_sub_blocks_evaluable": 5,
+      "n_donors": 5,
+      "null_p": 1.0
+    },
+    {
+      "constraint": "C1",
+      "cell_type": "Tumor",
+      "marker": "PTPRZ1",
+      "claim": "Tumor: CT > LE",
+      "donor_equal_rate": 0.0556,
+      "n_sub_blocks_evaluable": 22,
+      "n_donors": 18,
+      "null_p": 1.0
+    },
+    {
+      "constraint": "C1",
+      "cell_type": "Tumor",
+      "marker": "EGFR",
+      "claim": "Tumor: CT > LE",
+      "donor_equal_rate": null,
+      "n_sub_blocks_evaluable": 0,
+      "n_donors": 0
+    },
+    {
+      "constraint": "C1",
+      "cell_type": "Tumor",
+      "marker": "CD44",
+      "claim": "Tumor: CT > LE",
+      "donor_equal_rate": 0.8999,
+      "n_sub_blocks_evaluable": 137,
+      "n_donors": 26,
+      "null_p": 0.0005
+    },
+    {
+      "constraint": "C1",
+      "cell_type": "Tumor",
+      "marker": "BIRC5",
+      "claim": "Tumor: CT > LE",
+      "donor_equal_rate": 0.6302,
+      "n_sub_blocks_evaluable": 134,
+      "n_donors": 26,
+      "null_p": 0.007
+    },
+    {
+      "constraint": "C1",
+      "cell_type": "Tumor",
+      "marker": "TOP2A",
+      "claim": "Tumor: CT > LE",
+      "donor_equal_rate": 0.6,
+      "n_sub_blocks_evaluable": 5,
+      "n_donors": 5,
+      "null_p": 0.49625
+    },
+    {
+      "constraint": "C3",
+      "cell_type": "Endothelial",
+      "marker": "ESM1",
+      "claim": "Endothelial: MVP > CT",
+      "donor_equal_rate": 1.0,
+      "n_sub_blocks_evaluable": 8,
+      "n_donors": 6,
+      "null_p": 0.005
+    },
+    {
+      "constraint": "C3",
+      "cell_type": "Endothelial",
+      "marker": "CD34",
+      "claim": "Endothelial: MVP > CT",
+      "donor_equal_rate": 0.0,
+      "n_sub_blocks_evaluable": 2,
+      "n_donors": 2
+    },
+    {
+      "constraint": "C3",
+      "cell_type": "Endothelial",
+      "marker": "KDR",
+      "claim": "Endothelial: MVP > CT",
+      "donor_equal_rate": 0.6667,
+      "n_sub_blocks_evaluable": 3,
+      "n_donors": 3,
+      "null_p": 0.48476
+    },
+    {
+      "constraint": "C3",
+      "cell_type": "Endothelial",
+      "marker": "CAV1",
+      "claim": "Endothelial: MVP > CT",
+      "donor_equal_rate": 0.5,
+      "n_sub_blocks_evaluable": 4,
+      "n_donors": 4,
+      "null_p": 0.68366
+    },
+    {
+      "constraint": "C4",
+      "cell_type": "Endothelial",
+      "marker": "ESM1",
+      "claim": "Endothelial: MVP is the maximum",
+      "donor_equal_rate": 0.75,
+      "n_sub_blocks_evaluable": 8,
+      "n_donors": 6,
+      "null_p": 0.02049
+    },
+    {
+      "constraint": "C4",
+      "cell_type": "Endothelial",
+      "marker": "CD34",
+      "claim": "Endothelial: MVP is the maximum",
+      "donor_equal_rate": 0.0,
+      "n_sub_blocks_evaluable": 2,
+      "n_donors": 2
+    },
+    {
+      "constraint": "C4",
+      "cell_type": "Endothelial",
+      "marker": "KDR",
+      "claim": "Endothelial: MVP is the maximum",
+      "donor_equal_rate": 0.6667,
+      "n_sub_blocks_evaluable": 3,
+      "n_donors": 3,
+      "null_p": 0.21589
+    },
+    {
+      "constraint": "C4",
+      "cell_type": "Endothelial",
+      "marker": "CAV1",
+      "claim": "Endothelial: MVP is the maximum",
+      "donor_equal_rate": 0.25,
+      "n_sub_blocks_evaluable": 4,
+      "n_donors": 4,
+      "null_p": 0.72914
+    },
+    {
+      "constraint": "C5",
+      "cell_type": "Macrophage_Microglia",
+      "marker": "CD163",
+      "claim": "Macrophage_Microglia: PAN > LE",
+      "donor_equal_rate": 1.0,
+      "n_sub_blocks_evaluable": 1,
+      "n_donors": 1
+    },
+    {
+      "constraint": "C5",
+      "cell_type": "Macrophage_Microglia",
+      "marker": "LAPTM5",
+      "claim": "Macrophage_Microglia: PAN > LE",
+      "donor_equal_rate": 1.0,
+      "n_sub_blocks_evaluable": 1,
+      "n_donors": 1
+    },
+    {
+      "constraint": "C6",
+      "cell_type": "Macrophage_Microglia",
+      "marker": "CD163",
+      "claim": "Macrophage_Microglia: MVP > CT",
+      "donor_equal_rate": 1.0,
+      "n_sub_blocks_evaluable": 7,
+      "n_donors": 6,
+      "null_p": 0.0085
+    },
+    {
+      "constraint": "C6",
+      "cell_type": "Macrophage_Microglia",
+      "marker": "LAPTM5",
+      "claim": "Macrophage_Microglia: MVP > CT",
+      "donor_equal_rate": 1.0,
+      "n_sub_blocks_evaluable": 1,
+      "n_donors": 1
+    },
+    {
+      "constraint": "C7",
+      "cell_type": "Tumor",
+      "marker": "SOX2",
+      "claim": "Tumor: LE < IT < CT",
+      "donor_equal_rate": 0.0,
+      "n_sub_blocks_evaluable": 4,
+      "n_donors": 4,
+      "null_p": 1.0
+    },
+    {
+      "constraint": "C7",
+      "cell_type": "Tumor",
+      "marker": "PTPRZ1",
+      "claim": "Tumor: LE < IT < CT",
+      "donor_equal_rate": 0.0,
+      "n_sub_blocks_evaluable": 15,
+      "n_donors": 13,
+      "null_p": 1.0
+    },
+    {
+      "constraint": "C7",
+      "cell_type": "Tumor",
+      "marker": "EGFR",
+      "claim": "Tumor: LE < IT < CT",
+      "donor_equal_rate": null,
+      "n_sub_blocks_evaluable": 0,
+      "n_donors": 0
+    },
+    {
+      "constraint": "C7",
+      "cell_type": "Tumor",
+      "marker": "CD44",
+      "claim": "Tumor: LE < IT < CT",
+      "donor_equal_rate": 0.5286,
+      "n_sub_blocks_evaluable": 112,
+      "n_donors": 24,
+      "null_p": 0.0005
+    },
+    {
+      "constraint": "C7",
+      "cell_type": "Tumor",
+      "marker": "BIRC5",
+      "claim": "Tumor: LE < IT < CT",
+      "donor_equal_rate": 0.2597,
+      "n_sub_blocks_evaluable": 109,
+      "n_donors": 24,
+      "null_p": 0.01599
+    },
+    {
+      "constraint": "C7",
+      "cell_type": "Tumor",
+      "marker": "TOP2A",
+      "claim": "Tumor: LE < IT < CT",
+      "donor_equal_rate": 0.75,
+      "n_sub_blocks_evaluable": 4,
+      "n_donors": 4,
+      "null_p": 0.01649
+    }
+  ]
+}
