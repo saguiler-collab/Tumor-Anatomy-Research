@@ -1,0 +1,34 @@
+{
+  "folders": [
+    {
+      "name": "Anatomic Concordance — the Anatomy Test",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "window.title": "Anatomic Concordance — ${activeEditorShort}${separator}${rootName}",
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/.pytest_cache": true,
+      "**/*.pyc": true
+    },
+    "search.exclude": {
+      "data/**": true,
+      "results_archive/**": true,
+      "results_superseded/**": true,
+      "pipeline packages /**": true,
+      "release/**": true,
+      "figures/plates.html": true
+    },
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": ["tests"],
+    "files.trimTrailingWhitespace": true,
+    "editor.rulers": [88]
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "reditorsupport.r"
+    ]
+  }
+}
