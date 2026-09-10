@@ -413,3 +413,50 @@ from Stanford's servers.
 **ABSOLUTE purity for TCGA-GBM.** Still wanted as an orthogonal yardstick that never
 touches RNA (`docs/EXTERNAL_ACTIONS.md` item 3, Carter et al. 2012, doi:10.1038/nbt.2203).
 Not obtained.
+
+---
+
+## Second and third GBM references — obtained 2026-09-10, not yet ingested
+
+Both were downloaded to `pipeline packages / repos/SCDC/`. Inspected by metadata only; no
+expression matrix has been read into a run.
+
+### Neftel et al. 2019 (GSE131928) — the usable second reference
+
+| file | size | content |
+|---|---|---|
+| `GSM3828673_10X_GBM_IDHwt_processed_TPM.tsv` | 1.5 GB | **16,201 cells · 21 donors · 10x** |
+| `GSM3828672_Smartseq2_GBM_IDHwt_processed_TPM.tsv` | 944 MB | SMART-Seq2 version |
+| `GSE131928_single_cells_tumor_name_and_adult_or_peidatric.xlsx` | 848 KB | sample metadata |
+
+**Take the 10x file.** It is platform-matched to GBmap (10x), so pairing them in SCDC
+ENSEMBLE tests *reference choice* rather than confounding it with *platform*. The
+SMART-Seq2 file is the same study on a different chemistry and would introduce that
+confound; it is worth keeping for a deliberate cross-platform experiment, not for D2.
+
+Donor labels are encoded in the cell IDs as the prefix before the final underscore
+(`102_1` -> donor `102`). Note that several are repeat samples of one patient (`105A`,
+`105_B1`, `105_C1`, `105_C2`), so 21 is the number of *samples*, not of patients — which
+is what SCDC's `sample` argument wants, but the distinction must be stated wherever
+"donors" is reported.
+
+### Mossi Albiach et al. 2023 — NOT usable as a second reference
+
+`d45b4ce6-9725-4d79-b97a-70a44158bdbf.h5ad`, 1.41 GB, from CELLxGENE collection
+`113a558a-e96e-4643-81db-140e95c58578`.
+
+135,482 cells and **one donor** (`SL040`, right temporal lobe, 10x 3' v3). Eight times
+Neftel's cell count and none of its structure.
+
+That rules it out for the purpose it was fetched for. SCDC and MuSiC exist to model
+cross-subject variance; a single-donor reference cannot supply it, and SCDC_prop run on
+this alone would be degenerate for the same reason `scdc_ensemble` currently is. Pairing
+it with GBmap in an ENSEMBLE would weight across two references of which one has no
+subject-level variance to weight with.
+
+**What it is good for instead.** Its `obs` carries `Zone`, `Location` and `NeftelClass` —
+the study sampled tumour core through to macroscopically normal cortex, so cells are
+annotated by position along that gradient. That is a spatially-resolved single-cell view
+of the same axis the Ivy GAP constraints describe, and it could support an independent
+check on the constraints themselves rather than on the methods. Recorded here as an
+opportunity, not a plan.
