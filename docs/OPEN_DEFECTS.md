@@ -70,10 +70,45 @@ until it has been.
 
 | method | driver line | returns | why suspected |
 |---|---|---|---|
-| MuSiC | `R/run_music.R:61` | `est$Est.prop.weighted` | MuSiC's weighting explicitly involves cell size |
+| MuSiC | `R/run_music.R:61` | `est$Est.prop.weighted` | **Upgraded to near-confirmed 2026-09-10** — see below |
 | SCDC | `R/run_scdc.R:46` | `est$prop.est.mvw` | `ct.cell.size` defaults to library size computed from the data |
 | Bisque | `R/run_bisque.R:35` | `t(est$bulk.props)` | documented as cell proportions |
 | BayesPrism | `R/run_bayesprism.R:72` | `get.fraction(..., "type")` | theta is a cell-type fraction |
+
+#### MuSiC, and why it makes the fix harder than EPIC's
+
+Source inspection of `MuSiC::music_prop` (no execution): it takes a `cell_size`
+parameter, and when that is NULL it derives `M.S`, the mean cell size per type, from the
+data. Its model is `Y_jg = sum_k S_k p_k theta_kg` — cell size is divided out internally,
+so `Est.prop.weighted` is a **cell** proportion. Our correction is therefore a second one.
+
+The difficulty: MuSiC returns only `Est.prop.weighted` and `Est.prop.allgene`
+(`p.weight`, `p.nnls`). **It exposes no mRNA-proportion variant.** Unlike EPIC, you cannot
+simply take the other output.
+
+That splits the fix into two incompatible designs, and choosing between them is a real
+decision rather than a patch:
+
+**(A) Every method returns an mRNA share; the project converts once, centrally.**
+This is what `METHODS.md` and the registration describe, and it keeps every method on
+identical cell-size factors — which is the point of doing it centrally. But it is not
+reachable for MuSiC without multiplying its output back by `M.S`, reconstructing a
+quantity the package deliberately does not return.
+
+**(B) Each method returns cell fractions using its own factors; the project applies
+nothing to those methods.** Reachable for every package. But methods would then be using
+*different* cell-size factors — EPIC's `mRNA_cell`, MuSiC's data-derived `M.S`, ours for
+the least-squares family — which breaks the uniformity the central correction exists to
+guarantee, and weakens the equal-footing claim.
+
+There is a third option worth considering: pass the project's factors *into* each package
+that accepts them (`MuSiC(cell_size=)`, `SCDC_ENSEMBLE(ct.cell.size=)`, `EPIC(mRNA_cell=)`)
+and skip the central step for those methods. That preserves both uniformity and each
+package's own machinery, at the cost of a per-method wiring change and a declared
+deviation for each.
+
+**No design should be adopted until every method is verified**, because (B) and the third
+option require knowing exactly which methods already correct and which do not.
 
 **How to verify each**, the same way EPIC was: run the package on its own bundled example,
 obtain both an uncorrected and a corrected quantity if it exposes them, and compare. Where
