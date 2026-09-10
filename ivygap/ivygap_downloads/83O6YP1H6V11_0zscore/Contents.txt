@@ -1,0 +1,22 @@
+=========================
+Ivy Glioblastoma Atlas Project
+=========================
+
+This archive contains expression data for rows 1 through 2000 of a 'differential' search
+at a 'SAMPLES' resolution level, arranged by structures,donors.
+
+The file Expression.csv contains expression values, calculated using zscore normalization.
+Each row begins with the ID of a probe.
+
+The file Columns.csv contains metadata for each column in Expression.csv, arranged in the same order.
+The columns sample_mri_0, sample_mri_1, sample_mri_2 should be understood to be MRI coordinates of the sample in x,y,z order.
+A value of -1 in any of the sample_xxx columns of Columns.csv indicates that there is no sample data for that column.
+This can occur for example when there are multiple donors in the data set, and not all structures have been sampled in all donors.
+Corresponding cells in Expression.csv will be blank.
+
+The file Probes.csv contains metadata for the probes referenced in Expression.csv.
+
+The original search can be reproduced on our web site at https://glioblastoma.alleninstitute.org/rnaseq/searches?%257B%22search_type%22%253A%22differential%22%252C%22target_features%22%253A%255B309780906%255D%252C%22contrast_features%22%253A%255B309780592%252C298764292%252C298764274%252C309780846%255D%252C%22target_tumors%22%253A%255B%255D%252C%22contrast_tumors%22%253A%255B%255D%252C%22page_num%22%253A0%257D
+
+
+
