@@ -28,6 +28,7 @@ constraint set would need — never to retune the constraints and re-report.
 from __future__ import annotations
 
 import json
+import time
 
 import numpy as np
 import pandas as pd
@@ -99,6 +100,26 @@ def _atlas_label_counts() -> dict | None:
         return {cats[i]: int(counts[i]) for i in range(len(cats))}
     except Exception:                                       # noqa: BLE001
         return None
+
+
+def _runtime_note(method, elapsed: float) -> str | None:
+    """
+    Flag a fallback that ran far past the budget its R path was held to.
+
+    The R side is bounded by `r_bridge.timeout_for`; the Python reimplementation that
+    replaces it on timeout is not bounded at all. So a method can be stopped at 2,400 s
+    for being slow and then spend eight hours in its substitute, which is the opposite of
+    what the budget was for. Killing the fallback would be worse — it would leave the
+    method with no result at all — so this records the fact loudly instead of hiding it.
+    """
+    r_name = getattr(method, "r_method", method.name)
+    budget = r_bridge.R_METHOD_TIMEOUTS.get(r_name)
+    if budget is None or elapsed <= budget:
+        return None
+    return (f"ran {elapsed:.0f}s against a {budget}s R budget "
+            f"({elapsed / budget:.1f}x). The R path is bounded; the Python fallback that "
+            f"replaces it is not, so most of this is unbounded substitute time. Reported "
+            f"rather than truncated, because a truncated method has no result at all.")
 
 
 def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
@@ -204,7 +225,9 @@ def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
     estimates, implementations, failures, disclosure = {}, {}, {}, []
     for method in all_methods:
         try:
+            _t0 = time.perf_counter()
             estimates[method.name] = method.fit_predict(data)
+            _elapsed = time.perf_counter() - _t0
             implementations[method.name] = getattr(method, "implementation_", "python") or "python"
             # Two invariants are recorded here rather than in the benchmark stage,
             # because the benchmark does not run without a cell-level reference and
@@ -232,6 +255,14 @@ def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
                     getattr(method, "r_method", method.name),
                     {"n_genes": int(data.bulk.shape[0]),
                      "gene_space": "shared marker subset"}),
+                # Wall-clock, recorded because it was previously printed to the console
+                # and nowhere else. In the 2026-09-10 run DWLS took 28,387 s — 2,400 s of
+                # bounded R plus ~26,000 s of UNBOUNDED Python fallback — and no artefact
+                # said so. A reader comparing that run to the 3,471 s one before it had no
+                # way to see the difference, and a fallback that runs for eight hours is
+                # an operational fact about the result, not a detail of the console.
+                "wall_clock_seconds": round(_elapsed, 1),
+                "wall_clock_note": _runtime_note(method, _elapsed),
             })
             if verbose:
                 tag = "  [CONTROL]" if method.name in CONTROL_NAMES else ""
