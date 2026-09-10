@@ -1,0 +1,8 @@
+{
+  "constraint_freeze_hash": "2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a",
+  "registered_utc": "2026-09-10T02:43:55Z",
+  "registry": "OSF",
+  "url": "https://osf.io/nj78m",
+  "what_this_certifies": "The seven anatomic constraints hashed here were registered publicly at the URL above on the date above. The hash covers the canonical payload of the claims \u2014 ids, cell types, structures, directions, kinds and weights \u2014 not the source file, so reformatting constraints.py does not change it while altering a claim does.",
+  "what_this_does_not_certify": "That the analyses postdate the registration. Runs archived before this date are pilot work and are labelled as such; the ordering check reports any result file older than the registration."
+}
