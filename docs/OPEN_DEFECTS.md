@@ -62,58 +62,48 @@ Macrophages move by a factor of ~3.5 between the two. `R/run_epic.R:44` takes
 **Fix:** take `est$mRNAProportions` so the central correction is the only one. Unambiguous,
 because the package hands you the choice explicitly.
 
-### MuSiC, SCDC, Bisque, BayesPrism — SUSPECTED, not yet verified
+### All five now VERIFIED — 2026-09-10
 
-Each returns something documented as *cell type proportions* and each models cell size
-somewhere internally. None has been verified the way EPIC was, and none should be changed
-until it has been.
+Each package was run on a purpose-built reference where the two cell types differ 3x in
+mRNA content, mixed **50/50 by cell count**. That separates the two possible answers
+cleanly and puts neither at a boundary:
 
-| method | driver line | returns | why suspected |
+- if a package returns **0.50**, it already divided out cell size — it reports a CELL share
+- if it returns **0.75**, it reports an mRNA share and our correction is the first one
+
+(An earlier version of this test used a 10x ratio, which put the mRNA answer at 0.988 —
+both answers crowd the ceiling and the result is unreadable. The ratio matters.)
+
+| method | returned | reports | our correction is |
 |---|---|---|---|
-| MuSiC | `R/run_music.R:61` | `est$Est.prop.weighted` | **Upgraded to near-confirmed 2026-09-10** — see below |
-| SCDC | `R/run_scdc.R:46` | `est$prop.est.mvw` | `ct.cell.size` defaults to library size computed from the data |
-| Bisque | `R/run_bisque.R:35` | `t(est$bulk.props)` | documented as cell proportions |
-| BayesPrism | `R/run_bayesprism.R:72` | `get.fraction(..., "type")` | theta is a cell-type fraction |
+| **MuSiC** | **0.500** | CELL share | **a SECOND correction — defect** |
+| **Bisque** | **0.500** | CELL share | **a SECOND correction — defect** |
+| **EPIC** | *(offers both)* | CELL share, as taken | **a SECOND correction — defect** |
+| BayesPrism | 0.750 | mRNA share | correct, the first |
+| SCDC | 0.653 | between the two | **partial** — see below |
 
-#### MuSiC, and why it makes the fix harder than EPIC's
+**Three of the top methods are double-corrected, including the top-ranked one.** MuSiC
+leads the ACS leaderboard at 1.000 and the accuracy benchmark at MAE 0.0508, and its
+estimates have had a per-type cell-size factor applied twice.
 
-Source inspection of `MuSiC::music_prop` (no execution): it takes a `cell_size`
-parameter, and when that is NULL it derives `M.S`, the mean cell size per type, from the
-data. Its model is `Y_jg = sum_k S_k p_k theta_kg` — cell size is divided out internally,
-so `Est.prop.weighted` is a **cell** proportion. Our correction is therefore a second one.
+**SCDC is the awkward one.** At 0.653 it sits between 0.50 and 0.75, closer to the mRNA
+answer. It does *some* internal size handling — `ct.cell.size` defaults to library size
+derived from the data — without fully converting. So neither "apply ours" nor "skip ours"
+is right for SCDC, and the third design below (pass this project's factors in via
+`ct.cell.size`, skip the central step) is the only one that handles it cleanly.
 
-The difficulty: MuSiC returns only `Est.prop.weighted` and `Est.prop.allgene`
-(`p.weight`, `p.nnls`). **It exposes no mRNA-proportion variant.** Unlike EPIC, you cannot
-simply take the other output.
+### What this changes, and what it does not
 
-That splits the fix into two incompatible designs, and choosing between them is a real
-decision rather than a patch:
+**Does not change ACS or any conclusion resting on it.** The bias is a per-type constant
+applied twice within a method. Multiplying a cell type's column by a constant cannot
+reorder that column across structures, and ACS is a rank statistic over structures inside
+a tumour. The leaderboard, the control verdict and the ISH agreement all stand.
 
-**(A) Every method returns an mRNA share; the project converts once, centrally.**
-This is what `METHODS.md` and the registration describe, and it keeps every method on
-identical cell-size factors — which is the point of doing it centrally. But it is not
-reachable for MuSiC without multiplying its output back by `M.S`, reconstructing a
-quantity the package deliberately does not return.
-
-**(B) Each method returns cell fractions using its own factors; the project applies
-nothing to those methods.** Reachable for every package. But methods would then be using
-*different* cell-size factors — EPIC's `mRNA_cell`, MuSiC's data-derived `M.S`, ours for
-the least-squares family — which breaks the uniformity the central correction exists to
-guarantee, and weakens the equal-footing claim.
-
-There is a third option worth considering: pass the project's factors *into* each package
-that accepts them (`MuSiC(cell_size=)`, `SCDC_ENSEMBLE(ct.cell.size=)`, `EPIC(mRNA_cell=)`)
-and skip the central step for those methods. That preserves both uniformity and each
-package's own machinery, at the cost of a per-method wiring change and a declared
-deviation for each.
-
-**No design should be adopted until every method is verified**, because (B) and the third
-option require knowing exactly which methods already correct and which do not.
-
-**How to verify each**, the same way EPIC was: run the package on its own bundled example,
-obtain both an uncorrected and a corrected quantity if it exposes them, and compare. Where
-a package exposes only one, read whether its vignette calls the output a transcript share
-or a cell share. Do not guess — a wrong "fix" here silently biases every result.
+**Does change the accuracy arm, and therefore rho.** MAE is computed against known
+composition on the pseudobulk, where a doubled correction is a real error in magnitude.
+Since rho correlates the ACS ranking against the accuracy ranking, and the accuracy
+ranking is what moves, the headline number will change when this is fixed. It is not
+knowable in advance whether it rises or falls.
 
 ### Why it was not fixed on discovery
 
