@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 """
+SUPERSEDED — do not use. Replaced by scripts/build_figure_data.py.
+
+Written for the 2026-09-03 run, before the figure data was generated from the
+artefacts. It predates the atlas/cohort separation, the comparable-vs-real method
+distinction, and the wall-clock and registration fields. Kept because the protocol
+labels superseded work rather than deleting it.
+"""
+
+"""
 figure_data.py — collect everything the figures need into one JSON.
 
 The figures are rendered from artefacts, never from numbers typed by hand. This script

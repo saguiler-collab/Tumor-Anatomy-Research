@@ -11,18 +11,22 @@ Deconvolution in Glioblastoma**
 the orientation: what the project is, why it exists, what it found, and what it cannot
 claim.
 
-> ### Registration status: **UNREGISTERED**
+> ### Registration: **live at <https://osf.io/dm2t8>**
 >
-> "Pre-registered" is used throughout this repository in a specific and limited sense:
-> the constraint file was written, frozen and SHA-256 hashed **before any deconvolution
-> output was inspected**, and the hash proves it has not changed since. That is a real
-> property and it is what the design rests on.
+> The constraint file was written, frozen and SHA-256 hashed
+> (`2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a`) before any
+> deconvolution output was inspected, and publicly registered on 2026-09-10. The run
+> reported below postdates that registration, and the pipeline checks this rather than
+> asserting it — comparing every result file's timestamp against the registration and
+> reporting *"every result file postdates it"*.
 >
-> It is *not* the same as a public registration, which does not yet exist. Until a
-> receipt is recorded in `REGISTRATION.json`, this project must not describe itself as
-> pre-registered without qualification, and the analyses already archived are pilot work.
-> `python3 scripts/register.py --status` reports the live state, and every run embeds it
-> in its own artefacts rather than letting a reader assume.
+> Two honest qualifications. The registration is **retrospective** and says so: pilot
+> analyses were run before it, and they are labelled as pilots. And two statements inside
+> it need correcting — see `docs/ROAD_TO_PAPER.md` 0.2 — which will be published
+> *beside* the record rather than edited into it.
+>
+> `python3 scripts/register.py --status` reports the live state, including whether the
+> registration still exists.
 
 ---
 
@@ -249,21 +253,22 @@ so the leaderboard means something.
 |---|---|---|---|
 | MuSiC | 1.000 | [1.000, 1.000] | R:MuSiC |
 | NNLS / SVR / Elastic Net / EPIC | 0.985 | [0.953, 1.000] | mixed |
-| CIBERSORTx (B-mode) | 0.969 | [0.930, 1.000] | this project |
+| CIBERSORTx **B-mode** | 0.969 | [0.930, 1.000] | this project |
+| CIBERSORTx **S-mode** | 0.969 | [0.906, 1.000] | this project |
 | SCDC / SCDC ENSEMBLE | 0.954 | [0.911, 0.986] | R:SCDC |
 | Bisque | 0.923 | [0.866, 0.983] | R:BisqueRNA |
 | BayesPrism | 0.877 | [0.786, 0.968] | reimplementation |
 | Bayesian / Hierarchical | 0.769 | [0.627, 0.921] | this project |
-| DWLS | 0.738 | [0.600, 0.867] | reimplementation |
+| DWLS | 0.738 | [0.600, 0.867] | reimplementation — **the genuine R package measures 0.708**, see below |
 | *control_random* | *0.400* | | |
 | *control_shuffled_signature* | *0.138* | | |
 | quanTIseq | 0.600 | [0.333, 0.882] | **not ranked** — partial coverage |
 
 ### The headline
 
-**ρ = 0.733** (95% CI [0.271, 0.944], p = 0.0044, 13 methods) — above the pre-registered
-0.60 bar with the interval excluding zero. On the wider 270-sample cohort, **ρ = 0.750**.
-The two ACS rankings agree with each other at **ρ = 0.987**.
+**ρ = 0.7501** (95% CI [0.328, 0.957], p = 0.0020, 14 methods) — above the
+pre-registered 0.60 bar with the interval excluding zero. On the wider 270-sample cohort,
+**ρ = 0.7607**. The two ACS rankings agree with each other at **ρ = 0.985**.
 
 > **Anatomic concordance ranks deconvolution methods approximately the way ground truth
 > does — using no ground truth and no outcomes.**
@@ -278,6 +283,20 @@ only 66 distinct values.
 
 So the correct claim is *"anatomy separates good methods from bad ones"*, not *"anatomy
 identifies the best method"*. The second sentence is not supported and is not made.
+
+### One method needed measuring twice
+
+DWLS exceeded its wall-clock budget in the confirmatory run and fell back to a Python
+reimplementation, so the table above is not the published package. It was re-measured
+separately with a four-hour budget: the **genuine R package scores 0.7077**
+[0.576, 0.864], completing in 3,873 s — *lower* than the reimplementation's 0.738, and
+still last.
+
+That matters beyond bookkeeping. Avila Cobos et al. (2020) rank DWLS **best** among
+methods that use a single-cell reference. Running the real package shows the disagreement
+is genuine rather than an artefact of substituted software — and the likeliest reason is
+that DWLS is built to stop abundant populations swamping rare ones, while this roster is
+50–60% tumour cells. See `docs/RELATED_WORK.md`.
 
 ---
 

@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
 """
+SUPERSEDED — do not use, and do not cite its output.
+
+Replaced by scripts/ish_constraint_check.py. This version pulled ISH values one
+experiment at a time from the Allen API and was wrong three ways: it used 72 of 632
+experiments (11.4%); it pooled expression energy across DIFFERENT sub-block
+specimens, conflating tumour-to-tumour variation with structure differences; and it
+pooled markers that contradict each other. The correct input was already on disk —
+gene_expression_details.csv has one row per (gene x sub-block) with all five
+structures as columns, so the comparison is paired inside one block by construction.
+"""
+
+"""
 fetch_ivygap_ish.py — check the pre-registered constraints against in-situ hybridization.
 
 WHAT THIS IS FOR
