@@ -74,15 +74,43 @@ spreading evenly.
 Avila Cobos: *"DWLS performed best among the deconvolution methods that use scRNA-seq
 data as input."* Ours: DWLS is **last among real methods** — ACS 0.7385, MAE 0.0763.
 
-**This is not a contradiction, and the reason is recorded in our own artefacts.** In the
-confirmatory run DWLS ran as `python-reimplementation` in **both** anatomic stages, having
-exceeded its 2,400 s budget for the genuine R package. Our DWLS row is not the DWLS Avila
-Cobos evaluated.
+**RESOLVED 2026-09-10: it is a real disagreement, not an artefact.**
 
-The honest statement is therefore: *this study does not test the published DWLS on the
-anatomic cohort.* It is disclosed per method rather than absorbed, which is why the
-discrepancy is explainable at all. Anyone comparing the two rankings must not read our
-DWLS row as evidence about the package.
+The confirmatory run's DWLS row is the Python reimplementation — it exceeded its 2,400 s
+budget in both anatomic stages — so the comparison was initially unresolvable.
+`scripts/remeasure_dwls.py` therefore ran the **genuine R package** on the same cohort
+with a 4-hour budget. It completed in **3,873 s (1.08 h)**, above the pipeline budget and
+well inside the new one.
+
+| | ACS | 95% CI | pairs | null_p |
+|---|---|---|---|---|
+| **genuine `R:DWLS`** | **0.7077** | [0.576, 0.864] | 57 | 0.0001 |
+| Python reimplementation | 0.7385 | — | 57 | 0.0001 |
+
+The genuine package scores **lower** than the reimplementation, and stays last. The
+re-measurement was committed to in advance to report whatever it found, and it went
+against the convenient direction.
+
+So the disagreement with Avila Cobos survives the obvious explanation. Two substantive
+readings remain, and they are not exclusive:
+
+**DWLS is built for rare cell types.** Its dampening suppresses the dominance of highly
+expressed genes belonging to abundant populations — the regime where a rare type would
+otherwise be swamped. This roster is the opposite: tumour cells are roughly 50-60% of
+every sample, and the constraints that discriminate (C5, C6, C7) concern myeloid and
+tumour populations that are not rare. Avila Cobos's simulated mixtures were not
+tumour-dominated in this way.
+
+**And the yardsticks differ.** Avila Cobos ranks by RMSE against simulated composition;
+this ranks by ordinal agreement with anatomy on real microdissected tissue. A method can
+be well calibrated in magnitude and still order structures wrongly, which is precisely
+the distinction this study exists to examine.
+
+The leaderboard row still carries the reimplementation, because that is what the
+archived confirmatory run produced and the archive stands as recorded. The genuine
+measurement is reported **alongside** it in `results/dwls_remeasured.json`, never
+substituted in. Any statement about DWLS in the paper should quote 0.7077 and say which
+software produced it.
 
 A second, independent factor: DWLS is built for **rare** cell types, damping the
 dominance of highly expressed genes belonging to abundant populations. This roster is
