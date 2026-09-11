@@ -305,7 +305,7 @@ that DWLS is built to stop abundant populations swamping rare ones, while this r
 - **One tissue is a case study, not a method.** Nine evaluable tumours is the ceiling and
   no analysis inside Ivy GAP raises it. A second tissue is the only fix.
 - **No prognostic claim is possible.** Ivy GAP publishes survival times with **no
-  vital-status column**, so who was censored is unknowable and no C-index can be computed.
+  vital-status column**, so who was censored is unknowable and no C-index can be computed — the C-index being the standard measure of how well a prediction orders patients by survival, which needs to know who died and who was merely lost to follow-up.
   The analysis reports **BLOCKED** rather than guessing. Worse, of 42 tumours the 10 with
   blank times are **not missing at random** — a blank is associated with MGMT methylation
   (Fisher p = 0.0021), the best favourable prognostic factor in GBM, so dropping them
@@ -328,7 +328,32 @@ that DWLS is built to stop abundant populations swamping rare ones, while this r
 
 ---
 
-## 8. Repository map
+## 8. A short glossary
+
+Terms this README uses that are not common outside the field.
+
+| term | what it means here |
+|---|---|
+| **Bulk RNA-seq** | Sequencing a whole piece of tissue at once. You get the *average* signal of every cell in it, not per-cell readings. |
+| **Deconvolution** | Working backwards from that average to estimate what fraction of the tissue each cell type made up. |
+| **Signature matrix** | A reference table of what each cell type's gene expression looks like on its own. Most deconvolution methods solve against one. |
+| **Single-cell atlas** | A dataset where each cell was sequenced individually, so cell types are known. Used here to build the signature matrix — never to score anything. |
+| **Pseudobulk** | Artificial "tissue" made by pooling known quantities of known single cells. Because you built it, you know the true composition — which is how accuracy is measured. |
+| **Donor-held-out** | Test mixtures are built only from patients whose cells were *excluded* from the reference, so no method is graded on people it was fitted to. |
+| **Ordinal claim** | A statement about *order* — "more of X here than there" — rather than about a number. Every constraint in this study is ordinal. |
+| **ACS** | Anatomic Concordance Score: the weighted fraction of ordinal claims a method gets right. |
+| **Permutation null** | To ask whether a score beats chance, shuffle the labels many times and see how often chance does as well. Here the shuffling happens *within* each tumour. |
+| **Bootstrap interval** | A confidence range obtained by resampling the tumours many times and re-computing the score. |
+| **Spearman ρ** | A correlation between two *rankings* rather than two sets of values. The study's headline number. |
+| **C-index** | How well a prediction orders patients by survival. Requires knowing who died — which this dataset does not record. |
+| **H&E** | Haematoxylin and eosin, the standard tissue stain. A pathologist reads structure from an H&E slide. |
+| **ISH** | In-situ hybridisation: staining tissue to show where a specific gene is switched on, leaving the tissue intact. |
+| **MGMT methylation** | A chemical mark on a DNA-repair gene. It is the strongest favourable prognostic factor in glioblastoma. |
+| **Degenerate (of a method)** | Running in a mode where the thing that makes it distinctive is switched off — for example an ensemble method given only one input to ensemble. |
+
+---
+
+## 9. Repository map
 
 | path | what it is |
 |---|---|
@@ -360,7 +385,7 @@ python3 scripts/archive_run.py --verify <stamp>
 
 ---
 
-## 9. What comes next
+## 10. What comes next
 
 1. **Register the constraint file** (`docs/EXTERNAL_ACTIONS.md` item 1). Free, and it is
    what turns "we say we wrote this first" into something a reader can verify.
