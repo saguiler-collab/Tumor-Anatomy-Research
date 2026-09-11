@@ -1,7 +1,6 @@
 # Road to the paper
 
-Everything that must happen before writing, in order, with dependencies. Status
-2026-09-10, after the confirmatory run (`results_archive/2026-09-10T2039`).
+Everything that must happen before writing, in order, with dependencies. Status 2026-09-11, after the confirmatory run (`results_archive/2026-09-10T2039`).
 
 `docs/EXTERNAL_CHECKLIST.md` ranks items by value. **This file sequences them**, and
 separates what *blocks* a credible paper from what *strengthens* one.
@@ -27,23 +26,42 @@ These are not improvements. Each one prevents a statement in the paper from bein
 
 ### 0.1 Verify the cell-size double-correction · **INTERNAL + package docs**
 
-`OPEN_DEFECTS.md` D1. EPIC is **confirmed** corrected twice — the package returns
-`mRNAProportions` and `cellFractions` separately and the driver takes the corrected one,
-after which `fit_predict` corrects again. MuSiC is near-confirmed. SCDC, Bisque and
-BayesPrism are suspected and unverified.
+`OPEN_DEFECTS.md` D1. **Verification is COMPLETE as of 2026-09-10** — all five packages
+were tested on a reference where two cell types differ 3x in mRNA content, mixed 50/50 by
+cell count, so 0.50 means the package already divided out cell size and 0.75 means it did
+not:
 
-**Why blocking:** it changes every accuracy number, therefore the accuracy ranking,
-therefore rho — the paper's headline. It does **not** change ACS, because a constant
-per-type factor cannot reorder a cell type across structures.
+| method | returned | reports | our correction is |
+|---|---|---|---|
+| **MuSiC** | 0.500 | cell share | **a second correction — defect** |
+| **Bisque** | 0.500 | cell share | **defect** |
+| **EPIC** | offers both | cell share, as taken | **defect** |
+| BayesPrism | 0.750 | mRNA share | correct, the first |
+| SCDC | 0.653 | between the two | **partial** |
 
-**Steps.** For each of MuSiC, SCDC, Bisque, BayesPrism: run the package on its own bundled
-example; establish from its vignette or return structure whether the output is a
-transcript share or a cell share; record the evidence. Then choose one of the three
-designs in D1 and apply it uniformly. Publish before/after numbers for every affected
-method so the effect on the leaderboard is visible, not absorbed.
+**Three of the top methods are double-corrected, including MuSiC**, which leads ACS at
+1.000 and the accuracy benchmark at MAE 0.0508.
 
-**Do not** fix it method-by-method as each is verified — a leaderboard half-corrected is
-worse than one uniformly wrong.
+**Why blocking:** it changes every affected accuracy number, therefore the accuracy
+ranking, therefore rho — the paper's headline. It does **not** change ACS, because a
+per-type constant applied twice cannot reorder a cell type across structures and ACS is a
+rank statistic over structures within a tumour. The leaderboard, the control verdict and
+the ISH agreement all stand.
+
+**What remains is a decision, not an investigation.** SCDC's 0.653 settles it: it is
+neither answer, so neither "apply ours" nor "skip ours" is right for it. Only the third
+design in D1 handles all five — pass this project's cell-size factors *into* each package
+that accepts one (`MuSiC(cell_size=)`, `SCDC_ENSEMBLE(ct.cell.size=)`, `EPIC(mRNA_cell=)`)
+and skip the central step for those.
+
+**Steps.**
+1. Adopt the third design.
+2. Apply it to all five at once. **Do not** fix them one at a time — a half-corrected
+   leaderboard is worse than a uniformly wrong one.
+3. Re-run, and publish before/after numbers per method so the effect is visible.
+4. Record it as a declared deviation: the registration says the conversion is "applied
+   once and centrally", and passing factors into each package is a different mechanism for
+   the same intent.
 
 ### 0.2 Publish the registration corrections · **EXTERNAL, 20 minutes**
 
@@ -135,21 +153,105 @@ cannot be repaired afterwards:
 
 `freeze_hash()` raises while `FROZEN = False`, so step 4 cannot silently happen first.
 
-### 2.2 A method that differs in kind
+### 2.2 Methods that differ in kind — CDSeq and Scaden
 
-CDSeq (reference-free, no signature matrix) or Scaden (deep learning). The 14 comparable
-methods produce only **8 distinct ACS values**, four tied at 0.9846. Another least-squares
-variant joins the tie and *lowers* the rank correlation's resolution; a method with
-different assumptions spreads the range.
+**Neither is implemented. Zero code exists for either.** Status as of 2026-09-11.
 
-### 2.3 An orthogonal yardstick
+The 14 comparable methods produce only **8 distinct ACS values**, four tied at 0.9846.
+Another least-squares variant joins that tie and *lowers* the rank correlation's
+resolution. A method built on different assumptions spreads the range instead.
 
-- **ABSOLUTE purity** for TCGA-GBM (Carter 2012) — DNA-based, never touches RNA.
-- **Liu, Qian & Ma 2025** — DNA-methylation deconvolution of the brain-tumour
-  microenvironment. Orthogonal modality, and specifically about brain tumours.
+| | what it is | why it adds something |
+|---|---|---|
+| **CDSeq** | **Reference-free.** Uses no signature matrix at all; infers cell-type profiles and proportions jointly from the bulk. | Tests something no current entry does: can anatomy rank a method that never saw your reference? Every one of the 15 shares the same GBmap signature, so they share its biases. CDSeq does not. |
+| **Scaden** | Deep learning, trained on simulated bulk. | A different paradigm, though it trains on simulated mixtures — the same construction Nguyen et al. warn favours methods sharing the simulator's assumptions. Read its result with that in mind. |
 
-Either shares no failure mode with RNA-based deconvolution, which is what makes it worth
-more than a fourth RNA method.
+**CDSeq is the more valuable of the two**, for the reason in its row: it is the only
+candidate that breaks the shared-reference dependency.
+
+**The registration consequence.** The registration says *"Fifteen deconvolution methods
+and two negative controls."* Adding either makes it sixteen or seventeen — a change to
+the registered analysis plan, decided after the leaderboard was seen. Three honest options, in the **Registration** section below. Do not edit the existing registration.
+
+### 2.3 ABSOLUTE purity — **data obtained 2026-09-11, not yet computed**
+
+This is the protocol's **yardstick 2**, and it is closer than it looked.
+
+**What already exists.** `agreement.py` evaluates four yardsticks, not one — the
+confirmatory run reports `absolute_purity` as UNAVAILABLE rather than absent. So the
+machinery is wired; it needs data, not code.
+
+**What was obtained today.** `TCGA_mastercalls.abs_tables_JSedit.fixed.txt` from the
+PanCanAtlas, GDC file UUID `4f277128-f793-4354-a13d-30cc7fe9f6b5`, 901,812 bytes,
+sha256 `f430a975433d82e0…`. 10,786 rows with both `purity` and `Cancer DNA fraction`.
+Provenance in `reference_frozen/tcga_benchmark/ABSOLUTE_PROVENANCE.json`; the file itself
+is gitignored, as data is.
+
+**Overlap, measured:** the predecessor project's `TCGA-GBM.star_counts.tsv` has 175 bulk
+samples; **156 of them have an ABSOLUTE purity call** — more than the 120 the predecessor
+reported.
+
+**Why it is still not computable.** The existing `orthogonal_validation.csv` records the
+purity correlation for **one** method (`v2_STAR_SVR_clean`, rho = 0.761, n = 120). One
+point cannot rank anything. To use this as a yardstick, all 15 methods must be run on the
+TCGA-GBM cohort and each method's Tumor fraction correlated against purity.
+
+**Steps.**
+1. Load `TCGA-GBM.star_counts.tsv` (predecessor project, read-only) and normalise to CPM.
+2. Deconvolve all 15 methods against the frozen signature — the same one, for equal footing.
+3. Per method, Spearman-correlate the Tumor column against `Cancer DNA fraction` across
+   the 156 shared samples.
+4. Feed those correlations to `load_absolute_purity()`; the agreement test picks them up
+   with no further change.
+
+**Why this is worth more than a sixteenth method.** It is a *second yardstick*, measured
+from **DNA**, sharing no failure mode with any RNA-based method under test. Nguyen et al.
+(2024) criticise simulation-based benchmarking for favouring methods that share the
+simulator's assumptions; a DNA-derived yardstick is immune to that criticism in a way no
+RNA method can be. It also gives the agreement test a second, independent rho — turning a
+single correlation into a replication.
+
+**Also worth considering:** Liu, Qian & Ma 2025 — DNA-methylation deconvolution of the
+brain-tumour microenvironment. Same orthogonality argument, and specifically about brain
+tumours.
+
+---
+
+## Tier 2.5 · Registration: what you may and may not do
+
+**You cannot edit or update a published OSF registration. That is the point of one.**
+A record revisable after seeing results proves nothing, which is exactly why yours is
+worth something.
+
+Withdrawing is worse than doing nothing: it leaves a public tombstone naming you and
+saying the registration was withdrawn, and a reader will assume something serious was
+wrong rather than "the stage count was off by one".
+
+So for anything that changes the registered plan — adding CDSeq or Scaden, adding the
+ABSOLUTE yardstick, changing the cell-size mechanism — there are three honest routes:
+
+| route | when it fits | cost |
+|---|---|---|
+| **Declared deviation** | Small additions reported separately and kept out of the primary correlation. | A paragraph in the methods. Nothing filed. |
+| **Exploratory** | Your registration already reserves this: *"Everything not named above is exploratory and labelled as such."* | Nothing. Already covered. |
+| **A second registration** | A materially different analysis — a second tissue, or a substantially expanded method set. | A new OSF record citing the first. The original stays. |
+
+**What I would do for each pending item:**
+
+- **CDSeq / Scaden** — declared deviation, reported outside the primary correlation, which
+  stays on the fifteen registered methods. Or fold into a second registration if the
+  second tissue happens anyway, since that needs one regardless.
+- **ABSOLUTE purity** — **no registration change needed.** It is already a registered
+  yardstick; `agreement.py` evaluates it and currently reports UNAVAILABLE. Supplying the
+  data executes the registered plan rather than departing from it.
+- **The cell-size fix** — declared deviation. The registered *intent* ("applied once") is
+  preserved; only the mechanism changes.
+- **The two 0.2 corrections** — published beside the record. Not a deviation at all, just
+  errata.
+
+**The order that matters:** do not file a second registration until the plan is settled.
+A second registration filed now, then amended again in a week, is worth less than one
+filed once when the method set and yardsticks are final.
 
 ---
 

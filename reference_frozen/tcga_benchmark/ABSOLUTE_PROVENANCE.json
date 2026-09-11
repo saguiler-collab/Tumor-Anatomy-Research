@@ -1,0 +1,19 @@
+{
+  "what": "ABSOLUTE tumour purity/ploidy master calls, PanCanAtlas. Yardstick 2 in Anatomy_Test.md \u2014 a DNA-derived measurement of the same quantity the Tumor column estimates from RNA, so it shares no failure mode with any method under test.",
+  "file": "TCGA_mastercalls.abs_tables_JSedit.fixed.txt",
+  "sha256": "f430a975433d82e0098d7405619d4f12a0c765fcd97e7d63cc9b1de7f2d763cd",
+  "bytes": 901812,
+  "source": "https://gdc.cancer.gov/about-data/publications/pancanatlas",
+  "gdc_file_uuid": "4f277128-f793-4354-a13d-30cc7fe9f6b5",
+  "downloaded_utc": "2026-09-11",
+  "n_rows": 10786,
+  "purity_column": "'Cancer DNA fraction' is the column the predecessor project's flowchart requires; 'purity' is also present and is ABSOLUTE's own purity estimate. Both are non-null for the same 156 samples.",
+  "overlap_with_tcga_gbm_bulk": {
+    "n_bulk_samples": 175,
+    "n_with_purity": 156,
+    "predecessor_reported_n": 120,
+    "bulk_source": "TCGA-GBM.star_counts.tsv in the predecessor project, which is read-only from here"
+  },
+  "status": "File obtained. The yardstick is NOT yet computable: it requires all 15 methods to be run on the TCGA-GBM cohort and each method's Tumor fraction correlated against purity. Until then load_absolute_purity() correctly reports UNAVAILABLE.",
+  "local_path": "data/raw/tcga/TCGA_mastercalls.abs_tables_JSedit.fixed.txt (gitignored; re-download from the UUID above)"
+}
