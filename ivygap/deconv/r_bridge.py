@@ -131,13 +131,32 @@ def export_for_genes(ref_name: str, genes) -> tuple[Path, Path]:
         raise RBridgeError(
             f"none of the requested genes are in the cell-level reference {ref_name!r}")
 
-    # Key on the cells as well as the genes: two references can share a gene set and
-    # hold entirely different cells, and reusing one's counts for the other is exactly
-    # the mismatch the metadata comment above describes.
+    # Key on the gene list, the cell ids, AND THE VALUES.
+    #
+    # The values used to be absent from the key, which made this a cache that ignored the
+    # content it was caching. Re-registering the same cells and genes at a different
+    # scaling -- raw library sizes instead of 1e6 CPM, say -- produced an identical key and
+    # silently handed R the stale file. That is not a hypothetical: it is the mechanism the
+    # cell-size probe had to vary in order to measure anything, and it is the same shape as
+    # D10, where a re-measurement ran on a gene space nobody had recorded.
+    #
+    # Hashed in column chunks rather than through one `to_numpy().tobytes()`, because the
+    # production block is roughly 657 genes x 80,000 cells and a single materialised copy
+    # of that is several hundred megabytes on a machine this pipeline already pushes into
+    # swap. The hash is exact either way -- chunking changes only the peak memory.
     digest = hashlib.sha256()
     digest.update("\n".join(map(str, genes)).encode())
     digest.update(b"\x00")
     digest.update("\n".join(map(str, expression.columns)).encode())
+    digest.update(b"\x00")
+    _block_for_key = expression.loc[genes]
+    digest.update(str(_block_for_key.shape).encode())
+    digest.update(str(_block_for_key.to_numpy(dtype="float64", copy=False).dtype).encode())
+    _step = max(1, 4096)
+    for _i in range(0, _block_for_key.shape[1], _step):
+        chunk = _block_for_key.iloc[:, _i:_i + _step].to_numpy(dtype="float64")
+        digest.update(np.ascontiguousarray(chunk).tobytes())
+    del _block_for_key
     key = digest.hexdigest()[:16]
     counts_path = config.REFERENCE_DIR / f"sc_counts_{ref_name}_{key}.csv.gz"
     meta_path = config.REFERENCE_DIR / f"sc_meta_{ref_name}.csv"

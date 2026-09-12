@@ -181,7 +181,15 @@ def main() -> int:
     ap.add_argument("--methods", default="",
                     help="comma-separated subset; default is every available method")
     ap.add_argument("--no-r", action="store_true", help="force the all-Python path")
-    ap.add_argument("--out", default="results/cell_size_semantics.json")
+    ap.add_argument("--export-scale", choices=("normalized", "raw"), default="normalized",
+                    help="what the cell-consuming R packages receive. 'normalized' mirrors "
+                         "production (cells at 1e6 CPM, as build_from_h5ad returns them); "
+                         "'raw' gives them per-cell library sizes, which is what their "
+                         "published usage assumes. Only the EXPORT changes -- the reference "
+                         "profile is built the production way in both, so a package that "
+                         "moves between the two moved because of its own internal "
+                         "cell-size estimate and nothing else.")
+    ap.add_argument("--out", default="")
     ap.add_argument("--budget", type=int, default=1800, help="seconds per R method")
     args = ap.parse_args()
 
@@ -201,11 +209,21 @@ def main() -> int:
 
     from ivygap.deconv import r_bridge
     from ivygap.deconv.registry import build_methods
-    # The same normalised cells production exports, not the raw ones -- otherwise the R
-    # packages would build their own basis from a different scaling than the Python ones.
+    # WHAT THE CELL-CONSUMING PACKAGES SEE. This is the variable under test.
+    #
+    # Production hands them `build_from_h5ad`'s return value, which is normalised to 1e6
+    # CPM per cell. A package that estimates cell size from its single-cell input then
+    # measures every type's mean library size as identical, so its own conversion becomes
+    # the identity and it returns mRNA share -- whatever it does when given raw counts.
+    # `--export-scale raw` is the counterfactual.
     raw_totals = expr.sum(axis=0)
     norm = expr.div(raw_totals.replace(0.0, np.nan), axis=1).mul(1e6).fillna(0.0)
-    r_bridge.set_cell_source(ref.name, norm, meta)
+    exported = norm if args.export_scale == "normalized" else expr
+    print(f"  cell export handed to the R packages: {args.export_scale}"
+          + ("  (mirrors production)" if args.export_scale == "normalized"
+             else "  (counterfactual: published usage)"))
+    r_bridge.clear_cell_source(ref.name)
+    r_bridge.set_cell_source(ref.name, exported, meta)
 
     wanted = {m.strip() for m in args.methods.split(",") if m.strip()}
     methods = [m for m in build_methods(prefer_r=not args.no_r)
@@ -264,10 +282,18 @@ def main() -> int:
             "n_samples": int(bulk.shape[1]), "n_genes": int(bulk.shape[0]),
             "tolerance": TOL,
             "central_correction_applied": False,
+            "export_scale": args.export_scale,
+            "export_scale_meaning": (
+                "normalized = what production hands the R packages (1e6 CPM per cell, as "
+                "build_from_h5ad returns); raw = per-cell library sizes preserved, which "
+                "is what each package's published usage assumes. The reference PROFILE is "
+                "built the production way in both, so only a package's own internal "
+                "cell-size estimate can differ between them."),
         },
         "methods": rows,
     }
-    out = Path(args.out)
+    out = Path(args.out) if args.out else Path(
+        f"results/cell_size_semantics_{args.export_scale}.json")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2))
     print(f"\nwrote {out}")
