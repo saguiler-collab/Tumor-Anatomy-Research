@@ -244,3 +244,65 @@ whose contribution is platform correction. Any claim that S-mode is "less accura
 be qualified by what the yardstick can and cannot see.
 
 This is a limitation of the accuracy arm and should be stated as one.
+
+---
+
+## D6 · ACS cannot distinguish methods that disagree about composition by 20 points
+
+**Not a bug. A property of the design, and the most important limitation to state in the
+paper.** Found 2026-09-12 while auditing the ties.
+
+Four methods score **exactly** ACS 0.9846 — `nnls`, `svr`, `elastic_net`, `epic`. Their
+estimates are not close:
+
+| method | mean Tumor | mean Macrophage | mean Endothelial |
+|---|---|---|---|
+| svr | **0.590** | 0.078 | 0.142 |
+| nnls | 0.574 | 0.057 | 0.147 |
+| elastic_net | 0.494 | 0.070 | 0.160 |
+| epic | **0.395** | 0.073 | 0.157 |
+
+Mean absolute difference per sample, svr vs epic: **Tumor 0.206, Oligodendrocyte 0.125,
+Astrocyte 0.106.** Largest single-sample difference across the four: **0.72**.
+
+So the anatomic test declares four methods equally good while they disagree about what
+fraction of the tissue is cancer by twenty percentage points — a relative difference of
+about 50%.
+
+### Why this happens, and why it is not fixable by tuning
+
+ACS scores **order**, not magnitude. Every constraint asks "is X higher in structure A
+than in structure B", and a method can get every ordering right while being badly
+calibrated in absolute terms. Two methods that both put endothelium highest in MVP score
+identically whether one says 14% and the other says 30%.
+
+This is inherent to any ordinal criterion, and it is the honest cost of the thing that
+makes the design work at all: orderings are knowable from anatomy without ground truth,
+and magnitudes are not.
+
+### What it means for the study's claim
+
+The registered question is whether anatomic concordance can be used **to choose a
+deconvolution method**. This bounds the answer:
+
+- ACS **can** separate methods that get orderings wrong from methods that get them right —
+  the controls at 0.138 and 0.400 against a 0.969 median establish that, and it is a real
+  result.
+- ACS **cannot** choose between methods that order correctly but differ substantially in
+  composition. On this cohort that is six of fourteen methods.
+
+A paper that says "anatomy identifies the best method" would be wrong. One that says
+"anatomy separates methods that reproduce known biology from methods that do not, and
+cannot rank within that set" is supported.
+
+### This compounds the resolution ceiling, it is not the same as it
+
+The 66-value granularity (weighted denominator 65) explains why *scores* collide. This is
+the stronger statement: even where scores collide, the underlying *estimates* differ by
+amounts that would change any biological conclusion drawn from them. Reporting the tie
+groups is necessary but not sufficient — the composition spread within a tie group should
+be reported too.
+
+**Suggested for the paper:** a figure showing mean composition per method within the
+0.9846 tie group. It makes the limitation visible in one image and is more honest than a
+footnote.
