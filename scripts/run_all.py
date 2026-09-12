@@ -8,6 +8,13 @@ run_all.py — the whole pipeline, in the only order that is scientifically vali
     4. anatomic    deconvolve real tissue, score the frozen biology claims  <- headline
     5. survival    out-of-fold prognosis, with the power verdict attached
     6. release     assemble the public bundle
+    7. write-up    regenerate RESULTS.md and the figures, BEFORE archiving
+
+Stage 7 exists because of an ordering fault, not for tidiness. The archive copies
+RESULTS.md, so archiving before regenerating freezes a stale write-up into the citable
+snapshot. The 2026-09-10T2039 archive carries a RESULTS.md dated a day earlier that says
+UNREGISTERED while its own artefact says REGISTERED — both archived, both INTACT, and
+disagreeing. See `results_archive/ERRATA.md`.
 
 Stage 3 must precede stage 4: the method is chosen against known truth, and the frozen
 anatomic claims then validate that choice. Choosing the method that best reproduces the
@@ -46,6 +53,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 import traceback
 from pathlib import Path
@@ -523,6 +531,34 @@ def main() -> int:
     # sharing paths, once to the test suite writing into the real tree — and both fixes
     # prevent a repeat of their own mechanism without making a finished run durable.
     # This does.
+    # ---- stage 7: regenerate the write-up, BEFORE archiving -----------------
+    # Ordering is the whole point. The archive copies RESULTS.md, so archiving before
+    # regenerating freezes a stale write-up into the citable snapshot. That happened: the
+    # 2026-09-10T2039 archive carries a RESULTS.md dated 2026-09-09 saying UNREGISTERED
+    # while its own registration artefact says REGISTERED. Both were archived, INTACT, and
+    # disagreeing. See results_archive/ERRATA.md.
+    if not args.synthetic:
+        _banner(7, "REGENERATE THE WRITE-UP")
+        here = Path(__file__).resolve().parent
+        for label, cmd in (
+            ("RESULTS.md", [sys.executable, str(here / "summarize_results.py"), "--write"]),
+            ("figures/plates.html", [sys.executable, str(here / "build_plates.py")]),
+        ):
+            try:
+                r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+                if r.returncode == 0:
+                    print(f"  regenerated {label}")
+                else:
+                    # Not fatal: the run's measurements are already on disk and archiving
+                    # them is more important than the prose. But it is reported loudly,
+                    # because an un-regenerated write-up is exactly the fault above.
+                    print(f"  WARNING: {label} NOT regenerated (exit {r.returncode}): "
+                          f"{(r.stderr or r.stdout).strip()[:300]}")
+                    print(f"  the archive will carry a STALE {label}. Regenerate and "
+                          f"note it in results_archive/ERRATA.md.")
+            except Exception as exc:                         # noqa: BLE001
+                print(f"  WARNING: {label} NOT regenerated: {type(exc).__name__}: {exc}")
+
     if not args.synthetic:
         try:
             from scripts.archive_run import archive
