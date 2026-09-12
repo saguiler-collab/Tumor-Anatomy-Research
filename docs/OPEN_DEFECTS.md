@@ -10,9 +10,9 @@ keeping, marked RESOLVED at the top.
 
 | | status |
 |---|---|
-| **D1** cell-size correction | RESOLVED — not a double correction; a substituted one, now declared |
+| **D1** cell-size correction | **OPEN** — substitution is declared; whether a residual second conversion remains is unmeasured (three revisions, read the whole entry) |
 | **D2** SCDC ENSEMBLE degenerate | open, disclosed in the leaderboard |
-| **D3** SCDC `ct.cell.size` | RESOLVED by D1's measurement — not passing it is correct |
+| **D3** SCDC `ct.cell.size` | reopened with D1 — depends on it |
 | **D4** unbounded Python fallback | open, operational |
 | **D5** yardstick cannot reward platform correction | open, design limit |
 | **D6** ACS cannot separate 20-point composition differences | open, design limit |
@@ -25,15 +25,21 @@ keeping, marked RESOLVED at the top.
 
 ## D1 · Cell-size correction — investigated as a DOUBLE correction, measured to be a SUBSTITUTED one
 
-> **RESOLUTION, 2026-09-12.** The heading's original claim — "applied twice to some R
-> methods" — is **measured to be false in production** for MuSiC, SCDC and EPIC, and
-> **unmeasured** for Bisque and BayesPrism. The correction is applied **once**. What is real
-> is that the harness substitutes this project's cell-size factors for the packages' own, by
-> normalising cells to 1e6 before export, and that this was undeclared. It is now declared.
+> **STATUS, 2026-09-12 (third revision today — read all of it).** This entry has now been
+> wrong in both directions, and the sequence matters more than any one claim in it:
 >
-> The entry is kept in full, in order, because the reasoning went wrong twice in opposite
-> directions and the record of that is worth more than a tidy summary. Read to the end
-> before using any number in it. Jump to **"MEASURED 2026-09-12"** for the conclusion.
+> 1. It first said the double correction **cannot change ACS**. Wrong; retracted.
+> 2. It then said the double correction **happens and every leaderboard number is
+>    provisional**. Asserted from prose with no artefact.
+> 3. A measured probe then said the packages return mRNA share, so the correction is
+>    applied **once** and D1 is resolved. **That is withdrawn too** — the probe exported its
+>    full gene space, and production exports a marker subset. The distinction turns out to
+>    decide the answer.
+>
+> **Current state: GENUINELY OPEN, and narrowed to one measurable question** — see
+> "WITHDRAWN: the resolution was premature" below. What is settled is that the harness
+> *substitutes* its cell-size handling for the packages', and that this was undeclared; it is
+> now declared, with the uncertainty declared alongside it.
 
 **Severity as first recorded: high.** It affects the accuracy numbers that the primary result is computed
 from, and one of the methods involved is the top-ranked one.
@@ -246,6 +252,61 @@ names outside its own built-in roster.
 the truth.** Taking MuSiC's 0.7501, dividing by the cell-size factors (3000, 1000) and
 renormalising gives **0.5001** against a true cell fraction of **0.5000**.
 
+### WITHDRAWN: the resolution above was premature — measured 2026-09-12, same day
+
+**The probe exported its full gene space. Production exports a marker subset. That
+difference decides the answer, and it invalidates the inference above.**
+
+`run_r_method` calls `export_for_genes(ref_name, list(data.bulk.index))`, so the R packages
+receive only the genes in the bulk — 657 of roughly 27,625 in the cell source. Cells are
+normalised to 1e6 **across all genes**; they are emphatically not equal across a subset of
+them, because cell types differ in how much of their transcriptome falls inside a marker
+panel.
+
+Measured on the real atlas export that is on disk (`sc_counts_gbmap_c3d46536…`, 1,591 genes
+x 15,311 cells, CPM-normalised then subset — the production construction):
+
+| cell type | mean library size over the exported subset | relative |
+|---|---|---|
+| Oligodendrocyte | 65,003 | 2.17 |
+| Astrocyte | 61,263 | 2.04 |
+| Macrophage_Microglia | 60,253 | 2.01 |
+| NK_cell | 51,646 | 1.72 |
+| Endothelial | 51,140 | 1.70 |
+| T_cell | 43,705 | 1.46 |
+| B_cell | 40,871 | 1.36 |
+| **Tumor** | **29,999** | **1.00** |
+
+**Spread 2.17x — not flat.** `music_basis` computes `M.S` from exactly this quantity, so
+MuSiC's own cell-size estimate in production is *not* the identity. It is a real conversion,
+applied with factors that are an artefact of which genes the marker panel happens to
+contain, and it is then followed by this project's central conversion.
+
+So the probe's clean 0.7501 shows only that MuSiC returns mRNA share **when its input gives
+it no per-type variation to find**. Production gives it 2.17x of variation. The claim that
+the correction is applied once does not follow, and the earlier "the leaderboard is not
+provisional for this reason" is withdrawn with it.
+
+**Why this was caught.** The probe was built symmetric — every cell type owning an equal
+block of genes with identical concentration — so restricting it to a subset preserved
+flatness by construction. Real cell types are not symmetric: a tumour cell puts 30,000 of
+its million into the marker space while an oligodendrocyte puts 65,000. A synthetic probe
+that mirrors production in the variable under test but not in the structure that modulates
+it will produce a confident wrong answer, which is what happened here.
+
+### The one experiment that settles it
+
+Run MuSiC on a probe whose exported **subset** gives per-type library sizes spanning
+roughly 2x while the true cell-size ratio stays 3x, and see whether its answer moves off the
+mRNA value. `scripts/verify_cell_size_semantics.py --bulk-gene-fraction` now narrows the
+bulk and export the way production does; what it still needs is an asymmetric subset, since
+a balanced one cannot produce the non-flatness that matters.
+
+Until that is measured, this project must say: **the packages' own cell-size handling is
+substituted for by the harness in a way that is measured to be incomplete, and whether a
+residual second conversion is applied is not known.** That is a weaker and more awkward
+statement than either previous version, and it is the one the evidence supports.
+
 ### What this means for the leaderboard
 
 **The "15 of 16 methods change ACS, 7 of 14 ranks move" measurement above describes a
@@ -365,16 +426,18 @@ project's opening argument criticises.
 `R/run_scdc.R` does not pass `ct.cell.size`, so SCDC computes library sizes from the data
 rather than using `reference_frozen/cell_size_factors.csv`.
 
-**RESOLVED 2026-09-12 — not passing it is correct here.** D1's measurement settles the
-condition this entry was waiting on. SCDC derives `ct.cell.size` from the cells it is given,
-and production gives it cells normalised to 1e6 each, so what it derives is flat and its own
-conversion is the identity: measured, SCDC returns **0.7501** on a probe whose true mRNA
-fraction is 0.7500. Its output is therefore an mRNA share, it is corrected once and
-centrally, and passing `ct.cell.size` would make that correction the second one — the exact
-error D1 was wrongly believed to contain.
+**STILL OPEN — a resolution was written and withdrawn the same day.** It said D1's
+measurement settled this, because SCDC derives `ct.cell.size` from the cells it is given and
+production normalises them, so what it derives would be flat. That reasoning holds only for
+an export spanning the full gene space. Production exports a marker subset, over which
+per-type library sizes are measured to span 2.17x on the real atlas, so what SCDC derives is
+**not** flat and its conversion is not the identity.
 
-With a raw export SCDC returns 0.5336, i.e. it does convert partly when it can. That is why
-this entry could not be resolved from the source alone and needed the measurement.
+What is measured: SCDC returns 0.7501 on a full-gene-space export and 0.5336 on a raw one,
+so it does convert when its input gives it per-type variation to find. Production gives it
+some. Whether passing `ct.cell.size` explicitly would be the second conversion or a
+replacement for a partial one is exactly what D1's remaining experiment decides. Resolve D1
+first — genuinely, this time.
 
 **What remains is the declaration, not the code.** The substitution — our factors instead of
 the package's own — is now listed in `DECLARED_DEVIATIONS` for `scdc` and `scdc_ensemble`

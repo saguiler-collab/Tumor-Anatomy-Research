@@ -181,6 +181,16 @@ def main() -> int:
     ap.add_argument("--methods", default="",
                     help="comma-separated subset; default is every available method")
     ap.add_argument("--no-r", action="store_true", help="force the all-Python path")
+    ap.add_argument("--bulk-gene-fraction", type=float, default=1.0,
+                    help="fraction of the reference's genes that form the BULK gene space, "
+                         "and hence the export. Production uses 657 of ~27,625 (~2.4%%): the "
+                         "cell source is the full transcriptome and only the bulk's genes "
+                         "are exported to R. This matters because per-cell totals are 1e6 "
+                         "across ALL genes but NOT across a subset, so a package estimating "
+                         "cell size from the exported subset may see unequal library sizes "
+                         "even though the full matrix was normalised. 1.0 exports "
+                         "everything, which is what the first version of this probe did and "
+                         "why it did not test production's actual condition.")
     ap.add_argument("--export-scale", choices=("normalized", "raw"), default="normalized",
                     help="what the cell-consuming R packages receive. 'normalized' mirrors "
                          "production (cells at 1e6 CPM, as build_from_h5ad returns them); "
@@ -196,6 +206,26 @@ def main() -> int:
     print("building the probe: two types, "
           f"{SIZE_RATIO:g}x mRNA ratio, mixed 50/50 by cell count")
     ref, expr, meta, bulk, manifest, truth = build_probe()
+
+    # Narrow the BULK (and so the reference, and so the export) to a subset of the cell
+    # source's genes, the way production does. `cell_size` stays a full-transcriptome
+    # quantity, because build_from_h5ad captures raw_totals before any gene subsetting.
+    if args.bulk_gene_fraction < 1.0:
+        from ivygap import config as _cfg
+        roster = list(_cfg.CELL_TYPES)
+        per_type = max(1, int(round(len(bulk.index) * args.bulk_gene_fraction
+                                    / len(roster))))
+        # Take the leading genes of every type's marker block, so all eight types stay
+        # represented -- production's subset is "top N per cell type plus markers", not a
+        # random draw, and a random draw here would test a different thing.
+        block = len(bulk.index) // len(roster)
+        keep = [g for i in range(len(roster))
+                for g in bulk.index[i * block:i * block + per_type]]
+        bulk = bulk.loc[keep]
+        ref = ref.subset_genes(keep)
+        print(f"  bulk/export gene space narrowed to {len(keep)} of "
+              f"{len(expr.index)} reference genes "
+              f"({len(keep) / len(expr.index):.1%}; production is ~2.4%)")
     cs = ref.cell_size
     print(f"  reference cell_size: {BIG}={cs[BIG]:.1f}  {SMALL}={cs[SMALL]:.1f}  "
           f"ratio {cs[BIG] / cs[SMALL]:.3f} (target {SIZE_RATIO:g})")
@@ -283,6 +313,8 @@ def main() -> int:
             "tolerance": TOL,
             "central_correction_applied": False,
             "export_scale": args.export_scale,
+            "bulk_gene_fraction": args.bulk_gene_fraction,
+            "n_reference_genes": int(len(expr.index)),
             "export_scale_meaning": (
                 "normalized = what production hands the R packages (1e6 CPM per cell, as "
                 "build_from_h5ad returns); raw = per-cell library sizes preserved, which "
@@ -292,8 +324,11 @@ def main() -> int:
         },
         "methods": rows,
     }
+    suffix = args.export_scale
+    if args.bulk_gene_fraction < 1.0:
+        suffix += f"_subset{args.bulk_gene_fraction:g}"
     out = Path(args.out) if args.out else Path(
-        f"results/cell_size_semantics_{args.export_scale}.json")
+        f"results/cell_size_semantics_{suffix}.json")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2))
     print(f"\nwrote {out}")

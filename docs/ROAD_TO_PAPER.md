@@ -24,9 +24,26 @@ method. That is Tier 2.
 
 These are not improvements. Each one prevents a statement in the paper from being wrong.
 
-### 0.1 The cell-size correction · **RESOLVED 2026-09-12 — it was not a double correction**
+### 0.1 The cell-size correction · **STILL BLOCKING — narrowed to one experiment**
 
-**Previous status: BLOCKING, "every leaderboard number is provisional". That is withdrawn.**
+> **This entry was marked RESOLVED earlier on 2026-09-12 and the resolution was withdrawn
+> the same day.** The probe that resolved it exported its full gene space; production
+> exports a marker subset, and on the real atlas per-type library sizes over such a subset
+> span **2.17x** (Tumor 29,999 to Oligodendrocyte 65,003). `music_basis` computes its `M.S`
+> from exactly that quantity, so MuSiC's own conversion is *not* neutralised in production
+> and the "applied once" conclusion does not follow. See `docs/OPEN_DEFECTS.md` D1, which
+> records all three revisions in order.
+>
+> **What is now settled and no longer needs work:** the five-package table is a reproducible
+> script rather than prose; the packages demonstrably convert cell size when their input lets
+> them estimate it (MuSiC 0.5001, SCDC 0.5336 on a raw export); the substitution the harness
+> performs is declared in `method_configs.json` for all five, with its uncertainty declared
+> alongside. **What remains is one measurement**, described at the end of D1: run MuSiC on a
+> probe whose exported subset gives per-type library sizes spanning ~2x while the true
+> cell-size ratio stays 3x, and see whether its answer moves off the mRNA value.
+>
+> Until then the leaderboard's status is genuinely unknown on this point — neither
+> "provisional" nor "fine".
 
 The five-package table this entry rested on existed only as prose in two markdown files,
 measured once by a script that was never saved. It is now
