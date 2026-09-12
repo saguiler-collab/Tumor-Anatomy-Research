@@ -77,6 +77,20 @@ def main() -> int:
     if args.out is None:
         args.out = f"results/{M}_remeasured.json"
 
+    # Fail fast, before the multi-GB atlas load. A re-measurement that cannot be compared
+    # is not worth an hour of CPU, and finding that out after the hour is worse.
+    genes_path = config.BENCH_DIR / "signature_genes.json"
+    if not genes_path.exists():
+        print(f"BLOCKED: {genes_path} does not exist.\n\n"
+              f"The leaderboard's gene space is not recoverable from the artefacts on "
+              f"disk — only its COUNT was ever recorded. Running anyway would measure a "
+              f"different gene space than every method it would be compared against, "
+              f"which is exactly what produced the 1,591-vs-657 mismatch in the DWLS and "
+              f"BayesPrism re-measurements (docs/OPEN_DEFECTS.md D10).\n\n"
+              f"To resume: complete one full `python scripts/run_all.py`, which now "
+              f"writes the gene list, then re-run this script.")
+        return 2
+
     print("building the anatomic cohort and the cell-level reference...")
     expr, meta = load_cached()
     anat = [s for s in expr.columns
@@ -84,9 +98,39 @@ def main() -> int:
             and meta.loc[s, "structure"] in config.PRIMARY_STRUCTURES]
 
     ref, cells, cmeta = build_from_h5ad(config.REFERENCE_DIR / "gbmap_core.h5ad")
-    genes = [g for g in ref.profile.index if g in set(expr.index)]
-    from ivygap.data.reference import frozen_gene_space
-    genes, prov = frozen_gene_space(ref, expr.index)
+
+    # THE GENE SPACE MUST BE THE LEADERBOARD'S, OR THE NUMBER IS NOT COMPARABLE.
+    #
+    # This used to call `frozen_gene_space`, which returns the FALLBACK space the pipeline
+    # uses only when it has no cell-level reference — 1,591 genes. The leaderboard's 16
+    # methods all ran on the benchmark's 657-gene marker subset. Both re-measurements made
+    # before 2026-09-12 therefore ran on 1,591 genes and were reported "alongside" a
+    # leaderboard built on 657, with the DWLS report printing a direct comparison to the
+    # reimplementation's 0.7385 as though only the implementation differed. It did not.
+    #
+    # The run now persists its exact gene list (`benchmark/signature_genes.json`). If that
+    # file is absent this script ABORTS: a re-measurement on a gene space nobody can
+    # reproduce is worse than no re-measurement, because it looks like evidence.
+    gene_rec = json.loads(genes_path.read_text())
+    genes = [g for g in gene_rec["genes"] if g in set(expr.index)]
+    if len(genes) != len(gene_rec["genes"]):
+        print(f"BLOCKED: {len(gene_rec['genes']) - len(genes)} of the recorded "
+              f"{len(gene_rec['genes'])} genes are absent from the loaded bulk. The "
+              f"recorded gene space does not match this bulk matrix, so the comparison "
+              f"would not be like-for-like. Nothing is imputed and nothing is dropped "
+              f"silently.")
+        return 2
+    prov = {"source": str(genes_path.relative_to(config.PROJECT_ROOT)),
+            "n_genes": len(genes),
+            "sha256": config.sha256_strings(genes),
+            "matches_recorded_hash": config.sha256_strings(genes) == gene_rec.get("sha256"),
+            "strategy": "the leaderboard's own gene space, read from the run artefact"}
+    if not prov["matches_recorded_hash"]:
+        print("BLOCKED: the gene list reproduces a different hash than the artefact "
+              "records. Do not report a comparison built on it.")
+        return 2
+    print(f"  gene space: {len(genes)} genes, hash {prov['sha256'][:16]}… "
+          f"(the leaderboard's own)")
 
     bulk = expr.loc[genes, anat]
     bulk = bulk / bulk.sum(axis=0) * 1e6
@@ -118,6 +162,7 @@ def main() -> int:
         "pipeline_budget_seconds": r_bridge.timeout_for("dwls"),
         "elapsed_seconds": round(elapsed, 1),
         "n_samples": int(bulk.shape[1]), "n_genes": int(bulk.shape[0]),
+        "gene_space": prov,
         "failed": failed,
     }
 

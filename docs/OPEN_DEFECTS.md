@@ -569,3 +569,80 @@ one, never as the provenance claim.
 Have the gate prefer `run_started_utc` from the run's own report when present, fall back
 to mtimes with the vacuity stated in the verdict text, and refuse to report PASS from
 mtimes alone on a tree whose files all share a copy timestamp.
+
+
+---
+
+## D10 · Both single-method re-measurements ran on a different gene space than the leaderboard they were compared against
+
+**Status: the false comparisons are WITHDRAWN and the mechanism is FIXED. The
+re-measurements themselves must be redone. Found 2026-09-12.**
+
+### What happened
+
+| | ACS | genes |
+|---|---|---|
+| every one of the 16 methods on the ACS leaderboard | — | **657** |
+| genuine `R:DWLS` re-measurement | 0.7077 | **1,591** |
+| genuine `R:BayesPrism` re-measurement | 0.8923 | **1,591** |
+
+`scripts/remeasure_method.py` built its gene space with `frozen_gene_space()`. That is the
+space `run_all.py` uses **only in its fallback branch**, when no cell-level reference is
+available. The real path uses the benchmark's marker subset — `bench["genes"]` intersected
+with the bulk — which is 657 genes. The two differ by a factor of 2.4.
+
+Both re-measurements were then reported beside the leaderboard as though the only
+difference were the implementation. The DWLS report printed "reimplementation in the
+confirmatory run: ACS 0.7385" directly beneath its own 0.7077, and three documents drew
+conclusions from the gap:
+
+- `README.md`: the genuine package scores "*lower* than the reimplementation's 0.738, and
+  still last", and "Running the real package shows the disagreement is genuine rather than
+  an artefact of substituted software".
+- `docs/RELATED_WORK.md`: "the disagreement with Avila Cobos survives the obvious
+  explanation".
+- `docs/ROAD_TO_PAPER.md` Tier 0.3, marked **DONE**.
+
+**None of it follows.** All three are withdrawn in place.
+
+### Why nothing caught it
+
+Only the gene **count** was ever persisted — `n_signature_genes: 657` in
+`method_selection_decision.json`, `n_genes: "657"` in the equal-footing certificate. The
+gene *list* existed only in memory during a run. So a re-measurement had no artefact to
+read, `frozen_gene_space()` looked like a reasonable way to rebuild "the" gene space, and
+the mismatch was invisible to every check in the project. The equal-footing machinery
+compares methods *within* a run and had no reason to look across runs.
+
+This is the same shape as D9: a check that was structurally unable to see the thing it
+was supposed to guarantee.
+
+### Fixed
+
+1. `run_all.py` writes `results/benchmark/signature_genes.json` — the full ordered gene
+   list, its count, and an order-sensitive `sha256` (`config.sha256_strings`, added for
+   this; order matters because two methods handed the same genes in a different column
+   order have not received identical inputs).
+2. `remeasure_method.py` reads that file and **aborts** if it is absent, if any recorded
+   gene is missing from the bulk, or if the list does not reproduce the recorded hash. It
+   never substitutes a gene space. The check runs before the multi-GB atlas load, so it
+   fails in about two seconds rather than after an hour of CPU.
+3. `results/dwls_remeasured.json` and `results/bayesprism_remeasured.json` carry a
+   `COMPARABILITY: NOT COMPARABLE` header stating what each still establishes and what it
+   does not.
+4. The withdrawals are written into README, `RELATED_WORK.md` and Tier 0.3, which is
+   reopened.
+
+### What still stands from the re-measurements
+
+Both published packages **run to completion** on this cohort, and both need roughly twice
+the pipeline's 2,400 s budget — DWLS 3,873 s, BayesPrism 4,689 s. Those are real
+measurements and they explain the fallbacks. Nothing about the *scores* is usable yet.
+
+### What closes it
+
+One full `run_all.py` (which writes the gene list), then re-run both re-measurements. The
+two must not run concurrently on this machine: three BayesPrism Gibbs workers at ~900 MB
+each already drive it into swap. Only then can the question the re-measurement was built
+to answer — does genuine DWLS beat its reimplementation, and does the Avila Cobos
+disagreement survive — be answered at all.

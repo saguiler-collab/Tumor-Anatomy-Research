@@ -82,17 +82,29 @@ budget in both anatomic stages — so the comparison was initially unresolvable.
 with a 4-hour budget. It completed in **3,873 s (1.08 h)**, above the pipeline budget and
 well inside the new one.
 
-| | ACS | 95% CI | pairs | null_p |
-|---|---|---|---|---|
-| **genuine `R:DWLS`** | **0.7077** | [0.576, 0.864] | 57 | 0.0001 |
-| Python reimplementation | 0.7385 | — | 57 | 0.0001 |
+| | ACS | 95% CI | pairs | null_p | genes |
+|---|---|---|---|---|---|
+| **genuine `R:DWLS`** | **0.7077** | [0.576, 0.864] | 57 | 0.0001 | **1,591** |
+| Python reimplementation | 0.7385 | — | 57 | 0.0001 | **657** |
 
-The genuine package scores **lower** than the reimplementation, and stays last. The
-re-measurement was committed to in advance to report whatever it found, and it went
-against the convenient direction.
+> **CORRECTION, 2026-09-12 — these two rows are not comparable, and the comparison this
+> section drew from them is withdrawn.** The re-measurement ran on 1,591 genes; the
+> leaderboard ran on 657. `scripts/remeasure_method.py` was reading the gene space the
+> pipeline uses only as a *fallback*, and only the gene COUNT had ever been persisted, so
+> nothing caught it. This section previously concluded "the genuine package scores lower
+> than the reimplementation, and stays last" and that **the disagreement with Avila Cobos
+> survives the obvious explanation**. Neither follows from a 2.4-fold difference in gene
+> space. See `docs/OPEN_DEFECTS.md` D10.
+>
+> The re-measurement's commitment to report whatever it found still stands, and is why
+> this correction is here rather than absent. What it established is that the genuine
+> package completes in 3,873 s against a 2,400 s pipeline budget — a real measurement, and
+> the reason for the fallback.
 
-So the disagreement with Avila Cobos survives the obvious explanation. Two substantive
-readings remain, and they are not exclusive:
+So **whether the disagreement with Avila Cobos survives the substituted-software
+explanation is still open.** The readings below were written when it looked settled; they
+remain the candidate explanations to test once a comparable measurement exists, and neither
+is evidence today. They are not exclusive:
 
 **DWLS is built for rare cell types.** Its dampening suppresses the dominance of highly
 expressed genes belonging to abundant populations — the regime where a rare type would
@@ -109,8 +121,12 @@ the distinction this study exists to examine.
 The leaderboard row still carries the reimplementation, because that is what the
 archived confirmatory run produced and the archive stands as recorded. The genuine
 measurement is reported **alongside** it in `results/dwls_remeasured.json`, never
-substituted in. Any statement about DWLS in the paper should quote 0.7077 and say which
-software produced it.
+substituted in — and that file now carries a `COMPARABILITY: NOT COMPARABLE` header.
+
+**Any statement about DWLS in the paper must name the software AND the gene space.**
+Quoting 0.7077 beside 0.7385 without both is the error this section made. The same applies
+to BayesPrism, re-measured at 0.8923 on the same 1,591-gene space against a leaderboard row
+of 0.8769 on 657.
 
 A second, independent factor: DWLS is built for **rare** cell types, damping the
 dominance of highly expressed genes belonging to abundant populations. This roster is

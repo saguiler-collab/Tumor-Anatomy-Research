@@ -48,8 +48,18 @@ ROOT = Path(__file__).resolve().parent.parent
 #: Values a method is legitimately allowed to show besides its two leaderboard entries,
 #: each with the reason it exists. A method may not be added here to silence a mismatch.
 DECLARED_REMEASUREMENTS = {
-    "dwls": {0.708: "the genuine DWLS R package, unbounded budget (scripts/remeasure_method.py)",
+    # A re-measurement listed here is NOT thereby comparable to the leaderboard. Both
+    # values below were measured on 1,591 genes against a leaderboard built on 657
+    # (docs/OPEN_DEFECTS.md D10), so a document may print them only alongside the gene
+    # space. This checker verifies a number exists in an artefact; it cannot verify that
+    # the sentence around it is fair, and it must not be read as blessing the comparison.
+    "dwls": {0.7077: "genuine DWLS R package, 4 h budget, 1,591 genes — NOT comparable "
+                     "to the 657-gene leaderboard (D10)",
+             0.708: "the same value, rounded to 3 dp",
              0.738: "the Python reimplementation, as run in the confirmatory run"},
+    "bayesprism": {0.8923: "genuine BayesPrism R package, 4 h budget, 1,591 genes — NOT "
+                           "comparable to the 657-gene leaderboard (D10)",
+                   0.892: "the same value, rounded to 3 dp"},
 }
 
 SKIP = ("/.git/", "/node_modules/", "/pipeline_packages/",

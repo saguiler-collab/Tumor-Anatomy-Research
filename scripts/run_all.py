@@ -296,6 +296,28 @@ def main() -> int:
         genes = [g for g in bench["genes"] if g in bulk.index]
         reference = bench["reference"].subset_genes(genes)
 
+        # PERSIST THE ACTUAL GENE LIST, not just its count.
+        #
+        # Only `n_signature_genes: 657` was ever recorded, never which 657. A
+        # single-method re-measurement therefore had no way to reproduce this gene space,
+        # and `scripts/remeasure_method.py` silently fell through to `frozen_gene_space`
+        # — 1,591 genes. Both re-measurements to date ran on 1,591 while every leaderboard
+        # method ran on 657, and their ACS was reported "alongside" the leaderboard as
+        # though only the implementation differed. Equal footing is the one thing this
+        # project cannot be sloppy about, and a count is not a gene space.
+        (config.BENCH_DIR / "signature_genes.json").write_text(json.dumps({
+            "what_this_is": ("The exact gene space every method in this run received. "
+                             "Written so a single-method re-measurement can reproduce it "
+                             "rather than approximate it — the count alone cannot."),
+            "n_genes": len(genes),
+            "selected_from": {"n_bench_genes": len(bench["genes"]),
+                              "n_bulk_genes": int(len(bulk.index))},
+            "sha256": config.sha256_strings(genes),
+            "genes": list(genes),
+        }, indent=2))
+        print(f"gene space persisted: {len(genes)} genes -> "
+              f"{(config.BENCH_DIR / 'signature_genes.json').name}")
+
         # EQUAL FOOTING ACROSS THE R BOUNDARY.
         #
         # `bench["reference"]` is built from TRAINING donors only. The Python methods

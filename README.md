@@ -259,7 +259,7 @@ so the leaderboard means something.
 | Bisque | 0.923 | [0.866, 0.983] | R:BisqueRNA |
 | BayesPrism | 0.877 | [0.786, 0.968] | reimplementation |
 | Bayesian / Hierarchical | 0.769 | [0.627, 0.921] | this project |
-| DWLS | 0.738 | [0.600, 0.867] | reimplementation — **the genuine R package measures 0.708**, see below |
+| DWLS | 0.738 | [0.600, 0.867] | reimplementation — the genuine R package was measured separately but **on a different gene space**, see below |
 | *control_random* | *0.400* | | |
 | *control_shuffled_signature* | *0.138* | | |
 | quanTIseq | 0.600 | [0.333, 0.882] | **not ranked** — partial coverage |
@@ -284,19 +284,46 @@ only 66 distinct values.
 So the correct claim is *"anatomy separates good methods from bad ones"*, not *"anatomy
 identifies the best method"*. The second sentence is not supported and is not made.
 
-### One method needed measuring twice
+### Two methods needed measuring twice — and the re-measurement is not yet comparable
 
-DWLS exceeded its wall-clock budget in the confirmatory run and fell back to a Python
-reimplementation, so the table above is not the published package. It was re-measured
-separately with a four-hour budget: the **genuine R package scores 0.7077**
-[0.576, 0.864], completing in 3,873 s — *lower* than the reimplementation's 0.738, and
-still last.
+DWLS and BayesPrism both exceeded their wall-clock budgets in the confirmatory run and
+fell back to Python reimplementations, so neither row above is the published package. Each
+was re-measured separately with a four-hour budget, and both genuine packages completed:
+
+| method | genuine R package | completed in | pipeline budget |
+|---|---|---|---|
+| `R:DWLS` | ACS 0.7077 [0.576, 0.864] | 3,873 s | 2,400 s |
+| `R:BayesPrism` | ACS 0.8923 [0.800, 0.972] | 4,689 s | 2,400 s |
+
+> **Neither number may be compared with the table above.** Found 2026-09-12: both
+> re-measurements ran on **1,591 genes**, while all 16 methods in the leaderboard ran on
+> the benchmark's **657-gene** marker subset. `scripts/remeasure_method.py` was reading the
+> gene space the pipeline uses only as a *fallback*. A 2.4-fold difference in gene space is
+> not a detail, so the gap between 0.7077 and the reimplementation's 0.738 is not
+> attributable to the implementation, and the earlier claim here that genuine DWLS scored
+> "*lower* … and still last" is withdrawn — it was not measured on the same footing.
+
+**What the re-measurements do establish.** Both published packages run to completion on
+this cohort, and both need roughly twice the pipeline's 2,400 s budget — which is why they
+fell back, and it is a measurement rather than a guess.
+
+**What closes it.** The pipeline now persists its exact gene list
+(`results/benchmark/signature_genes.json`); before, only the count was recorded, which is
+why the mismatch was invisible. `remeasure_method.py` now aborts unless that file exists
+and its hash matches, rather than silently substituting a different gene space. One full
+`run_all.py` followed by the two re-measurements makes them comparable. See
+`docs/OPEN_DEFECTS.md` D10.
 
 That matters beyond bookkeeping. Avila Cobos et al. (2020) rank DWLS **best** among
-methods that use a single-cell reference. Running the real package shows the disagreement
-is genuine rather than an artefact of substituted software — and the likeliest reason is
-that DWLS is built to stop abundant populations swamping rare ones, while this roster is
-50–60% tumour cells. See `docs/RELATED_WORK.md`.
+methods that use a single-cell reference, and this study ranks it last. Running the real
+package was meant to settle whether that disagreement is genuine or an artefact of
+substituted software. **It does not settle it yet**, because the gene space differed: the
+question the re-measurement was built to answer is still open, and saying so is the only
+honest position until one comparable run exists.
+
+The hypothesis for the disagreement is unchanged and independent of this: DWLS is built to
+stop abundant populations swamping rare ones, while this roster is 50–60% tumour cells. It
+remains a hypothesis. See `docs/RELATED_WORK.md`.
 
 ---
 

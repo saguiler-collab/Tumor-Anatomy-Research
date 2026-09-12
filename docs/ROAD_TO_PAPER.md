@@ -101,14 +101,44 @@ The registration is permanent and correct not to edit. Two statements in it are 
 phrased as a correction *beside* the registration. Do not amend the OSF record. A
 registration with a published correction is stronger than one nobody checked.
 
-### 0.3 Settle how DWLS is reported · **DONE 2026-09-10**
+### 0.3 Settle how DWLS and BayesPrism are reported · **REOPENED 2026-09-12 — was marked DONE in error**
 
-Resolved. The genuine R package was measured at **ACS 0.7077** [0.576, 0.864], 57 pairs,
-null_p 0.0001, in 3,873 s. It scores *lower* than the reimplementation (0.7385) and stays
-last. The disagreement with Avila Cobos is real, not an artefact of substituted software.
+Both genuine R packages were measured, and both completed:
 
-**Remaining step:** every DWLS statement in the paper must quote 0.7077 and name the
-software. The archived leaderboard row is the reimplementation and stays as recorded.
+| method | genuine R package | elapsed | pipeline budget | genes |
+|---|---|---|---|---|
+| `R:DWLS` | ACS 0.7077 [0.576, 0.864] | 3,873 s | 2,400 s | 1,591 |
+| `R:BayesPrism` | ACS 0.8923 [0.800, 0.972] | 4,689 s | 2,400 s | 1,591 |
+
+**Why this is reopened.** Every method on the leaderboard ran on the benchmark's **657**
+gene marker subset. Both re-measurements ran on **1,591** —
+`scripts/remeasure_method.py` was reading the gene space the pipeline uses only as a
+*fallback*, and only the gene COUNT had ever been persisted, so nothing caught it. The
+entry previously read "It scores *lower* than the reimplementation (0.7385) and stays last.
+The disagreement with Avila Cobos is real, not an artefact of substituted software."
+**Neither sentence follows from measurements on gene spaces differing 2.4-fold, and both
+are withdrawn.** See `docs/OPEN_DEFECTS.md` D10.
+
+**Already done, and it is what makes the rest cheap:**
+- `run_all.py` persists the exact gene list and its hash to
+  `results/benchmark/signature_genes.json`.
+- `remeasure_method.py` aborts unless that file exists and its hash reproduces, instead of
+  silently substituting a gene space. It fails in ~2 s rather than after an hour of CPU.
+- Both report files carry a `COMPARABILITY: NOT COMPARABLE` header.
+- README, `RELATED_WORK.md` and this entry carry the withdrawal.
+
+**Steps to close it.**
+1. One full `python scripts/run_all.py` — writes `signature_genes.json`.
+2. `python scripts/remeasure_method.py --method dwls --budget 14400`
+3. `python scripts/remeasure_method.py --method bayesprism --budget 14400`
+   (~1.1 h and ~1.3 h respectively, measured, and they must not run concurrently on this
+   machine — three BayesPrism Gibbs workers at ~900 MB each already put it into swap.)
+4. Then, and only then, state whether genuine DWLS scores above or below its
+   reimplementation, and whether the Avila Cobos disagreement survives.
+
+**Until then:** every DWLS and BayesPrism statement in the paper must name the software
+**and** the gene space, and must not compare across the two. The archived leaderboard rows
+are the reimplementations and stay as recorded.
 
 ---
 

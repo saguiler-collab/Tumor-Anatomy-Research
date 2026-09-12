@@ -412,6 +412,23 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
+def sha256_strings(items) -> str:
+    """
+    Order-sensitive content hash of a sequence of strings — a gene space, a cell-type
+    roster, a sample list.
+
+    Order matters and is deliberately not normalised away: two methods handed the same
+    genes in a different column order have not received identical inputs, and a hash that
+    hid that would defeat the purpose. Newline-delimited so no separator can appear inside
+    an item.
+    """
+    h = hashlib.sha256()
+    for s in items:
+        h.update(str(s).encode())
+        h.update(b"\n")
+    return h.hexdigest()
+
+
 def sha256_frame(df) -> str:
     """
     Stable content hash of a DataFrame, used by the equal-footing guard to prove that
