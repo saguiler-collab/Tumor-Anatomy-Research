@@ -190,8 +190,19 @@ second is the real one:
    to a benchmark already criticised for leaning on simulated mixtures buys less than it
    costs. CDSeq, being reference-free, buys something no current entry provides.
 
-If Scaden is dropped, the paper should say so in one sentence and give reason 2 — a
-deliberate exclusion with a stated rationale reads better than silence, and it is the
+**Scaden is dropped, and the paper will say so.** Suggested wording:
+
+> Scaden (Menden et al. 2020) was obtained and deliberately not evaluated. Two reasons.
+> Practically, it requires TensorFlow, for which no wheel exists on this project's Python
+> version, so including it would mean maintaining a parallel interpreter for one method.
+> Substantively, Scaden is trained on simulated bulk mixtures — the construction Nguyen
+> et al. (2024) identify as biasing benchmarks toward methods that share the simulator's
+> assumptions. Since this study's accuracy arm is itself built on simulated mixtures,
+> adding a method trained on them would compound a limitation the study already discloses
+> rather than test against it. CDSeq was pursued instead, being reference-free and
+> therefore independent of both the simulator and the signature matrix.
+
+A deliberate exclusion with a stated rationale reads better than silence, and it is the
 same discipline the constraint file already applies to T cells.
 
 The 14 comparable methods produce only **8 distinct ACS values**, four tied at 0.9846.
@@ -201,7 +212,7 @@ resolution. A method built on different assumptions spreads the range instead.
 | | what it is | why it adds something |
 |---|---|---|
 | **CDSeq** | **Reference-free.** Uses no signature matrix at all; infers cell-type profiles and proportions jointly from the bulk. | Tests something no current entry does: can anatomy rank a method that never saw your reference? Every one of the 15 shares the same GBmap signature, so they share its biases. CDSeq does not. |
-| **Scaden** | Deep learning, trained on simulated bulk. | A different paradigm, though it trains on simulated mixtures — the same construction Nguyen et al. warn favours methods sharing the simulator's assumptions. Read its result with that in mind. |
+| **Scaden** | Deep learning, trained on simulated bulk. | **DROPPED — decision taken 2026-09-12.** Reported in the paper as a deliberate exclusion with its reason, not omitted silently. |
 
 **CDSeq is the more valuable of the two**, for the reason in its row: it is the only
 candidate that breaks the shared-reference dependency.

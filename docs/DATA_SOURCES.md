@@ -425,7 +425,7 @@ expression matrix has been read into a run.
 
 | file | size | content |
 |---|---|---|
-| `GSM3828673_10X_GBM_IDHwt_processed_TPM.tsv` | 1.5 GB | **16,201 cells · 21 donors · 10x** |
+| `GSM3828673_10X_GBM_IDHwt_processed_TPM.tsv` | 1.5 GB | **16,201 cells · 9 patients (21 samples) · 10x** |
 | `GSM3828672_Smartseq2_GBM_IDHwt_processed_TPM.tsv` | 944 MB | SMART-Seq2 version |
 | `GSE131928_single_cells_tumor_name_and_adult_or_peidatric.xlsx` | 848 KB | sample metadata |
 
@@ -434,11 +434,29 @@ ENSEMBLE tests *reference choice* rather than confounding it with *platform*. Th
 SMART-Seq2 file is the same study on a different chemistry and would introduce that
 confound; it is worth keeping for a deliberate cross-platform experiment, not for D2.
 
-Donor labels are encoded in the cell IDs as the prefix before the final underscore
-(`102_1` -> donor `102`). Note that several are repeat samples of one patient (`105A`,
-`105_B1`, `105_C1`, `105_C2`), so 21 is the number of *samples*, not of patients — which
-is what SCDC's `sample` argument wants, but the distinction must be stated wherever
-"donors" is reported.
+**CORRECTED 2026-09-12 — it is 9 patients, not 21.** An earlier entry here said 21
+donors, counted from the cell-ID prefix before the final underscore. That over-counts:
+the authoritative `tumour name` column in the series xlsx gives **9 tumours**, and the
+prefix splits repeat samples of one patient — `105A`, `105_B1`, `105_B2`, `105_C1`,
+`105_C2`, `105_D1`, `105_D2` are all MGH105.
+
+| tumour | cells | | tumour | cells |
+|---|---|---|---|---|
+| MGH105 | 5,513 | | MGH115 | 1,283 |
+| MGH124 | 2,415 | | MGH118 | 539 |
+| MGH143 | 2,314 | | MGH114 | 473 |
+| MGH102 | 1,822 | | MGH126 | 229 |
+| MGH125 | 1,613 | | | |
+
+21 is the number of **samples**, which is what SCDC's `sample` argument wants; 9 is the
+number of **patients**, which is what a "donors" figure means. Both must be reported with
+the right label — cross-subject variance is estimated across patients, not across repeat
+samples of the same patient, so calling this a 21-donor reference would overstate its
+statistical footing by more than a factor of two.
+
+All 16,201 10X cells are **adult**. The study also contains paediatric GBM, but none of it
+is in the 10X subset, so mixing paediatric tissue into an adult reference is not a risk
+here. It would be for the Smart-seq2 subset, which is not the one to use.
 
 ### Mossi Albiach et al. 2023 — NOT usable as a second reference
 
@@ -471,6 +489,12 @@ scoring, inferCNV, then malignant classification and Neftel-state scoring.
 
 A deconvolution reference is a matrix of per-cell-type expression profiles. Without
 labels there is nothing to profile, so the 1.5 GB download is not yet usable.
+
+**Confirmed 2026-09-12 by checking all four GEO supplementary files.** The series ships
+`GSE131928_RAW.tar`, the per-cell xlsx, and `filelist.txt`. The xlsx holds 24,131 per-cell
+records with columns `Sample name, title, source name, organism, molecule, processed data
+file, instrument model, tumour name, adult/paediatric` — **no cell-type column**. The
+labels are produced by the authors' analysis, not distributed with the series.
 
 **Two ways forward, and they are not equivalent.**
 
