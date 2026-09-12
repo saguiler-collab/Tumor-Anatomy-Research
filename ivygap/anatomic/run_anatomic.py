@@ -27,6 +27,7 @@ constraint set would need — never to retune the constraints and re-report.
 
 from __future__ import annotations
 
+import datetime as _dt
 import json
 import time
 
@@ -165,6 +166,14 @@ def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
     and it is why the pre-registered 122-sample analysis keeps the canonical filenames
     while the wider run cannot overwrite a single one of them.
     """
+    # Captured before anything is written. `registration_status.json` judges the ordering
+    # gate by comparing result-file mtimes against the registration, and mtimes do not
+    # survive a copy: git clone, rsync and an unzip all stamp every file with the moment
+    # of the copy, which silently makes the gate pass for any tree a reviewer obtains.
+    # A timestamp recorded INSIDE the artefact travels with it and can be checked years
+    # later, so it goes into the report regardless of whether the gate reads it yet.
+    run_started_utc = _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds")
+
     config.ensure_dirs()
 
     out = config.ANATOMIC_DIR if out_subdir is None else config.ANATOMIC_DIR / out_subdir
@@ -546,6 +555,15 @@ def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
     from ivygap.deconv import configs as configs_mod
     configs_mod.write(all_methods, out / "method_configs.json", implementations)
 
+    # Provisional: written here so the rest of this function can embed it in the report.
+    # It is REWRITTEN at the end of the run, and the reason is a defect this check had
+    # from the start. The ordering gate compares each result file's mtime against the
+    # registration time, and at this point the run has not yet overwritten most of its
+    # artefacts — they still carry the PREVIOUS run's mtimes. Checking here therefore
+    # reports the last run's files as predating the registration, every time, and the
+    # 2026-09-10 run duly published "25 result file(s) are OLDER than the registration"
+    # when the true count was zero. A false protocol violation in the primary results
+    # document is as damaging as a missed one.
     reg = registration.status()
     (out / "registration_status.json").write_text(reg.to_json())
 
@@ -562,6 +580,8 @@ def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
             out / "composition_by_tumor_structure.csv")
 
     report = {
+        "run_started_utc": run_started_utc,
+        "run_finished_utc": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
         "constraint_freeze_hash": K.freeze_hash(),
         "n_constraints": len(K.CONSTRAINTS),
         "coverage": K.coverage_report(),
@@ -599,6 +619,17 @@ def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
                 "benchmark, never by ACS.",
     }
     (out / "anatomic_report.json").write_text(json.dumps(report, indent=2, default=str))
+
+    # --- the ordering gate, re-checked now that every artefact is on disk -------
+    # This is the authoritative copy. Written last, deliberately: it is the only point at
+    # which every result file carries this run's mtime rather than the previous run's.
+    reg_final = registration.status()
+    (out / "registration_status.json").write_text(reg_final.to_json())
+    if verbose and reg_final.results_predating_registration:
+        print(f"\nregistration ordering gate: "
+              f"{len(reg_final.results_predating_registration)} file(s) predate the "
+              f"registration even after the run completed — investigate rather than "
+              f"regenerate.")
 
     if verbose:
         print("\n--- ACS leaderboard ---")

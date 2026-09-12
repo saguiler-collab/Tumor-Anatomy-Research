@@ -496,3 +496,76 @@ the controls, which satisfy it only 56% of the time.
 ordering below it; C6 and C5 sit on the column absorbing 7.0% of the atlas.
 **Not established:** that the myeloid absorption *causes* C6's discriminating power. The
 two are linked by the column they share, and that is a reason to test it, not a result.
+
+
+---
+
+## D9 · The pre-registration ordering gate published a violation that never happened, and cannot be verified from a copy
+
+**Status: the false verdict is FIXED. The gate's underlying weakness is DISCLOSED and
+partly mitigated. Recorded 2026-09-12.**
+
+### What was published, and why it was wrong
+
+`RESULTS.md` §1a — the integrity section, above the leaderboard — carried this:
+
+> REGISTERED, but 25 result file(s) are OLDER than the registration. The protocol's gate
+> is that the registration precedes every result. Those files were produced before the
+> constraints were registered and must be regenerated or labelled superseded.
+
+**The true count was zero.** Measured: 45 result files, none with an mtime before
+`2026-09-10T03:32:03Z`.
+
+The cause was ordering, not arithmetic. `run_anatomic.run()` called
+`registration.status()` partway through the run, and the gate works by comparing each
+result file's mtime against the registration time. At that moment the run had not yet
+overwritten most of its artefacts, so the mtimes compared were the **previous** run's. The
+check therefore reported the previous run's files as violations on every run, and nothing
+rewrote the verdict afterwards. Twenty-one result files ended up newer than the file
+asserting they were too old.
+
+A protocol violation asserted that did not happen is as damaging as one missed. A reader
+cannot tell which kind of error they are looking at, and the natural remedy the text
+itself suggests — "regenerate or label superseded" — would have thrown away sound results.
+
+### Fixed
+
+1. `registration_status.json` is now written **last**, after every other artefact, which
+   is the only point at which every file carries the current run's mtime. The provisional
+   copy written mid-run is documented as provisional at the call site.
+2. `summarize_results.py` refuses to reprint an ordering verdict whose own file is older
+   than the results it claims to have judged, and prints a STALE warning instead.
+3. The verdict was recomputed: **REGISTERED, and every result file postdates the
+   registration.** `release/` was updated to match.
+4. `tests/test_registration_ordering_gate.py` pins all three, including a test that the
+   repository's own tree is not carrying a stale verdict.
+
+### The weakness that remains — and it matters for a reviewer
+
+**mtimes do not survive a copy.** `git clone`, `rsync`, and unzipping an OSF download all
+stamp every file with the moment of the copy. So for any tree a reviewer obtains, every
+result file postdates the registration by construction, and the gate passes **vacuously**.
+It cannot be the evidence that this project's results postdate its registration; it can
+only catch the mistake locally, on the machine that produced them.
+
+Partly mitigated: `anatomic_report.json` now records `run_started_utc` and
+`run_finished_utc` inside the artefact, which travel with the file and can be checked
+later. The gate does not yet read them.
+
+**What actually establishes the ordering, and what the paper should cite:**
+
+- the git history — the constraint file's commit and hash precede the result commits, and
+  git timestamps are content-addressed rather than filesystem metadata;
+- the OSF registration's own immutable timestamp, `2026-09-10T03:32:03Z`, which this
+  project cannot alter;
+- the constraint freeze hash `2d1fb47c…`, recorded in every artefact and matching the
+  registered payload.
+
+Those three are durable. The mtime gate is a local smoke test and should be described as
+one, never as the provenance claim.
+
+### The fix that would close it
+
+Have the gate prefer `run_started_utc` from the run's own report when present, fall back
+to mtimes with the vacuity stated in the verdict text, and refuse to report PASS from
+mtimes alone on a tree whose files all share a copy timestamp.

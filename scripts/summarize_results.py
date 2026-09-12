@@ -45,6 +45,27 @@ def _fmt(x, nd=3):
     return str(x)
 
 
+def _ordering_verdict_is_stale(anat: Path) -> int:
+    """
+    How many result files are NEWER than the registration-status file that judged them.
+
+    Zero means the verdict was computed after everything it checked, and can be read as
+    written. Anything else means it cannot.
+    """
+    status = anat / "registration_status.json"
+    if not status.exists():
+        return 0
+    cutoff = status.stat().st_mtime
+    newer = 0
+    for d in (anat, anat.parent / "benchmark", anat.parent / "survival"):
+        if not d.exists():
+            continue
+        for p in d.rglob("*"):
+            if p.is_file() and p != status and p.stat().st_mtime > cutoff + 1.0:
+                newer += 1
+    return newer
+
+
 def integrity_section(anat: Path) -> str:
     """
     The three risks Anatomy_Test.md names that used to be asserted rather than checked.
@@ -59,6 +80,21 @@ def integrity_section(anat: Path) -> str:
         state = reg.get("state")
         mark = "**REGISTERED**" if state == "REGISTERED" else f"**{state}**"
         out.append(f"**Pre-registration:** {mark}. {reg.get('verdict','')}\n")
+
+        # The ordering verdict is only as current as the file that carries it. It compares
+        # result mtimes against the registration, so a status file written BEFORE the run
+        # finished judged the previous run's artefacts — which is exactly what happened on
+        # 2026-09-10: it published "25 result file(s) are OLDER than the registration"
+        # when the true count was zero. Refusing to reprint a verdict whose own file
+        # predates what it judged is what stops that reaching a reader again.
+        stale = _ordering_verdict_is_stale(anat)
+        if stale:
+            out.append(
+                f"> **The ordering verdict above is STALE and must not be read.** "
+                f"`registration_status.json` is older than {stale} result file(s) it "
+                f"claims to have checked, so it judged a previous run's artefacts. "
+                f"Recompute it with `python scripts/register.py --status` before citing "
+                f"any pre-registration claim.\n")
 
     cov = _load_json(anat / "reference_coverage.json")
     if cov and cov.get("atlas_labels_dropped"):

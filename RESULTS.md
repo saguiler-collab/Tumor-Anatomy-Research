@@ -20,7 +20,7 @@ HEADLINE: ACS ranking tracks true accuracy at the pre-registered bar. Anatomic c
 
 ## 1a. Integrity checks
 
-**Pre-registration:** **REGISTERED**. REGISTERED, but 25 result file(s) are OLDER than the registration. The protocol's gate is that the registration precedes every result. Those files were produced before the constraints were registered and must be regenerated or labelled superseded.
+**Pre-registration:** **REGISTERED**. REGISTERED: constraint file 2d1fb47c98832adf... registered at 2026-09-10T03:32:03Z with OSF, and every result file postdates it.
 
 **Reference coverage:** the roster maps 12 of the atlas's labels and drops the rest — **23,864 cells (7.0%)**.
 
