@@ -281,3 +281,60 @@ Relevant if the second tissue becomes spatial rather than Allen bulk.
 Deconvolution of the brain-tumour microenvironment from DNA methylation — an orthogonal
 modality sharing no failure mode with RNA-based deconvolution, and specifically about
 brain tumours. A candidate third yardstick alongside ABSOLUTE purity.
+
+---
+
+## 8 · Methods considered for addition, and the orthogonal yardstick
+
+Added 2026-09-11. DOIs Crossref-verified. Implementation status in
+`docs/ROAD_TO_PAPER.md`.
+
+> Kang K, Meng Q, Shats I, Umbach DM, Li M, Li Y, Li X, Li L. CDSeq: A novel complete
+> deconvolution method for dissecting heterogeneous samples using gene expression data.
+> *PLoS Comput Biol* 15:e1007510 (2019).
+> doi:[10.1371/journal.pcbi.1007510](https://doi.org/10.1371/journal.pcbi.1007510)
+
+**Reference-free.** Infers cell-type profiles and proportions jointly from the bulk, using
+no signature matrix. That is why it is the most valuable addition available: all fifteen
+current methods solve against the same GBmap signature and therefore share its biases.
+CDSeq would test whether anatomic concordance can rank a method that never saw the
+reference. R package v1.0.9 obtained; **not installed** — see the toolchain blocker in
+`ROAD_TO_PAPER.md` 2.2.
+
+> Menden K, Marouf M, Oller S, Dalmia A, Magruder DS, Kloiber K, Heutink P, Bonn S.
+> Deep learning-based cell composition analysis from tissue expression profiles.
+> *Sci Adv* 6:eaba2619 (2020).
+> doi:[10.1126/sciadv.aba2619](https://doi.org/10.1126/sciadv.aba2619)
+
+**Scaden.** Deep learning trained on simulated bulk. Source obtained; **not installed and
+recommended to drop** — it requires `tensorflow>=2.0`, which has no wheel for this
+machine's Python 3.14.5. The scientific case is also weaker than CDSeq's: Scaden trains on
+simulated mixtures, the construction Nguyen et al. (2024) argue favours methods sharing
+the simulator's assumptions.
+
+### The ABSOLUTE purity yardstick
+
+> Carter SL, Cibulskis K, Helman E, et al. Absolute quantification of somatic DNA
+> alterations in human cancer. *Nat Biotechnol* 30:413–421 (2012).
+> doi:[10.1038/nbt.2203](https://doi.org/10.1038/nbt.2203)
+
+The method that produced the purity calls. Yardstick 2 in `Anatomy_Test.md`: a
+**DNA-derived** measurement of the same quantity the Tumor column estimates from RNA, so
+it shares no failure mode with any method under test.
+
+> Liu J, Lichtenberg T, Hoadley KA, et al. An integrated TCGA pan-cancer clinical data
+> resource to drive high-quality survival outcome analytics. *Cell* 173:400–416 (2018).
+> doi:[10.1016/j.cell.2018.02.052](https://doi.org/10.1016/j.cell.2018.02.052)
+
+The PanCanAtlas publication the master-calls file is distributed with.
+`TCGA_mastercalls.abs_tables_JSedit.fixed.txt`, GDC file UUID
+`4f277128-f793-4354-a13d-30cc7fe9f6b5`, sha256 `f430a975433d82e0…`. Provenance in
+`reference_frozen/tcga_benchmark/ABSOLUTE_PROVENANCE.json`.
+
+> Aran D, Sirota M, Butte AJ. Systematic pan-cancer analysis of tumour purity.
+> *Nat Commun* 6:8971 (2015).
+> doi:[10.1038/ncomms9971](https://doi.org/10.1038/ncomms9971)
+
+The alternative purity compilation, carrying ESTIMATE/LUMP/IHC/consensus columns the
+master-calls file does not. Not used — the predecessor project's flowchart specifies the
+master-calls file, and that is what was obtained.

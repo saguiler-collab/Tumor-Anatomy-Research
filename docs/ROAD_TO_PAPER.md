@@ -155,7 +155,34 @@ cannot be repaired afterwards:
 
 ### 2.2 Methods that differ in kind — CDSeq and Scaden
 
-**Neither is implemented. Zero code exists for either.** Status as of 2026-09-11.
+**Status 2026-09-11: sources obtained, neither installed, and each is blocked by
+something different.**
+
+| | source | blocker | verdict |
+|---|---|---|---|
+| **CDSeq** | R package v1.0.9, in `pipeline packages / repos/CDSeq/` | **macOS Fortran toolchain missing.** `ld: library 'emutls_w' not found`; R is configured to use `/opt/gfortran/bin/gfortran`, which does not exist. Its R dependencies (`dirmult`, `RcppThread`, `ggpubr`, `harmony`) installed fine. | **Worth unblocking** |
+| **Scaden** | Python source, in `~/Downloads/scaden-master` | **`tensorflow>=2.0` has no wheel for Python 3.14.5.** `pip` reports "No matching distribution found". | **Recommend dropping** |
+
+**To unblock CDSeq — EXTERNAL, one installer.** Install the official R macOS toolchain
+from <https://mac.r-project.org/tools/> (the gfortran package matching R 4.6, x86_64).
+Then `install.packages("<path to CDSeq_R_Package-master>", repos=NULL, type="source")`.
+Nothing else is missing; the failure is purely a linker looking for Fortran runtime
+libraries that are not on this machine.
+
+**Why drop Scaden rather than build a second Python environment.** Two reasons, and the
+second is the real one:
+
+1. TensorFlow would need a separate Python 3.11 or 3.12 environment maintained alongside
+   the project's 3.14 — a standing maintenance cost for one method.
+2. **Scaden trains on simulated bulk**, which is the construction Nguyen et al. (2024)
+   single out: *"any algorithm would be the best, when applied to data that was simulated
+   based on the same set of assumptions."* Adding a method trained on simulated mixtures
+   to a benchmark already criticised for leaning on simulated mixtures buys less than it
+   costs. CDSeq, being reference-free, buys something no current entry provides.
+
+If Scaden is dropped, the paper should say so in one sentence and give reason 2 — a
+deliberate exclusion with a stated rationale reads better than silence, and it is the
+same discipline the constraint file already applies to T cells.
 
 The 14 comparable methods produce only **8 distinct ACS values**, four tied at 0.9846.
 Another least-squares variant joins that tie and *lowers* the rank correlation's
