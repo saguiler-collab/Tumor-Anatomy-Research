@@ -24,76 +24,48 @@ method. That is Tier 2.
 
 These are not improvements. Each one prevents a statement in the paper from being wrong.
 
-### 0.1 The cell-size correction · **STILL BLOCKING — narrowed to one experiment**
+### 0.1 The cell-size correction · **RESOLVED 2026-09-12 for MuSiC, SCDC and least squares**
 
-> **This entry was marked RESOLVED earlier on 2026-09-12 and the resolution was withdrawn
-> the same day.** The probe that resolved it exported its full gene space; production
-> exports a marker subset, and on the real atlas per-type library sizes over such a subset
-> span **2.17x** (Tumor 29,999 to Oligodendrocyte 65,003). `music_basis` computes its `M.S`
-> from exactly that quantity, so MuSiC's own conversion is *not* neutralised in production
-> and the "applied once" conclusion does not follow. See `docs/OPEN_DEFECTS.md` D1, which
-> records all three revisions in order.
->
-> **What is now settled and no longer needs work:** the five-package table is a reproducible
-> script rather than prose; the packages demonstrably convert cell size when their input lets
-> them estimate it (MuSiC 0.5001, SCDC 0.5336 on a raw export); the substitution the harness
-> performs is declared in `method_configs.json` for all five, with its uncertainty declared
-> alongside. **What remains is one measurement**, described at the end of D1: run MuSiC on a
-> probe whose exported subset gives per-type library sizes spanning ~2x while the true
-> cell-size ratio stays 3x, and see whether its answer moves off the mRNA value.
->
-> Until then the leaderboard's status is genuinely unknown on this point — neither
-> "provisional" nor "fine".
+Four revisions in one day, all recorded in `docs/OPEN_DEFECTS.md` D1. The conclusion rests on
+a probe that mirrors production's actual condition — a marker-subset export whose per-type
+library sizes span 1.92x with the tumour type lowest, matching the 2.17x measured on the real
+atlas (Tumor 29,999, Oligodendrocyte 65,003).
 
-The five-package table this entry rested on existed only as prose in two markdown files,
-measured once by a script that was never saved. It is now
-`scripts/verify_cell_size_semantics.py`, and it was run against the genuine R packages in
-both scalings — the CPM-normalised cell export production writes, and raw per-cell library
-sizes, which is what each package's published usage assumes. Only the export differs, so a
-package that moves did so because of its own internal cell-size estimate.
+The probe has two correct answers available, which is what makes it decisive: the true mRNA
+share is **0.7500** over the full gene space and **0.6094** over the exported subset, against
+a true cell fraction of **0.5000**.
 
-| package | production export | raw export | moves? |
-|---|---|---|---|
-| **MuSiC** | 0.7501 — **mRNA share** | 0.5001 — CELL share | **yes** |
-| **SCDC** | 0.7501 — **mRNA share** | 0.5336 — partial | **yes** |
-| **EPIC** | 0.7501 — **mRNA share** | 0.7501 — mRNA share | no |
-| Bisque | UNREADABLE (75% leak) | UNREADABLE | — |
+| package | measured | estimand | after the central conversion | error |
+|---|---|---|---|---|
+| MuSiC | 0.7500 | full space | **0.5000** | +0.0000 |
+| NNLS (control) | 0.7506 | full space | 0.5008 | +0.0008 |
+| SCDC | 0.7469 | full space | 0.4959 | −0.0041 |
+| **EPIC** | **0.6104** | **subset** | **0.3431** | **−0.1569** |
 
-Probe truth: cell fraction 0.5000, mRNA fraction 0.7500.
+**Not a double correction.** MuSiC's own `M.S` is non-flat and does apply a conversion, but
+it corrects the *subset bias*, not cell size — it cannot correct cell size, because
+normalising each cell to 1e6 destroyed that information before MuSiC saw the cells. What it
+leaves is exactly the full-transcriptome mRNA share, which is what this project's conversion
+expects. The two compose correctly.
 
-**MuSiC and SCDC do convert cell size when they can estimate it. Production prevents them
-from estimating it** — every cell is normalised to 1e6 before export, so each type's mean
-library size is identical by construction and their own conversion becomes the identity.
-They return mRNA share, this project's conversion is the first and only one, and it lands on
-the truth: MuSiC's 0.7501 divided by the size factors and renormalised gives **0.5001**
-against a true 0.5000.
+**So the earlier "every leaderboard number is provisional" is withdrawn, and so is the
+opposite over-claim made and retracted the same day.** For MuSiC, SCDC and the least-squares
+family the conversion is applied once and lands within 0.005 of truth.
 
-**So there is no second correction to remove, and no re-run.** The "15 of 16 methods change
-ACS" figure was produced by applying the correction a *second* time — the right experiment
-for a hypothesis now measured to be false. Applying it twice does change ACS; nothing in the
-pipeline applies it twice.
+**Still open, and moved to its own entry:**
 
-**What is left is documentation, not computation:**
-
-1. **Declare the deviation.** Production substitutes this project's cell-size factors for
-   MuSiC's and SCDC's own, by normalising before export. That is defensible and probably
-   right — one set of factors, computed one way, applied identically to every method, which
-   is what equal footing demands — and it is plainly what the design intends, since
-   `cell_totals` is captured *before* normalisation so the destroyed information can be
-   reinstated centrally. But it departs from published behaviour and is **not** listed in
-   `method_configs.json` beside the cibersortx, dwls and quantiseq deviations. Add it, with
-   this measurement as the evidence.
-2. **Resolve Bisque and BayesPrism, or state them as unresolved.** The probe cannot read
-   either: both assign most of their mass to the six roster types absent from the probe
-   mixture (Bisque 75%, BayesPrism 31%). A probe with no absent types would settle it.
-   Until then this project must not assert either package's convention — Bisque's ACS row
-   stays as measured, and the claim that it is "double-corrected" is withdrawn along with
-   the rest.
-
-**What does NOT change.** The retraction of the original "a per-type constant cannot reorder
-a column across structures" claim stands: the renormalisation is composition-dependent and
-applying the conversion twice really would move ACS. That was always the right correction to
-make; what was wrong was believing the pipeline did it.
+1. **EPIC — now Tier 0.4, and a new defect (D11).** `scaleExprs = TRUE`, its published
+   default, renormalises onto the shared gene set and makes EPIC's estimand the within-subset
+   mRNA share. The central conversion then divides a subset share by full-transcriptome
+   factors. Mechanism confirmed: with `scaleExprs = FALSE` EPIC returns 0.7504. EPIC is
+   joint-2nd on the leaderboard at 0.9846, so this is not a footnote.
+2. **Bisque and BayesPrism remain unmeasured.** The probe cannot read either — ≥31% of their
+   mass lands on roster types absent from the mixture. A probe with no absent types would
+   settle it. Their conventions must not be asserted meanwhile, and the old claim that Bisque
+   was double-corrected is withdrawn as unmeasured.
+3. **Declare the substitution**, which is done: `DECLARED_DEVIATIONS` now carries it for
+   music, scdc, scdc_ensemble, bisque and bayesprism, each stating what is measured and what
+   is not.
 
 ### 0.2 Publish the registration corrections · **EXTERNAL, 20 minutes**
 
@@ -147,6 +119,34 @@ are withdrawn.** See `docs/OPEN_DEFECTS.md` D10.
 are the reimplementations and stay as recorded.
 
 ---
+
+### 0.4 EPIC's estimand · **BLOCKING, new 2026-09-12**
+
+`docs/OPEN_DEFECTS.md` D11. EPIC returns the mRNA share **within the exported gene subset**;
+every other method returns the full-space share. The cell-size conversion divides by
+full-transcriptome factors, so for EPIC it is applied to the wrong quantity — measured error
+**−0.157** in the dominant type on the probe, where every other method is within 0.005.
+
+Mechanism confirmed: `scaleExprs = TRUE` (EPIC's published default). With it off EPIC returns
+0.7504 and agrees with the others.
+
+**Do not fix this by changing `scaleExprs`.** It is the published default, the fairness rule
+is defaults with no per-method tuning, and EPIC's ACS is already known — changing a parameter
+after seeing a score is the retune the protocol forbids and would be indistinguishable from
+tuning EPIC up the leaderboard. EPIC is joint-2nd at 0.9846.
+
+**Legitimate routes, and both need a decision recorded before any number moves:**
+
+1. **State per method which estimand it returns**, and convert accordingly — a documented
+   rule, pre-stated, applied to every method rather than to EPIC alone. This is the honest
+   fix and it requires re-running the affected rows.
+2. **Report EPIC's row with the mis-scaling disclosed** and make no correction, treating it
+   as a property of running EPIC on a marker subset.
+
+**First, measure the effect on the real cohort.** The probe's concentration bias is 3x
+against the atlas's measured 2.17x spread, so the real error is the same order but is not
+−0.157 and must not be scaled from it.
+
 
 ## Tier 1 · Strongly recommended — the paper is materially weaker without these
 

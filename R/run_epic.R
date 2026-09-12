@@ -38,8 +38,24 @@ bulk_mat <- bulk_mat[shared, , drop = FALSE]
 # the same decision, and for the same reason, as DWLS's opened cutoffs.
 ref <- list(refProfiles = sig_mat, sigGenes = rownames(sig_mat))
 
+# DIAGNOSTIC HOOK, NOT A PARAMETER OF THIS STUDY.
+#
+# scaleExprs = TRUE is EPIC's published default and is what every run of this pipeline
+# uses. The environment variable exists solely so `scripts/verify_cell_size_semantics.py`
+# can isolate one mechanism: EPIC is measured to return the mRNA share WITHIN the exported
+# gene subset, where MuSiC, SCDC and NNLS all return the full-space share, and scaleExprs
+# renormalising onto the shared gene set is the suspected cause (docs/OPEN_DEFECTS.md D11).
+#
+# It must never be set for a real run. The protocol's fairness rule is published defaults
+# with no per-method tuning, and EPIC's ACS is already known -- changing this after seeing a
+# score would be indistinguishable from tuning EPIC up the leaderboard.
+.scale_exprs <- !identical(Sys.getenv("IVYGAP_EPIC_SCALE_EXPRS", "TRUE"), "FALSE")
+if (!.scale_exprs) {
+  cat("DIAGNOSTIC: EPIC running with scaleExprs = FALSE. This is NOT a study result.\n")
+}
+
 est <- EPIC(bulk = bulk_mat, reference = ref, withOtherCells = TRUE,
-            constrainedSum = TRUE, scaleExprs = TRUE)
+            constrainedSum = TRUE, scaleExprs = .scale_exprs)
 
 props <- est$cellFractions
 # EPIC appends an "otherCells" column for material the reference cannot explain. It is
