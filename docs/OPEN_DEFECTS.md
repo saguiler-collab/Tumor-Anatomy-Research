@@ -957,6 +957,59 @@ but *not* the renormalisation that follows it, which is composition-dependent. T
 same mechanism as D1's retracted-then-confirmed point about renormalisation, so an EPIC
 mis-scaling can move ACS and cannot be assumed harmless.
 
-**Not established:** the size of the effect on real data. The probe's bias is 3x in
-transcriptome concentration against the atlas's measured 2.17x spread, so the real error is
-of the same order but is not this number, and must be measured rather than scaled.
+### The size on real data is NOT established, and one line of evidence argues it is small
+
+Two calculations disagree, and both belong here.
+
+**An analytic propagation says the effect should be large.** EPIC's estimand is proportional
+to `n_k · c_k · f_k`, where `f_k` is the share of type *k*'s transcriptome falling inside the
+marker panel. The central conversion divides by `c_k`, leaving `n_k · f_k` instead of `n_k`,
+so the residual distortion is exactly `f_k`. Measured on the real atlas export:
+
+| cell type | `f_k` | relative to the mean |
+|---|---|---|
+| Tumor | 0.0300 | **0.594** |
+| B_cell | 0.0409 | 0.810 |
+| T_cell | 0.0437 | 0.866 |
+| Endothelial | 0.0511 | 1.013 |
+| NK_cell | 0.0516 | 1.023 |
+| Macrophage_Microglia | 0.0603 | 1.193 |
+| Astrocyte | 0.0613 | 1.213 |
+| Oligodendrocyte | 0.0650 | 1.288 |
+
+Propagating those through a plausible GBM composition gives Tumor 0.550 → 0.387
+(**−0.163**) and Macrophage_Microglia 0.250 → 0.353 (**+0.103**), which matches the probe's
+−0.157 closely.
+
+**The pseudobulk benchmark argues against a distortion that large.** If EPIC's tumour
+fraction were out by 0.16 on real mixtures, its error would be conspicuous. It is not:
+
+| method | `mae_primary` |
+|---|---|
+| music | 0.0508 |
+| elastic_net | 0.0551 |
+| nnls | 0.0561 |
+| bayesprism | 0.0585 |
+| cibersortx | 0.0608 |
+| svr | 0.0610 |
+| **epic** | **0.0659** |
+| cibersortx_smode | 0.0693 |
+
+EPIC sits 7th of 15, modestly behind MuSiC, nowhere near where a 0.16 bias on the dominant
+type would put it. **So the analytic propagation overstates the real-data effect**, and this
+entry does not claim −0.163 for real data.
+
+Candidate reasons the propagation is too crude, none tested: `withOtherCells = TRUE` gives
+EPIC a sink column that can absorb part of the mis-scaling, and `write_proportions`
+renormalises across the roster afterwards; the benchmark's own pseudobulk truth is built from
+the same normalised cells, which may cancel part of the effect; the real 657-gene panel may
+have a narrower spread than the 1,591-gene export these `f_k` come from; and EPIC's
+constrained solve on a real, non-orthogonal signature does not reduce cleanly to "returns the
+subset share" the way it does on the probe's block-diagonal one.
+
+**What is established:** on a controlled probe EPIC returns the subset share where every
+other method returns the full-space share, and `scaleExprs` is the cause.
+**What is not:** how much that costs on Ivy GAP. The benchmark says less than the propagation
+implies. Resolving it needs EPIC re-run on the real cohort with `scaleExprs = FALSE` and the
+two compositions compared directly — which is a measurement, not an argument, and must be
+recorded as a declared diagnostic rather than swapped into the leaderboard.

@@ -143,9 +143,18 @@ tuning EPIC up the leaderboard. EPIC is joint-2nd at 0.9846.
 2. **Report EPIC's row with the mis-scaling disclosed** and make no correction, treating it
    as a property of running EPIC on a marker subset.
 
-**First, measure the effect on the real cohort.** The probe's concentration bias is 3x
-against the atlas's measured 2.17x spread, so the real error is the same order but is not
-−0.157 and must not be scaled from it.
+**First, measure the effect on the real cohort — and note the evidence is mixed.** An
+analytic propagation of the per-type marker-space concentrations measured on the real atlas
+predicts a large distortion (Tumor 0.550 → 0.387). The pseudobulk benchmark contradicts it:
+EPIC's `mae_primary` is **0.0659**, 7th of 15 and only modestly behind MuSiC's 0.0508, which
+is not where a 0.16 bias on the dominant type would put it. So the probe result is solid and
+the real-data magnitude is genuinely unresolved, probably smaller than the propagation
+implies — `withOtherCells = TRUE` gives EPIC a sink column, the output is renormalised across
+the roster afterwards, and the benchmark's own truth is built from the same normalised cells.
+
+The measurement that settles it: EPIC re-run on the real cohort with `scaleExprs = FALSE` as
+a **declared diagnostic**, compared composition-by-composition against the production row.
+Recorded alongside, never swapped into the leaderboard.
 
 
 ## Tier 1 · Strongly recommended — the paper is materially weaker without these
