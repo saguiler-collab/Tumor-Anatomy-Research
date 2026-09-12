@@ -182,4 +182,6 @@ One more thing it fixes, quietly. The current frozen prognosis result is a null 
 
 Cohort figures from the Allen Institute's Ivy GAP documentation: 270 laser-microdissected RNA-seq samples across 41 tumors, of which 122 samples from 10 tumors form the anatomic-structures study. Internal counts (153 / 92 / 70 events, the Uno-C panel, the E−M interval) read from the locked run deployable_rc_v1. Verify every external figure against the current portal release before citing it.
 
+> **Addendum, 2026-09-12 (measurement, not a protocol change).** That verification was done. The 2014-11-25 RNA-seq release contains **37** tumours, not 41: 10 anatomic + 34 ISH-cluster, with 7 contributing to both. The 270 / 122 / 10 figures above are exact. The 41 likely counts the whole Ivy GAP project including tumours that contributed no RNA-seq. Nothing pre-registered depends on this number — no constraint, threshold or cohort rule reads it — so the sentence above is left as written and corrected here. See [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) § “A discrepancy worth flagging”.
+
 Sources — Ivy GAP RNA-Seq · Ivy GAP data documentation · GSE107559 · CATD benchmark · omnideconv · Spotless · Perivascular immune phenotype in GBM

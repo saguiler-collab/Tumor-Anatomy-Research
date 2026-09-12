@@ -82,6 +82,54 @@ both answers crowd the ceiling and the result is unreadable. The ratio matters.)
 | BayesPrism | 0.750 | mRNA share | correct, the first |
 | SCDC | 0.653 | between the two | **partial** — see below |
 
+#### That table is now reproducible — added 2026-09-12
+
+**The five numbers above were measured once by a script that was never saved, and no
+artefact recorded them.** They existed only as this table and its copy in
+`ROAD_TO_PAPER.md`. That breaks the project's own rule — *measure and record, never
+validate against hard-coded literals* — and a blocking design decision rested on numbers
+neither a reviewer nor this project could re-check.
+
+`scripts/verify_cell_size_semantics.py` now runs the probe and writes
+`results/cell_size_semantics.json`. It is not a benchmark: a package is not better for
+using either convention, and the script reports no ranking.
+
+**Status of the re-measurement:**
+
+| row | prose value | re-measured | agrees |
+|---|---|---|---|
+| BayesPrism | 0.750 | **0.7500** (reimplementation) | yes |
+| MuSiC | 0.500 | pending — needs R | — |
+| Bisque | 0.500 | pending — needs R | — |
+| EPIC | offers both | pending — needs R | — |
+| SCDC | 0.653 | pending — needs R | — |
+
+The four R rows are pending only because the cores were busy with the BayesPrism
+re-measurement; nothing about them is in doubt yet. **Until they are measured, treat the
+prose values as unverified rather than as wrong.**
+
+#### What building the probe clarified about the defect's scope
+
+The probe's first version passed *raw* single cells to `build_reference`, which put each
+type's library size into the profile columns. Plain NNLS then returned 0.500 — apparently
+"already a cell share". That is an artefact of the probe, not a property of NNLS, and it
+matters because production does the opposite: `build_from_h5ad` normalises every cell to
+1e6 **before** averaging into the profile and captures the raw library sizes separately as
+the cell-size factors. Every profile column therefore carries the same total.
+
+The consequence, which was implicit before and is now measured: because the signature's
+columns are equal-total, a least-squares solve against it returns **mRNA share**, and the
+central conversion is that family's *first* conversion and is correct. NNLS comes out at
+exactly 0.7500 — the theoretical value, which is what certifies the probe is built right.
+
+**So the defect is narrower and better defined than "the correction is applied twice".**
+It is specific to packages that perform their *own* internal size conversion, using their
+own estimate. It does not touch the least-squares family (NNLS, SVR, both CIBERSORTx
+modes, Elastic Net), which is measured above and confirmed. That does not shrink the
+defect's *impact* — 15 of 16 methods still move when the correction is applied twice,
+because the renormalisation is composition-dependent and a changed column changes every
+other column in the sample.
+
 **Three of the top methods are double-corrected, including the top-ranked one.** MuSiC
 leads the ACS leaderboard at 1.000 and the accuracy benchmark at MAE 0.0508, and its
 estimates have had a per-type cell-size factor applied twice.

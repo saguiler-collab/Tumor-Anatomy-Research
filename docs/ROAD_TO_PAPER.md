@@ -64,12 +64,28 @@ design in D1 handles all five — pass this project's cell-size factors *into* e
 that accepts one (`MuSiC(cell_size=)`, `SCDC_ENSEMBLE(ct.cell.size=)`, `EPIC(mRNA_cell=)`)
 and skip the central step for those.
 
+**Step 0, added 2026-09-12 — the table above had no artefact behind it.** Those five
+numbers were measured once by a script that was never saved. A blocking decision rested on
+prose. `scripts/verify_cell_size_semantics.py` now reproduces the probe and writes
+`results/cell_size_semantics.json`; the BayesPrism row re-measures at 0.7500 as claimed,
+and the four R rows are pending only because the cores were busy. Do not adopt the third
+design until that artefact exists for all five — the design *is* the table.
+
+Building it clarified the scope, which the paper needs stated precisely: production
+normalises each cell to 1e6 before averaging into the reference profile, so every profile
+column carries the same total and a least-squares solve returns **mRNA share**. NNLS
+measures exactly 0.7500, the theoretical value. So the defect is specific to packages that
+run their *own* size conversion, and does not touch NNLS, SVR, either CIBERSORTx mode, or
+Elastic Net. The *impact* is unchanged — 15 of 16 methods still move — because the
+renormalisation is composition-dependent.
+
 **Steps.**
-1. Adopt the third design.
-2. Apply it to all five at once. **Do not** fix them one at a time — a half-corrected
+1. Finish the re-measurement for the four R packages; commit the artefact.
+2. Adopt the third design, for the packages the artefact says need it.
+3. Apply it to all of those at once. **Do not** fix them one at a time — a half-corrected
    leaderboard is worse than a uniformly wrong one.
-3. Re-run, and publish before/after numbers per method so the effect is visible.
-4. Record it as a declared deviation: the registration says the conversion is "applied
+4. Re-run, and publish before/after numbers per method so the effect is visible.
+5. Record it as a declared deviation: the registration says the conversion is "applied
    once and centrally", and passing factors into each package is a different mechanism for
    the same intent.
 

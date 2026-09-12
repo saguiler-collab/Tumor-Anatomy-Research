@@ -92,7 +92,52 @@ def test_the_shipped_results_md_matches_the_generator():
     regenerated = summarize.render(results)
     assert shipped.read_text().strip() == regenerated.strip(), (
         "RESULTS.md is out of sync with results/. Regenerate it:\n"
-        "    python3 scripts/summarize_results.py > RESULTS.md")
+        "    python3 scripts/summarize_results.py --write\n"
+        "and see what would change first with:\n"
+        "    python3 scripts/summarize_results.py --check")
+
+
+def test_cohort_line_bridges_cohort_tumours_to_evaluable_tumours(fake_results):
+    """
+    The cohort line says 10 tumours; every per-method row says 9. A reader who meets
+    those two numbers with nothing between them has found what looks like an arithmetic
+    error, or a silent exclusion. Neither is what happened: tumour 710262 was sampled at
+    CT and PAN only, so all seven constraints return `not evaluable` for it and it leaves
+    the numerator and the denominator together.
+
+    Pins that the header states both numbers whenever they differ, and states neither
+    twice when they agree.
+    """
+    anat = fake_results / "anatomic"
+    pd.DataFrame([{"method": "music", "tumor_id": t, "n_constraints_evaluable": 7,
+                   "n_satisfied": 7, "weight_evaluated": 8.0, "weight_satisfied": 8.0,
+                   "acs": 1.0, "constraints_satisfied": "C1", "constraints_violated": ""}
+                  for t in range(9)]).to_csv(anat / "acs_per_tumor.csv", index=False)
+
+    head = summarize.header_section(fake_results)
+    assert summarize._evaluable_tumors(anat) == 9
+    assert "10 tumours" in head
+    assert "**9**" in head, f"the evaluable count is missing from:\n{head}"
+
+    # When they agree, the qualifier must not appear -- it would be noise, and a reader
+    # who sees "10 of 10" reasonably wonders what the distinction is for.
+    pd.DataFrame([{"method": "music", "tumor_id": t, "n_constraints_evaluable": 7,
+                   "n_satisfied": 7, "weight_evaluated": 8.0, "weight_satisfied": 8.0,
+                   "acs": 1.0, "constraints_satisfied": "C1", "constraints_violated": ""}
+                  for t in range(10)]).to_csv(anat / "acs_per_tumor.csv", index=False)
+    head10 = summarize.header_section(fake_results)
+    assert summarize._evaluable_tumors(anat) == 10
+    assert "evaluable constraint pair" not in head10
+
+
+def test_evaluable_tumours_is_none_rather_than_a_guess_when_unmeasurable(tmp_path):
+    """A missing per-tumour artefact must yield None, never a fabricated count."""
+    anat = tmp_path / "anatomic"
+    anat.mkdir(parents=True)
+    assert summarize._evaluable_tumors(anat) is None
+    pd.DataFrame(columns=["method", "tumor_id"]).to_csv(
+        anat / "acs_per_tumor.csv", index=False)
+    assert summarize._evaluable_tumors(anat) is None
 
 
 # --- the figure blob must come from the artefacts too -------------------------

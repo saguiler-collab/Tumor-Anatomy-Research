@@ -1,7 +1,7 @@
 # Results — the Anatomy Test
 
 **Run:** 2026-09-10  
-**Cohort:** Ivy GAP, ACS scored on 122 H&E anatomic samples / 10 tumours  
+**Cohort:** Ivy GAP, ACS scored on 122 H&E anatomic samples / 10 tumours, of which **9** contribute at least one evaluable constraint pair (the per-method tables report 9)  
 **Constraint freeze hash:** `2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a`  
 **Gene space:** 657 genes · **reference:** gbmap:6fa50a03ee163760  
 
@@ -59,6 +59,7 @@ Fell back to this project's Python reimplementation:
 
 - constraint freeze hash: `2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a`
 - ACS cohort: **122 samples / 10 tumours**, 10,000 within-tumour permutations per method
+- tumours contributing an evaluable constraint pair: **9 of 10**. Every per-method row reports 9. The remainder are not dropped by a filter — the archive gave them none of the structure pairs the constraints name, so all seven constraints return *not evaluable* and are excluded from numerator and denominator alike.
 - structures: {'CT': 30, 'MVP': 25, 'PAN': 24, 'IT': 24, 'LE': 19}
 - portal reconciliation: RECONCILED: 122 anatomic samples across 5 structures agree exactly with the portal's own table ({'CT': 30, 'IT': 24, 'LE': 19, 'MVP': 25, 'PAN': 24}), and the study assignment agrees on all 270 shared samples. 9 sample(s) exist on the live portal but not in the 2014-11-25 archive — a release skew, all in the 'Cancer Stem Cells RNA Seq' study, not a parsing error. Step 3's gate is closed.
 
@@ -310,4 +311,3 @@ Not a protocol analysis. The protocol's agreement test correlates ACS against *a
 - best prognosis: `svr` (ACS 0.985, delta C +0.080)
 
 Three independent reasons this cannot support a claim: every C-index is INCONCLUSIVE by the pre-specified power rule; ACS supplies only 9 distinct values across 15 methods, so the rank is mostly ties; and the outcome side rests on a declared assumption about censoring. It is recorded because it points the same way as the superseded run did, and because the direction is the protocol's second branch.
-

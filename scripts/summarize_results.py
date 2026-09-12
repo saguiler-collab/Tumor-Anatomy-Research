@@ -312,7 +312,24 @@ def per_tumor_table(path: Path, method: str) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _evaluable_tumors(anat: Path) -> int | None:
+    """
+    How many tumours contribute at least one evaluable constraint pair.
+
+    This is NOT the cohort's tumour count, and conflating the two is how a reader ends up
+    reading "10 tumours" in the header of a table whose every row says 9. A tumour scores
+    nothing when the archive gave it none of the structures its constraints name — Ivy GAP
+    sampled per block, so a tumour can be CT-and-PAN only. Derived from the per-tumour
+    artefact so it cannot drift from the leaderboard it explains.
+    """
+    df = _load_csv(anat / "acs_per_tumor.csv")
+    if df is None or df.empty or "tumor_id" not in df.columns:
+        return None
+    return int(df["tumor_id"].nunique())
+
+
 def header_section(results_dir: Path) -> str:
+
     """
     Title, cohort line and headline, generated rather than typed.
 
@@ -340,8 +357,12 @@ def header_section(results_dir: Path) -> str:
     if stamp:
         A(f"**Run:** {stamp}  ")
     if rep:
+        n_eval = _evaluable_tumors(anat)
         line = (f"**Cohort:** Ivy GAP, ACS scored on {rep['n_samples']} H&E anatomic "
                 f"samples / {rep['n_tumors']} tumours")
+        if n_eval is not None and n_eval != rep["n_tumors"]:
+            line += (f", of which **{n_eval}** contribute at least one evaluable "
+                     f"constraint pair (the per-method tables report {n_eval})")
         if rep.get("deconvolved_all_samples"):
             line += f" ({rep['n_samples_deconvolved']} samples deconvolved)"
         A(line + "  ")
@@ -393,8 +414,16 @@ def render(results_dir: Path) -> str:
     A("## 2. Cohort and provenance\n")
     if rep:
         A(f"- constraint freeze hash: `{rep['constraint_freeze_hash']}`")
+        n_eval = _evaluable_tumors(anat)
         A(f"- ACS cohort: **{rep['n_samples']} samples / {rep['n_tumors']} tumours**, "
           f"{rep['n_permutations']:,} within-tumour permutations per method")
+        if n_eval is not None and n_eval != rep["n_tumors"]:
+            A(f"- tumours contributing an evaluable constraint pair: **{n_eval} of "
+              f"{rep['n_tumors']}**. Every per-method row reports {n_eval}. The "
+              f"remainder are not dropped by a filter — the archive gave them none of "
+              f"the structure pairs the constraints name, so all seven constraints "
+              f"return *not evaluable* and are excluded from numerator and denominator "
+              f"alike.")
         A(f"- structures: {rep['structures']}")
         if rep.get("deconvolved_all_samples"):
             A(f"- deconvolved: {rep['n_samples_deconvolved']} samples / "
@@ -561,12 +590,52 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--results-dir", default="results")
+    ap.add_argument("--out", default="RESULTS.md",
+                    help="file that --write and --check compare against")
+    ap.add_argument("--write", action="store_true",
+                    help="write the render to --out instead of stdout")
+    ap.add_argument("--check", action="store_true",
+                    help="exit non-zero if --out differs from the render, and print the "
+                         "first differing lines; nothing is written")
     args = ap.parse_args()
     root = Path(args.results_dir)
     if not root.exists():
         print(f"no such results directory: {root}")
         return 1
-    print(render(root))
+
+    text = render(root)
+    out = Path(args.out)
+
+    if args.check:
+        # RESULTS.md claims in its own header that nothing in it is transcribed by hand.
+        # Until this mode existed, nothing enforced that claim: the script printed to
+        # stdout and a human had to remember to redirect it. That is the same "a human
+        # had to remember and did not" failure header_section was written to prevent,
+        # one level up.
+        if not out.exists():
+            print(f"CHECK FAILED: {out} does not exist")
+            return 1
+        have = out.read_text()
+        if have == text:
+            print(f"CHECK OK: {out} matches the artefacts ({len(text.splitlines())} lines)")
+            return 0
+        import difflib
+        d = list(difflib.unified_diff(have.splitlines(), text.splitlines(),
+                                      fromfile=str(out), tofile="render(artefacts)",
+                                      lineterm="", n=1))
+        print(f"CHECK FAILED: {out} does not match the artefacts. "
+              f"Regenerate with --write.\n")
+        print("\n".join(d[:60]))
+        if len(d) > 60:
+            print(f"... {len(d) - 60} more diff lines")
+        return 1
+
+    if args.write:
+        out.write_text(text)
+        print(f"wrote {out} ({len(text.splitlines())} lines) from {root}")
+        return 0
+
+    print(text)
     return 0
 
 
