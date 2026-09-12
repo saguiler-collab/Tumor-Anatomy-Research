@@ -154,14 +154,24 @@ uniformly. The run finishes as-is.
 
 ### What it does NOT invalidate
 
-The bias is **uniform within a method across all samples** — a per-type constant factor
-applied twice. It therefore does not disturb any *within-method, between-structure*
-ordering, which is what ACS scores. ACS is a rank statistic over structures inside a
-tumour, and multiplying a cell type's column by a constant cannot reorder that column
-across structures.
+**This section previously restated the retracted claim and contradicted the correction
+above. Rewritten 2026-09-12.**
 
-So: the ACS leaderboard is **not** invalidated. What moves is the **accuracy** side of the
-agreement test, and therefore rho.
+What the defect does **not** touch, because none of these depends on the cell-size
+conversion:
+
+- **The constraint file** and its hash — registered, and independent of any method.
+- **The negative controls.** `control_random` is unaffected entirely (delta 0.0000 when
+  the correction is applied a second time); the shuffled-signature control moves by
+  0.0154. Neither comes near a real method either way.
+- **The permutation null**, which shuffles structure labels within a tumour and is
+  computed on whatever estimates it is given.
+- **The ISH validation**, which involves no deconvolution at all.
+- **The design** — pre-registration, equal footing, the nesting rule, outcome-blind
+  selection.
+
+What it **does** touch is stated above: ACS, the leaderboard ordering, the accuracy arm,
+and rho. Every leaderboard number is provisional until the fix lands.
 
 ---
 

@@ -19,7 +19,9 @@ Status as of 2026-09-10.
       expression energy per (gene × sub-block × structure)
 - [x] **Ivy GAP structure areas** — `sub_block_details.csv`, normalised area per structure
 - [x] **GBmap Core** single-cell atlas — 338,564 cells
-- [x] **Neftel GSE131928** — 10x (16,201 cells / 21 donors) and SMART-Seq2
+- [x] **Neftel GSE131928** — 10x (16,201 cells / **9 patients**, 21 samples) and
+      SMART-Seq2. **No cell-type labels** — confirmed against all four GEO
+      supplementary files, so it cannot yet serve as a reference.
 - [x] **Mossi Albiach** — 135,482 cells, 1 donor
 - [ ] **Nothing further from Ivy GAP.** BAM files and the reference genome are not needed —
       nothing in this pipeline consumes reads or re-aligns.

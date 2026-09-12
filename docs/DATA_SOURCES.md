@@ -512,4 +512,5 @@ annotation choices recorded with the same discipline as the constraint file.
 
 **Consequence for D2.** `scdc_ensemble` cannot be un-degenerated until annotated cell
 types exist for a second multi-donor reference. Neither file currently on disk satisfies
-that: Neftel has 21 donors and no labels; Albiach has labels and one donor.
+that: Neftel has 9 patients (21 samples) and no labels; Albiach has labels and one
+donor.
