@@ -144,6 +144,51 @@ Methods are judged against the **hardest** control (`control_shuffled_signature`
 | C4 | 0.23 |
 | C7 | 0.18 |
 
+### Which constraints carry the ranking
+
+Across the **14 comparable real methods**. `spread` is the range of the satisfied rate; a spread of zero means the constraint is unanimous and contributes nothing to the ORDERING, however well it separates real methods from the controls.
+
+| ID | claim | weight | tumours | mean rate | min | max | spread | controls |
+|---|---|---|---|---|---|---|---|---|
+| C6 | Macrophage_Microglia: MVP > CT | 1.0 | 9 | 0.770 | 0.222 | 1.000 | **0.778** | 0.278 |
+| C7 | Tumor: LE < IT < CT | 2.0 | 8 | 0.875 | 0.500 | 1.000 | **0.500** | 0.000 |
+| C1 | Tumor: CT > LE | 1.0 | 8 | 0.929 | 0.625 | 1.000 | **0.375** | 0.375 |
+| C5 | Macrophage_Microglia: PAN > LE | 1.0 | 6 | 0.917 | 0.667 | 1.000 | **0.333** | 0.250 |
+| C2 | Oligodendrocyte: LE > CT | 1.0 | 8 | 0.991 | 0.875 | 1.000 | **0.125** | 0.375 |
+| C4 | Endothelial: MVP is the maximum | 1.0 | 9 | 0.992 | 0.889 | 1.000 | **0.111** | 0.278 |
+| C3 | Endothelial: MVP > CT | 1.0 | 9 | 1.000 | 1.000 | 1.000 | **0.000** **unanimous** | 0.556 |
+
+**1 of 7 constraints is unanimous (C3).** The ranking is carried by the remaining 6, led by `C6` (spread 0.778), `C7` (spread 0.500), `C1` (spread 0.375).
+
+
+### Leave-one-out robustness
+
+Recomputed from the archived (constraint x tumour) satisfaction matrix, which reproduces every published ACS to 1e-16 before any variant is reported. **Reporting only** — the registered ACS uses all constraints and all tumours, and no variant below may reorder the leaderboard, select a method, or justify dropping a constraint.
+
+| excluded | rho vs full ranking | max rank move | methods moved | top method |
+|---|---|---|---|---|
+| C1 | 1.0000 | 0.0 | 0 | `music` |
+| C2 | 1.0000 | 0.0 | 0 | `music` |
+| C3 | 1.0000 | 0.0 | 0 | `music` |
+| C4 | 1.0000 | 0.0 | 0 | `music` |
+| C5 | 0.9728 | 2.0 | 10 | `music` |
+| C6 | 0.6780 | 6.0 | 13 | `music` |
+| C7 | 0.9287 | 5.0 | 9 | `music` |
+| tumor:292163427 | 1.0000 | 0.0 | 0 | `music` |
+| tumor:703393 | 0.9261 | 5.0 | 11 | `music` |
+| tumor:703493 | 0.9682 | 2.0 | 9 | `music` |
+| tumor:705757 | 1.0000 | 0.0 | 0 | `music` |
+| tumor:705758 | 1.0000 | 0.0 | 0 | `music` |
+| tumor:705803 | 0.9705 | 2.0 | 9 | `music` |
+| tumor:705859 | 0.9966 | 1.0 | 3 | `music` |
+| tumor:711547 | 1.0000 | 0.0 | 0 | `music` |
+| tumor:711560 | 1.0000 | 0.0 | 0 | `music` |
+
+**The top method survives every single exclusion.** No one constraint and no one tumour is responsible for it.
+
+**The ordering below the top is not equally robust.** Dropping `C6` moves the ranking to rho 0.678, with a maximum move of 6 positions — so that one constraint carries a large share of the separation between the middle-ranked methods. Tumour exclusion is milder (worst rho 0.926). This is reported as a limit on how finely the leaderboard can be read, not as a reason to change the constraint set.
+
+
 ### Per constraint — best method (`music`)
 
 | ID | claim | weight | tumours evaluable | satisfied |

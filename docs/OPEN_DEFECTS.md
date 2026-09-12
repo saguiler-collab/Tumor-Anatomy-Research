@@ -426,3 +426,73 @@ have to be declared.
 
 **Do not** fix this by clipping or smoothing the estimates. The degenerate value is the
 method's actual output and the honest record of what it produced.
+
+
+---
+
+## D8 · The ranking below the top rests largely on one constraint, and that constraint sits on the roster's weakest column
+
+**Status: MEASURED and DISCLOSED. Not a code defect — a limit on how finely the
+leaderboard can be read. Recorded 2026-09-12.**
+
+`scripts/constraint_sensitivity.py` recomputes ACS with each constraint and each tumour
+left out in turn, from the archived (constraint x tumour) satisfaction matrix. The matrix
+reproduces all 17 published ACS values to 1e-16 before any variant is reported, so this is
+arithmetic on the recorded result, not a re-run that could differ for other reasons.
+
+**The headline is robust.** MuSiC is top under every single-constraint exclusion and every
+single-tumour exclusion. No one claim and no one tumour is responsible for it.
+
+**The ordering below the top is not.**
+
+| excluded | rho vs the full ranking | max rank move |
+|---|---|---|
+| C6 — Macrophage_Microglia: MVP > CT | **0.678** | **6 positions** |
+| C7 — Tumor: LE < IT < CT | 0.929 | 5 |
+| C5 — Macrophage_Microglia: PAN > LE | 0.973 | 2 |
+| C1, C2, C3, C4 | 1.000 | 0 |
+| worst single tumour (703393) | 0.926 | 5 |
+
+Dropping C6 alone moves 13 of the 14 ranked methods and takes rank agreement to 0.678. So
+the separation among the middle-ranked methods is substantially one constraint's work.
+
+### Why this is worse than it first looks
+
+C6 and C5 are the two Macrophage_Microglia constraints, and that column is the one the
+reference is least able to support. `RESULTS.md` §1 records it independently: the roster
+drops Mono (14,215 cells), DC (3,961) and RG (2,807) — 7.0% of the atlas — and the
+dominant dropped signal is myeloid, whose nearest retained column is
+Macrophage_Microglia. The absorbed signal is therefore concentrated on exactly the two
+constraints that carry most of the ranking.
+
+These two facts were recorded separately and neither pointed at the other. Together they
+say: **the part of the leaderboard that discriminates most is the part resting on the
+roster's most heavily loaded column.**
+
+### What follows, and what does not
+
+**Does not follow:** that the constraint set should change. C6 stays. The protocol is
+explicit that constraints are never edited in response to scores, and a constraint that
+carries the ranking is the last one it would be honest to remove after the fact. C3
+likewise stays despite contributing nothing to the ordering — it earns its weight against
+the controls, which satisfy it only 56% of the time.
+
+**Does follow:**
+
+1. **Report rank differences among the middle of the leaderboard as weak.** The tie
+   structure already says this — ACS takes 66 distinct values on a weighted denominator of
+   65, and D6 shows it cannot separate methods differing by 20 composition points. This is
+   the third independent reason for the same caution.
+2. **The second tissue must not reuse a roster with the same weakness**, or the same
+   column carries the ranking twice and the replication is not independent of it. See
+   `docs/SECOND_TISSUE.md`.
+3. **A reference that retains the myeloid subtypes would test this directly.** If C6's
+   discriminating power survives un-collapsing Mono and DC, the concern is answered; if it
+   does not, the finding is about the roster and must be stated that way.
+
+### What is established, and what is not
+
+**Established:** the top method is robust to any single exclusion; C6 carries most of the
+ordering below it; C6 and C5 sit on the column absorbing 7.0% of the atlas.
+**Not established:** that the myeloid absorption *causes* C6's discriminating power. The
+two are linked by the column they share, and that is a reason to test it, not a result.

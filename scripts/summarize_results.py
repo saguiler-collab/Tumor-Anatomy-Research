@@ -296,6 +296,118 @@ def per_constraint_table(path: Path, method: str) -> str:
     return "\n".join(lines) + "\n"
 
 
+def constraint_discrimination(anat: Path) -> str:
+    """
+    Which constraints actually separate the methods, and which are unanimous.
+
+    A reviewer's first question about a composite score is whether one component drives
+    it. The answer here is specific and partly uncomfortable: C3 is satisfied by every
+    comparable real method on every evaluable tumour, so it contributes nothing to the
+    ORDERING even though the controls miss it about half the time. Reporting only the mean
+    satisfied rate would hide that. Spread is the statistic that exposes it.
+
+    A unanimous constraint is not a broken one. C3 is near-definitional -- microvascular
+    proliferation is where the vessels are -- and a constraint set with no easy members
+    could not distinguish a method from a scrambled one. It earns its weight against the
+    controls and carries none of the ranking, and both halves of that belong in print.
+    """
+    per_c = _load_csv(anat / "acs_per_constraint.csv")
+    lb = _load_csv(anat / "acs_leaderboard.csv")
+    if per_c is None or lb is None:
+        return "_(not produced)_\n"
+
+    real = lb[(~lb["is_control"].astype(bool))
+              & (lb["comparable"].astype(bool))]["method"].tolist()
+    sub = per_c[per_c["method"].isin(real)]
+    if sub.empty:
+        return "_(no comparable real methods)_\n"
+
+    ctrl_names = lb[lb["is_control"].astype(bool)]["method"].tolist()
+    ctrl = per_c[per_c["method"].isin(ctrl_names)]
+
+    lines = [f"Across the **{len(real)} comparable real methods**. `spread` is the range of "
+             "the satisfied rate; a spread of zero means the constraint is unanimous and "
+             "contributes nothing to the ORDERING, however well it separates real methods "
+             "from the controls.\n",
+             "| ID | claim | weight | tumours | mean rate | min | max | spread | controls |",
+             "|---|---|---|---|---|---|---|---|---|"]
+    rows = []
+    for cid, grp in sub.groupby("constraint", sort=True):
+        r = grp["fraction_satisfied"].astype(float)
+        c = ctrl[ctrl["constraint"] == cid]["fraction_satisfied"].astype(float)
+        rows.append((cid, str(grp["description"].iloc[0]), float(grp["weight"].iloc[0]),
+                     int(grp["n_tumors_evaluable"].iloc[0]), r.mean(), r.min(), r.max(),
+                     r.max() - r.min(), c.mean() if len(c) else float("nan")))
+    for cid, desc, w, n, mean, lo, hi, spread, cm in sorted(rows, key=lambda x: -x[7]):
+        flag = " **unanimous**" if spread == 0 else ""
+        lines.append(f"| {cid} | {desc} | {_fmt(w, 1)} | {n} | {mean:.3f} | {lo:.3f} "
+                     f"| {hi:.3f} | **{spread:.3f}**{flag} | {_fmt(cm)} |")
+
+    carrying = [r for r in rows if r[7] > 0]
+    unanimous = [r[0] for r in rows if r[7] == 0]
+    lines.append("")
+    if unanimous:
+        verb = "is" if len(unanimous) == 1 else "are"
+        lines.append(f"**{len(unanimous)} of {len(rows)} constraints {verb} unanimous "
+                     f"({', '.join(unanimous)}).** The ranking is carried by the "
+                     f"remaining {len(carrying)}, led by "
+                     + ", ".join(f"`{r[0]}` (spread {r[7]:.3f})"
+                                 for r in sorted(carrying, key=lambda x: -x[7])[:3]) + ".")
+    else:
+        lines.append("Every constraint separates at least two methods; none is unanimous.")
+    return "\n".join(lines) + "\n"
+
+
+def sensitivity_section(anat: Path) -> str:
+    """
+    Leave-one-out robustness, rendered from `constraint_sensitivity.json`.
+
+    Reporting only. The registered ACS uses all constraints and all tumours; nothing here
+    reorders anything, and a constraint that carries none of the ordering still stays in
+    the set. Removing it after seeing the scores is the retune the protocol forbids.
+    """
+    rep = _load_json(anat / "constraint_sensitivity.json")
+    if rep is None:
+        return ("_(not produced: run `python scripts/constraint_sensitivity.py`)_\n")
+
+    s = rep["summary"]
+    out = [f"Recomputed from the archived (constraint x tumour) satisfaction matrix, which "
+           f"reproduces every published ACS to {rep['reconstruction_max_abs_error']:.0e} "
+           f"before any variant is reported. **Reporting only** — the registered ACS uses "
+           f"all constraints and all tumours, and no variant below may reorder the "
+           f"leaderboard, select a method, or justify dropping a constraint.\n",
+           "| excluded | rho vs full ranking | max rank move | methods moved | top method |",
+           "|---|---|---|---|---|"]
+    for r in rep["leave_one_constraint_out"] + rep["leave_one_tumor_out"]:
+        flag = " **changes**" if r["top_method_changes"] else ""
+        out.append(f"| {r['excluded']} | {r['spearman_vs_full_ranking']:.4f} "
+                   f"| {r['max_rank_move']:.1f} | {r['n_methods_whose_rank_moves']} "
+                   f"| `{r['top_method']}`{flag} |")
+    out.append("")
+
+    ct = s["constraints_whose_removal_changes_the_top_method"]
+    tu = s["tumors_whose_removal_changes_the_top_method"]
+    if not ct and not tu:
+        out.append("**The top method survives every single exclusion.** No one constraint "
+                   "and no one tumour is responsible for it.")
+    else:
+        out.append(f"**The top method changes when these are excluded:** "
+                   f"{', '.join(ct + tu) or 'none'}.")
+
+    worst = min(rep["leave_one_constraint_out"],
+                key=lambda r: r["spearman_vs_full_ranking"])
+    out.append("")
+    out.append(f"**The ordering below the top is not equally robust.** Dropping "
+               f"`{worst['excluded']}` moves the ranking to rho "
+               f"{worst['spearman_vs_full_ranking']:.3f}, with a maximum move of "
+               f"{worst['max_rank_move']:.0f} positions — so that one constraint carries a "
+               f"large share of the separation between the middle-ranked methods. Tumour "
+               f"exclusion is milder (worst rho {s['min_rho_tumor_dropout']:.3f}). This is "
+               f"reported as a limit on how finely the leaderboard can be read, not as a "
+               f"reason to change the constraint set.")
+    return "\n".join(out) + "\n"
+
+
 def per_tumor_table(path: Path, method: str) -> str:
     df = _load_csv(path)
     if df is None:
@@ -443,7 +555,11 @@ def render(results_dir: Path) -> str:
 
     best = rep["best_acs_method"] if rep else None
     if best:
-        A(f"### Per constraint — best method (`{best}`)\n")
+        A("### Which constraints carry the ranking\n")
+        A(constraint_discrimination(anat))
+        A("\n### Leave-one-out robustness\n")
+        A(sensitivity_section(anat))
+        A(f"\n### Per constraint — best method (`{best}`)\n")
         A(per_constraint_table(anat / "acs_per_constraint.csv", best))
         A(f"\n### Per tumour — `{best}`\n")
         A(per_tumor_table(anat / "acs_per_tumor.csv", best))

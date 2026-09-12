@@ -182,19 +182,74 @@ def rscript_available() -> bool:
     return shutil.which("Rscript") is not None
 
 
+#: Result of every package probe made in this process: package -> (available, why).
+#: Whether an R package is installed cannot change while the process runs, so probing
+#: once is not an optimisation with a correctness cost — it removes one.
+_PACKAGE_PROBE: dict[str, tuple[bool, str]] = {}
+
+
+def probe_r_package(package: str) -> tuple[bool, str]:
+    """
+    Ask R itself whether the package loads, once per process, and say how it knows.
+
+    Two things this fixes, both real.
+
+    **The probe was uncached.** Every `check()` spawned a fresh R process with a 120 s
+    timeout. A 15-method run makes that call many times over, and the test suite more; a
+    single pytest run was observed spending over twenty minutes almost entirely in
+    repeated `requireNamespace` probes while the machine was busy.
+
+    **A failed probe was indistinguishable from an absent package.** The old code caught
+    every exception — `TimeoutExpired` included — and returned False, which `check()` then
+    reported as "R package X is not installed". Under load the probe can time out while
+    the package is installed and perfectly usable, and the method would quietly run its
+    Python reimplementation instead. The fallback is recorded, so nothing is hidden, but
+    the recorded *reason* would be false and the leaderboard would depend on how busy the
+    machine was. The three states are now distinct, and a probe that fails for any reason
+    other than the package being absent says so.
+    """
+    if package in _PACKAGE_PROBE:
+        return _PACKAGE_PROBE[package]
+    if not rscript_available():
+        result = (False, "Rscript is not on PATH")
+    else:
+        try:
+            proc = subprocess.run(
+                ["Rscript", "-e",
+                 f'cat(if (requireNamespace("{package}", quietly=TRUE)) "yes" else "no")'],
+                capture_output=True, text=True, timeout=120,
+            )
+            if proc.stdout.strip().endswith("yes"):
+                result = (True, f"R package {package} loads")
+            elif proc.stdout.strip().endswith("no"):
+                result = (False, f"R package {package} is not installed")
+            else:
+                result = (False,
+                          f"the probe for R package {package} returned neither yes nor no "
+                          f"(exit {proc.returncode}); treating it as unavailable, but this "
+                          f"is a PROBE FAILURE, not evidence the package is absent")
+        except subprocess.TimeoutExpired:
+            result = (False,
+                      f"the probe for R package {package} timed out after 120 s. This is a "
+                      f"PROBE FAILURE, not evidence the package is absent — most likely the "
+                      f"machine was loaded. A method falling back for this reason is running "
+                      f"its Python reimplementation for a reason unrelated to the method.")
+        except Exception as exc:                          # noqa: BLE001
+            result = (False,
+                      f"the probe for R package {package} raised "
+                      f"{type(exc).__name__}; PROBE FAILURE, not evidence of absence")
+    _PACKAGE_PROBE[package] = result
+    return result
+
+
 def r_package_available(package: str) -> bool:
     """Ask R itself whether the package loads — presence on disk is not enough."""
-    if not rscript_available():
-        return False
-    try:
-        proc = subprocess.run(
-            ["Rscript", "-e",
-             f'cat(if (requireNamespace("{package}", quietly=TRUE)) "yes" else "no")'],
-            capture_output=True, text=True, timeout=120,
-        )
-        return proc.stdout.strip().endswith("yes")
-    except Exception:                                    # noqa: BLE001
-        return False
+    return probe_r_package(package)[0]
+
+
+def clear_package_probe_cache() -> None:
+    """For tests, and for a process that installs a package after probing for it."""
+    _PACKAGE_PROBE.clear()
 
 
 @dataclass
@@ -214,8 +269,12 @@ def check(method_name: str, ref_name: str) -> Availability:
         return Availability(method_name, False, "no R implementation is wired for this method")
     if not rscript_available():
         return Availability(method_name, False, "Rscript is not on PATH")
-    if not r_package_available(pkg):
-        return Availability(method_name, False, f"R package {pkg} is not installed")
+    ok, why = probe_r_package(pkg)
+    if not ok:
+        # `why` distinguishes "not installed" from "the probe failed". Recording the
+        # difference matters: a fallback caused by a loaded machine is not a fact about
+        # the method, and must not read like one in implementation_report.json.
+        return Availability(method_name, False, why)
     # Either a registered in-memory cell source (from which a per-gene-set export is
     # written on demand) or a pre-written full export will do.
     # EPIC and quanTIseq consume a signature matrix, which every run already has, so
