@@ -22,8 +22,6 @@ HEADLINE: ACS ranking tracks true accuracy at the pre-registered bar. Anatomic c
 
 **Pre-registration:** **REGISTERED**. REGISTERED: constraint file 2d1fb47c98832adf... registered at 2026-09-10T03:32:03Z with OSF, and every result file postdates it.
 
-> **The ordering verdict above is STALE and must not be read.** `registration_status.json` is older than 1 result file(s) it claims to have checked, so it judged a previous run's artefacts. Recompute it with `python scripts/register.py --status` before citing any pre-registration claim.
-
 **Reference coverage:** the roster maps 12 of the atlas's labels and drops the rest — **23,864 cells (7.0%)**.
 
 | dropped population | cells |
