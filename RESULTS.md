@@ -252,6 +252,54 @@ Pre-registered bar: rho >= 0.6 AND a bootstrap CI excluding zero. Minimum method
 | simulated_donor_mismatch | — | — – — | 0 | — | UNAVAILABLE: this yardstick produced no scores in this run. |
 
 
+## 5a. The constraints against in-situ hybridization
+
+Ivy GAP's ISH panel quantifies expression energy for 480 genes over 899 sub-blocks from 42 donors, in the same five anatomic structures. **No deconvolution method touches it**, so it is the one test here of whether the constraints are true of the tissue rather than agreed on by solvers.
+
+**Exploratory, and the constraints do not move on it.** The constraint file is frozen at `2d1fb47c98832adf…` and registered. Nothing below may edit it.
+
+**ISH energy is not composition.** It is transcript signal in a region, which rises with expression per cell as well as with cell number. A marker can move the right way for the wrong reason, and the reverse.
+
+Markers were declared before any value was read. **8 of 17 testable marker-constraint tests reach p < 0.05** under a within-sub-block permutation null; satisfaction is averaged within donor before averaging across donors, because sub-blocks nest in donors.
+
+| constraint | claim | marker | donors | blocks | satisfied rate | null p |
+|---|---|---|---|---|---|---|
+| C1 | Tumor: CT > LE | `SOX2` | 5 | 5 | 0.000 | 1.0000 |
+| C1 | Tumor: CT > LE | `PTPRZ1` | 18 | 22 | 0.056 | 1.0000 |
+| C1 | Tumor: CT > LE | `EGFR` | 0 | 0 | — | — |
+| C1 | Tumor: CT > LE | `CD44` | 26 | 137 |  **0.900** |  **0.0005** |
+| C1 | Tumor: CT > LE | `BIRC5` | 26 | 134 |  **0.630** |  **0.0070** |
+| C1 | Tumor: CT > LE | `TOP2A` | 5 | 5 | 0.600 | 0.4963 |
+| C3 | Endothelial: MVP > CT | `ESM1` | 6 | 8 |  **1.000** |  **0.0050** |
+| C3 | Endothelial: MVP > CT | `CD34` | 2 | 2 | 0.000 | — |
+| C3 | Endothelial: MVP > CT | `KDR` | 3 | 3 | 0.667 | 0.4848 |
+| C3 | Endothelial: MVP > CT | `CAV1` | 4 | 4 | 0.500 | 0.6837 |
+| C4 | Endothelial: MVP is the maximum | `ESM1` | 6 | 8 |  **0.750** |  **0.0205** |
+| C4 | Endothelial: MVP is the maximum | `CD34` | 2 | 2 | 0.000 | — |
+| C4 | Endothelial: MVP is the maximum | `KDR` | 3 | 3 | 0.667 | 0.2159 |
+| C4 | Endothelial: MVP is the maximum | `CAV1` | 4 | 4 | 0.250 | 0.7291 |
+| C5 | Macrophage_Microglia: PAN > LE | `CD163` | 1 | 1 | 1.000 | — |
+| C5 | Macrophage_Microglia: PAN > LE | `LAPTM5` | 1 | 1 | 1.000 | — |
+| C6 | Macrophage_Microglia: MVP > CT | `CD163` | 6 | 7 |  **1.000** |  **0.0085** |
+| C6 | Macrophage_Microglia: MVP > CT | `LAPTM5` | 1 | 1 | 1.000 | — |
+| C7 | Tumor: LE < IT < CT | `SOX2` | 4 | 4 | 0.000 | 1.0000 |
+| C7 | Tumor: LE < IT < CT | `PTPRZ1` | 13 | 15 | 0.000 | 1.0000 |
+| C7 | Tumor: LE < IT < CT | `EGFR` | 0 | 0 | — | — |
+| C7 | Tumor: LE < IT < CT | `CD44` | 24 | 112 |  **0.529** |  **0.0005** |
+| C7 | Tumor: LE < IT < CT | `BIRC5` | 24 | 109 |  **0.260** |  **0.0160** |
+| C7 | Tumor: LE < IT < CT | `TOP2A` | 4 | 4 |  **0.750** |  **0.0165** |
+
+**What this supports.** The endothelial and perivascular-myeloid claims — the strongest in the set on neuropathology — have independent measured support: ESM1 satisfies C3 in every evaluable donor (p = 0.005) and C4 at 0.750 (p = 0.021), and CD163 satisfies C6 in every evaluable donor (p = 0.0085).
+
+**What it does not.** C1 and C7 — the tumour constraints — come out **marker-dependent, and the disagreement is not noise**. CD44 satisfies C1 at 0.900 over 137 blocks and 26 donors (p = 0.0005) and BIRC5 at 0.630 (p = 0.007), while SOX2 and PTPRZ1 satisfy it at **0.000 and 0.056**, with a null p of 1.000 — as far the other way as the data allow. All four are real tumour markers.
+
+The reading that fits is that these markers track different tumour programmes rather than tumour cell *density*, which is what C1 claims: SOX2 and PTPRZ1 mark stem-like and OPC-like states reported to be enriched at the infiltrating margin, while CD44 and BIRC5 mark mesenchymal and proliferating states concentrated in the dense core. That is an interpretation, offered as one, and it is a hypothesis this study does not test. What is measured is that **no marker in this panel measures tumour cell density**, so the ISH panel cannot adjudicate C1 or C7 either way.
+
+**C2 is unmeasurable here.** Oligodendrocyte: LE > CT cannot be checked. Ivy GAP's ISH panel contains no myelin or oligodendrocyte-lineage marker — MBP, PLP1, MOG, MAG, CNP, SOX10, MOBP and CLDN11 are all absent. OLIG2 IS present and is deliberately not used: in glioma it is expressed by the tumour cells themselves and by OPCs, so scoring an oligodendrocyte claim on it would measure tumour content and report it as oligodendrocyte content.
+
+**Power.** 11 of 24 marker-constraint rows rest on fewer than five donors, and 2 on none at all (EGFR is in the panel but yielded no evaluable structure pair). The endothelial and myeloid results rest on 6-8 blocks. That is thin, and the support they give the constraint set is correspondingly weak — real, independent, and small.
+
+
 ## 6. Does deconvolving all 270 samples change the ranking?
 
 | method | ACS (122 anatomic) | ACS (270 deconvolved) | delta | rank change |

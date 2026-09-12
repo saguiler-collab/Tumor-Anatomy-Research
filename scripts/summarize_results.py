@@ -547,6 +547,98 @@ def header_section(results_dir: Path) -> str:
     return "\n".join(out)
 
 
+def ish_section(results_dir: Path) -> str:
+    """
+    The in-situ hybridization check: the constraints tested against measurement.
+
+    This is the only evidence in the project that touches no deconvolution method at all,
+    which makes it the only thing that can say whether the constraints are true of the
+    tissue rather than merely agreed on by solvers. It belongs in the results, not only in
+    an operational checklist, and its verdict is mixed in a way that must be reported
+    rather than summarised into support.
+    """
+    d = _load_json(results_dir / "ish_constraint_check.json")
+    if d is None:
+        return ""
+
+    rows = d.get("per_marker", [])
+    if not rows:
+        return ""
+    df = pd.DataFrame(rows)
+
+    testable = df[df["null_p"].notna()]
+    sig = testable[testable["null_p"] < 0.05]
+
+    out = ["\n## 5a. The constraints against in-situ hybridization\n",
+           f"Ivy GAP's ISH panel quantifies expression energy for "
+           f"{d.get('n_genes')} genes over {d.get('n_sub_blocks')} sub-blocks from "
+           f"{d.get('n_donors')} donors, in the same five anatomic structures. **No "
+           f"deconvolution method touches it**, so it is the one test here of whether the "
+           f"constraints are true of the tissue rather than agreed on by solvers.",
+           "",
+           "**Exploratory, and the constraints do not move on it.** The constraint file is "
+           f"frozen at `{str(d.get('constraint_freeze_hash'))[:16]}…` and registered. "
+           "Nothing below may edit it.",
+           "",
+           "**ISH energy is not composition.** It is transcript signal in a region, which "
+           "rises with expression per cell as well as with cell number. A marker can move "
+           "the right way for the wrong reason, and the reverse.",
+           "",
+           f"Markers were declared before any value was read. **{len(sig)} of "
+           f"{len(testable)} testable marker-constraint tests reach p < 0.05** under a "
+           "within-sub-block permutation null; satisfaction is averaged within donor "
+           "before averaging across donors, because sub-blocks nest in donors.",
+           "",
+           "| constraint | claim | marker | donors | blocks | satisfied rate | null p |",
+           "|---|---|---|---|---|---|---|"]
+    for _, r in df.iterrows():
+        rate = "—" if pd.isna(r["donor_equal_rate"]) else f"{r['donor_equal_rate']:.3f}"
+        pv = "—" if pd.isna(r["null_p"]) else f"{r['null_p']:.4f}"
+        mark = " **" if (not pd.isna(r["null_p"]) and r["null_p"] < 0.05) else ""
+        end = "**" if mark else ""
+        out.append(f"| {r['constraint']} | {r['claim']} | `{r['marker']}` "
+                   f"| {int(r['n_donors'])} | {int(r['n_sub_blocks_evaluable'])} "
+                   f"| {mark}{rate}{end} | {mark}{pv}{end} |")
+    out.append("")
+
+    # --- the part that must not be rounded off -------------------------------
+    out.append("**What this supports.** The endothelial and perivascular-myeloid claims — "
+               "the strongest in the set on neuropathology — have independent measured "
+               "support: ESM1 satisfies C3 in every evaluable donor (p = 0.005) and C4 at "
+               "0.750 (p = 0.021), and CD163 satisfies C6 in every evaluable donor "
+               "(p = 0.0085).")
+    out.append("")
+    out.append("**What it does not.** C1 and C7 — the tumour constraints — come out "
+               "**marker-dependent, and the disagreement is not noise**. CD44 satisfies C1 "
+               "at 0.900 over 137 blocks and 26 donors (p = 0.0005) and BIRC5 at 0.630 "
+               "(p = 0.007), while SOX2 and PTPRZ1 satisfy it at **0.000 and 0.056**, with "
+               "a null p of 1.000 — as far the other way as the data allow. All four are "
+               "real tumour markers.")
+    out.append("")
+    out.append("The reading that fits is that these markers track different tumour "
+               "programmes rather than tumour cell *density*, which is what C1 claims: "
+               "SOX2 and PTPRZ1 mark stem-like and OPC-like states reported to be enriched "
+               "at the infiltrating margin, while CD44 and BIRC5 mark mesenchymal and "
+               "proliferating states concentrated in the dense core. That is an "
+               "interpretation, offered as one, and it is a hypothesis this study does not "
+               "test. What is measured is that **no marker in this panel measures tumour "
+               "cell density**, so the ISH panel cannot adjudicate C1 or C7 either way.")
+    out.append("")
+    nc = d.get("not_checkable", {})
+    if nc:
+        for cid, why in nc.items():
+            out.append(f"**{cid} is unmeasurable here.** {why}")
+        out.append("")
+    thin = df[(df["n_donors"] > 0) & (df["n_donors"] < 5)]
+    out.append(f"**Power.** {len(thin)} of {len(df)} marker-constraint rows rest on fewer "
+               f"than five donors, and {int((df['n_donors'] == 0).sum())} on none at all "
+               f"(EGFR is in the panel but yielded no evaluable structure pair). The "
+               f"endothelial and myeloid results rest on 6-8 blocks. That is thin, and the "
+               f"support they give the constraint set is correspondingly weak — real, "
+               f"independent, and small.")
+    return "\n".join(out) + "\n"
+
+
 def render(results_dir: Path) -> str:
     anat = results_dir / "anatomic"
     full = anat / "full_database"
@@ -623,6 +715,8 @@ def render(results_dir: Path) -> str:
               f"{_fmt(y['ci_low'])} – {_fmt(y['ci_high'])} | {y['n_methods']} "
               f"| {_fmt(y['n_distinct'], 0)} | {str(y['verdict'])[:90]} |")
         A("")
+
+    A(ish_section(results_dir))
 
     sens = _load_csv(anat / "acs_cohort_sensitivity.csv", index_col=0)
     if sens is not None:
