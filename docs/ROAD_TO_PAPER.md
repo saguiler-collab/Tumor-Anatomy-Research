@@ -42,11 +42,21 @@ not:
 **Three of the top methods are double-corrected, including MuSiC**, which leads ACS at
 1.000 and the accuracy benchmark at MAE 0.0508.
 
-**Why blocking:** it changes every affected accuracy number, therefore the accuracy
-ranking, therefore rho — the paper's headline. It does **not** change ACS, because a
-per-type constant applied twice cannot reorder a cell type across structures and ACS is a
-rank statistic over structures within a tumour. The leaderboard, the control verdict and
-the ISH agreement all stand.
+**Why blocking — and this is worse than stated here until 2026-09-11.** An earlier
+version of this file said the defect "does not change ACS". That was asserted from the
+shape of the formula, never tested, and is **wrong**. `to_cell_fractions` renormalises
+each sample after dividing by cell size, and the renormalisation divisor depends on that
+sample's composition, so the effective scaling varies sample to sample and *can* reorder a
+cell type across structures.
+
+Measured by applying the correction a second time to every archived estimate table:
+**15 of 16 methods change ACS**, the largest change is 0.0462, and **7 of 14 ranks move** —
+DWLS rises from 14th to 12th, EPIC and SVR rise to joint first.
+
+So it moves **ACS, the leaderboard ordering, the accuracy arm, and rho.** The design is
+untouched — controls, permutation null, constraint file and ISH validation do not depend
+on the cell-size conversion — but every leaderboard number is provisional until this is
+fixed.
 
 **What remains is a decision, not an investigation.** SCDC's 0.653 settles it: it is
 neither answer, so neither "apply ours" nor "skip ours" is right for it. Only the third

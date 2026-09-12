@@ -92,18 +92,49 @@ derived from the data — without fully converting. So neither "apply ours" nor 
 is right for SCDC, and the third design below (pass this project's factors in via
 `ct.cell.size`, skip the central step) is the only one that handles it cleanly.
 
-### What this changes, and what it does not
+### What this changes — CORRECTED 2026-09-11
 
-**Does not change ACS or any conclusion resting on it.** The bias is a per-type constant
-applied twice within a method. Multiplying a cell type's column by a constant cannot
-reorder that column across structures, and ACS is a rank statistic over structures inside
-a tumour. The leaderboard, the control verdict and the ISH agreement all stand.
+**An earlier version of this section claimed the double correction "cannot change ACS,
+because a per-type constant cannot reorder a column across structures". That claim was
+wrong, was repeated several times, and is retracted here.** It was asserted from the
+shape of the formula and never tested. When tested, it fails.
 
-**Does change the accuracy arm, and therefore rho.** MAE is computed against known
-composition on the pseudobulk, where a doubled correction is a real error in magnitude.
-Since rho correlates the ACS ranking against the accuracy ranking, and the accuracy
-ranking is what moves, the headline number will change when this is fixed. It is not
-knowable in advance whether it rises or falls.
+`to_cell_fractions` divides by cell size **and then renormalises each sample to sum 1**:
+
+```python
+out = rna_fractions / cell_size
+return project_to_simplex(out)          # <- the renormalisation
+```
+
+The renormalisation divisor is `sum_j(w_j / c_j)`, which **depends on that sample's own
+composition**. So the effective scaling applied to cell type k is not `1/c_k` but
+`(1/c_k) / sum_j(w_j/c_j)`, and that denominator differs from sample to sample. Two
+samples with the same true ordering of type k can come out ordered differently. The
+per-column-constant argument would hold for the division alone; it does not survive the
+renormalisation.
+
+**Measured, by applying the correction a second time to each archived estimate table:**
+
+| | |
+|---|---|
+| methods whose ACS changes | **15 of 16** |
+| largest single change | **0.0462** (Bisque, 0.9231 -> 0.8769) |
+| methods whose RANK moves | **7 of 14** |
+| Spearman(before, after) | 0.968 |
+
+DWLS rises from 14th to 12th; EPIC and SVR rise to joint first with MuSiC; NNLS and
+Elastic Net fall from 2nd to 4th.
+
+**So the severity is higher than previously stated.** The defect affects:
+
+- **ACS**, and therefore the leaderboard ordering;
+- **the accuracy arm**, where a doubled correction is an error in magnitude;
+- **rho**, which correlates the two.
+
+Both arms of the agreement test move. Nothing about the *design* is invalidated — the
+controls, the permutation null, the constraint file and the ISH validation are untouched,
+because none of them depends on the cell-size conversion. But every number in the
+leaderboard should be treated as provisional until the fix lands.
 
 ### Why it was not fixed on discovery
 
