@@ -306,3 +306,65 @@ be reported too.
 **Suggested for the paper:** a figure showing mean composition per method within the
 0.9846 tie group. It makes the limitation visible in one image and is more honest than a
 footnote.
+
+---
+
+## D7 · Degenerate per-sample solves are neither detected nor disclosed
+
+**Severity: medium. A real defect, with a bounded and measured effect.** Found 2026-09-12.
+
+Ten estimates across three methods put **100% of a sample into a single cell type** —
+always Tumor:
+
+| method | samples at 100% Tumor |
+|---|---|
+| DWLS | 6 |
+| BayesPrism | 2 |
+| SCDC / SCDC ENSEMBLE | 2 |
+
+A glioblastoma block containing no macrophages, no endothelium and no oligodendrocytes is
+not a composition; it is a solver that failed and returned a corner of the simplex. The
+pipeline currently treats these as valid estimates. Nothing flags them, nothing counts
+them, and they enter the (tumour, structure) means that constraints are scored on.
+
+This sits against the project's own standard — *"no failed folds, no silently dropped
+samples, no method quietly missing from a ranking"*. These samples are not dropped, but
+they are silently **wrong**, which the standard does not currently name.
+
+### Where they land, and why that is the interesting part
+
+**Seven of the eight distinct degenerate samples are PAN** — pseudopalisading cells around
+necrosis. That is not random. PAN is necrotic tissue: degraded RNA, low library
+complexity, and a composition genuinely dominated by tumour cells. It is the hardest
+structure in the cohort to deconvolve, and it is also **the structure C5 depends on**
+(Macrophage/microglia: PAN > LE).
+
+### The effect is real but dose-dependent — measured, not assumed
+
+| tumour | method | degenerate PAN blocks | C5 outcome |
+|---|---|---|---|
+| 705803 | DWLS | **2 of 3** | **violated** |
+| 705803 | SCDC | 1 of 3 | satisfied |
+| 703393 | SCDC | 1 of 3 | satisfied |
+| 705803 | BayesPrism | 0 | violated — a different cause |
+
+So a degenerate block corrupts the structure mean only when it is a **majority** of that
+structure's blocks, because the mean over the remaining good blocks survives one bad one.
+And C5 also fails for reasons unrelated to degeneracy, so the two must not be conflated.
+
+**What is established:** degenerate solves exist, concentrate in PAN, are undetected, and
+can flip a constraint when they dominate a structure's blocks.
+**What is not established:** that they changed the leaderboard ordering. On this cohort
+the one clear case (DWLS, 705803) affects a method already last.
+
+### The fix
+
+Detect and disclose, do not silently drop. A per-sample estimate whose maximum component
+exceeds some threshold — 0.99, or exactly 1.0 — should be counted and reported per method
+in `implementation_report.json`, the same way wall-clock and fallbacks are. Whether such
+samples should also be *excluded* from the structure mean is a study-design decision and
+must not be made quietly: excluding them would change ACS, and the exclusion rule would
+have to be declared.
+
+**Do not** fix this by clipping or smoothing the estimates. The degenerate value is the
+method's actual output and the honest record of what it produced.
