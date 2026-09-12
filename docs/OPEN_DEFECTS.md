@@ -5,13 +5,37 @@ nobody has to rediscover them. Each entry states what was **verified** versus wh
 **suspected**, because the difference decides whether a fix is safe.
 
 Closed defects live in git history and in `docs/METHODS.md`; this file is only what is
-still open.
+still open — plus entries whose *investigation* concluded but whose reasoning is worth
+keeping, marked RESOLVED at the top.
+
+| | status |
+|---|---|
+| **D1** cell-size correction | RESOLVED — not a double correction; a substituted one, now declared |
+| **D2** SCDC ENSEMBLE degenerate | open, disclosed in the leaderboard |
+| **D3** SCDC `ct.cell.size` | RESOLVED by D1's measurement — not passing it is correct |
+| **D4** unbounded Python fallback | open, operational |
+| **D5** yardstick cannot reward platform correction | open, design limit |
+| **D6** ACS cannot separate 20-point composition differences | open, design limit |
+| **D7** degenerate per-sample solves undetected | open |
+| **D8** one constraint carries the ranking below the top | measured, disclosed |
+| **D9** false pre-registration violation published | FIXED; residual weakness disclosed |
+| **D10** re-measurements used a different gene space | mechanism FIXED; the two measurements must be redone |
 
 ---
 
-## D1 · Cell-size correction is applied twice to some R methods
+## D1 · Cell-size correction — investigated as a DOUBLE correction, measured to be a SUBSTITUTED one
 
-**Severity: high.** It affects the accuracy numbers that the primary result is computed
+> **RESOLUTION, 2026-09-12.** The heading's original claim — "applied twice to some R
+> methods" — is **measured to be false in production** for MuSiC, SCDC and EPIC, and
+> **unmeasured** for Bisque and BayesPrism. The correction is applied **once**. What is real
+> is that the harness substitutes this project's cell-size factors for the packages' own, by
+> normalising cells to 1e6 before export, and that this was undeclared. It is now declared.
+>
+> The entry is kept in full, in order, because the reasoning went wrong twice in opposite
+> directions and the record of that is worth more than a tidy summary. Read to the end
+> before using any number in it. Jump to **"MEASURED 2026-09-12"** for the conclusion.
+
+**Severity as first recorded: high.** It affects the accuracy numbers that the primary result is computed
 from, and one of the methods involved is the top-ranked one.
 
 ### The rule this breaks
@@ -184,6 +208,93 @@ controls, the permutation null, the constraint file and the ISH validation are u
 because none of them depends on the cell-size conversion. But every number in the
 leaderboard should be treated as provisional until the fix lands.
 
+### MEASURED 2026-09-12 — the double correction does not happen in production
+
+**The premise of everything above is refuted for three of the five packages.** The probe is
+now a script (`scripts/verify_cell_size_semantics.py`) rather than prose, it was run against
+the genuine R packages, and it was run twice: once with the cell export production actually
+writes, and once with raw per-cell library sizes, which is what each package's published
+usage assumes. Only the export differs between the two — the reference profile is built the
+production way in both — so a package that moves between them moved because of its own
+internal cell-size estimate and nothing else.
+
+| package | production export (1e6 CPM/cell) | raw export | moves? |
+|---|---|---|---|
+| **MuSiC** | 0.7501 — **mRNA share** | 0.5001 — CELL share | **yes** |
+| **SCDC** | 0.7501 — **mRNA share** | 0.5336 — partial | **yes** |
+| **EPIC** | 0.7501 — **mRNA share** | 0.7501 — mRNA share | no |
+| Bisque | UNREADABLE | UNREADABLE | — |
+
+Artefacts: `results/cell_size_semantics_normalized.json`,
+`results/cell_size_semantics_raw.json`, `results/cell_size_semantics_comparison.json`.
+The probe's true mRNA fraction is 0.7500 and its true cell fraction 0.5000, so 0.7501 is
+the mRNA answer to within the solver's own error.
+
+**The mechanism.** MuSiC and SCDC *do* convert cell size when they can estimate it —
+`music_basis` computes `M.S`, the mean library size per cell type, and `SCDC_basis` derives
+one the same way. Production hands them cells normalised to 1e6 each, so every type's mean
+library size is **identical by construction**, their estimate comes out flat, and their own
+conversion becomes the identity. They return mRNA share. `reference.py` states this exact
+hazard in a comment about why `cell_totals` must be captured before normalisation; what was
+missed is that it applies to the R packages' internal estimates too, not only to ours.
+
+EPIC does not move because it never reads the cells — it consumes the signature matrix, and
+its `mRNA_cell` argument is left at the default, which supplies no factor for cell-type
+names outside its own built-in roster.
+
+**So the project's conversion is the FIRST and ONLY one for these three, and it lands on
+the truth.** Taking MuSiC's 0.7501, dividing by the cell-size factors (3000, 1000) and
+renormalising gives **0.5001** against a true cell fraction of **0.5000**.
+
+### What this means for the leaderboard
+
+**The "15 of 16 methods change ACS, 7 of 14 ranks move" measurement above describes a
+counterfactual, not a bias in the published numbers.** It was produced by applying the
+correction *a second time* to each archived estimate table, which is the right experiment
+for the hypothesis that the correction had already been applied once by the package. That
+hypothesis is now measured to be false for MuSiC, SCDC and EPIC. Applying the correction
+twice does change ACS — that finding stands and the retraction above of the
+"cannot change ACS" claim stands with it — but **nothing in the pipeline applies it twice.**
+
+**The leaderboard is therefore not provisional for this reason.** The earlier statement that
+"every number in the leaderboard should be treated as provisional until the fix lands" is
+withdrawn. There is no fix to land for these three.
+
+### What remains genuinely open
+
+1. **Bisque is unresolved.** The probe cannot read it: Bisque assigns **75%** of its mass to
+   the six roster types absent from the mixture, in both scalings, so the ratio between the
+   two present types measures nothing about a cell-size convention. Its documented
+   behaviour (`ReferenceBasedDecomposition` returning cell proportions) suggests cell share,
+   but this project has not measured it and must not assert it. A probe that fits Bisque
+   would need a roster with no absent types.
+2. **BayesPrism is unresolved under production scaling** for the same reason — 31% leakage.
+   Its Python reimplementation measures 0.7500, mRNA share, cleanly.
+3. **The earlier prose numbers are unexplained but consistent.** MuSiC 0.500 matches the
+   raw-export measurement almost exactly; SCDC 0.653 sits between this probe's raw 0.5336
+   and mRNA 0.7501. The likeliest reading is that the unsaved original probe used raw cells
+   — the same probe-versus-production mismatch that this script's own first version fell
+   into and that its comments now record. Not established, and it does not need to be: the
+   production measurement is what governs.
+
+### The real defect this uncovered — UNDECLARED DEVIATION
+
+Not a double correction. A **substituted** one.
+
+Production silently neutralises MuSiC's and SCDC's own cell-size machinery by normalising
+every cell to a common library size before export, and then supplies this project's factors
+instead. That is arguably the *better* choice — one set of factors, computed one way,
+applied identically to every method, which is what equal footing demands, and it is clearly
+what the design intends, since `cell_totals` is deliberately captured before normalisation
+precisely so the information normalisation destroys can be reinstated centrally.
+
+But it is a deviation from each package's published behaviour, it is currently **not
+declared** in `method_configs.json` alongside the cibersortx, dwls and quantiseq
+deviations, and a reviewer who knows MuSiC would reasonably expect `music_prop` to be doing
+its own cell-size estimation. It must be declared, with this measurement as the evidence.
+
+That is the remaining work on D1, and it is documentation rather than a re-run.
+
 ### Why it was not fixed on discovery
 
 Found mid-run, while the confirmatory run (the first to postdate registration) was in
@@ -252,9 +363,22 @@ project's opening argument criticises.
 **Severity: low, and entangled with D1.**
 
 `R/run_scdc.R` does not pass `ct.cell.size`, so SCDC computes library sizes from the data
-rather than using `reference_frozen/cell_size_factors.csv`. Whether that is wrong depends
-on D1's resolution: if SCDC's output is taken as an mRNA share and corrected centrally,
-not passing `ct.cell.size` is right. Resolve D1 first.
+rather than using `reference_frozen/cell_size_factors.csv`.
+
+**RESOLVED 2026-09-12 — not passing it is correct here.** D1's measurement settles the
+condition this entry was waiting on. SCDC derives `ct.cell.size` from the cells it is given,
+and production gives it cells normalised to 1e6 each, so what it derives is flat and its own
+conversion is the identity: measured, SCDC returns **0.7501** on a probe whose true mRNA
+fraction is 0.7500. Its output is therefore an mRNA share, it is corrected once and
+centrally, and passing `ct.cell.size` would make that correction the second one — the exact
+error D1 was wrongly believed to contain.
+
+With a raw export SCDC returns 0.5336, i.e. it does convert partly when it can. That is why
+this entry could not be resolved from the source alone and needed the measurement.
+
+**What remains is the declaration, not the code.** The substitution — our factors instead of
+the package's own — is now listed in `DECLARED_DEVIATIONS` for `scdc` and `scdc_ensemble`
+and appears in `method_configs.json`.
 
 **Verified not a defect:** `truep` is never passed to SCDC. Passing it would leak the
 answer into the estimate on the benchmark arm, where true proportions are known.

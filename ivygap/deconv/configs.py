@@ -35,6 +35,143 @@ from pathlib import Path
 #: method name -> (what was changed, why, when the decision was made).
 #: Only genuine departures from a tool's documented defaults belong here.
 DECLARED_DEVIATIONS: dict[str, list[dict]] = {
+    "bisque": [
+        {
+            "parameter": "the scale of the single-cell matrix this HARNESS exports, and "
+                         "hence whether the package estimates cell size itself",
+            "published_default": "raw per-cell counts",
+            "used": ("cells normalised to 1e6 each before export, the same treatment every "
+                     "cell-consuming method receives, followed by this project's cell-size "
+                     "factors applied once and centrally"),
+            "why": ("Equal footing: one set of factors applied identically to all 16 "
+                    "methods. Declared for this method even though its own convention is "
+                    "UNMEASURED — the cell-size probe cannot read it, because on a roster "
+                    "with six types absent from the mixture this package assigns ~75% of "
+                    "its mass to the absent types and the remaining ratio measures nothing "
+                    "about a cell-size convention. So this entry records what the harness "
+                    "does, and explicitly does NOT claim the package would have corrected "
+                    "cell size itself. An earlier version of docs/OPEN_DEFECTS.md D1 "
+                    "asserted this package was double-corrected; that claim is withdrawn "
+                    "as unmeasured. See scripts/verify_cell_size_semantics.py."),
+            "decided": ("from the harness's own code path, which is a fact about this "
+                        "pipeline and not about any score"),
+        },
+    ],
+    "bayesprism": [
+        {
+            "parameter": "the scale of the single-cell matrix this HARNESS exports, and "
+                         "hence whether the package estimates cell size itself",
+            "published_default": "raw per-cell counts",
+            "used": ("cells normalised to 1e6 each before export, the same treatment every "
+                     "cell-consuming method receives, followed by this project's cell-size "
+                     "factors applied once and centrally"),
+            "why": ("Equal footing, as above. This package's own convention is UNMEASURED "
+                    "under the production export — the probe shows ~31% leakage onto roster "
+                    "types absent from the mixture, which makes the reading unusable. Its "
+                    "PYTHON reimplementation measures 0.7500 on the same probe, i.e. mRNA "
+                    "share, which if it carries over to the R package would make this "
+                    "project's conversion the first and correct one. Not assumed. See "
+                    "scripts/verify_cell_size_semantics.py and docs/OPEN_DEFECTS.md D1."),
+            "decided": ("from the harness's own code path, which is a fact about this "
+                        "pipeline and not about any score"),
+        },
+    ],
+    "scdc_ensemble": [
+        {
+            "parameter": "the scale of the single-cell matrix this HARNESS exports, and "
+                         "hence whether the package estimates cell size itself",
+            "published_default": ("raw per-cell counts, from which the package derives its "
+                                  "own per-cell-type mRNA content — `music_basis` computes "
+                                  "`M.S`, the mean library size per cell type, and "
+                                  "`SCDC_basis` derives one the same way"),
+            "used": ("cells normalised to 1e6 each before export, so every cell type's "
+                     "mean library size is identical and the package's own cell-size "
+                     "estimate is flat. The package therefore returns mRNA share, and this "
+                     "project's cell-size factors — captured from the RAW library sizes "
+                     "before normalisation — are applied once, centrally, to every method."),
+            "why": ("Equal footing. One set of factors, computed one way, applied "
+                    "identically to all 16 methods, rather than each package deriving its "
+                    "own from whatever cells it happened to receive. Normalising per cell "
+                    "before averaging is also what keeps a deeply sequenced cell from "
+                    "dominating its type's mean profile. MEASURED, not assumed: on a probe "
+                    "where two types differ 3x in mRNA and are mixed 50/50 by cell count "
+                    "(true cell fraction 0.500, true mRNA fraction 0.750), this package "
+                    "returns 0.7501 with the production export and 0.5336 with a "
+                    "raw export, so it does convert when it can and production "
+                    "prevents it. One central conversion applied to 0.7501 gives "
+                    "0.5001 against a truth of 0.5000. See "
+                    "scripts/verify_cell_size_semantics.py, "
+                    "results/cell_size_semantics_{normalized,raw}.json, and "
+                    "docs/OPEN_DEFECTS.md D1."),
+            "decided": ("from the measurement above, which is independent of any ACS or "
+                        "benchmark score — the probe is synthetic and its truth is known "
+                        "by construction"),
+        },
+    ],
+    "scdc": [
+        {
+            "parameter": "the scale of the single-cell matrix this HARNESS exports, and "
+                         "hence whether the package estimates cell size itself",
+            "published_default": ("raw per-cell counts, from which the package derives its "
+                                  "own per-cell-type mRNA content — `music_basis` computes "
+                                  "`M.S`, the mean library size per cell type, and "
+                                  "`SCDC_basis` derives one the same way"),
+            "used": ("cells normalised to 1e6 each before export, so every cell type's "
+                     "mean library size is identical and the package's own cell-size "
+                     "estimate is flat. The package therefore returns mRNA share, and this "
+                     "project's cell-size factors — captured from the RAW library sizes "
+                     "before normalisation — are applied once, centrally, to every method."),
+            "why": ("Equal footing. One set of factors, computed one way, applied "
+                    "identically to all 16 methods, rather than each package deriving its "
+                    "own from whatever cells it happened to receive. Normalising per cell "
+                    "before averaging is also what keeps a deeply sequenced cell from "
+                    "dominating its type's mean profile. MEASURED, not assumed: on a probe "
+                    "where two types differ 3x in mRNA and are mixed 50/50 by cell count "
+                    "(true cell fraction 0.500, true mRNA fraction 0.750), this package "
+                    "returns 0.7501 with the production export and 0.5336 with a "
+                    "raw export, so it does convert when it can and production "
+                    "prevents it. One central conversion applied to 0.7501 gives "
+                    "0.5001 against a truth of 0.5000. See "
+                    "scripts/verify_cell_size_semantics.py, "
+                    "results/cell_size_semantics_{normalized,raw}.json, and "
+                    "docs/OPEN_DEFECTS.md D1."),
+            "decided": ("from the measurement above, which is independent of any ACS or "
+                        "benchmark score — the probe is synthetic and its truth is known "
+                        "by construction"),
+        },
+    ],
+    "music": [
+        {
+            "parameter": "the scale of the single-cell matrix this HARNESS exports, and "
+                         "hence whether the package estimates cell size itself",
+            "published_default": ("raw per-cell counts, from which the package derives its "
+                                  "own per-cell-type mRNA content — `music_basis` computes "
+                                  "`M.S`, the mean library size per cell type, and "
+                                  "`SCDC_basis` derives one the same way"),
+            "used": ("cells normalised to 1e6 each before export, so every cell type's "
+                     "mean library size is identical and the package's own cell-size "
+                     "estimate is flat. The package therefore returns mRNA share, and this "
+                     "project's cell-size factors — captured from the RAW library sizes "
+                     "before normalisation — are applied once, centrally, to every method."),
+            "why": ("Equal footing. One set of factors, computed one way, applied "
+                    "identically to all 16 methods, rather than each package deriving its "
+                    "own from whatever cells it happened to receive. Normalising per cell "
+                    "before averaging is also what keeps a deeply sequenced cell from "
+                    "dominating its type's mean profile. MEASURED, not assumed: on a probe "
+                    "where two types differ 3x in mRNA and are mixed 50/50 by cell count "
+                    "(true cell fraction 0.500, true mRNA fraction 0.750), this package "
+                    "returns 0.7501 with the production export and 0.5001 with a "
+                    "raw export, so it does convert when it can and production "
+                    "prevents it. One central conversion applied to 0.7501 gives "
+                    "0.5001 against a truth of 0.5000. See "
+                    "scripts/verify_cell_size_semantics.py, "
+                    "results/cell_size_semantics_{normalized,raw}.json, and "
+                    "docs/OPEN_DEFECTS.md D1."),
+            "decided": ("from the measurement above, which is independent of any ACS or "
+                        "benchmark score — the probe is synthetic and its truth is known "
+                        "by construction"),
+        },
+    ],
     "cibersortx": [
         {
             "parameter": "batch-correction mode (B-mode vs S-mode)",

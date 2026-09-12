@@ -24,70 +24,59 @@ method. That is Tier 2.
 
 These are not improvements. Each one prevents a statement in the paper from being wrong.
 
-### 0.1 Verify the cell-size double-correction · **INTERNAL + package docs**
+### 0.1 The cell-size correction · **RESOLVED 2026-09-12 — it was not a double correction**
 
-`OPEN_DEFECTS.md` D1. **Verification is COMPLETE as of 2026-09-10** — all five packages
-were tested on a reference where two cell types differ 3x in mRNA content, mixed 50/50 by
-cell count, so 0.50 means the package already divided out cell size and 0.75 means it did
-not:
+**Previous status: BLOCKING, "every leaderboard number is provisional". That is withdrawn.**
 
-| method | returned | reports | our correction is |
+The five-package table this entry rested on existed only as prose in two markdown files,
+measured once by a script that was never saved. It is now
+`scripts/verify_cell_size_semantics.py`, and it was run against the genuine R packages in
+both scalings — the CPM-normalised cell export production writes, and raw per-cell library
+sizes, which is what each package's published usage assumes. Only the export differs, so a
+package that moves did so because of its own internal cell-size estimate.
+
+| package | production export | raw export | moves? |
 |---|---|---|---|
-| **MuSiC** | 0.500 | cell share | **a second correction — defect** |
-| **Bisque** | 0.500 | cell share | **defect** |
-| **EPIC** | offers both | cell share, as taken | **defect** |
-| BayesPrism | 0.750 | mRNA share | correct, the first |
-| SCDC | 0.653 | between the two | **partial** |
+| **MuSiC** | 0.7501 — **mRNA share** | 0.5001 — CELL share | **yes** |
+| **SCDC** | 0.7501 — **mRNA share** | 0.5336 — partial | **yes** |
+| **EPIC** | 0.7501 — **mRNA share** | 0.7501 — mRNA share | no |
+| Bisque | UNREADABLE (75% leak) | UNREADABLE | — |
 
-**Three of the top methods are double-corrected, including MuSiC**, which leads ACS at
-1.000 and the accuracy benchmark at MAE 0.0508.
+Probe truth: cell fraction 0.5000, mRNA fraction 0.7500.
 
-**Why blocking — and this is worse than stated here until 2026-09-11.** An earlier
-version of this file said the defect "does not change ACS". That was asserted from the
-shape of the formula, never tested, and is **wrong**. `to_cell_fractions` renormalises
-each sample after dividing by cell size, and the renormalisation divisor depends on that
-sample's composition, so the effective scaling varies sample to sample and *can* reorder a
-cell type across structures.
+**MuSiC and SCDC do convert cell size when they can estimate it. Production prevents them
+from estimating it** — every cell is normalised to 1e6 before export, so each type's mean
+library size is identical by construction and their own conversion becomes the identity.
+They return mRNA share, this project's conversion is the first and only one, and it lands on
+the truth: MuSiC's 0.7501 divided by the size factors and renormalised gives **0.5001**
+against a true 0.5000.
 
-Measured by applying the correction a second time to every archived estimate table:
-**15 of 16 methods change ACS**, the largest change is 0.0462, and **7 of 14 ranks move** —
-DWLS rises from 14th to 12th, EPIC and SVR rise to joint first.
+**So there is no second correction to remove, and no re-run.** The "15 of 16 methods change
+ACS" figure was produced by applying the correction a *second* time — the right experiment
+for a hypothesis now measured to be false. Applying it twice does change ACS; nothing in the
+pipeline applies it twice.
 
-So it moves **ACS, the leaderboard ordering, the accuracy arm, and rho.** The design is
-untouched — controls, permutation null, constraint file and ISH validation do not depend
-on the cell-size conversion — but every leaderboard number is provisional until this is
-fixed.
+**What is left is documentation, not computation:**
 
-**What remains is a decision, not an investigation.** SCDC's 0.653 settles it: it is
-neither answer, so neither "apply ours" nor "skip ours" is right for it. Only the third
-design in D1 handles all five — pass this project's cell-size factors *into* each package
-that accepts one (`MuSiC(cell_size=)`, `SCDC_ENSEMBLE(ct.cell.size=)`, `EPIC(mRNA_cell=)`)
-and skip the central step for those.
+1. **Declare the deviation.** Production substitutes this project's cell-size factors for
+   MuSiC's and SCDC's own, by normalising before export. That is defensible and probably
+   right — one set of factors, computed one way, applied identically to every method, which
+   is what equal footing demands — and it is plainly what the design intends, since
+   `cell_totals` is captured *before* normalisation so the destroyed information can be
+   reinstated centrally. But it departs from published behaviour and is **not** listed in
+   `method_configs.json` beside the cibersortx, dwls and quantiseq deviations. Add it, with
+   this measurement as the evidence.
+2. **Resolve Bisque and BayesPrism, or state them as unresolved.** The probe cannot read
+   either: both assign most of their mass to the six roster types absent from the probe
+   mixture (Bisque 75%, BayesPrism 31%). A probe with no absent types would settle it.
+   Until then this project must not assert either package's convention — Bisque's ACS row
+   stays as measured, and the claim that it is "double-corrected" is withdrawn along with
+   the rest.
 
-**Step 0, added 2026-09-12 — the table above had no artefact behind it.** Those five
-numbers were measured once by a script that was never saved. A blocking decision rested on
-prose. `scripts/verify_cell_size_semantics.py` now reproduces the probe and writes
-`results/cell_size_semantics.json`; the BayesPrism row re-measures at 0.7500 as claimed,
-and the four R rows are pending only because the cores were busy. Do not adopt the third
-design until that artefact exists for all five — the design *is* the table.
-
-Building it clarified the scope, which the paper needs stated precisely: production
-normalises each cell to 1e6 before averaging into the reference profile, so every profile
-column carries the same total and a least-squares solve returns **mRNA share**. NNLS
-measures exactly 0.7500, the theoretical value. So the defect is specific to packages that
-run their *own* size conversion, and does not touch NNLS, SVR, either CIBERSORTx mode, or
-Elastic Net. The *impact* is unchanged — 15 of 16 methods still move — because the
-renormalisation is composition-dependent.
-
-**Steps.**
-1. Finish the re-measurement for the four R packages; commit the artefact.
-2. Adopt the third design, for the packages the artefact says need it.
-3. Apply it to all of those at once. **Do not** fix them one at a time — a half-corrected
-   leaderboard is worse than a uniformly wrong one.
-4. Re-run, and publish before/after numbers per method so the effect is visible.
-5. Record it as a declared deviation: the registration says the conversion is "applied
-   once and centrally", and passing factors into each package is a different mechanism for
-   the same intent.
+**What does NOT change.** The retraction of the original "a per-type constant cannot reorder
+a column across structures" claim stands: the renormalisation is composition-dependent and
+applying the conversion twice really would move ACS. That was always the right correction to
+make; what was wrong was believing the pipeline did it.
 
 ### 0.2 Publish the registration corrections · **EXTERNAL, 20 minutes**
 
