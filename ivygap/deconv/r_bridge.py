@@ -328,6 +328,23 @@ def check(method_name: str, ref_name: str) -> Availability:
 #: run reporters so "which genes did this method see" is an artefact, not a claim.
 LAST_GENE_SPACE: dict[str, dict] = {}
 
+#: R packages MEASURED to return CELL fractions rather than mRNA shares, so this project's
+#: central conversion would be the second one and must be skipped.
+#:
+#: Measured by `scripts/verify_cell_size_semantics.py --mixture all_types`: two cell types
+#: differing 3x in mRNA, mixed at equal cell counts, so 0.750 is an mRNA share and 0.500 a
+#: cell share. MuSiC 0.7502, SCDC 0.7503, EPIC 0.7502, BayesPrism 0.7502 -- all mRNA share.
+#: Bisque 0.5000, and its off-pair mass of 0.750 against the others' 0.600 confirms it
+#: independently. Artefact: results/cell_size_semantics_normalized_all_types.json.
+#: See docs/OPEN_DEFECTS.md D1.
+#:
+#: Keyed on the R method, NOT on the method name, because the convention belongs to the
+#: implementation that actually ran. This project's Python reimplementation of Bisque has
+#: NOT been measured on that probe, so the fallback path is deliberately left unflagged:
+#: assuming it shares the R package's convention would be exactly the unmeasured inference
+#: D1 has already been corrected for twice.
+R_RETURNS_CELL_FRACTIONS = frozenset({"bisque"})
+
 #: Methods that consume a reference PROFILE rather than individual cells.
 SIGNATURE_ONLY_METHODS = frozenset({"epic", "quantiseq"})
 
@@ -599,6 +616,20 @@ class RMethod(DeconvolutionMethod):
         # the moment the real package starts working.
         self.degenerate_: bool = False
         self.degeneracy_reason_: str | None = None
+
+    @property
+    def returns_cell_fractions(self) -> bool:
+        """
+        True only when the GENUINE R package ran AND that package is measured to convert
+        cell size itself.
+
+        Dynamic rather than a class attribute because the two implementations behind this
+        wrapper can disagree: R:BisqueRNA is measured to return cell fractions, and the
+        Python reimplementation has not been measured at all. `_solve_all` runs before the
+        base class reads this, so `implementation_` is already known.
+        """
+        return (self.r_method in R_RETURNS_CELL_FRACTIONS
+                and str(self.implementation_).startswith("R:"))
 
     def _solve_all(self, data: DeconvolutionInput) -> np.ndarray:
         try:

@@ -64,9 +64,10 @@ DEFECTS: dict[str, list[tuple[str, str]]] = {
     "epic": [("D11", "returns the within-subset mRNA share, so the cell-size conversion is "
                      "applied to the wrong quantity; tumour bias -0.135 is the worst in the "
                      "top group")],
-    "scdc": [("D2", "ENSEMBLE alias is degenerate with one reference"),
-             ("D3", "resolved: not passing ct.cell.size is correct here")],
-    "scdc_ensemble": [("D2", "reduces exactly to SCDC with one reference")],
+    "scdc": [("D3", "resolved: not passing ct.cell.size is correct here"),
+             ("D1", "resolved: returns mRNA share (0.7503), central conversion is the first")],
+    "scdc_ensemble": [("D2!ext", "reduces exactly to SCDC with one reference — needs a "
+                                 "second LABELLED reference (EXTERNAL_ACTIONS item 9)")],
     "bisque": [("D1", "CONFIRMED double correction: Bisque returns CELL share (0.5000, "
                       "off-pair 0.750) so the central conversion is the second one. Fix is "
                       "to skip the central step for Bisque, as is already done for "
@@ -186,15 +187,18 @@ def main() -> int:
         has_calibrated_unc = bool(conf and conf.get("mean_coverage") is not None
                                   and conf["mean_coverage"] >= target_cov - 0.03)
 
-        closable, structural = [], []
+        closable, structural, ext_blocked = [], [], []
         if not is_control:
             for prop, why in STRUCTURAL.get(m, []):
                 structural.append(f"{prop} — {why}")
 
             if reimpl:
-                closable.append("the GENUINE package has not been measured on the "
-                                "leaderboard's gene space (D10): run one full run_all.py, "
-                                "then scripts/remeasure_method.py")
+                ext_blocked.append(
+                    "the GENUINE package has not been measured on the leaderboard's gene "
+                    "space (D10). scripts/reconstruct_gene_space.py recovers that space in "
+                    "minutes but must load a 7.6 GB atlas, which this machine cannot do "
+                    "alongside anything else — see EXTERNAL_ACTIONS item 6. Then: "
+                    "scripts/remeasure_method.py --method <m> --budget 14400")
             if bool(row["degenerate"]) and m not in STRUCTURAL:
                 closable.append("runs in a degenerate/degraded mode with no structural reason "
                                 "recorded — investigate")
@@ -217,9 +221,12 @@ def main() -> int:
                 # resolved. An earlier version routed a CONFIRMED double correction into
                 # "structural" and scored Bisque complete, which is the wrong way round:
                 # confirming a defect makes it actionable, not permanent.
-                closable.append(f"{d}: {why}")
+                if d.endswith("!ext"):
+                    ext_blocked.append(f"{d[:-4]}: {why}")
+                else:
+                    closable.append(f"{d}: {why}")
 
-        missing = closable
+        missing = closable + ext_blocked
 
         rows.append({
             "method": m,
@@ -244,9 +251,11 @@ def main() -> int:
             "conformal_coverage": (conf or {}).get("mean_coverage"),
             "has_calibrated_uncertainty": has_calibrated_unc if not is_control else None,
             "closable_gaps": closable,
+            "blocked_on_external_input": ext_blocked,
             "structural_properties_disclosed": structural,
             "what_is_missing": missing,
-            "complete": (not closable) and not is_control,
+            "complete": (not closable) and (not ext_blocked) and not is_control,
+            "complete_except_external": (not closable) and not is_control,
         })
 
     real = [r for r in rows if not r["is_control"]]
@@ -259,6 +268,7 @@ def main() -> int:
                          "acceptable is failing one silently."),
         "n_methods": len(real),
         "n_complete": sum(1 for r in real if r["complete"]),
+        "n_complete_except_external": sum(1 for r in real if r["complete_except_external"]),
         "n_genuine_package": sum(1 for r in real if r["genuine_package"]),
         "n_reimplementation": sum(1 for r in real if r["is_reimplementation"]),
         "n_reporting_uncertainty": sum(1 for r in real if r["reports_uncertainty"]),
@@ -270,8 +280,11 @@ def main() -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2))
 
-    print(f"{report['n_complete']} of {report['n_methods']} real methods are COMPLETE "
-          f"by every criterion\n")
+    n_ext = sum(1 for r in real if r["complete_except_external"] and not r["complete"])
+    print(f"{report['n_complete']} of {report['n_methods']} real methods are COMPLETE\n"
+          f"{n_ext} more are complete EXCEPT for an input this project cannot obtain "
+          f"(see docs/EXTERNAL_ACTIONS.md)\n"
+          f"{report['n_methods'] - report['n_complete'] - n_ext} need work here\n")
     hdr = f"{'method':24s} {'impl':22s} {'ACS':>6s} {'MAE':>7s} {'TumBias':>8s} {'unc':>4s} {'deg':>4s}"
     print(hdr); print("-" * len(hdr))
     for r in rows:

@@ -279,6 +279,20 @@ class DeconvolutionMethod(abc.ABC):
     requires_r: bool = False
     #: True if the method genuinely consumes more than one reference
     uses_multiple_references: bool = False
+    #: True when the method's OWN output is already a CELL fraction, so this project's
+    #: central mRNA-to-cell conversion would be the SECOND one.
+    #:
+    #: Set from measurement, never from a guess. `scripts/verify_cell_size_semantics.py`
+    #: mixes two cell types differing 3x in mRNA at equal cell counts and reads what each
+    #: package returns: 0.75 is an mRNA share and the central conversion is correct, 0.50 is
+    #: already a cell share and applying ours again double-corrects. The off-pair mass
+    #: confirms each reading independently. On that probe MuSiC, SCDC, EPIC and BayesPrism
+    #: all return 0.7502-0.7503; Bisque returns 0.5000. See docs/OPEN_DEFECTS.md D1.
+    #:
+    #: This is NOT a tuning knob. A method may be flagged here only on the probe's evidence,
+    #: which is synthetic and whose truth is known by construction, and never because
+    #: flagging it improves a score.
+    returns_cell_fractions: bool = False
     #: The roster cell types this method is capable of estimating at all, or None when
     #: it models every one of them. Set this ONLY for a method whose published design
     #: omits a type — quanTIseq's TIL10 signature has no tumour, endothelial, glial or
@@ -343,7 +357,14 @@ class DeconvolutionMethod(abc.ABC):
         # rescale a handful of immune types to sum 1 and assert the tumour is entirely
         # immune. quanTIseq also already applies its own mRNA scaling (scale_mRNA=TRUE,
         # its published default), so ours would be the second correction, not the first.
-        apply_cs = data.apply_cell_size_correction and covered is None
+        #
+        # `returns_cell_fractions` is the same exclusion for the same reason, extended to a
+        # method whose output is ALREADY a cell fraction. Measured, per package, by
+        # scripts/verify_cell_size_semantics.py -- Bisque is the one package in this panel
+        # that converts internally, so applying ours centrally applied it twice.
+        apply_cs = (data.apply_cell_size_correction
+                    and covered is None
+                    and not self.returns_cell_fractions)
 
         rows = []
         for i in range(n_s):
