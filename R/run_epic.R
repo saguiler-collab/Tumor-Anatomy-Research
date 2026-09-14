@@ -63,10 +63,26 @@ props <- est$cellFractions
 # the otherCells share is written beside the output so it is not silently absorbed.
 if ("otherCells" %in% colnames(props)) {
   other <- props[, "otherCells", drop = FALSE]
+  # Named `<out-stem>_othercells.csv` so r_bridge copies it out of the temp directory into
+  # results/diagnostics/. It used to be written here and deleted with the run, so the one
+  # number that says how much of EPIC's estimand is conditional on explained signal was
+  # produced on every run and survived none. See docs/OPEN_DEFECTS.md D13.
   utils::write.csv(other, sub("\\.csv$", "_othercells.csv", args$out))
   cat(sprintf("EPIC otherCells fraction: mean %.4f, max %.4f\n",
               mean(other[, 1]), max(other[, 1])))
   props <- props[, setdiff(colnames(props), "otherCells"), drop = FALSE]
+}
+
+# CONVERGENCE, per sample. EPIC's optimiser can fail to converge and say so only in a
+# warning, which nothing here was reading. fit.gof carries a code and a message per sample.
+if (!is.null(est$fit.gof)) {
+  gof <- as.data.frame(est$fit.gof)
+  utils::write.csv(gof, sub("\\.csv$", "_convergence.csv", args$out))
+  if ("convergeCode" %in% colnames(gof)) {
+    n_bad <- sum(gof$convergeCode != 0, na.rm = TRUE)
+    cat(sprintf("EPIC convergence: %d of %d samples did NOT converge (code != 0)\n",
+                n_bad, nrow(gof)))
+  }
 }
 
 write_proportions(props, args$cell_types, args$out)

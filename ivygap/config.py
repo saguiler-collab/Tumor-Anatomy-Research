@@ -47,11 +47,16 @@ ANATOMIC_DIR = RESULTS_DIR / "anatomic"
 SURVIVAL_DIR = RESULTS_DIR / "survival"
 RELEASE_DIR = PROJECT_ROOT / "release"      # the stable, public-facing snapshot
 FIGURES_DIR = RESULTS_DIR / "figures"
+#: Diagnostics an R script writes beside its output -- EPIC's `otherCells` fraction and its
+#: per-sample convergence codes, for instance. These used to live in a temporary directory
+#: and be deleted with it, so the numbers needed to judge EPIC's estimand were produced on
+#: every run and survived none of them.
+DIAGNOSTICS_DIR = RESULTS_DIR / "diagnostics"
 
 ALL_OUTPUT_DIRS = [
     DATA_DIR, RAW_DIR, PROCESSED_DIR, REFERENCE_DIR, PSEUDOBULK_DIR,
     RESULTS_DIR, ESTIMATES_DIR, BENCH_DIR, ANATOMIC_DIR, SURVIVAL_DIR,
-    RELEASE_DIR, FIGURES_DIR,
+    RELEASE_DIR, FIGURES_DIR, DIAGNOSTICS_DIR,
 ]
 
 # --- Ivy GAP raw inputs -------------------------------------------------------
@@ -317,7 +322,7 @@ def use_synthetic_paths() -> None:
     makes this rebinding work).
     """
     global RUN_LABEL, RESULTS_DIR, ESTIMATES_DIR, BENCH_DIR, ANATOMIC_DIR
-    global SURVIVAL_DIR, RELEASE_DIR, FIGURES_DIR, ALL_OUTPUT_DIRS
+    global SURVIVAL_DIR, RELEASE_DIR, FIGURES_DIR, DIAGNOSTICS_DIR, ALL_OUTPUT_DIRS
 
     RUN_LABEL = "synthetic"
     RESULTS_DIR = PROJECT_ROOT / "results_synthetic"
@@ -327,11 +332,15 @@ def use_synthetic_paths() -> None:
     SURVIVAL_DIR = RESULTS_DIR / "survival"
     FIGURES_DIR = RESULTS_DIR / "figures"
     RELEASE_DIR = PROJECT_ROOT / "release_synthetic"
+    # Re-pointed like every other output directory. Left at the real tree it would let a
+    # synthetic run drop diagnostics into results/, which is the mixing the whole
+    # synthetic/real split exists to prevent.
+    DIAGNOSTICS_DIR = RESULTS_DIR / "diagnostics"
 
     ALL_OUTPUT_DIRS = [
         DATA_DIR, RAW_DIR, PROCESSED_DIR, REFERENCE_DIR, PSEUDOBULK_DIR,
         RESULTS_DIR, ESTIMATES_DIR, BENCH_DIR, ANATOMIC_DIR, SURVIVAL_DIR,
-        RELEASE_DIR, FIGURES_DIR,
+        RELEASE_DIR, FIGURES_DIR, DIAGNOSTICS_DIR,
     ]
 
 

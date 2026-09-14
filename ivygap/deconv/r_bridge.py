@@ -324,6 +324,11 @@ def check(method_name: str, ref_name: str) -> Availability:
 #: A benchmark that never finishes produces no result at all, which is strictly worse
 #: than a disclosed fallback. The budget is generous enough that the methods measured to
 #: complete here (MuSiC ~95 s, SCDC ~90 s, Bisque ~30 s) are nowhere near it.
+#: Diagnostic files an R script wrote beside its output on the most recent call, per
+#: method. Populated by `run_r_method`; read by the run reporters so a sidecar is an
+#: artefact rather than something that existed for the lifetime of a temp directory.
+LAST_SIDECARS: dict[str, list] = {}
+
 #: What gene space each R method actually received on its most recent call. Read by the
 #: run reporters so "which genes did this method see" is an artefact, not a claim.
 LAST_GENE_SPACE: dict[str, dict] = {}
@@ -528,6 +533,18 @@ def run_r_method(method_name: str, data: DeconvolutionInput,
             raise RBridgeError(f"{script.name} exited 0 but wrote no output file")
 
         result = pd.read_csv(out_path, index_col=0)
+
+        # SIDECARS. Some scripts write diagnostics beside their output -- EPIC's
+        # `otherCells` fraction and its per-sample convergence codes are the ones that
+        # matter. They used to be written into this temporary directory and deleted with
+        # it, so the numbers needed to judge EPIC's estimand were produced on every run
+        # and never survived one. Anything matching the output's stem is copied out.
+        for extra in sorted(tmp.glob(f"{out_path.stem}_*.csv")):
+            dest = config.DIAGNOSTICS_DIR / f"{method_name}_{extra.name.split('_', 1)[1]}"
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(extra, dest)
+            LAST_SIDECARS.setdefault(method_name, []).append(
+                str(dest.relative_to(config.PROJECT_ROOT)))
 
     # R reorders and renames freely; force the project's roster and sample order back
     # on, and fail loudly if something is genuinely absent rather than filling zeros.

@@ -1261,8 +1261,65 @@ artefact preserves it. The one number needed to judge how much this matters was 
 is a recording gap, break 2 is measured from a package warning, and break 3 is measured at
 machine precision. All three are score-independent; the decisions must be too.
 
-### Note on convergence
+### MEASURED on the real cohort, 2026-09-14 — one break shrinks, one grows
 
-The same probe produced `The optimization didn't fully converge for some samples`. EPIC
-exposes `fit.gof` with a convergence code per sample and this project does not read it. Worth
-checking on the real cohort before any EPIC number is defended, and cheap.
+Both diagnostics are now preserved. `run_epic.R` names them so `r_bridge` copies them out of
+the temp directory into `results/diagnostics/`, and `config.DIAGNOSTICS_DIR` is re-pointed
+under `results_synthetic/` for synthetic runs like every other output directory.
+
+**Break 3 shrinks to almost nothing.** `otherCells` on the 122 real anatomic samples:
+
+| mean | median | max | samples > 0.10 |
+|---|---|---|---|
+| 0.0013 | 0.0000 | 0.0427 | **0 of 122** |
+
+EPIC's estimand is conditional on explained signal in principle; in practice the "other"
+compartment absorbs essentially nothing, so dropping it and renormalising changes almost
+nothing. Worth noting for its own sake: the roster discards 7.0% of the atlas and EPIC still
+assigns ~0 to `otherCells` — it forces unexplained signal into the roster columns rather than
+the compartment built for it.
+
+**A fourth break appears, and it is the largest: EPIC did not converge on 52% of samples.**
+
+| convergeCode | n | meaning |
+|---|---|---|
+| 0 | 59 | converged |
+| 1 | 29 | iteration limit |
+| 10 | 34 | degenerate simplex |
+| | **63 of 122 did NOT converge** | |
+
+This was emitted as an R warning on every run and never read, because nothing looked at
+`fit.gof`. **EPIC is joint-2nd on the leaderboard at 0.9846, and more than half of its
+estimates come from a failed optimisation.**
+
+**Is it structure-dependent?** No: converged rates run 0.400 (CT) to 0.680 (MVP), chi-square
+p = 0.275.
+
+**Does it change the estimates?** Two different answers, and the difference matters.
+
+*Endothelial: no — the marginal difference is a confound.* Converged samples show Endothelial
+0.219 against 0.100 for non-converged, but MVP is 28.8% of the converged group and 12.7% of
+the non-converged, and MVP carries Endothelial 0.724 against 0.003-0.024 elsewhere. Within
+each structure the difference collapses to between -0.021 and +0.008. Simpson's paradox.
+
+*Tumor: yes, and it survives the same test.* Within structure:
+
+| structure | converged | not converged | delta | n (conv / not) |
+|---|---|---|---|---|
+| CT | 0.483 | 0.615 | **+0.132** | 12 / 18 |
+| LE | 0.070 | 0.162 | **+0.092** | 8 / 11 |
+| PAN | 0.796 | 0.638 | **−0.158** | 11 / 13 |
+| IT | 0.340 | 0.337 | −0.003 | 11 / 13 |
+| MVP | 0.151 | 0.150 | −0.002 | 17 / 8 |
+
+Differences up to 0.16 in the dominant compartment, **and the sign flips between
+structures**. Tumor carries **C1** (CT > LE) and **C7** (LE < IT < CT), so this lands on two
+of the seven constraints — the same two the ISH check could not adjudicate.
+
+**What is established and what is not.** Established: 52% non-convergence, not
+structure-dependent, associated with tumour differences up to 0.16 that survive
+stratification. **Not** established: that non-convergence *causes* them. Per-cell counts are
+8-18, the comparison is observational, and a sample that is hard to fit may be genuinely
+unusual rather than mis-fitted. The clean test is to re-run the non-converged samples with a
+higher iteration limit and see whether their estimates move — which changes an EPIC parameter
+and must be run as a declared diagnostic, reported beside the row and never substituted in.
