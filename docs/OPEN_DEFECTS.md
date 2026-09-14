@@ -341,6 +341,57 @@ Bisque and BayesPrism remain unreadable on this probe in every mode (≥31% of t
 lands on the roster types absent from the mixture), so their convention is still unmeasured
 and must not be asserted.
 
+### ALL FIVE MEASURED — the table is complete, 2026-09-13
+
+The probe could not read Bisque or BayesPrism because the two-type mixture left six roster
+types absent, and those two put 31-75% of their mass on absent columns. `--mixture all_types`
+removes the cause: all eight types appear at equal cell counts, BIG still carrying 3x the
+mRNA, so there are no absent types to leak into.
+
+| package | returned (BIG:SMALL) | off-pair mass | convention | this project's conversion is |
+|---|---|---|---|---|
+| **MuSiC** | 0.7502 | 0.600 | mRNA share | the FIRST — correct |
+| **SCDC** | 0.7503 | 0.600 | mRNA share | the FIRST — correct |
+| **EPIC** | 0.7502 | 0.600 | mRNA share | the FIRST — correct *(but see D11)* |
+| **BayesPrism** | 0.7502 | 0.600 | mRNA share | the FIRST — correct |
+| **Bisque** | **0.5000** | **0.750** | **CELL share** | **a SECOND correction — defect** |
+
+**Each verdict is confirmed twice over, by two independent quantities.** The pair ratio says
+what convention a method used; the *off-pair* mass says the same thing without reference to
+the pair, because a method reporting mRNA share must leave 1-(3+1)/(3+7) = **0.600** outside
+the pair, while one reporting cell share must leave 1-2/8 = **0.750**. Every method's two
+readings agree. A coding error in the classifier could move the first number; it could not
+move both into agreement.
+
+Artefact: `results/cell_size_semantics_normalized_all_types.json`.
+
+**So the original prose table was right about Bisque and wrong about MuSiC, SCDC and EPIC.**
+Bisque is the one genuine double correction in the panel, and it is the only one. The
+sequence of revisions in this entry was not wasted: the answer is package-specific, and
+nothing short of measuring each package on a probe that mirrors production would have got it
+right.
+
+### Bisque: what the double correction means, and what must NOT be done about it
+
+Bisque's `ReferenceBasedDecomposition` returns cell proportions, and `to_cell_fractions` then
+divides by cell size again. Its leaderboard row (ACS 0.9231) and its benchmark numbers carry
+that.
+
+This matters more than its rank suggests, because Bisque is the panel's **most reliable
+method on the tumour compartment** by two independent measures: the smallest tumour bias
+(-0.0256 against MuSiC's -0.0757) and the narrowest conformal interval (+/-0.489 against
+MuSiC's +/-0.557). A correction applied twice to the method that is otherwise best calibrated
+on the clinically decisive quantity is worth fixing properly rather than quickly.
+
+**The fix is to skip the central conversion for Bisque**, exactly as it is already skipped for
+quanTIseq, and to declare it the same way. That is a mechanism change, not a tuning: the rule
+is "apply the conversion once", and for Bisque applying it centrally is applying it twice.
+
+**What must not be done:** do not adopt the fix *because* it may improve Bisque's numbers.
+The decision rests on the measurement above, which is independent of any ACS or benchmark
+score — the probe is synthetic and its truth is known by construction. Record the before and
+after for every affected number, as the D1 fix section already requires.
+
 ### What this means for the leaderboard
 
 **The "15 of 16 methods change ACS, 7 of 14 ranks move" measurement above describes a

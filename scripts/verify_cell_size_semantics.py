@@ -72,7 +72,7 @@ TOL = 0.08
 
 
 def build_probe(n_genes: int = 240, n_donors: int = 6, cells_per_type_per_donor: int = 30,
-                n_samples: int = 12, seed: int = 0):
+                n_samples: int = 12, seed: int = 0, mixture: str = "two_types"):
     """
     A reference on the real 8-type roster whose BIG type carries 3x the mRNA per cell,
     and bulk mixed 50/50 by CELL count between BIG and SMALL only.
@@ -140,19 +140,22 @@ def build_probe(n_genes: int = 240, n_donors: int = 6, cells_per_type_per_donor:
     ref = build_reference(norm, meta, name="cellsize_probe", cell_totals=raw_totals)
 
     # --- bulk: equal CELL counts of BIG and SMALL, summed --------------------
-    big_ids = [c for c in cols if f"_{BIG}_" in c]
-    small_ids = [c for c in cols if f"_{SMALL}_" in c]
+    by_type = {ct: [c for c in cols if f"_{ct}_" in c] for ct in roster}
     k = 30
+    mixed_types = [BIG, SMALL] if mixture == "two_types" else roster
     bulk_cols, truth = {}, []
     for s in range(n_samples):
-        a = list(rng.choice(big_ids, k, replace=False))
-        b = list(rng.choice(small_ids, k, replace=False))
-        v = expr[a].sum(axis=1) + expr[b].sum(axis=1)
+        picked = {ct: list(rng.choice(by_type[ct], k, replace=False)) for ct in mixed_types}
+        v = sum(expr[ids].sum(axis=1) for ids in picked.values())
         bulk_cols[f"S{s:02d}"] = v / v.sum() * 1e6
-        ma, mb = expr[a].to_numpy().sum(), expr[b].to_numpy().sum()
+        mrna = {ct: float(expr[ids].to_numpy().sum()) for ct, ids in picked.items()}
+        total_mrna = sum(mrna.values())
         truth.append({"sample": f"S{s:02d}",
-                      "cell_fraction_big": k / (2 * k),
-                      "mrna_fraction_big": float(ma / (ma + mb))})
+                      "cell_fraction_big": 1.0 / len(mixed_types),
+                      "mrna_fraction_big": mrna[BIG] / total_mrna,
+                      "pair_cell_fraction_big": 0.5,
+                      "pair_mrna_fraction_big":
+                          mrna[BIG] / (mrna[BIG] + mrna[SMALL])})
     bulk = pd.DataFrame(bulk_cols, index=genes)
     manifest = pd.DataFrame({"patient_id": [f"P{i}" for i in range(n_samples)],
                              "structure": ["CT"] * n_samples}, index=bulk.columns)
@@ -181,6 +184,14 @@ def main() -> int:
     ap.add_argument("--methods", default="",
                     help="comma-separated subset; default is every available method")
     ap.add_argument("--no-r", action="store_true", help="force the all-Python path")
+    ap.add_argument("--mixture", choices=("two_types", "all_types"), default="two_types",
+                    help="which roster types appear in the BULK. 'two_types' mixes BIG and "
+                         "SMALL only, leaving six absent -- readable for methods that leave "
+                         "absent types near zero, but UNREADABLE for Bisque and BayesPrism, "
+                         "which put 31-75%% of their mass on the absent types so the BIG:SMALL "
+                         "ratio measures nothing. 'all_types' mixes all eight at equal cell "
+                         "counts with BIG still carrying the 3x mRNA, so there are no absent "
+                         "types to leak into and every method is readable.")
     ap.add_argument("--subset-mode", choices=("full", "balanced", "biased"), default="full",
                     help="how the BULK/export gene space relates to the cell source. 'full' "
                          "exports every gene, which is what this probe's first version did "
@@ -216,7 +227,7 @@ def main() -> int:
 
     print("building the probe: two types, "
           f"{SIZE_RATIO:g}x mRNA ratio, mixed 50/50 by cell count")
-    ref, expr, meta, bulk, manifest, truth = build_probe()
+    ref, expr, meta, bulk, manifest, truth = build_probe(mixture=args.mixture)
 
     # Narrow the BULK (and so the reference, and so the export) to a subset of the cell
     # source's genes, the way production does. `cell_size` stays a full-transcriptome
@@ -292,27 +303,47 @@ def main() -> int:
             # question this probe asks and must not be read as if it were.
             big, small = est[BIG].to_numpy(), est[SMALL].to_numpy()
             pair = big + small
-            leak = float(1.0 - np.mean(pair))
+            # In two_types mode the other six roster types are ABSENT from the mixture, so
+            # any mass on them is leakage and a large value makes the pair ratio
+            # meaningless. In all_types mode they are genuinely present, so the same
+            # quantity is not leakage at all -- it is their true share. Guarding on the
+            # wrong one is what made Bisque and BayesPrism unreadable.
+            nonpair = float(1.0 - np.mean(pair))
+            if args.mixture == "two_types":
+                leak = nonpair
+                unreadable = leak > 0.25
+                leak_note = "mass on roster types ABSENT from the mixture"
+            else:
+                n_t = len(data.cell_types)
+                exp_pair_cell = 2.0 / n_t
+                exp_pair_mrna = (SIZE_RATIO + 1.0) / (SIZE_RATIO + (n_t - 1))
+                floor = 0.5 * min(exp_pair_cell, exp_pair_mrna)
+                leak = nonpair
+                unreadable = float(np.mean(pair)) < floor
+                leak_note = (f"mass on the six other PRESENT types; expected "
+                             f"{1 - exp_pair_mrna:.2f} (mRNA) to {1 - exp_pair_cell:.2f} "
+                             f"(cell)")
             with np.errstate(invalid="ignore", divide="ignore"):
                 ratio = np.where(pair > 0, big / np.maximum(pair, 1e-12), np.nan)
             val = float(np.nanmean(ratio))
             conv, meaning = classify(val)
-            if leak > 0.25:
+            if unreadable:
                 conv, meaning = "UNREADABLE", (
-                    f"assigned {leak:.1%} of its mass to the six cell types absent from "
-                    "the mixture, so the BIG:SMALL ratio does not measure a cell-size "
-                    "convention here")
+                    f"put {leak:.1%} of its mass outside the two types under test "
+                    f"({leak_note}), leaving too little on the pair for its ratio to "
+                    "measure a cell-size convention")
             impl = getattr(m, "last_implementation", None) or (
                 "R" if getattr(m, "requires_r", False) else "python")
             rows.append({"method": m.name, "returned_big_fraction": round(val, 4),
                          "sd_across_samples": round(float(np.nanstd(ratio)), 4),
-                         "leakage_to_absent_types": round(leak, 4),
+                         "mass_outside_the_pair": round(leak, 4),
+                         "mass_outside_note": leak_note,
                          "convention": conv, "meaning": meaning,
                          "implementation": str(impl),
                          "elapsed_s": round(time.perf_counter() - t0, 1),
                          "failed": None})
             print(f"  {m.name:24s} {val:.4f}  {conv:11s}  "
-                  f"leak {leak:+.3f}  ({impl})")
+                  f"off-pair {leak:+.3f}  ({impl})")
         except Exception as exc:                                   # noqa: BLE001
             rows.append({"method": m.name, "returned_big_fraction": None,
                          "convention": "FAILED", "meaning": None,
@@ -334,6 +365,7 @@ def main() -> int:
             "n_samples": int(bulk.shape[1]), "n_genes": int(bulk.shape[0]),
             "tolerance": TOL,
             "central_correction_applied": False,
+            "mixture": args.mixture,
             "export_scale": args.export_scale,
             "subset_mode": args.subset_mode,
             "bulk_gene_fraction": args.bulk_gene_fraction,
@@ -348,6 +380,8 @@ def main() -> int:
         "methods": rows,
     }
     suffix = args.export_scale
+    if args.mixture != "two_types":
+        suffix += f"_{args.mixture}"
     if args.subset_mode != "full":
         suffix += f"_{args.subset_mode}"
     out = Path(args.out) if args.out else Path(
