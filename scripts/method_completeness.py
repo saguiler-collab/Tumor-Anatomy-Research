@@ -61,9 +61,23 @@ ROOT = Path(__file__).resolve().parent.parent
 #: (defect id, one-line consequence). Maintained by hand because it is a judgement about
 #: what a defect implies, but every claim in it is traceable to docs/OPEN_DEFECTS.md.
 DEFECTS: dict[str, list[tuple[str, str]]] = {
-    "epic": [("D11", "returns the within-subset mRNA share, so the cell-size conversion is "
-                     "applied to the wrong quantity; tumour bias -0.135 is the worst in the "
-                     "top group")],
+    "epic": [("D11", "returns the within-subset mRNA share rather than the full-space one. "
+                     "Practical effect on the published numbers is nil because D12 shows the "
+                     "conversion it is applied to is the identity, but the estimand still "
+                     "differs from every other method's"),
+             ("D13!ext", "68% of samples (83/122) do not converge, up from 52% after "
+                         "restoring the gene weighting. Diagnosing it means re-running the "
+                         "failures at a higher iteration limit — an EPIC parameter change, "
+                         "so a declared diagnostic reported beside the row, never "
+                         "substituted in"),
+             ("D13", "cellFractions is labelled a cell fraction and equals mRNAProportions "
+                     "to 2.776e-17, because no roster name matches EPIC's mRNA_cell "
+                     "defaults. Needs a relabel or a real mRNA_cell vector — a design "
+                     "decision, not a fix"),
+             ("-", "break 1 FIXED 2026-09-14: refProfiles.var now supplied, gene weighting "
+                   "restored, before/after preserved under results/diagnostics/"),
+             ("-", "break 3 MEASURED negligible: otherCells mean 0.0013, max 0.0427, zero "
+                   "samples above 0.10")],
     "scdc": [("D3", "resolved: not passing ct.cell.size is correct here"),
              ("D1", "resolved: returns mRNA share (0.7503), central conversion is the first")],
     "scdc_ensemble": [("D2!ext", "reduces exactly to SCDC with one reference — needs a "
