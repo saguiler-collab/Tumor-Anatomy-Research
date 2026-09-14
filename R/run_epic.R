@@ -36,7 +36,25 @@ bulk_mat <- bulk_mat[shared, , drop = FALSE]
 # sigGenes: EPIC's variable-gene set. The pipeline has already chosen an informative
 # gene space for every method, so all of it is offered rather than filtering twice —
 # the same decision, and for the same reason, as DWLS's opened cutoffs.
+# refProfiles.var: EPIC's gene weighting, which is its published contribution. Supplied as a
+# STANDARD DEVIATION on the profile's own scale -- r_bridge square-roots the reference's
+# variance before writing it, because EPIC's weight is refProfiles / refProfiles.var and that
+# ratio is only meaningful if both are in expression units.
+#
+# Until 2026-09-14 this was not passed and EPIC warned "'refProfiles.var' not defined; using
+# identical weights for all genes" on every run, unread. See docs/OPEN_DEFECTS.md D13.
 ref <- list(refProfiles = sig_mat, sigGenes = rownames(sig_mat))
+if (!is.null(args$signature_var) && file.exists(args$signature_var)) {
+  v <- as.matrix(utils::read.csv(args$signature_var, row.names = 1, check.names = FALSE))
+  v <- v[rownames(sig_mat), colnames(sig_mat), drop = FALSE]
+  if (identical(dim(v), dim(sig_mat))) {
+    ref$refProfiles.var <- v
+    cat(sprintf("EPIC: refProfiles.var supplied (%d x %d), gene weighting ENABLED\n",
+                nrow(v), ncol(v)))
+  } else {
+    cat("EPIC: refProfiles.var dimensions do not match the signature; NOT supplied\n")
+  }
+}
 
 # DIAGNOSTIC HOOK, NOT A PARAMETER OF THIS STUDY.
 #

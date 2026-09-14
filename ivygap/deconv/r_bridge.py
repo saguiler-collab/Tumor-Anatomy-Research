@@ -508,9 +508,28 @@ def run_r_method(method_name: str, data: DeconvolutionInput,
         sig_path = tmp / "signature.csv"
         data.primary.profile.to_csv(sig_path)
 
+        # PER-GENE VARIABILITY, as a STANDARD DEVIATION.
+        #
+        # EPIC weights genes by `rowSums(refProfiles / (refProfiles.var + 1e-12))`, a
+        # signal-to-noise ratio that is only dimensionally sensible if refProfiles.var is on
+        # the same scale as the profile. EPIC's own bundled TRef confirms it: its
+        # refProfiles.var has median 30.9 against profile median 9.2 and max 78,469 against
+        # 71,786 -- the same order of magnitude, not a squared one.
+        #
+        # `ReferenceBundle.sigma` is a VARIANCE, so it is square-rooted here. Passing it raw
+        # would divide a mean by a squared spread and systematically over-weight
+        # low-expression genes, which is a silent mis-weighting rather than an error.
+        #
+        # Written for every method; only the ones that ask for it read it. Until 2026-09-14
+        # it was written for none, so EPIC ran with `using identical weights for all genes`
+        # -- its published contribution switched off. See docs/OPEN_DEFECTS.md D13.
+        var_path = tmp / "signature_var.csv"
+        (data.primary.sigma.clip(lower=0.0) ** 0.5).to_csv(var_path)
+
         payload = {
             "bulk": str(bulk_path),
             "signature": str(sig_path),
+            "signature_var": str(var_path),
             "sc_counts": str(counts_path),
             "sc_meta": str(meta_path),
             "out": str(out_path),

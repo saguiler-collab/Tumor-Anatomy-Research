@@ -1244,6 +1244,56 @@ effect is nil there. On the real cohort it is **not recorded at all**: `run_epic
 sidecar next to its output inside a temporary directory that is deleted with the run, so no
 artefact preserves it. The one number needed to judge how much this matters was thrown away.
 
+### Break 1 FIXED and MEASURED, 2026-09-14 — it restores EPIC, and it costs convergence
+
+`r_bridge` now writes the reference's per-gene variability beside the signature and
+`run_epic.R` passes it as `refProfiles.var`. EPIC's warning is gone and its gene weighting is
+on.
+
+**It is exported as a STANDARD DEVIATION, not the variance.** EPIC's weight is
+`rowSums(refProfiles / (refProfiles.var + 1e-12))`, a signal-to-noise ratio that is only
+dimensionally meaningful if both terms are in expression units. EPIC's own bundled `TRef`
+confirms the scale: its `refProfiles.var` has median 30.9 against a profile median of 9.2 and
+max 78,469 against 71,786 — the same order of magnitude, not a squared one, and correlating
+0.898 with the profile. `ReferenceBundle.sigma` is a variance, so it is square-rooted before
+export. Passing it raw would have divided a mean by a squared spread and silently
+over-weighted low-expression genes — a mis-weighting, not an error, and it would not have
+announced itself.
+
+**What changed, measured on the real cohort with all seven equivalence conditions passing:**
+
+| | uniform weights | variance weighted | delta |
+|---|---|---|---|
+| **ACS** | 0.9846 | **0.9846** | **0.0000** |
+| Tumor (mean) | 0.3946 | 0.3431 | **−0.0514** |
+| Oligodendrocyte | 0.1731 | 0.2035 | +0.0304 |
+| Astrocyte | 0.1949 | 0.2112 | +0.0163 |
+| Endothelial | 0.1574 | 0.1643 | +0.0068 |
+| max per-sample change | — | — | **0.3540** |
+| **samples not converged** | 63 / 122 (52%) | **83 / 122 (68%)** | **+20** |
+
+Both estimate tables are kept: `results/diagnostics/epic_uniform_weights_estimates.csv` and
+`epic_variance_weighted_estimates.csv`.
+
+**Three things to read from this, and the third is the awkward one.**
+
+1. **Compositions move materially** — up to 0.354 in a single sample, and tumour down 0.051
+   on average. So the weighting was never cosmetic; running EPIC without it was running a
+   different method, which is what the invariant says.
+2. **ACS does not move at all.** 0.9846 before and after. ACS is an ordinal statistic over
+   structures and absorbed a 0.354 per-sample change without registering it — the same
+   insensitivity D6 records, arriving from a new direction, and a useful caution about how
+   finely the leaderboard can be read.
+3. **Convergence gets worse, from 52% to 68% failing.** Restoring EPIC's published behaviour
+   made the optimisation harder on this reference and gene space. That is a real cost and it
+   must not be buried: the fix is defensible because it restores published behaviour, **not**
+   because it improved anything. It did not improve ACS, and it degraded convergence.
+
+**This is not yet a decision.** The change is implemented and measured; whether the
+leaderboard should adopt it requires a full re-run and a recorded rationale. The rationale
+may not be "the numbers look better" — they are unchanged where the leaderboard looks and
+worse where the optimiser reports.
+
 ### What must be done, and what must not
 
 **Must be done, in this order:**
