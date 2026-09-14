@@ -327,6 +327,27 @@ remains a hypothesis. See `docs/RELATED_WORK.md`.
 
 ---
 
+## 6b. Is any of this clinically usable?
+
+Short answer: **not yet, and the reasons are measured rather than hedged.** See
+[docs/CLINICAL_READINESS.md](docs/CLINICAL_READINESS.md).
+
+- Every method's tumour error grows monotonically with tumour content, and at high purity
+  (0.7–1.0, where real Ivy GAP tissue sits — median 0.68) **every method under-calls tumour by
+  0.33 to 0.51**.
+- The missing mass becomes **T cells**: predicted 4.6× to 7.9× the true content. An
+  immune-cold high-purity tumour would be reported as infiltrated by every method here.
+- **ACS cannot see it.** `T_cell` carries no constraint, so a method could invent T cells
+  without limit and still score 1.000.
+- Only one method reports per-sample uncertainty and its 95% intervals cover **9.25%**.
+  Conformal calibration fixes the availability; the widths are the problem — most methods
+  cannot bound tumour purity better than **±0.63** against **±0.67** for a random draw.
+- One design property measurably buys accuracy: **weighting genes by cross-donor
+  consistency** (MuSiC − NNLS, isolated). Regularisation, batch correction and a donor
+  hierarchy buy nothing on this cohort.
+
+---
+
 ## 7. Limitations, stated plainly
 
 - **One tissue is a case study, not a method.** Nine evaluable tumours is the ceiling and
