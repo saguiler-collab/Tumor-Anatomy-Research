@@ -80,9 +80,26 @@ def main() -> int:
     print("loading the Ivy GAP bulk ...")
     expr, meta_bulk = load_cached()
 
-    print("loading the atlas (this is the slow step) ...")
-    _, sc_expression, sc_meta = build_from_h5ad(config.REFERENCE_DIR / "gbmap_core.h5ad")
-    print(f"  {sc_expression.shape[1]:,} cells x {sc_expression.shape[0]:,} genes")
+    # RESTRICT TO THE BULK'S GENES FIRST, exactly as run_all.py does:
+    #     build_from_h5ad(gbmap, restrict_to_genes=bulk.index, export=False)
+    #
+    # This is not an optimisation, it changes the answer. `select_signature_genes` ranks the
+    # top N per cell type within whatever gene space it is given, so selecting from the full
+    # 27,625-gene atlas picks different winners than selecting from the ~16,758 the bulk also
+    # carries -- and the winners that are absent from the bulk are then dropped, leaving
+    # FEWER than the run had. The first version of this script omitted the restriction and
+    # reconstructed 513 genes against the recorded 657. The count gate caught it, which is
+    # what the gate is for.
+    #
+    # export=False for the same reason run_all sets it: the cell-level export is written per
+    # gene set on demand by the R bridge, and writing it here both wastes ~49 minutes and
+    # overwrites the export a later re-measurement would reuse.
+    print("loading the atlas, restricted to the bulk's genes (the slow step) ...")
+    _, sc_expression, sc_meta = build_from_h5ad(
+        config.REFERENCE_DIR / "gbmap_core.h5ad",
+        restrict_to_genes=expr.index, export=False)
+    print(f"  {sc_expression.shape[1]:,} cells x {sc_expression.shape[0]:,} genes "
+          f"(bulk carries {len(expr.index):,})")
 
     # --- CHECK 1: the donor split must reproduce the recorded one ------------
     train_donors, test_donors = split_donors(sc_meta, seed=config.RANDOM_SEED)
