@@ -22,6 +22,7 @@ keeping, marked RESOLVED at the top.
 | **D10** re-measurements used a different gene space | mechanism FIXED; the two measurements must be redone |
 | **D11** EPIC returns the within-subset mRNA share, not the full-space one | **OPEN** — but see D12: the conversion it is applied to is the identity, so the practical effect on the published numbers is nil |
 | **D12** the cell-size correction has never been applied — it is the identity | **OPEN, high** — supersedes most of D1; no number changes, but the registration says otherwise |
+| **D13** EPIC runs with `refProfiles.var` unset, so its gene weighting is off; its output is mislabelled as a cell fraction | **OPEN, high** — EPIC is joint-2nd at 0.9846 |
 
 ---
 
@@ -1172,3 +1173,96 @@ Two defensible options, and the choice must be recorded before any number moves:
 **Option 1 must not be chosen because it might improve a score**, and option 2 must not be
 chosen because it is less work. The measurement above is score-independent; the decision
 should be too, and stated in the paper either way.
+
+
+---
+
+## D13 · EPIC runs with its defining feature disabled, and its output is mislabelled
+
+**Severity: high. EPIC is joint-2nd on the ACS leaderboard at 0.9846. Found 2026-09-14 by
+interrogating the installed package.**
+
+Three separate breaks, all measured against `EPIC` as installed, all in `R/run_epic.R`.
+
+### 1 · `refProfiles.var` is not supplied, so gene variance weighting is OFF
+
+```
+ref <- list(refProfiles = sig_mat, sigGenes = rownames(sig_mat))
+```
+
+EPIC emits a warning that this project has never recorded:
+
+> `'refProfiles.var' not defined; using identical weights for all genes`
+
+Weighting genes by their variability across reference samples is EPIC's published
+contribution. Without it EPIC is a constrained least-squares solve with uniform weights.
+
+**The variance matrix exists and is simply never passed.** `build_reference` computes it
+(`reference.py:134-139`) and `ReferenceBundle` carries it as `sigma`. Nothing in `r_bridge` or
+any script in `R/` mentions `sigma`, so it is never exported and EPIC never sees it.
+
+This is the same shape as the project's own invariant about MuSiC — *"MuSiC without
+cross-donor variance is NNLS"* — and it applies with equal force: **EPIC without
+`refProfiles.var` is not EPIC.** By the invariant "never report a degenerate method under its
+own name", the row should either supply the variance or be renamed and disclosed.
+
+### 2 · `cellFractions` is taken as a cell fraction and is not one
+
+`run_epic.R` reads `est$cellFractions`. EPIC converts mRNA share to cell share using
+`mRNA_cell`, which this project leaves at `NULL`, so EPIC falls back to its shipped
+`mRNA_cell_default`. That vector is keyed on EPIC's own roster:
+
+```
+Bcells 0.402  Macrophages 1.420  Monocytes 1.420  Neutrophils 0.130
+NKcells 0.440  Tcells 0.395  ...  otherCells 0.400  default 0.400
+```
+
+**Not one of this project's eight roster names matches.** `Macrophage_Microglia` is not
+`Macrophages`; `T_cell` is not `Tcells`; `B_cell` is not `Bcells`; `NK_cell` is not `NKcells`.
+So EPIC applies `default = 0.400` to all eight, uniformly — and a uniform factor cancels in
+the renormalisation.
+
+Measured directly on the installed package with this project's roster names:
+
+> `cellFractions` IDENTICAL to `mRNAProportions`, max difference **2.776e-17**.
+
+So `cellFractions` here is an mRNA proportion wearing a cell-fraction label. Given **D12** —
+the project's own conversion is also the identity — nothing downstream is inconsistent, but
+the label is wrong and the paper must not call it a cell fraction.
+
+This also explains D11 precisely: EPIC's divergence was never about `scaleExprs` alone.
+
+### 3 · The `otherCells` compartment makes EPIC's estimand different, and its size is unrecorded
+
+`withOtherCells = TRUE` gives EPIC a ninth column for signal the reference cannot explain,
+which is defensible on this data — the roster drops 7.0% of the atlas. But the harness then
+drops that column and renormalises across the eight roster types, so **EPIC's reported
+fractions are conditional on the explained signal** while every other method's are not.
+
+On a clean synthetic where the reference explains everything, `otherCells = 0.0000`, so the
+effect is nil there. On the real cohort it is **not recorded at all**: `run_epic.R` writes the
+sidecar next to its output inside a temporary directory that is deleted with the run, so no
+artefact preserves it. The one number needed to judge how much this matters was thrown away.
+
+### What must be done, and what must not
+
+**Must be done, in this order:**
+
+1. **Preserve the `otherCells` mass** as a first-class artefact. It is one line and it decides
+   how serious break 3 is.
+2. **Export `sigma` and pass it as `refProfiles.var`.** This restores EPIC to its published
+   form. It will change EPIC's numbers, so it is a declared deviation with before/after
+   published per number.
+3. **Relabel.** EPIC's column is an mRNA proportion. Either pass a real `mRNA_cell` for this
+   roster — which requires deciding what that vector should be, a design question — or state
+   plainly that EPIC's row is an mRNA proportion.
+
+**Must not be done:** none of these may be adopted because it improves EPIC's rank. Break 1
+is a recording gap, break 2 is measured from a package warning, and break 3 is measured at
+machine precision. All three are score-independent; the decisions must be too.
+
+### Note on convergence
+
+The same probe produced `The optimization didn't fully converge for some samples`. EPIC
+exposes `fit.gof` with a convergence code per sample and this project does not read it. Worth
+checking on the real cohort before any EPIC number is defended, and cheap.
