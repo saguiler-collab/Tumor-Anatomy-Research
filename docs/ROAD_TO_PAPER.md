@@ -24,7 +24,18 @@ method. That is Tier 2.
 
 These are not improvements. Each one prevents a statement in the paper from being wrong.
 
-### 0.1 The cell-size correction · **RESOLVED 2026-09-12 for MuSiC, SCDC and least squares**
+### 0.1 The cell-size correction · **SUPERSEDED BY D12 on 2026-09-14 — it was never applied at all**
+
+> **Read `docs/OPEN_DEFECTS.md` D12 first.** Everything below measures which packages convert
+> cell size internally, and that work stands: MuSiC, SCDC, EPIC and BayesPrism return mRNA
+> share; Bisque alone returns cell share. But the project's own central conversion is the
+> **identity** on the reference every score was computed against — `cell_size` is 1e6 for all
+> eight types, spread 1.0000 — because `run_benchmark` rebuilds the reference from the
+> already-normalised matrix without passing `cell_totals`.
+>
+> So nothing is corrected twice, or once. No leaderboard number moves. What this item now
+> requires is a **decision**, stated in D12: apply the conversion for real, or declare that
+> this study reports mRNA proportions. Neither may be chosen for its effect on a score.
 
 Four revisions in one day, all recorded in `docs/OPEN_DEFECTS.md` D1. The conclusion rests on
 a probe that mirrors production's actual condition — a marker-subset export whose per-type
@@ -79,83 +90,84 @@ The registration is permanent and correct not to edit. Two statements in it are 
 phrased as a correction *beside* the registration. Do not amend the OSF record. A
 registration with a published correction is stronger than one nobody checked.
 
-### 0.3 Settle how DWLS and BayesPrism are reported · **REOPENED 2026-09-12 — was marked DONE in error**
+### 0.3 Settle how DWLS and BayesPrism are reported · **DONE 2026-09-14**
 
-Both genuine R packages were measured, and both completed:
+Both genuine packages measured on inputs verified equivalent to the leaderboard's:
 
-| method | genuine R package | elapsed | pipeline budget | genes |
-|---|---|---|---|---|
-| `R:DWLS` | ACS 0.7077 [0.576, 0.864] | 3,873 s | 2,400 s | 1,591 |
-| `R:BayesPrism` | ACS 0.8923 [0.800, 0.972] | 4,689 s | 2,400 s | 1,591 |
+| method | genuine R package | reimplementation (leaderboard row) | delta | elapsed | budget |
+|---|---|---|---|---|---|
+| `R:DWLS` | **0.7846** [0.657, 0.906] | 0.7385 | **+0.046** | 2,474 s | 2,400 s |
+| `R:BayesPrism` | **0.8154** [0.710, 0.915] | 0.8769 | **−0.062** | 2,045 s | 2,400 s |
 
-**Why this is reopened.** Every method on the leaderboard ran on the benchmark's **657**
-gene marker subset. Both re-measurements ran on **1,591** —
-`scripts/remeasure_method.py` was reading the gene space the pipeline uses only as a
-*fallback*, and only the gene COUNT had ever been persisted, so nothing caught it. The
-entry previously read "It scores *lower* than the reimplementation (0.7385) and stays last.
-The disagreement with Avila Cobos is real, not an artefact of substituted software."
-**Neither sentence follows from measurements on gene spaces differing 2.4-fold, and both
-are withdrawn.** See `docs/OPEN_DEFECTS.md` D10.
+Seven input-equivalence conditions are recorded in each report and the run aborts if any
+fails: gene space by hash, 88 training donors by name, 22 held-out donors by name, no silent
+sample loss, identical sample IDs in order, identical cell-type ordering, same normalisation
+and scale.
 
-**Already done, and it is what makes the rest cheap:**
-- `run_all.py` persists the exact gene list and its hash to
-  `results/benchmark/signature_genes.json`.
-- `remeasure_method.py` aborts unless that file exists and its hash reproduces, instead of
-  silently substituting a gene space. It fails in ~2 s rather than after an hour of CPU.
-- Both report files carry a `COMPARABILITY: NOT COMPARABLE` header.
-- README, `RELATED_WORK.md` and this entry carry the withdrawal.
+**Getting there required killing two runs.** The first attempt reported 0.7077 and 0.8923;
+both are VOID. They used the 1,591-gene fallback space *and* built the reference from all 110
+donors, so the method saw the 22 held-out donors' cells — the donor leakage `run_benchmark`'s
+own guard exists to prevent, reintroduced one level up. **Both conclusions reversed** once the
+inputs were equivalent.
 
-**Steps to close it.**
-1. One full `python scripts/run_all.py` — writes `signature_genes.json`.
-2. `python scripts/remeasure_method.py --method dwls --budget 14400`
-3. `python scripts/remeasure_method.py --method bayesprism --budget 14400`
-   (~1.1 h and ~1.3 h respectively, measured, and they must not run concurrently on this
-   machine — three BayesPrism Gibbs workers at ~900 MB each already put it into swap.)
-4. Then, and only then, state whether genuine DWLS scores above or below its
-   reimplementation, and whether the Avila Cobos disagreement survives.
+**What this settles.** Genuine DWLS is *higher* than its reimplementation and is no longer
+last among the real methods, so part of the Avila Cobos disagreement was substituted software.
+Genuine BayesPrism is *lower* than its reimplementation. BayesPrism's fallback in the
+confirmatory run was **load-dependent** — it completes in 2,045 s against a 2,400 s budget —
+while DWLS genuinely exceeds it.
 
-**Until then:** every DWLS and BayesPrism statement in the paper must name the software
-**and** the gene space, and must not compare across the two. The archived leaderboard rows
-are the reimplementations and stay as recorded.
+**What remains, and it is not this item.** The archived leaderboard rows are still the
+reimplementations, because that is what the confirmatory run produced and the archive stands
+as recorded. Only a full `run_all.py` replaces them; until then the two are reported side by
+side. Every DWLS and BayesPrism statement in the paper must name the software, the gene space
+and the donor split.
 
 ---
 
-### 0.4 EPIC's estimand · **BLOCKING, new 2026-09-12**
+### 0.4 EPIC · **BLOCKING, and larger than first recorded (D11 + D13)**
 
-`docs/OPEN_DEFECTS.md` D11. EPIC returns the mRNA share **within the exported gene subset**;
-every other method returns the full-space share. The cell-size conversion divides by
-full-transcriptome factors, so for EPIC it is applied to the wrong quantity — measured error
-**−0.157** in the dominant type on the probe, where every other method is within 0.005.
+EPIC is joint-2nd on the ACS leaderboard at 0.9846. Three things are wrong with how it is
+run, all measured against the installed package on 2026-09-14.
 
-Mechanism confirmed: `scaleExprs = TRUE` (EPIC's published default). With it off EPIC returns
-0.7504 and agrees with the others.
+**1. Its defining feature is off.** `run_epic.R` builds
+`list(refProfiles = sig_mat, sigGenes = ...)` and never supplies `refProfiles.var`. EPIC
+warns — `'refProfiles.var' not defined; using identical weights for all genes` — and this
+project has never recorded that warning. Weighting genes by their variability is EPIC's
+published contribution; without it EPIC is a constrained least squares with uniform weights.
+**The variance matrix exists**: `build_reference` computes it and `ReferenceBundle` carries it
+as `sigma`. Nothing in `r_bridge` or `R/` mentions `sigma`, so it is never exported.
 
-**Do not fix this by changing `scaleExprs`.** It is the published default, the fairness rule
-is defaults with no per-method tuning, and EPIC's ACS is already known — changing a parameter
-after seeing a score is the retune the protocol forbids and would be indistinguishable from
-tuning EPIC up the leaderboard. EPIC is joint-2nd at 0.9846.
+By this project's own invariant — *never report a degenerate method under its own name*,
+*MuSiC without cross-donor variance is NNLS* — **EPIC without `refProfiles.var` is not EPIC**.
 
-**Legitimate routes, and both need a decision recorded before any number moves:**
+**2. Its output is mislabelled.** `cellFractions` is taken as a cell fraction. EPIC converts
+using `mRNA_cell`, left `NULL` here, so it falls back to `mRNA_cell_default`, keyed on
+`Bcells`/`Macrophages`/`Tcells`/`NKcells`. **Not one of this project's eight roster names
+matches**, so EPIC applies `default = 0.400` uniformly and the conversion cancels. Measured on
+the installed package with this roster: `cellFractions` identical to `mRNAProportions`,
+**max difference 2.776e-17**.
 
-1. **State per method which estimand it returns**, and convert accordingly — a documented
-   rule, pre-stated, applied to every method rather than to EPIC alone. This is the honest
-   fix and it requires re-running the affected rows.
-2. **Report EPIC's row with the mis-scaling disclosed** and make no correction, treating it
-   as a property of running EPIC on a marker subset.
+**3. Its estimand differs and the evidence was discarded.** `withOtherCells = TRUE` gives EPIC
+a ninth column; the harness drops it and renormalises, so EPIC's fractions are conditional on
+explained signal while no other method's are. On a clean synthetic `otherCells = 0.0000`. On
+the real cohort it is **unrecorded** — `run_epic.R` writes the sidecar into a temporary
+directory deleted with the run.
 
-**First, measure the effect on the real cohort — and note the evidence is mixed.** An
-analytic propagation of the per-type marker-space concentrations measured on the real atlas
-predicts a large distortion (Tumor 0.550 → 0.387). The pseudobulk benchmark contradicts it:
-EPIC's `mae_primary` is **0.0659**, 7th of 15 and only modestly behind MuSiC's 0.0508, which
-is not where a 0.16 bias on the dominant type would put it. So the probe result is solid and
-the real-data magnitude is genuinely unresolved, probably smaller than the propagation
-implies — `withOtherCells = TRUE` gives EPIC a sink column, the output is renormalised across
-the roster afterwards, and the benchmark's own truth is built from the same normalised cells.
+**Steps, in order.**
 
-The measurement that settles it: EPIC re-run on the real cohort with `scaleExprs = FALSE` as
-a **declared diagnostic**, compared composition-by-composition against the production row.
-Recorded alongside, never swapped into the leaderboard.
+1. **Preserve the `otherCells` mass** as a first-class artefact, and read `fit.gof` while
+   there — the probe reported non-convergence and this project has never checked it. Cheap,
+   and it decides how serious point 3 is.
+2. **Export `sigma`, pass it as `refProfiles.var`.** Restores EPIC to its published form.
+   Changes EPIC's numbers, so: declared deviation, before/after per number.
+3. **Relabel.** EPIC's column is an mRNA proportion. Either supply a real `mRNA_cell` for this
+   roster — a design decision, not a fix — or say so plainly.
 
+**None of these may be adopted because they improve EPIC's rank.** Point 1 is a recording gap,
+point 2 comes from a package warning, point 3 is measured at machine precision. All three are
+score-independent and the decisions must be too.
+
+---
 
 ## Tier 1 · Strongly recommended — the paper is materially weaker without these
 

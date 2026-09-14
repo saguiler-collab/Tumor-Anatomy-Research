@@ -82,29 +82,34 @@ budget in both anatomic stages — so the comparison was initially unresolvable.
 with a 4-hour budget. It completed in **3,873 s (1.08 h)**, above the pipeline budget and
 well inside the new one.
 
-| | ACS | 95% CI | pairs | null_p | genes |
-|---|---|---|---|---|---|
-| **genuine `R:DWLS`** | **0.7077** | [0.576, 0.864] | 57 | 0.0001 | **1,591** |
-| Python reimplementation | 0.7385 | — | 57 | 0.0001 | **657** |
+| | ACS | 95% CI | pairs | null_p | genes | donors |
+|---|---|---|---|---|---|---|
+| **genuine `R:DWLS`** | **0.7846** | [0.657, 0.906] | 57 | 0.0001 | 657 | 88 train |
+| Python reimplementation | 0.7385 | — | 57 | 0.0001 | 657 | 88 train |
 
-> **CORRECTION, 2026-09-12 — these two rows are not comparable, and the comparison this
-> section drew from them is withdrawn.** The re-measurement ran on 1,591 genes; the
-> leaderboard ran on 657. `scripts/remeasure_method.py` was reading the gene space the
-> pipeline uses only as a *fallback*, and only the gene COUNT had ever been persisted, so
-> nothing caught it. This section previously concluded "the genuine package scores lower
-> than the reimplementation, and stays last" and that **the disagreement with Avila Cobos
-> survives the obvious explanation**. Neither follows from a 2.4-fold difference in gene
-> space. See `docs/OPEN_DEFECTS.md` D10.
->
-> The re-measurement's commitment to report whatever it found still stands, and is why
-> this correction is here rather than absent. What it established is that the genuine
-> package completes in 3,873 s against a 2,400 s pipeline budget — a real measurement, and
-> the reason for the fallback.
+**Measured 2026-09-14 on verified-equivalent inputs.** Seven conditions are checked and
+recorded in the report, and the run aborts if any fails: gene space by hash, the 88 training
+donors by name, the 22 held-out donors by name, no silent sample loss, identical sample IDs
+in order, identical cell-type ordering, and the same normalisation and scale.
 
-So **whether the disagreement with Avila Cobos survives the substituted-software
-explanation is still open.** The readings below were written when it looked settled; they
-remain the candidate explanations to test once a comparable measurement exists, and neither
-is evidence today. They are not exclusive:
+> **An earlier version of this table reported 0.7077 and is VOID.** That run used the
+> 1,591-gene fallback space *and* built its reference from all 110 donors, so the method saw
+> the 22 held-out donors' cells. Its conclusion — "the genuine package scores lower than the
+> reimplementation, and stays last" — **reversed** once the inputs were made equivalent. See
+> `docs/OPEN_DEFECTS.md` D10.
+
+**The genuine package scores HIGHER than the reimplementation**, by 0.046, which is three
+weighted constraint–tumour pairs out of 57. At 0.7846 DWLS is no longer last among the real
+methods: it passes both Bayesian models (0.7692). So part of this study's disagreement with
+Avila Cobos *was* an artefact of substituted software, and the part that remains is smaller
+than reported.
+
+So **the substituted-software explanation accounts for part of the disagreement, and the
+comparison can now be made.** Avila Cobos et al. rank DWLS best among single-cell-reference
+methods; this study ranked it last at 0.7385, and the genuine package measures 0.7846 — above
+both Bayesian models, no longer last, and still far from first. The two readings below remain
+the candidate explanations for the residual gap. They are not exclusive, and neither is
+established:
 
 **DWLS is built for rare cell types.** Its dampening suppresses the dominance of highly
 expressed genes belonging to abundant populations — the regime where a rare type would

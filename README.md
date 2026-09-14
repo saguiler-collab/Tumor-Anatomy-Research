@@ -284,35 +284,36 @@ only 66 distinct values.
 So the correct claim is *"anatomy separates good methods from bad ones"*, not *"anatomy
 identifies the best method"*. The second sentence is not supported and is not made.
 
-### Two methods needed measuring twice — and the re-measurement is not yet comparable
+### Two methods needed measuring twice — now done, on verified-equivalent inputs
 
-DWLS and BayesPrism both exceeded their wall-clock budgets in the confirmatory run and
-fell back to Python reimplementations, so neither row above is the published package. Each
-was re-measured separately with a four-hour budget, and both genuine packages completed:
+DWLS and BayesPrism both exceeded their wall-clock budgets in the confirmatory run and fell
+back to Python reimplementations, so neither leaderboard row is the published package. Both
+have now been re-measured with the genuine package on inputs verified equivalent to the
+leaderboard's:
 
-| method | genuine R package | completed in | pipeline budget |
-|---|---|---|---|
-| `R:DWLS` | ACS 0.7077 [0.576, 0.864] | 3,873 s | 2,400 s |
-| `R:BayesPrism` | ACS 0.8923 [0.800, 0.972] | 4,689 s | 2,400 s |
+| method | genuine R package | reimplementation (leaderboard row) | delta | elapsed |
+|---|---|---|---|---|
+| `R:DWLS` | **0.7846** [0.657, 0.906] | 0.7385 | **+0.046** | 2,474 s |
+| `R:BayesPrism` | **0.8154** [0.710, 0.915] | 0.8769 | **−0.062** | 2,045 s |
 
-> **Neither number may be compared with the table above.** Found 2026-09-12: both
-> re-measurements ran on **1,591 genes**, while all 16 methods in the leaderboard ran on
-> the benchmark's **657-gene** marker subset. `scripts/remeasure_method.py` was reading the
-> gene space the pipeline uses only as a *fallback*. A 2.4-fold difference in gene space is
-> not a detail, so the gap between 0.7077 and the reimplementation's 0.738 is not
-> attributable to the implementation, and the earlier claim here that genuine DWLS scored
-> "*lower* … and still last" is withdrawn — it was not measured on the same footing.
+**Seven input-equivalence conditions are checked and recorded in each report, and the run
+aborts if any fails:** the 657-gene space by hash, the 88 training donors by name, the 22
+held-out donors by name, no silent sample loss, identical sample IDs in identical order,
+identical cell-type ordering, and the same normalisation and scale.
 
-**What the re-measurements do establish.** Both published packages run to completion on
-this cohort, and both need roughly twice the pipeline's 2,400 s budget — which is why they
-fell back, and it is a measurement rather than a guess.
+> **Two earlier numbers are VOID.** The first attempt reported 0.7077 for DWLS and 0.8923 for
+> BayesPrism. Both ran on the 1,591-gene fallback space *and* built their reference from all
+> 110 donors instead of the 88 training donors — so the method saw the 22 held-out donors'
+> cells. **Both conclusions reversed once the inputs were made equivalent**: genuine DWLS is
+> *higher* than its reimplementation, not lower, and genuine BayesPrism is *lower*, not
+> higher. See `docs/OPEN_DEFECTS.md` D10.
 
-**What closes it.** The pipeline now persists its exact gene list
-(`results/benchmark/signature_genes.json`); before, only the count was recorded, which is
-why the mismatch was invisible. `remeasure_method.py` now aborts unless that file exists
-and its hash matches, rather than silently substituting a different gene space. One full
-`run_all.py` followed by the two re-measurements makes them comparable. See
-`docs/OPEN_DEFECTS.md` D10.
+**BayesPrism's fallback was load-dependent, not inherent.** It completed in 2,045 s against a
+2,400 s budget. DWLS genuinely exceeds it, at 2,474 s.
+
+The archived leaderboard rows remain the reimplementations, because that is what the
+confirmatory run produced and the archive stands as recorded. The genuine measurements are
+reported beside them until a full re-run replaces the rows.
 
 That matters beyond bookkeeping. Avila Cobos et al. (2020) rank DWLS **best** among
 methods that use a single-cell reference, and this study ranks it last. Running the real

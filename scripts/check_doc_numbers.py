@@ -53,13 +53,19 @@ DECLARED_REMEASUREMENTS = {
     # (docs/OPEN_DEFECTS.md D10), so a document may print them only alongside the gene
     # space. This checker verifies a number exists in an artefact; it cannot verify that
     # the sentence around it is fair, and it must not be read as blessing the comparison.
-    "dwls": {0.7077: "genuine DWLS R package, 4 h budget, 1,591 genes — NOT comparable "
-                     "to the 657-gene leaderboard (D10)",
-             0.708: "the same value, rounded to 3 dp",
-             0.738: "the Python reimplementation, as run in the confirmatory run"},
-    "bayesprism": {0.8923: "genuine BayesPrism R package, 4 h budget, 1,591 genes — NOT "
-                           "comparable to the 657-gene leaderboard (D10)",
-                   0.892: "the same value, rounded to 3 dp"},
+    # VALID as of 2026-09-14: 657-gene space (hash verified), 88/22 donor split reproduced
+    # by name, training cells only, all seven input-equivalence conditions passing. These
+    # ARE comparable to the leaderboard.
+    "dwls": {0.7846: "genuine DWLS R package, equivalent inputs, 2,474 s",
+             0.785: "the same value, rounded to 3 dp",
+             0.738: "the Python reimplementation, as run in the confirmatory run",
+             0.7077: "VOID — the 1,591-gene run with donor leakage (D10). Kept so a "
+                     "document still quoting it is recognised, not blessed",
+             0.708: "VOID, rounded"},
+    "bayesprism": {0.8154: "genuine BayesPrism R package, equivalent inputs, 2,045 s",
+                   0.815: "the same value, rounded to 3 dp",
+                   0.8923: "VOID — the 1,591-gene run with donor leakage (D10)",
+                   0.892: "VOID, rounded"},
 }
 
 SKIP = ("/.git/", "/node_modules/", "/pipeline_packages/",

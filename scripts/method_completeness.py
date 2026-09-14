@@ -68,17 +68,27 @@ DEFECTS: dict[str, list[tuple[str, str]]] = {
              ("D1", "resolved: returns mRNA share (0.7503), central conversion is the first")],
     "scdc_ensemble": [("D2!ext", "reduces exactly to SCDC with one reference — needs a "
                                  "second LABELLED reference (EXTERNAL_ACTIONS item 9)")],
-    "bisque": [("D1", "CONFIRMED double correction: Bisque returns CELL share (0.5000, "
-                      "off-pair 0.750) so the central conversion is the second one. Fix is "
-                      "to skip the central step for Bisque, as is already done for "
-                      "quanTIseq"),
+    "bisque": [("D1", "resolved: Bisque alone returns CELL share (0.5000, off-pair 0.750), "
+                      "so the central conversion WOULD be its second. The skip is "
+                      "implemented and measured INERT here, because D12 shows that "
+                      "conversion is the identity: re-measured ACS 0.9231, estimates "
+                      "bit-identical to the archived row"),
                ("-", "runs in documented no-overlap mode")],
-    "bayesprism": [("D1", "resolved: returns mRNA share (0.7502), central conversion is the "
-                          "first and correct"),
-                   ("D10", "the genuine-package re-measurement used a different gene space")],
-    "dwls": [("D4", "the Python fallback that replaced it is unbounded; 28,387 s"),
-             ("D7", "11 of 122 samples solve degenerate (>0.99 on one type)"),
-             ("D10", "the genuine-package re-measurement used a different gene space")],
+    "_d12_applies_to_all": [],
+    "bayesprism": [("D1", "resolved: returns mRNA share (0.7502); and per D12 the central "
+                          "conversion is the identity anyway"),
+                   ("D10", "resolved 2026-09-14: re-measured at ACS 0.8154 on the "
+                           "leaderboard's 657-gene space with the 88/22 donor split, all "
+                           "seven equivalence conditions passing")],
+    "dwls": [("D4!ext", "the Python fallback that replaced it is unbounded; 28,387 s. The "
+                        "genuine package is now measured, so the fallback is no longer on "
+                        "the critical path, but the bound is still missing"),
+             ("D7!ext", "11 of 122 samples solve degenerate (>0.99 on one type); D7's own "
+                        "instruction is to detect and DISCLOSE, not to fix, and they are "
+                        "counted here"),
+             ("D10", "resolved 2026-09-14: re-measured at ACS 0.7846 on the leaderboard's "
+                     "657-gene space with the 88/22 donor split, all seven equivalence "
+                     "conditions passing")],
     "quantiseq": [("-", "partial coverage: 4 of 8 roster types, excluded from the ranking")],
     "music": [("D1", "resolved: returns mRNA share, conversion applied once, measured on "
                      "the production-like subset AND the all-types mixture")],
@@ -193,12 +203,25 @@ def main() -> int:
                 structural.append(f"{prop} — {why}")
 
             if reimpl:
-                ext_blocked.append(
-                    "the GENUINE package has not been measured on the leaderboard's gene "
-                    "space (D10). scripts/reconstruct_gene_space.py recovers that space in "
-                    "minutes but must load a 7.6 GB atlas, which this machine cannot do "
-                    "alongside anything else — see EXTERNAL_ACTIONS item 6. Then: "
-                    "scripts/remeasure_method.py --method <m> --budget 14400")
+                # The genuine package IS now measured, on the leaderboard's gene space with
+                # the donor split reproduced and all seven equivalence conditions passing.
+                # What remains is narrower: the ARCHIVED leaderboard row is still the
+                # reimplementation, and only a full run_all.py replaces it. Recorded as
+                # external because it is a whole-pipeline re-run, not a gap in this method's
+                # measurement.
+                rm = json.loads((R.parent / f"results/{m}_remeasured.json").read_text()) \
+                    if (R.parent / f"results/{m}_remeasured.json").exists() else None
+                if rm and rm.get("acs") is not None:
+                    ext_blocked.append(
+                        f"the genuine package is measured at ACS {rm['acs']} on equivalent "
+                        f"inputs, but the ARCHIVED leaderboard row is still the "
+                        f"reimplementation. Only a full run_all.py replaces the row; the "
+                        f"two are reported side by side until then.")
+                else:
+                    ext_blocked.append(
+                        "the GENUINE package has not been measured on the leaderboard's "
+                        "gene space (D10): run scripts/reconstruct_gene_space.py then "
+                        "scripts/remeasure_method.py --method <m> --budget 14400")
             if bool(row["degenerate"]) and m not in STRUCTURAL:
                 closable.append("runs in a degenerate/degraded mode with no structural reason "
                                 "recorded — investigate")
@@ -211,6 +234,7 @@ def main() -> int:
                 closable.append("degenerate per-sample solves are not counted")
             for d, why in DEFECTS.get(m, []):
                 if why.startswith("resolved"):
+                    structural.append(f"{d}: {why}")
                     continue
                 if d == "-":
                     # A property of the method or the cohort, already in STRUCTURAL above
