@@ -264,6 +264,53 @@ def to_cell_fractions(rna_fractions: np.ndarray, cell_size: np.ndarray) -> np.nd
 # THE METHOD INTERFACE
 # =============================================================================
 
+def finalize_estimates(raw, data, covered=None, returns_cell_fractions: bool = False):
+    """
+    Turn a method's raw output into the project's canonical estimate table.
+
+    THE SINGLE implementation of simplex projection plus the cell-size conversion. It exists
+    because there used to be two: `DeconvolutionMethod.fit_predict` and, copied into
+    `scripts/remeasure_method.py`, a hand-rolled loop doing the same three steps. When
+    `returns_cell_fractions` was added to skip the conversion for Bisque — the one package
+    measured to convert internally — the fix reached `fit_predict` and not the copy, so the
+    re-measurement kept double-correcting and produced an estimate table BIT-IDENTICAL to the
+    uncorrected one. The fix looked applied and was not.
+
+    Any future change to this post-processing must therefore be made here, and both callers
+    get it. `tests/test_finalize_shared.py` pins that they agree.
+
+    Parameters
+    ----------
+    raw
+        samples x cell_types, a method's own output.
+    covered
+        Mask of the cell types the method structurally models, or None for all of them.
+        Partial coverage suppresses the conversion, which would otherwise renormalise a
+        handful of immune types to sum 1 and assert the tumour is entirely immune.
+    returns_cell_fractions
+        True when the method's output is ALREADY a cell fraction, so this project's
+        conversion would be the second one. Measured per package; see
+        `r_bridge.R_RETURNS_CELL_FRACTIONS`.
+    """
+    raw = np.asarray(raw, dtype="float64")
+    cell_size = data.primary.cell_size.reindex(list(data.cell_types)).to_numpy()
+    apply_cs = (data.apply_cell_size_correction
+                and covered is None
+                and not returns_cell_fractions)
+
+    rows = []
+    for i in range(raw.shape[0]):
+        w = project_to_simplex(raw[i], covered)
+        if apply_cs and np.isfinite(w).all():
+            w = to_cell_fractions(w, cell_size)
+        rows.append(w)
+
+    out = pd.DataFrame(np.vstack(rows), index=list(data.samples),
+                       columns=list(data.cell_types))
+    out.index.name = "sample_id"
+    return out
+
+
 class DeconvolutionMethod(abc.ABC):
     """
     Base class. Subclasses implement `_solve_all`, returning RNA proportions; the
@@ -351,32 +398,12 @@ class DeconvolutionMethod(abc.ABC):
                 f"{self.name} returned shape {raw.shape}, expected {(n_s, n_t)}"
             )
 
-        cell_size = data.primary.cell_size.reindex(list(data.cell_types)).to_numpy()
-
-        # Cell-size correction renormalises, so on a partial-coverage method it would
-        # rescale a handful of immune types to sum 1 and assert the tumour is entirely
-        # immune. quanTIseq also already applies its own mRNA scaling (scale_mRNA=TRUE,
-        # its published default), so ours would be the second correction, not the first.
-        #
-        # `returns_cell_fractions` is the same exclusion for the same reason, extended to a
-        # method whose output is ALREADY a cell fraction. Measured, per package, by
-        # scripts/verify_cell_size_semantics.py -- Bisque is the one package in this panel
-        # that converts internally, so applying ours centrally applied it twice.
-        apply_cs = (data.apply_cell_size_correction
-                    and covered is None
-                    and not self.returns_cell_fractions)
-
-        rows = []
-        for i in range(n_s):
-            w = project_to_simplex(raw[i], covered)
-            if apply_cs and np.isfinite(w).all():
-                w = to_cell_fractions(w, cell_size)
-            rows.append(w)
-
-        out = pd.DataFrame(np.vstack(rows), index=data.samples,
-                           columns=list(data.cell_types))
-        out.index.name = "sample_id"
-        return out
+        # Delegated so this project has exactly one implementation of the conversion rules.
+        # See finalize_estimates: a copy of this logic in scripts/remeasure_method.py silently
+        # missed the Bisque fix and produced an estimate table identical to the uncorrected
+        # one.
+        return finalize_estimates(raw, data, covered=covered,
+                                  returns_cell_fractions=self.returns_cell_fractions)
 
     def _covered_mask(self, cell_types) -> np.ndarray | None:
         """

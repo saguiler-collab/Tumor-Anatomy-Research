@@ -10,7 +10,7 @@ keeping, marked RESOLVED at the top.
 
 | | status |
 |---|---|
-| **D1** cell-size correction | **RESOLVED** for MuSiC, SCDC, least squares — NOT applied twice, measured on the production-like subset. Unmeasured for Bisque/BayesPrism. Four revisions; read the whole entry |
+| **D1** cell-size correction | **SUPERSEDED BY D12.** Package conventions measured for all five; Bisque alone returns cell share. But the conversion itself is the identity on this reference, so nothing was corrected twice — or once |
 | **D2** SCDC ENSEMBLE degenerate | open, disclosed in the leaderboard |
 | **D3** SCDC `ct.cell.size` | RESOLVED with D1 — not passing it is correct; SCDC returns full-space mRNA share |
 | **D4** unbounded Python fallback | open, operational |
@@ -20,7 +20,8 @@ keeping, marked RESOLVED at the top.
 | **D8** one constraint carries the ranking below the top | measured, disclosed |
 | **D9** false pre-registration violation published | FIXED; residual weakness disclosed |
 | **D10** re-measurements used a different gene space | mechanism FIXED; the two measurements must be redone |
-| **D11** EPIC returns the within-subset mRNA share, not the full-space one | **OPEN, high** — the cell-size conversion is applied to the wrong quantity; −0.157 on the probe |
+| **D11** EPIC returns the within-subset mRNA share, not the full-space one | **OPEN** — but see D12: the conversion it is applied to is the identity, so the practical effect on the published numbers is nil |
+| **D12** the cell-size correction has never been applied — it is the identity | **OPEN, high** — supersedes most of D1; no number changes, but the registration says otherwise |
 
 ---
 
@@ -1064,3 +1065,110 @@ other method returns the full-space share, and `scaleExprs` is the cause.
 implies. Resolving it needs EPIC re-run on the real cohort with `scaleExprs = FALSE` and the
 two compositions compared directly — which is a measurement, not an argument, and must be
 recorded as a declared diagnostic rather than swapped into the leaderboard.
+
+
+---
+
+## D12 · The cell-size correction has never been applied. It is the identity on the reference every score was computed against.
+
+**Severity: high, and it supersedes most of D1. Found 2026-09-14, measured.**
+
+### What was measured
+
+`results/bisque_remeasured.json` records the reference's `cell_size` vector for the first
+time:
+
+| cell type | cell_size |
+|---|---|
+| Tumor | 1,000,000.0000 |
+| Macrophage_Microglia | 1,000,000.0000 |
+| T_cell | 999,999.9375 |
+| NK_cell | 1,000,000.0000 |
+| B_cell | 1,000,000.0000 |
+| Endothelial | 1,000,000.0000 |
+| Oligodendrocyte | 1,000,000.0000 |
+| Astrocyte | 1,000,000.0000 |
+
+**Spread max/min = 1.0000.** `to_cell_fractions` divides by this vector and renormalises, so
+it is **exactly the identity**. (The 999,999.9375 is float32 summation of values totalling
+1e6 — it does not make the vector non-uniform in any meaningful sense.)
+
+### The mechanism
+
+`build_from_h5ad` does the right thing and says so in a comment at `reference.py:386`:
+
+> Each cell's library size, captured BEFORE normalisation. Normalising first and measuring
+> after would make every type's mean total 1e6 and turn the cell-size correction into a
+> no-op.
+
+It captures `raw_totals`, normalises each cell to 1e6, and passes `cell_totals=raw_totals`
+into `build_reference`. That reference has real cell-size spread.
+
+**`run_benchmark` then discards it.** At `run_benchmark.py:63-65` it rebuilds the reference
+from the already-normalised matrix, training donors only, and does **not** pass
+`cell_totals`:
+
+```python
+reference = build_reference(expression[train_cells], meta.loc[train_cells],
+                            name=config.PRIMARY_REFERENCE)
+```
+
+`build_reference` falls back to `expression.sum(axis=0)` (`reference.py:152-153`), which is
+1e6 for every cell because that matrix is the normalised one. So the reference handed to the
+benchmark — and then, via `bench["reference"]`, to the anatomic leaderboard — carries a
+uniform `cell_size`, and the conversion does nothing.
+
+The comment warning against exactly this sits 230 lines away from the call that does it.
+
+### Independent corroboration
+
+Bisque was re-measured with the central conversion **skipped** (D1's fix). Its estimate table
+came out **bit-identical** to the archived `ivygap_bisque.csv`, which was produced with the
+conversion **applied** — max absolute difference 0.000000 across all 122 samples and 8 types,
+and ACS 0.9231 with CI [0.8657, 0.9831] both ways.
+
+Applying a transform and skipping it cannot give identical output unless the transform is the
+identity. That is a second, independent proof, and it does not depend on reading any code.
+
+### What this means
+
+**It supersedes most of D1.** There is no double correction anywhere in the published
+results, because there is no correction anywhere:
+
+- Bisque's "confirmed double correction" is not double — it is zero. The fix committed for it
+  is *correct in mechanism* and *inert in effect* on this reference, and the leaderboard row
+  is unchanged.
+- The "15 of 16 methods change ACS when the correction is applied a second time" experiment
+  does **not** describe this pipeline. It must have used a cell-size vector with real spread
+  (the frozen `cell_size_factors.csv` spans 737x), so it measured a counterfactual reference,
+  not the one the leaderboard used. That experiment's numbers should not be cited as bearing
+  on the published results.
+- The `DECLARED_DEVIATIONS` entries added for MuSiC, SCDC, Bisque and BayesPrism say the
+  harness "substitutes this project's cell-size factors" for the packages' own. **It
+  substitutes nothing.** They must be corrected.
+
+**It is a deviation from the registration**, which states the conversion is "applied once and
+centrally". It is applied nowhere. That is a disclosure item, not a silent one.
+
+**What it does NOT change.** Every leaderboard number, every benchmark number, ACS, rho, the
+controls and the ISH validation all stand exactly as recorded — they were computed with an
+identity transform in the chain, which is the same as without it. Nothing needs re-running to
+*correct* anything. What needs deciding is whether the conversion *should* be applied, which
+is a design question, not a bug fix.
+
+### The decision this forces, and how to take it without breaking the protocol
+
+Two defensible options, and the choice must be recorded before any number moves:
+
+1. **Apply the conversion for real** — pass `cell_totals` through in `run_benchmark`, so the
+   reference carries true per-type mRNA content. This changes every method's estimates and
+   must be reported as a declared deviation with before/after per number. It also makes D1
+   live again, and Bisque's fix load-bearing.
+2. **Declare that this study reports mRNA proportions, not cell proportions** — which is what
+   it has in fact been doing throughout — and remove the conversion rather than leave dead
+   code implying otherwise. Cheaper, honest, and it changes no number; but it weakens the
+   comparison with studies that report cell fractions.
+
+**Option 1 must not be chosen because it might improve a score**, and option 2 must not be
+chosen because it is less work. The measurement above is score-independent; the decision
+should be too, and stated in the paper either way.

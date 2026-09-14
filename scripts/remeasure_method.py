@@ -97,7 +97,26 @@ def main() -> int:
             if bool(meta.loc[s, "is_anatomic_study"])
             and meta.loc[s, "structure"] in config.PRIMARY_STRUCTURES]
 
-    ref, cells, cmeta = build_from_h5ad(config.REFERENCE_DIR / "gbmap_core.h5ad")
+    # RESTRICT THE ATLAS TO THE BULK'S GENES, exactly as run_all.py does:
+    #     build_from_h5ad(gbmap, restrict_to_genes=bulk.index, export=False)
+    #
+    # This is not an optimisation and it is not about the 657 gene space. In
+    # `build_from_h5ad` the gene mask is applied to X BEFORE `raw_totals` is taken, so the
+    # restriction decides two things that reach every method:
+    #
+    #   * `cell_size`, which is the per-type mean of raw_totals. Summed over 27,625 atlas
+    #     genes it is a different vector than summed over the 16,758 the bulk also carries,
+    #     and the RATIOS between cell types differ, so the central mRNA-to-cell conversion
+    #     differs.
+    #   * the normalisation base. Each cell is scaled to 1e6 across whatever genes survive
+    #     the mask, so the reference PROFILE differs too.
+    #
+    # Without the restriction a re-measurement can use the leaderboard's exact 657 genes and
+    # still not be input-equivalent to it. Found 2026-09-14 while checking the seven
+    # equivalence conditions; two runs were killed and restarted because of it.
+    ref, cells, cmeta = build_from_h5ad(
+        config.REFERENCE_DIR / "gbmap_core.h5ad",
+        restrict_to_genes=expr.index, export=False)
 
     # THE GENE SPACE MUST BE THE LEADERBOARD'S, OR THE NUMBER IS NOT COMPARABLE.
     #
@@ -111,6 +130,8 @@ def main() -> int:
     # The run now persists its exact gene list (`benchmark/signature_genes.json`). If that
     # file is absent this script ABORTS: a re-measurement on a gene space nobody can
     # reproduce is worse than no re-measurement, because it looks like evidence.
+    sel_rec = json.loads(
+        (config.BENCH_DIR / "method_selection_decision.json").read_text())
     gene_rec = json.loads(genes_path.read_text())
     genes = [g for g in gene_rec["genes"] if g in set(expr.index)]
     if len(genes) != len(gene_rec["genes"]):
@@ -132,13 +153,117 @@ def main() -> int:
     print(f"  gene space: {len(genes)} genes, hash {prov['sha256'][:16]}… "
           f"(the leaderboard's own)")
 
+    # THE REFERENCE MUST BE BUILT FROM THE 88 TRAINING DONORS ONLY.
+    #
+    # The leaderboard's anatomic stage received `bench["reference"]`, built from training
+    # donors alone, and a cell source of `sc_expression.loc[genes, train_cells]`. This script
+    # used to hand the method the reference and the cells for ALL 110 donors, which is
+    # non-equivalent twice over: the reference profile is built from different cells, and the
+    # method sees the 22 HELD-OUT donors it was never supposed to see. That is the donor
+    # leakage `run_benchmark`'s own guard exists to prevent, reintroduced one level up.
+    #
+    # Found 2026-09-14 while checking the seven equivalence conditions. Two in-flight runs
+    # were killed because of it.
+    from ivygap.bench.pseudobulk import split_donors
+    train_donors, test_donors = split_donors(cmeta, seed=config.RANDOM_SEED)
+    rec_train = sorted(map(str, sel_rec["train_donors"]))
+    rec_test = sorted(map(str, sel_rec["test_donors"]))
+    if sorted(map(str, train_donors)) != rec_train or sorted(map(str, test_donors)) != rec_test:
+        print(f"BLOCKED: the donor split does not reproduce the recorded one "
+              f"({len(train_donors)}/{len(rec_train)} train, "
+              f"{len(test_donors)}/{len(rec_test)} test). The atlas did not load to the "
+              f"same cells, so no comparison against the leaderboard is valid.")
+        return 2
+    print(f"  donor split reproduces: {len(train_donors)} train / {len(test_donors)} "
+          f"held out, by name")
+
+    train_cells = cmeta.index[cmeta["donor"].astype(str).isin(train_donors)]
+    from ivygap.data.reference import build_reference
+    ref_train = build_reference(cells[train_cells], cmeta.loc[train_cells],
+                                name=config.PRIMARY_REFERENCE)
+
     bulk = expr.loc[genes, anat]
     bulk = bulk / bulk.sum(axis=0) * 1e6
-    data = DeconvolutionInput(bulk=bulk, references=(ref.subset_genes(genes),),
+    data = DeconvolutionInput(bulk=bulk, references=(ref_train.subset_genes(genes),),
                               manifest=meta.loc[anat])
-    r_bridge.set_cell_source(ref.name, cells, cmeta)
+    # Training cells only, matching run_all stage 4 exactly.
+    r_bridge.clear_cell_source(ref_train.name)
+    r_bridge.set_cell_source(ref_train.name, cells.loc[genes, train_cells],
+                             cmeta.loc[train_cells])
     print(f"  {bulk.shape[0]} genes x {bulk.shape[1]} samples | "
-          f"reference {cells.shape[1]} cells")
+          f"reference {len(train_cells):,} TRAINING cells from {len(train_donors)} donors")
+
+    # --- the seven equivalence conditions, recorded rather than assumed --------
+    canon_path = config.ESTIMATES_DIR / f"ivygap_{M}.csv"
+    canon = pd.read_csv(canon_path, index_col=0) if canon_path.exists() else None
+    equivalence = {
+        "1_gene_space": {"n_genes": len(genes), "sha256": prov["sha256"],
+                         "matches_leaderboard": prov["matches_recorded_hash"]},
+        "2_train_donors": {"n": len(train_donors),
+                           "matches_recorded": sorted(map(str, train_donors)) == rec_train},
+        "3_held_out_donors": {"n": len(test_donors),
+                              "matches_recorded": sorted(map(str, test_donors)) == rec_test,
+                              "reference_excludes_held_out_donors": True,
+                              "note": "the reference and the cell export carry TRAINING "
+                                      "donors only, as run_all stage 4 does, so none of "
+                                      "the 22 held-out donors' cells reach the method"},
+        "4_no_silent_sample_loss": {
+            "n_anatomic_samples_selected": len(anat),
+            "n_samples_in_bulk": int(bulk.shape[1]),
+            "equal": len(anat) == int(bulk.shape[1]),
+            "canonical_n_samples": None if canon is None else int(len(canon)),
+        },
+        "5_sample_ids": {
+            "canonical_artefact": str(canon_path.relative_to(config.PROJECT_ROOT)),
+            # Compared as STRINGS on purpose. Ivy GAP sample ids are numeric, so read_csv
+            # returns them as int64 while the bulk carries them as object -- comparing the
+            # lists directly reports a mismatch on dtype when the content is identical, and
+            # the first version of this check did exactly that and blocked a valid run.
+            "identical_and_in_order": (
+                None if canon is None
+                else [str(x) for x in canon.index] == [str(x) for x in bulk.columns]),
+            "n_canonical": None if canon is None else int(len(canon)),
+            "same_membership": (None if canon is None
+                                else set(map(str, canon.index)) == set(map(str, bulk.columns))),
+        },
+        "6_cell_type_order": {
+            "order": list(data.cell_types),
+            "matches_config": list(data.cell_types) == list(config.CELL_TYPES),
+            "matches_canonical": (None if canon is None
+                                  else list(canon.columns) == list(data.cell_types)),
+        },
+        "7_normalisation_and_scale": {
+            "atlas_restricted_to_bulk_genes": True,
+            "n_atlas_genes_after_restriction": int(cells.shape[0]),
+            "per_cell_normalisation": "1e6 across the restricted gene set, before profile "
+                                      "averaging; raw totals captured first as cell_size",
+            "bulk_scaling": "CPM over the 657-gene space (columns sum to 1e6)",
+            "cell_size_sha256": config.sha256_strings(
+                [f"{c}:{v:.6f}" for c, v in
+                 ref_train.cell_size.reindex(list(data.cell_types)).items()]),
+            # The VALUES, not just a hash. A hash proves two runs agree; it cannot tell a
+            # reader whether the conversion these factors drive does anything at all, and
+            # that turned out to be the question.
+            "cell_size": {c: round(float(v), 4) for c, v in
+                          ref_train.cell_size.reindex(list(data.cell_types)).items()},
+            "cell_size_spread_max_over_min": round(
+                float(ref_train.cell_size.max() / ref_train.cell_size.min()), 4),
+            "apply_cell_size_correction": bool(data.apply_cell_size_correction),
+        },
+    }
+    hard = [equivalence["1_gene_space"]["matches_leaderboard"],
+            equivalence["2_train_donors"]["matches_recorded"],
+            equivalence["3_held_out_donors"]["matches_recorded"],
+            equivalence["3_held_out_donors"]["reference_excludes_held_out_donors"],
+            equivalence["4_no_silent_sample_loss"]["equal"],
+            equivalence["6_cell_type_order"]["matches_config"]]
+    if equivalence["5_sample_ids"]["identical_and_in_order"] is not None:
+        hard.append(equivalence["5_sample_ids"]["identical_and_in_order"])
+    if not all(hard):
+        print("BLOCKED: an equivalence condition failed.")
+        print(json.dumps(equivalence, indent=2))
+        return 2
+    print(f"  equivalence: all {len(hard)} hard conditions PASS")
 
     print(f"\nrunning the genuine {M} R package with a {args.budget}s budget "
           f"(the pipeline's is {r_bridge.timeout_for(M)}s)...")
@@ -163,6 +288,8 @@ def main() -> int:
         "elapsed_seconds": round(elapsed, 1),
         "n_samples": int(bulk.shape[1]), "n_genes": int(bulk.shape[0]),
         "gene_space": prov,
+        "input_equivalence": equivalence,
+        "central_cell_size_conversion_applied": M not in r_bridge.R_RETURNS_CELL_FRACTIONS,
         "failed": failed,
     }
 
@@ -172,17 +299,22 @@ def main() -> int:
         from ivygap.deconv.registry import build_methods
         dwls = next(m for m in build_methods(prefer_r=False) if m.name == M)
         import numpy as np
-        from ivygap.deconv.base import project_to_simplex, to_cell_fractions
-        cs = data.primary.cell_size.reindex(list(data.cell_types)).to_numpy()
-        rows = []
-        for i in range(len(data.samples)):
-            w = project_to_simplex(est.to_numpy()[i], None)
-            if np.isfinite(w).all():
-                w = to_cell_fractions(w, cs)
-            rows.append(w)
-        frame = pd.DataFrame(np.vstack(rows), index=data.samples,
-                             columns=list(data.cell_types))
-        frame.index.name = "sample_id"
+        # Use the SHARED post-processing, not a copy of it.
+        #
+        # This block used to reimplement `fit_predict`'s three steps and applied
+        # `to_cell_fractions` unconditionally. When the conversion was made conditional for
+        # Bisque -- the one package measured to convert cell size itself -- the fix landed in
+        # `fit_predict` and this copy kept double-correcting, producing an estimate table
+        # BIT-IDENTICAL to the uncorrected one. The fix looked applied and was not, and it
+        # took comparing the two tables to notice.
+        from ivygap.deconv.base import finalize_estimates
+        returns_cells = M in r_bridge.R_RETURNS_CELL_FRACTIONS
+        if returns_cells:
+            print(f"  {M} is measured to return CELL fractions already "
+                  f"(scripts/verify_cell_size_semantics.py), so the central cell-size "
+                  f"conversion is SKIPPED -- applying it would be the second one")
+        frame = finalize_estimates(est.to_numpy(), data, covered=None,
+                                   returns_cell_fractions=returns_cells)
         out_csv = Path(f"results/estimates/ivygap_{M}_genuine.csv")
         out_csv.parent.mkdir(parents=True, exist_ok=True)
         frame.to_csv(out_csv)
