@@ -20,7 +20,7 @@ depending on what A18 finds.
 
 | # | do this | effort | why |
 |---|---|---|---|
-| **A18** | **Build a reference from GBmap's own Smart-seq2 subset and re-run the sensitivity test** | 2–3 h, internal | **The single most important open question in the project.** D14 shows the method ordering is not reproduced by either independent reference, but both alternatives are Smart-seq2 while GBmap is 87% 10x — so "the atlas matters" and "the platform matters" are not separated. GBmap contains ~9,000 Smart-seq2 cells (2.7%). Building from those and re-running settles it. Cheap, decisive, and it changes how the paper's central limitation is written. |
+| ~~A18~~ | ~~Separate atlas from platform~~ | **DONE 2026-09-15** | Settled by a 2x2 built from GBmap's own assay subsets. Hold the atlas, change platform: ordering survives (**+0.817**). Hold platform, change the atlas: it collapses (**+0.221**). **It is the atlas**, costing ~4x what platform costs. D14. |
 | **A2** | **Link the registration corrections from the OSF project wiki** | 10 min, browser | `docs/CORRECTIONS_REGISTRATION.md` is written. Post the link at <https://osf.io/vuh64>. A registration with a correction a reader can check beats one nobody re-examined. |
 | **A19** | **Decide C3: does this study report mRNA proportions or cell proportions?** | a decision, not compute | D12. The conversion has never been applied. Two defensible options, both recorded; the choice must not be made on which improves a score. Everything downstream of the paper's wording depends on it. |
 | **A5** | Hunt for an immune ground-truth cohort (IHC / flow / CyTOF with matched bulk) | hours, browser | Still the highest scientific value externally. Every method over-calls T cells 4.6–7.9× in high-purity tumour and **ACS cannot see it** — `T_cell` carries no constraint. Real measured immune content either confirms that on tissue or shows it is a pseudobulk artefact. |
@@ -50,7 +50,7 @@ depending on what A18 finds.
 | 15 | GSE84465 (Darmanis) | **DONE** — fetched, tested, and my recommendation corrected | — |
 | 9 | **Neftel cell-type labels** | **DONE 2026-09-15 — the user supplied the authors' own `CellAssignment`** | — |
 | 16 | derive Neftel annotations locally | **NOT NEEDED** — superseded by item 9 | — |
-| **A18** | **separate atlas from platform** | **OPEN, highest priority** | me, 8 GB |
+| A18 | separate atlas from platform | **DONE** — it is the atlas, not the platform | — |
 | **A19** | **decide mRNA vs cell proportions (C3)** | **OPEN — a decision only you can take** | you |
 | A2 | link the registration corrections on OSF | written; needs posting | you, 10 min |
 | 12 / A5 | immune ground truth | open, highest external value | you |

@@ -259,6 +259,7 @@ def build_from_h5ad(path: Path, name: str = "gbmap",
                     annotation_column: str = "annotation_level_3",
                     donor_column: str = "donor_id",
                     mapping: dict[str, str] | None = None,
+                    cell_filter=None,
                     max_cells_per_donor_type: int = MAX_CELLS_PER_DONOR_TYPE,
                     max_total_cells: int = MAX_TOTAL_CELLS,
                     gene_name_column: str | None = "feature_name",
@@ -314,6 +315,34 @@ def build_from_h5ad(path: Path, name: str = "gbmap",
             ).to_numpy(),
         }, index=obs_raw.index.astype(str))
         obs["_row"] = np.arange(len(obs))
+
+        # OPTIONAL CELL FILTER, applied BEFORE the balanced subsample.
+        #
+        # Order matters and is the whole reason this is a parameter rather than something a
+        # caller does afterwards. `_balanced_cell_sample` caps cells per (donor, cell type)
+        # without knowing about any other column, so filtering AFTER it returns whatever
+        # survived by chance -- for GBmap's 2.7% Smart-seq2 subset that would leave a handful
+        # of cells per type, and per (donor, type) often none. Filtering first lets the
+        # sampler balance WITHIN the chosen cells.
+        #
+        # Added 2026-09-15 to separate atlas from platform (OPEN_DEFECTS D14): the ordering
+        # disagreement between GBmap and two Smart-seq2 references could be either, and the
+        # test is a reference built from GBmap's OWN Smart-seq2 cells.
+        if cell_filter is not None:
+            keep = np.asarray(cell_filter(obs_raw), dtype=bool)
+            if keep.shape != (len(obs_raw),):
+                raise ValueError(
+                    f"cell_filter returned shape {keep.shape}, expected "
+                    f"({len(obs_raw)},) -- one boolean per cell in the file")
+            if not keep.any():
+                raise ValueError("cell_filter selected no cells; nothing is imputed")
+            n_before = len(obs)
+            obs = obs[keep]
+            _filter_record = {"cell_filter_applied": True,
+                              "n_cells_before_cell_filter": int(n_before),
+                              "n_cells_after_cell_filter": int(len(obs))}
+        else:
+            _filter_record = {"cell_filter_applied": False}
         n_all = len(obs)
         obs = obs.dropna(subset=["cell_type"])
         n_mapped = len(obs)
@@ -321,6 +350,7 @@ def build_from_h5ad(path: Path, name: str = "gbmap",
         keep_rows, sampling = _balanced_cell_sample(
             obs, max_cells_per_donor_type=max_cells_per_donor_type,
             max_total_cells=max_total_cells, seed=seed)
+        sampling.update(_filter_record)
         obs = obs.loc[keep_rows]
 
         # CELLxGENE atlases are indexed by Ensembl id (ENSG...), while Ivy GAP's bulk

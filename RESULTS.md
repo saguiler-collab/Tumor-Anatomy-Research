@@ -371,7 +371,16 @@ Every number above rests on one single-cell atlas. Two independent alternative r
 
 MuSiC, NNLS and EPIC lead under GBmap and fall to the bottom third under both alternatives; the two Bayesian models do the reverse. **DWLS is last under all three**, which is the one stable fact.
 
-**The confound that is not ruled out.** Both alternatives are Smart-seq2 and GBmap is 87% 10x, so *"GBmap is the outlier"* and *"10x is the outlier"* are not separated here. Both readings are first-order: either the ordering depends on the atlas, or it depends on the atlas's sequencing platform. Separating them needs a 10x reference other than GBmap, or a reference built from GBmap's own 2.7% Smart-seq2 subset — the decisive follow-up, and cheap.
+**The platform confound is resolved: it is the ATLAS.** Both alternatives are Smart-seq2 while GBmap is 87% 10x, so *"GBmap is the outlier"* and *"10x is the outlier"* were perfectly confounded. GBmap carries its own Smart-seq2 subset — 9,275 cells, 24 donors — and building references from it and from GBmap's 10x cells alone completes a 2x2:
+
+| | same atlas | different atlas |
+|---|---|---|
+| **same platform** | — | GBmap_SS2 vs Neftel **+0.221** |
+| **different platform** | GBmap_10x vs GBmap_SS2 **+0.817** | GBmap_10x vs Neftel **+0.038** |
+
+Hold the atlas and change the platform — same donors' tumours, same annotation pipeline — and the ordering **survives at 0.817**. Hold the platform and change the atlas, Smart-seq2 against Smart-seq2, and it **collapses to 0.221**. As ordering lost: platform costs 0.183, the atlas costs **0.779**, roughly four times as much, and the two are close to additive.
+
+So the leaderboard's ordering is a property of **GBmap** — not of 10x sequencing, not of the roster, and not of thin cell types in the alternatives. Both assay arms used the 4-type sub-roster, because GBmap's Smart-seq2 subset has zero B cells and two NK cells; the comparison is sound on the four types where every arm is well populated and says nothing about the rest.
 
 **And it exposes a shared dependence in the headline.** The rho = 0.750 above compares the ACS ranking with the pseudobulk-accuracy ranking, and **both arms use GBmap** — the ACS arm deconvolves Ivy GAP against it, the pseudobulk arm builds its mixtures from its cells. A method that suits GBmap scores well on both, so part of that agreement is agreement about the reference rather than about the tissue. That does not make rho = 0.750 wrong; it means it measures something narrower than *anatomy tracks truth* — agreement between two GBmap-based rankings. See `docs/OPEN_DEFECTS.md` D14.
 

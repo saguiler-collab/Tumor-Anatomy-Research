@@ -74,6 +74,14 @@ ALTERNATIVES = {
                   "Astrocyte"]),
     "neftel": (ROOT / "data/reference/neftel_2019",
                ["Tumor", "Macrophage_Microglia", "T_cell", "Oligodendrocyte"]),
+    # GBmap's own assay subsets, to separate ATLAS from PLATFORM (D14). Both use the
+    # Neftel 4-type sub-roster: GBmap's Smart-seq2 subset has ZERO B cells and 2 NK cells,
+    # so it cannot support the full roster, while all four of these are well populated
+    # (Tumor 1,200 cells / 24 donors; Macrophage 510 / 15; T_cell 97 / 14; Oligo 296 / 17).
+    "gbmap_smartseq2": (ROOT / "data/reference/gbmap_smartseq2",
+                        ["Tumor", "Macrophage_Microglia", "T_cell", "Oligodendrocyte"]),
+    "gbmap_tenx": (ROOT / "data/reference/gbmap_tenx",
+                   ["Tumor", "Macrophage_Microglia", "T_cell", "Oligodendrocyte"]),
 }
 
 
@@ -134,11 +142,18 @@ def main() -> int:
     ap.add_argument("--permutations", type=int, default=10000)
     ap.add_argument("--boot", type=int, default=2000)
     ap.add_argument("--reference", choices=sorted(ALTERNATIVES), default="darmanis")
+    ap.add_argument("--baseline", choices=["gbmap_atlas"] + sorted(ALTERNATIVES),
+                    default="gbmap_atlas",
+                    help="arm A. 'gbmap_atlas' rebuilds the full atlas; anything else is a "
+                         "stored reference, which is how the assay-subset comparisons are "
+                         "run without loading 7.6 GB twice.")
     ap.add_argument("--out", default="")
     args = ap.parse_args()
     ALT_DIR, SUB_ROSTER = ALTERNATIVES[args.reference]
     out_path = Path(args.out) if args.out else Path(
-        f"results/reference_sensitivity_{args.reference}.json")
+        f"results/reference_sensitivity_{args.baseline}_vs_{args.reference}.json"
+        if args.baseline != "gbmap_atlas"
+        else f"results/reference_sensitivity_{args.reference}.json")
 
     if not (ALT_DIR / "profile.csv").exists():
         print(f"BLOCKED: {ALT_DIR} not built. "
@@ -156,10 +171,14 @@ def main() -> int:
     dar = load_alt(args.reference, SUB_ROSTER)
     print(f"  {args.reference} reference: {dar.profile.shape[0]:,} genes x {len(SUB_ROSTER)} types")
 
-    print("\nloading the atlas for arm A (restricted to the bulk's genes) ...")
-    gb_full, _, _ = build_from_h5ad(config.REFERENCE_DIR / "gbmap_core.h5ad",
-                                    restrict_to_genes=expr.index, export=False)
-    gb = to_sub_roster(gb_full, SUB_ROSTER)
+    if args.baseline == "gbmap_atlas":
+        print("\nloading the atlas for arm A (restricted to the bulk's genes) ...")
+        gb_full, _, _ = build_from_h5ad(config.REFERENCE_DIR / "gbmap_core.h5ad",
+                                        restrict_to_genes=expr.index, export=False)
+        gb = to_sub_roster(gb_full, SUB_ROSTER)
+    else:
+        print(f"\narm A from the stored reference {args.baseline} ...")
+        gb = load_alt(args.baseline, SUB_ROSTER)
     print(f"  GBmap reference: {gb.profile.shape[0]:,} genes x {len(SUB_ROSTER)} types")
 
     # ONE shared gene space, so the only difference between arms is the reference.
@@ -200,9 +219,10 @@ def main() -> int:
     bulk = bulk / bulk.sum(axis=0) * 1e6
     man = meta.loc[anat]
 
-    print(f"\n=== arm A: GBmap reference, {len(SUB_ROSTER)}-type sub-roster ===")
-    arm_a = score_arm(f"gbmap_{len(SUB_ROSTER)}", gb.subset_genes(shared), bulk, man,
-                      args.permutations, args.boot, SUB_ROSTER)
+    print(f"\n=== arm A: {args.baseline} reference, {len(SUB_ROSTER)}-type "
+          f"sub-roster ===")
+    arm_a = score_arm(f"{args.baseline}_{len(SUB_ROSTER)}", gb.subset_genes(shared), bulk,
+                      man, args.permutations, args.boot, SUB_ROSTER)
     print(f"\n=== arm B: {args.reference} reference, {len(SUB_ROSTER)}-type "
           f"sub-roster ===")
     arm_b = score_arm(f"{args.reference}_{len(SUB_ROSTER)}", dar.subset_genes(shared),
@@ -217,7 +237,8 @@ def main() -> int:
     moved = (rb - ra).abs()
 
     print(f"\n=== reference sensitivity across {len(common)} methods ===\n")
-    print(f"{'method':24s} {'GBmap':>8s} {'Darmanis':>9s} {'delta':>8s} {'rank move':>10s}")
+    print(f"{'method':24s} {args.baseline[:8]:>8s} {args.reference[:9]:>9s} "
+          f"{'delta':>8s} {'rank move':>10s}")
     print("-" * 64)
     for m in a.sort_values(ascending=False).index:
         print(f"{m:24s} {a[m]:8.4f} {b[m]:9.4f} {b[m]-a[m]:+8.4f} "
@@ -235,6 +256,7 @@ def main() -> int:
         "why_both_arms": ("Swapping GBmap for Darmanis changes the reference AND the roster, "
                           "since Darmanis cannot resolve T_cell, NK_cell or B_cell. Running "
                           "GBmap on the same 5 types isolates the reference."),
+        "baseline_reference": args.baseline,
         "alternative_reference": args.reference,
         "sub_roster": SUB_ROSTER,
         "n_types": len(SUB_ROSTER),

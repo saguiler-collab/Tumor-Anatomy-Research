@@ -23,7 +23,7 @@ keeping, marked RESOLVED at the top.
 | **D11** EPIC returns the within-subset mRNA share, not the full-space one | **OPEN** — but see D12: the conversion it is applied to is the identity, so the practical effect on the published numbers is nil |
 | **D12** the cell-size correction has never been applied — it is the identity | **OPEN, high** — supersedes most of D1; no number changes, but the registration says otherwise |
 | **D13** EPIC runs with `refProfiles.var` unset, so its gene weighting is off; its output is mislabelled as a cell fraction | **OPEN, high** — EPIC is joint-2nd at 0.9846 |
-| **D14** the ACS ordering does not survive a change of reference atlas, and GBmap is the outlier | **OPEN, highest** — bears on the headline, not on one method. Two independent references agree with each other (rho 0.710) and neither reproduces GBmap's ordering (0.138, 0.038) |
+| **D14** the ACS ordering does not survive a change of reference atlas, and GBmap is the outlier | **OPEN, highest** — bears on the headline, not on one method. Confound RESOLVED 2026-09-15 by a 2x2: holding the atlas and changing platform preserves the ordering (0.817), holding platform and changing the atlas destroys it (0.221). **It is the atlas.** |
 
 ---
 
@@ -1443,21 +1443,46 @@ MuSiC, NNLS and EPIC lead under GBmap and fall to the bottom third under both al
 The two Bayesian models do the reverse. **DWLS is last under all three**, which is the one
 stable fact in the table.
 
-### The confound that is not ruled out, and it matters
+### The confound is now RESOLVED — it is the ATLAS, not the platform. Measured 2026-09-15.
 
-**Both alternatives are Smart-seq2. GBmap is 87% 10x.** So "GBmap is the outlier" and "10x is
-the outlier" are not separated by this design, and the two alternatives agreeing with each
-other is equally consistent with them sharing a platform.
+The obvious objection to everything above was that **both alternatives are Smart-seq2 while
+GBmap is 87% 10x**, so "GBmap is the outlier" and "10x is the outlier" were perfectly
+confounded. GBmap carries its own Smart-seq2 subset — **9,275 cells across 24 donors** — and
+building references from that subset and from its 10x cells alone completes a 2x2 that breaks
+the confound.
 
-That does not soften the finding — it sharpens it into two possibilities, and **both are
-first-order**:
+|  | **same atlas** | **different atlas** |
+|---|---|---|
+| **same platform** | — | GBmap_SS2 vs Neftel: **+0.221** |
+| **different platform** | GBmap_10x vs GBmap_SS2: **+0.817** | GBmap_10x vs Neftel: **+0.038** |
 
-1. the ordering depends on which atlas is used, or
-2. the ordering depends on the atlas's **sequencing platform**.
+Read it along the two axes:
 
-Either way the leaderboard cannot be presented as a property of the deconvolution methods.
-Separating them needs a **10x reference other than GBmap**, or a Smart-seq2 subset of GBmap
-itself (2.7% of it, ~9,000 cells) — which is the decisive follow-up and is cheap.
+- **Hold the atlas fixed, change the platform** — 10x cells against Smart-seq2 cells *from the
+  same atlas, the same donors' tumours, the same annotation pipeline*: the ordering **survives
+  at 0.817**.
+- **Hold the platform fixed, change the atlas** — Smart-seq2 against Smart-seq2, GBmap against
+  Neftel: the ordering **collapses to 0.221**.
+
+Expressed as ordering lost (1 − rho): **platform costs 0.183, atlas costs 0.779** — the atlas
+effect is roughly **four times** the platform effect, and the two are close to additive (both
+together: 0.962).
+
+**So the driver is which atlas the reference is built from, not how it was sequenced.** The two
+Smart-seq2 alternatives agreeing with each other at 0.710 was not a platform artefact.
+
+Artefacts: `results/reference_sensitivity_gbmap_tenx_vs_gbmap_smartseq2.json`,
+`results/reference_sensitivity_gbmap_smartseq2_vs_neftel.json`.
+
+**One caveat on the 0.817, stated so it is not over-read.** GBmap's Smart-seq2 subset is thin
+in three roster types — **zero B cells, 2 NK cells, 12 endothelial** — which is why both assay
+arms were run on the 4-type sub-roster where every type is well populated (Tumor 1,200 cells /
+24 donors, Macrophage 510 / 15, T_cell 97 / 14, Oligodendrocyte 296 / 17). The comparison is
+sound on those four; it says nothing about the types that were excluded.
+
+**What this does to the conclusion.** It strengthens it and makes it specific. The leaderboard's
+ordering is a property of GBmap. Not of 10x sequencing, not of the roster, not of thin cell
+types in the alternatives — of the atlas.
 
 ### The circularity this exposes in the headline
 
