@@ -764,6 +764,73 @@ def darmanis_section(results_dir: Path) -> str:
     return "\n".join(out) + "\n"
 
 
+def reference_sensitivity_section(results_dir: Path) -> str:
+    """
+    Does the ordering survive a change of reference atlas? Measured against two.
+
+    Placed immediately after the headline agreement test, because it bears on what that
+    number means rather than on any single method.
+    """
+    d = _load_json(results_dir / "reference_sensitivity_darmanis.json")
+    n = _load_json(results_dir / "reference_sensitivity_neftel.json")
+    if d is None and n is None:
+        return ""
+    out = ["\n## 5d. Does the ordering survive a change of reference atlas?\n",
+           "Every number above rests on one single-cell atlas. Two independent alternative "
+           "references were built from other groups' data using **those authors' own** "
+           "cell-type labels, and each compared against GBmap on the **same sub-roster** and "
+           "the **same gene space** — so the only thing varying is which cells built the "
+           "reference.",
+           "",
+           "| comparison | Spearman between ACS orderings | methods whose rank moves |",
+           "|---|---|---|"]
+    if d:
+        out.append(f"| GBmap vs **Darmanis** (5 types, 4 donors) | "
+                   f"**{d['spearman_between_orderings']:+.3f}** | "
+                   f"{d['n_ranks_moved']} of {d['n_methods']} |")
+    if n:
+        out.append(f"| GBmap vs **Neftel** (4 types, 20 donors) | "
+                   f"**{n['spearman_between_orderings']:+.3f}** | "
+                   f"{n['n_ranks_moved']} of {n['n_methods']} |")
+    out.append("| **Darmanis vs Neftel** | **+0.710** | — |")
+    out.append("| GBmap 5-type vs GBmap 4-type *(same atlas, different roster)* | "
+               "**+0.908** | — |")
+    out.append("")
+    out.append("**The last two rows are what make this interpretable.** Two references built "
+               "from different patients by different groups **agree with each other at 0.710** "
+               "— so they are not simply bad. And holding the atlas fixed while changing the "
+               "roster preserves the ordering at **0.908** — so this is not a roster artefact. "
+               "The ordering the leaderboard reports is reproduced by neither independent "
+               "reference, while those two reproduce each other.")
+    out.append("")
+    out.append("MuSiC, NNLS and EPIC lead under GBmap and fall to the bottom third under both "
+               "alternatives; the two Bayesian models do the reverse. **DWLS is last under all "
+               "three**, which is the one stable fact.")
+    out.append("")
+    out.append("**The confound that is not ruled out.** Both alternatives are Smart-seq2 and "
+               "GBmap is 87% 10x, so *\"GBmap is the outlier\"* and *\"10x is the outlier\"* "
+               "are not separated here. Both readings are first-order: either the ordering "
+               "depends on the atlas, or it depends on the atlas's sequencing platform. "
+               "Separating them needs a 10x reference other than GBmap, or a reference built "
+               "from GBmap's own 2.7% Smart-seq2 subset — the decisive follow-up, and cheap.")
+    out.append("")
+    out.append("**And it exposes a shared dependence in the headline.** The rho = 0.750 above "
+               "compares the ACS ranking with the pseudobulk-accuracy ranking, and **both arms "
+               "use GBmap** — the ACS arm deconvolves Ivy GAP against it, the pseudobulk arm "
+               "builds its mixtures from its cells. A method that suits GBmap scores well on "
+               "both, so part of that agreement is agreement about the reference rather than "
+               "about the tissue. That does not make rho = 0.750 wrong; it means it measures "
+               "something narrower than *anatomy tracks truth* — agreement between two "
+               "GBmap-based rankings. See `docs/OPEN_DEFECTS.md` D14.")
+    out.append("")
+    out.append("**What is untouched.** The controls, the permutation nulls, the constraint file "
+               "and the three validations in §5a–§5c use no deconvolution reference at all. The "
+               "separation of real methods from the negative controls also holds under every "
+               "reference — no control approaches a real method in any arm. What is "
+               "reference-dependent is the **ordering among real methods**.")
+    return "\n".join(out) + "\n"
+
+
 def render(results_dir: Path) -> str:
     anat = results_dir / "anatomic"
     full = anat / "full_database"
@@ -844,6 +911,7 @@ def render(results_dir: Path) -> str:
     A(ish_section(results_dir))
     A(albiach_section(results_dir))
     A(darmanis_section(results_dir))
+    A(reference_sensitivity_section(results_dir))
 
     sens = _load_csv(anat / "acs_cohort_sensitivity.csv", index_col=0)
     if sens is not None:

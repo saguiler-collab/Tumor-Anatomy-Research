@@ -356,6 +356,28 @@ Darmanis et al. (2017, GSE84465) dissected **4 glioblastomas** into tumour core 
 **What this cannot test.** C2 needs oligodendrocyte abundance per region, which needs unbiased composition. C3, C4 and C6 need a microvascular region; C5 needs a peri-necrotic one; C7 needs three ordered regions and this dissection has two. So: one constraint, one design, four patients. Narrow, and the first cross-patient evidence the project has.
 
 
+## 5d. Does the ordering survive a change of reference atlas?
+
+Every number above rests on one single-cell atlas. Two independent alternative references were built from other groups' data using **those authors' own** cell-type labels, and each compared against GBmap on the **same sub-roster** and the **same gene space** — so the only thing varying is which cells built the reference.
+
+| comparison | Spearman between ACS orderings | methods whose rank moves |
+|---|---|---|
+| GBmap vs **Darmanis** (5 types, 4 donors) | **+0.138** | 10 of 13 |
+| GBmap vs **Neftel** (4 types, 20 donors) | **+0.038** | 12 of 13 |
+| **Darmanis vs Neftel** | **+0.710** | — |
+| GBmap 5-type vs GBmap 4-type *(same atlas, different roster)* | **+0.908** | — |
+
+**The last two rows are what make this interpretable.** Two references built from different patients by different groups **agree with each other at 0.710** — so they are not simply bad. And holding the atlas fixed while changing the roster preserves the ordering at **0.908** — so this is not a roster artefact. The ordering the leaderboard reports is reproduced by neither independent reference, while those two reproduce each other.
+
+MuSiC, NNLS and EPIC lead under GBmap and fall to the bottom third under both alternatives; the two Bayesian models do the reverse. **DWLS is last under all three**, which is the one stable fact.
+
+**The confound that is not ruled out.** Both alternatives are Smart-seq2 and GBmap is 87% 10x, so *"GBmap is the outlier"* and *"10x is the outlier"* are not separated here. Both readings are first-order: either the ordering depends on the atlas, or it depends on the atlas's sequencing platform. Separating them needs a 10x reference other than GBmap, or a reference built from GBmap's own 2.7% Smart-seq2 subset — the decisive follow-up, and cheap.
+
+**And it exposes a shared dependence in the headline.** The rho = 0.750 above compares the ACS ranking with the pseudobulk-accuracy ranking, and **both arms use GBmap** — the ACS arm deconvolves Ivy GAP against it, the pseudobulk arm builds its mixtures from its cells. A method that suits GBmap scores well on both, so part of that agreement is agreement about the reference rather than about the tissue. That does not make rho = 0.750 wrong; it means it measures something narrower than *anatomy tracks truth* — agreement between two GBmap-based rankings. See `docs/OPEN_DEFECTS.md` D14.
+
+**What is untouched.** The controls, the permutation nulls, the constraint file and the three validations in §5a–§5c use no deconvolution reference at all. The separation of real methods from the negative controls also holds under every reference — no control approaches a real method in any arm. What is reference-dependent is the **ordering among real methods**.
+
+
 ## 6. Does deconvolving all 270 samples change the ranking?
 
 | method | ACS (122 anatomic) | ACS (270 deconvolved) | delta | rank change |

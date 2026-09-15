@@ -38,6 +38,14 @@ results_superseded/*/survival/
 # installs from here when present and falls back to CRAN/GitHub otherwise. Committing
 # them would bloat the repo and blur whose code is whose.
 pipeline packages /
+# The folder was renamed to `pipeline_packages ` on 2026-09-14 and the rule above stopped
+# matching it, silently un-ignoring ~4 GB: two GBM single-cell atlases, EcoTyper, and the
+# vendored package sources. `git add -A` then ran for 95 seconds trying to stage them before
+# it was killed. Both spellings are matched now, with and without the trailing space, and a
+# wildcard so a third rename cannot repeat it.
+pipeline_packages /
+pipeline_packages/
+pipeline?packages*/
 
 # DWLS's cached MAST signature build, keyed on the cell export it came from.
 dwls_signature_*/

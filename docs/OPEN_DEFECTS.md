@@ -23,6 +23,7 @@ keeping, marked RESOLVED at the top.
 | **D11** EPIC returns the within-subset mRNA share, not the full-space one | **OPEN** — but see D12: the conversion it is applied to is the identity, so the practical effect on the published numbers is nil |
 | **D12** the cell-size correction has never been applied — it is the identity | **OPEN, high** — supersedes most of D1; no number changes, but the registration says otherwise |
 | **D13** EPIC runs with `refProfiles.var` unset, so its gene weighting is off; its output is mislabelled as a cell fraction | **OPEN, high** — EPIC is joint-2nd at 0.9846 |
+| **D14** the ACS ordering does not survive a change of reference atlas, and GBmap is the outlier | **OPEN, highest** — bears on the headline, not on one method. Two independent references agree with each other (rho 0.710) and neither reproduces GBmap's ordering (0.138, 0.038) |
 
 ---
 
@@ -1384,3 +1385,115 @@ a leaderboard row.
 What can be done without touching EPIC is exactly what this entry does: report the rate,
 report that it is not structure-dependent, report the tumour differences that survive
 stratification, and state that the cause is not established.
+
+
+---
+
+## D14 · The leaderboard's ordering does not survive a change of reference atlas, and GBmap is the outlier
+
+**Severity: this is the most consequential finding in the project. It bears on the headline
+claim, not on a single method. Measured 2026-09-14.**
+
+### What was measured
+
+Two independent alternative references were built from other groups' data using **those
+authors' own cell-type labels** — Darmanis 2017 (5 roster types, 4 donors) and Neftel 2019
+(4 roster types, 20 donors, from the Broad Single Cell Portal `CellAssignment`). Each was
+compared against GBmap on the **same sub-roster** and the **same 651–654 gene space**, so the
+only thing varying is which cells built the reference.
+
+| comparison | Spearman between ACS orderings | methods whose rank moves |
+|---|---|---|
+| GBmap vs **Darmanis** | **+0.138** | 10 of 13 |
+| GBmap vs **Neftel** | **+0.038** | 12 of 13 |
+| **Darmanis vs Neftel** | **+0.710** | — |
+| GBmap 5-type vs GBmap 4-type | **+0.908** | — |
+
+Artefacts: `results/reference_sensitivity_darmanis.json`,
+`results/reference_sensitivity_neftel.json`.
+
+### The three readings, and why only one survives
+
+**"The alternatives are just bad references."** Ruled out by the third row. Darmanis and Neftel
+were built from different patients, by different groups, on different plates, and they **agree
+with each other at 0.710**. Two bad references would not agree; they would each be bad in their
+own direction. And Neftel is not thin — 20 donors and 4,916 malignant cells.
+
+**"It is the roster, not the reference."** Ruled out by the fourth row. Holding the atlas fixed
+and changing the roster from 5 types to 4 preserves the ordering at **0.908**. Dropping and
+adding columns barely moves it. Changing the atlas destroys it.
+
+**"GBmap is the outlier."** This is what the four numbers say. The ordering the published
+leaderboard reports is reproduced by neither independent reference, while those two reproduce
+each other.
+
+### What moves
+
+| method | GBmap | Darmanis | Neftel |
+|---|---|---|---|
+| MuSiC | 0.985 | 0.677 | 0.617 |
+| NNLS | 0.985 | 0.677 | 0.617 |
+| EPIC | 0.985 | 0.677 | 0.617 |
+| Elastic Net | 0.954 | 0.708 | **0.915** |
+| **Bayesian** | **0.769** | **0.923** | 0.787 |
+| **Bayesian hierarchical** | **0.769** | **0.892** | 0.808 |
+| DWLS | 0.692 | 0.585 | 0.319 |
+
+MuSiC, NNLS and EPIC lead under GBmap and fall to the bottom third under both alternatives.
+The two Bayesian models do the reverse. **DWLS is last under all three**, which is the one
+stable fact in the table.
+
+### The confound that is not ruled out, and it matters
+
+**Both alternatives are Smart-seq2. GBmap is 87% 10x.** So "GBmap is the outlier" and "10x is
+the outlier" are not separated by this design, and the two alternatives agreeing with each
+other is equally consistent with them sharing a platform.
+
+That does not soften the finding — it sharpens it into two possibilities, and **both are
+first-order**:
+
+1. the ordering depends on which atlas is used, or
+2. the ordering depends on the atlas's **sequencing platform**.
+
+Either way the leaderboard cannot be presented as a property of the deconvolution methods.
+Separating them needs a **10x reference other than GBmap**, or a Smart-seq2 subset of GBmap
+itself (2.7% of it, ~9,000 cells) — which is the decisive follow-up and is cheap.
+
+### The circularity this exposes in the headline
+
+The study's headline is rho = 0.75 between the ACS ranking and the pseudobulk-accuracy ranking,
+presented as anatomy tracking truth. **Both arms use GBmap.** The ACS arm deconvolves Ivy GAP
+against GBmap; the pseudobulk arm builds its mixtures *from GBmap cells* and deconvolves them
+against a GBmap reference.
+
+So a method that happens to suit GBmap scores well on both arms, and the agreement between them
+is then partly agreement about the reference rather than agreement about the tissue. Given that
+the ACS ordering collapses under a different reference, that shared dependence is not a
+theoretical worry.
+
+**This does not make rho = 0.75 wrong.** It means the number measures something narrower than
+claimed: agreement between two GBmap-based rankings. The honest statement of the headline has
+to say so, and the pre-registered threshold was never designed to test reference invariance.
+
+### What must happen before the paper
+
+1. **Report reference sensitivity as a first-order limitation**, with these four numbers. It is
+   not a footnote and it is not a robustness appendix.
+2. **Separate reference identity from platform.** Rebuild a reference from GBmap's Smart-seq2
+   subset and re-run. If the ordering then matches Darmanis and Neftel, the finding is about
+   platform. If it still matches full GBmap, it is about the atlas.
+3. **Re-state the headline** as agreement between two rankings that share a reference, and say
+   what that does and does not support.
+4. **Do not pick the reference that gives the preferred ordering.** Three references now give
+   three orderings; choosing among them on the basis of the result would be the most serious
+   version of the outcome-driven selection this project forbids. GBmap stays the registered
+   reference because it was registered, not because of what it produces.
+
+### What this does NOT invalidate
+
+The controls, the permutation nulls, the constraint file and its hash, the ISH validation
+(§5a), the Albiach composition validation (§5b) and the Darmanis cross-patient test (§5c) are
+all untouched — none of them uses a deconvolution reference at all. The **separation of real
+methods from the negative controls** also holds under every reference: no control approaches a
+real method in any arm. What is reference-dependent is the **ordering among real methods**,
+which is precisely what the leaderboard claims to provide.

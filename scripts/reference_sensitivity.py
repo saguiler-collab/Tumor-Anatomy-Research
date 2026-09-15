@@ -66,20 +66,29 @@ from ivygap.data.reference import ReferenceBundle, build_from_h5ad  # noqa: E402
 from ivygap.deconv.base import DeconvolutionInput                  # noqa: E402
 from ivygap.deconv.registry import build_methods                   # noqa: E402
 
-DAR = ROOT / "data/reference/darmanis_2017"
-SUB_ROSTER = ["Tumor", "Macrophage_Microglia", "Endothelial", "Oligodendrocyte", "Astrocyte"]
+#: Each alternative reference, with the sub-roster it can support. The sub-roster is the
+#: reference's OWN type list -- it is not a choice, it is what the reference has.
+ALTERNATIVES = {
+    "darmanis": (ROOT / "data/reference/darmanis_2017",
+                 ["Tumor", "Macrophage_Microglia", "Endothelial", "Oligodendrocyte",
+                  "Astrocyte"]),
+    "neftel": (ROOT / "data/reference/neftel_2019",
+               ["Tumor", "Macrophage_Microglia", "T_cell", "Oligodendrocyte"]),
+}
 
 
-def load_darmanis() -> ReferenceBundle:
-    prof = pd.read_csv(DAR / "profile.csv", index_col=0)
-    sig = pd.read_csv(DAR / "sigma.csv", index_col=0)
-    cs = pd.read_csv(DAR / "cell_size.csv", index_col=0)["cell_size"]
-    prof = prof[SUB_ROSTER]; sig = sig[SUB_ROSTER]; cs = cs.reindex(SUB_ROSTER)
-    return ReferenceBundle(name="darmanis_2017", profile=prof, sigma=sig, cell_size=cs,
-                           n_donors=4, donor_profiles=None, has_cross_donor_variance=True)
+def load_alt(name: str, sub_roster: list[str]) -> ReferenceBundle:
+    d, _ = ALTERNATIVES[name]
+    prof = pd.read_csv(d / "profile.csv", index_col=0)[sub_roster]
+    sig = pd.read_csv(d / "sigma.csv", index_col=0)[sub_roster]
+    cs = pd.read_csv(d / "cell_size.csv", index_col=0)["cell_size"].reindex(sub_roster)
+    prov = json.loads((d / "provenance.json").read_text())
+    return ReferenceBundle(name=name, profile=prof, sigma=sig, cell_size=cs,
+                           n_donors=len(prov["donors"]), donor_profiles=None,
+                           has_cross_donor_variance=True)
 
 
-def to_sub_roster(ref: ReferenceBundle) -> ReferenceBundle:
+def to_sub_roster(ref: ReferenceBundle, SUB_ROSTER: list[str]) -> ReferenceBundle:
     """Restrict a bundle to the 5 shared types, keeping every other field aligned."""
     return ReferenceBundle(
         name=ref.name + "_5type",
@@ -93,9 +102,10 @@ def to_sub_roster(ref: ReferenceBundle) -> ReferenceBundle:
 
 
 def score_arm(label: str, ref: ReferenceBundle, bulk: pd.DataFrame,
-              manifest: pd.DataFrame, n_perm: int, n_boot: int) -> dict:
+              manifest: pd.DataFrame, n_perm: int, n_boot: int,
+              SUB_ROSTER: list[str] | None = None) -> dict:
     data = DeconvolutionInput(bulk=bulk, references=(ref,), manifest=manifest,
-                             cell_types=tuple(SUB_ROSTER))
+                              cell_types=tuple(ref.cell_types))
     out = {}
     for m in build_methods(prefer_r=False):
         if m.name.startswith("control_"):
@@ -123,12 +133,18 @@ def main() -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--permutations", type=int, default=10000)
     ap.add_argument("--boot", type=int, default=2000)
-    ap.add_argument("--out", default="results/reference_sensitivity.json")
+    ap.add_argument("--reference", choices=sorted(ALTERNATIVES), default="darmanis")
+    ap.add_argument("--out", default="")
     args = ap.parse_args()
+    ALT_DIR, SUB_ROSTER = ALTERNATIVES[args.reference]
+    out_path = Path(args.out) if args.out else Path(
+        f"results/reference_sensitivity_{args.reference}.json")
 
-    if not (DAR / "profile.csv").exists():
-        print(f"BLOCKED: {DAR} not built. Run scripts/build_darmanis_reference.py first.")
+    if not (ALT_DIR / "profile.csv").exists():
+        print(f"BLOCKED: {ALT_DIR} not built. "
+              f"Run scripts/build_{args.reference}_reference.py first.")
         return 2
+    print(f"alternative reference: {args.reference}; sub-roster {SUB_ROSTER}")
 
     print("loading the Ivy GAP anatomic cohort ...")
     expr, meta = load_cached()
@@ -137,13 +153,13 @@ def main() -> int:
             and meta.loc[s, "structure"] in config.PRIMARY_STRUCTURES]
     print(f"  {len(anat)} anatomic samples")
 
-    dar = load_darmanis()
-    print(f"  Darmanis reference: {dar.profile.shape[0]:,} genes x {len(SUB_ROSTER)} types")
+    dar = load_alt(args.reference, SUB_ROSTER)
+    print(f"  {args.reference} reference: {dar.profile.shape[0]:,} genes x {len(SUB_ROSTER)} types")
 
     print("\nloading the atlas for arm A (restricted to the bulk's genes) ...")
     gb_full, _, _ = build_from_h5ad(config.REFERENCE_DIR / "gbmap_core.h5ad",
                                     restrict_to_genes=expr.index, export=False)
-    gb = to_sub_roster(gb_full)
+    gb = to_sub_roster(gb_full, SUB_ROSTER)
     print(f"  GBmap reference: {gb.profile.shape[0]:,} genes x {len(SUB_ROSTER)} types")
 
     # ONE shared gene space, so the only difference between arms is the reference.
@@ -184,12 +200,13 @@ def main() -> int:
     bulk = bulk / bulk.sum(axis=0) * 1e6
     man = meta.loc[anat]
 
-    print("\n=== arm A: GBmap reference, 5-type sub-roster ===")
-    arm_a = score_arm("gbmap5", gb.subset_genes(shared), bulk, man,
-                      args.permutations, args.boot)
-    print("\n=== arm B: Darmanis reference, 5-type sub-roster ===")
-    arm_b = score_arm("darmanis5", dar.subset_genes(shared), bulk, man,
-                      args.permutations, args.boot)
+    print(f"\n=== arm A: GBmap reference, {len(SUB_ROSTER)}-type sub-roster ===")
+    arm_a = score_arm(f"gbmap_{len(SUB_ROSTER)}", gb.subset_genes(shared), bulk, man,
+                      args.permutations, args.boot, SUB_ROSTER)
+    print(f"\n=== arm B: {args.reference} reference, {len(SUB_ROSTER)}-type "
+          f"sub-roster ===")
+    arm_b = score_arm(f"{args.reference}_{len(SUB_ROSTER)}", dar.subset_genes(shared),
+                      bulk, man, args.permutations, args.boot, SUB_ROSTER)
 
     common = [m for m in arm_a if "acs" in arm_a[m] and m in arm_b and "acs" in arm_b[m]]
     a = pd.Series({m: arm_a[m]["acs"] for m in common})
@@ -218,8 +235,9 @@ def main() -> int:
         "why_both_arms": ("Swapping GBmap for Darmanis changes the reference AND the roster, "
                           "since Darmanis cannot resolve T_cell, NK_cell or B_cell. Running "
                           "GBmap on the same 5 types isolates the reference."),
+        "alternative_reference": args.reference,
         "sub_roster": SUB_ROSTER,
-        "all_constraints_scoreable": True,
+        "n_types": len(SUB_ROSTER),
         "constraints_use_only": sorted({c.cell_type for c in __import__(
             "ivygap.anatomic.constraints", fromlist=["CONSTRAINTS"]).CONSTRAINTS}),
         "n_shared_genes": len(shared),
@@ -234,10 +252,10 @@ def main() -> int:
         "n_methods": len(common),
         "n_ranks_moved": int((moved > 0).sum()),
         "largest_rank_move": round(float(moved.max()), 1) if len(common) else None,
-        "arm_a_gbmap_5type": arm_a,
-        "arm_b_darmanis_5type": arm_b,
+        "arm_a_gbmap": arm_a,
+        "arm_b_alternative": arm_b,
     }
-    out = Path(args.out)
+    out = out_path
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2))
     print(f"\nwrote {out}")
