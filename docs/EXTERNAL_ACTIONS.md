@@ -10,59 +10,66 @@ lands, and how to confirm it worked. Ordered by what unblocks the most.
 
 ---
 
-## 0 · WHAT TO DO, IN ORDER, BY MACHINE — rewritten 2026-09-14
+## 0 · WHAT TO DO, IN ORDER, BY MACHINE — rewritten 2026-09-15
 
-Two lists. **Everything in list A runs on the 8 GB laptop** — most of it needs no compute at
-all, and the one download is small. **List B needs the advanced machine** and should not be
-started until A is done, because several items in B are cheaper once A has landed.
+Everything in **list A runs on the 8 GB laptop**. **List B needs the advanced machine.** Do A
+first: two items in B are cheaper once A has landed, and one of them may not be needed at all
+depending on what A18 finds.
 
-Ordered within each list by value per unit of effort.
+### LIST A — the 8 GB laptop
 
-### LIST A — the 8 GB laptop, starting now
-
-| # | do this | effort | why it is worth doing first |
+| # | do this | effort | why |
 |---|---|---|---|
-| ~~A1~~ | ~~Download GSE84465~~ | **DONE 2026-09-14** | Fetched and tested. It does **not** give a composition replication — the unpanned periphery is 13 cells. It gives the project's **first cross-patient constraint test** (C1, 4 patients, RESULTS.md §5c) and is the **best second-reference candidate** (5 of 8 roster types, 4 donors). Item 15 has the correction. |
-| ~~A1b~~ | ~~Build the Darmanis second reference~~ | **DONE 2026-09-14** | Built and validated: 22,799 genes x 5 types, 4 donors per type, `cell_size` spread 1.63, 7 of 8 markers in the expected column. `data/reference/darmanis_2017/`. |
-| **A1c** | **Run the reference-sensitivity check** | 1–2 h | Deconvolve the 122 anatomic samples against the Darmanis reference on the declared 5-type sub-roster and compare the ACS ordering to GBmap's. This is the first test of whether any result here is a property of GBmap rather than of the methods, and it also makes `SCDC ENSEMBLE` non-degenerate for the first time. |
-| **A2** | Publish the registration corrections | 20 min, browser | Tier 0.2. The registration is permanent and two statements in it are wrong. A published correction is stronger than one nobody checked. |
-| **A3** | Read tumour percentage off the Ivy GAP H&E images | hours, no compute | Item 13. Ivy GAP publishes the images; this is a reading exercise. Converts the 0.33–0.51 tumour under-call from a benchmark artefact into a tissue-level result. |
-| **A4** | Ask the Neftel authors for their cell-state assignments | 15 min, email | Item 9. Confirmed absent from all four GEO supplementary files. Deriving them locally is a list-B job and only yields 4 of 8 roster types anyway (item 16). |
-| **A5** | Hunt for an immune ground-truth cohort | hours, browser | Item 12, still the most scientifically valuable thing on either list. IHC/flow/CyTOF with matched bulk RNA-seq. |
-| **A6** | Install and wire **CDSeq** | 1–2 h | Item 14. The only *reference-free* candidate, so the only way to separate "the methods are wrong" from "the reference is wrong". Its source is already on disk. Try on 8 GB; if it thrashes, move it to B. |
+| **A18** | **Build a reference from GBmap's own Smart-seq2 subset and re-run the sensitivity test** | 2–3 h, internal | **The single most important open question in the project.** D14 shows the method ordering is not reproduced by either independent reference, but both alternatives are Smart-seq2 while GBmap is 87% 10x — so "the atlas matters" and "the platform matters" are not separated. GBmap contains ~9,000 Smart-seq2 cells (2.7%). Building from those and re-running settles it. Cheap, decisive, and it changes how the paper's central limitation is written. |
+| **A2** | **Link the registration corrections from the OSF project wiki** | 10 min, browser | `docs/CORRECTIONS_REGISTRATION.md` is written. Post the link at <https://osf.io/vuh64>. A registration with a correction a reader can check beats one nobody re-examined. |
+| **A19** | **Decide C3: does this study report mRNA proportions or cell proportions?** | a decision, not compute | D12. The conversion has never been applied. Two defensible options, both recorded; the choice must not be made on which improves a score. Everything downstream of the paper's wording depends on it. |
+| **A5** | Hunt for an immune ground-truth cohort (IHC / flow / CyTOF with matched bulk) | hours, browser | Still the highest scientific value externally. Every method over-calls T cells 4.6–7.9× in high-purity tumour and **ACS cannot see it** — `T_cell` carries no constraint. Real measured immune content either confirms that on tissue or shows it is a pseudobulk artefact. |
+| **A3** | Read tumour percentage off the Ivy GAP H&E images | hours, no compute | Ivy GAP publishes the images. Converts the 0.33–0.51 tumour under-call from a benchmark artefact into a tissue-level result. |
+| **A6** | Wire **CDSeq** (reference-free) | 1–2 h | Now more valuable than when first listed. D14 makes "is it the methods or the reference?" the central question, and a reference-free method is the only one that answers it from the other side. |
+| **A20** | Wire **RNA-Sieve** (native per-sample intervals) | 2–3 h | The only candidate that addresses the uncertainty gap at source rather than by conformal post-hoc calibration. `CLINICAL_READINESS.md` §4. |
 
-**Nothing in list A needs the results tree re-run.** A1 and A6 add new evidence beside the
-existing leaderboard; A2–A5 are external entirely.
-
-### LIST B — the advanced machine, after list A
+### LIST B — the advanced machine
 
 | # | do this | why it needs the bigger machine |
 |---|---|---|
-| **B1** | **One full `python scripts/run_all.py`** | Loads a 7.6 GB atlas and runs 17 methods; ~10 h. This is the item that replaces the archived DWLS and BayesPrism rows with the genuine packages, adopts whatever D12 decision is taken, and lands EPIC's `refProfiles.var`. Everything else in B is easier afterwards. |
-| **B2** | A second tissue | Item 2/8. A whole new cohort: download, ingest, reference, run. Also the only route past nine evaluable tumours. |
-| **B3** | Derive the Neftel annotations locally, if A4 got no answer | Item 16. inferCNV needed 16 GB *and* downsampling in the reference implementation. |
-| **B4** | A reference retaining Mono/DC/Mast | Item 10. Re-maps and rebuilds from the full atlas. |
-| **B5** | EcoTyper | 1 GB of package plus its own outputs; only worth it once a labelled second reference exists. |
+| **B1** | One full `python scripts/run_all.py` | 7.6 GB atlas, 17 methods, ~10 h. Replaces the archived DWLS and BayesPrism rows with the genuine packages, lands EPIC's `refProfiles.var`, and applies whatever A19 decides. **Do A18 and A19 first** — both change what this run should do. |
+| **B2** | A second tissue | Item 2/8. The only route past nine evaluable tumours, and now also the only way to test whether reference sensitivity is specific to Ivy GAP. |
+| **B4** | A reference retaining Mono/DC/Mast | Item 10, to test D8 directly. |
+| **B5** | EcoTyper | 1 GB of package; cell *states* rather than types. Lowest priority. |
+| ~~B3~~ | ~~Derive the Neftel annotations~~ | **NO LONGER NEEDED** — the user supplied the authors' own `CellAssignment`. |
 
 ---
 
-## 0a · STATUS BOARD
+## 0a · STATUS BOARD — 2026-09-15
 
-| # | need | status | machine |
+| # | need | status | who |
 |---|---|---|---|
 | 1 | OSF registration | **DONE** 2026-09-10 | — |
 | 5 | CIBERSORTx Supplementary Note 1 | **DONE** 2026-09-06 | — |
-| 6 | RAM for the gene-space reconstruction | **DONE 2026-09-14** — reconstructed and verified, both gates passed | was 8 GB, worked |
-| **15** | **GSE84465 (Darmanis 2017)** | **NEW, and the top of list A** | 8 GB |
-| 2 / 8 | a second tissue | open | advanced |
-| 9 | GSE131928 cell-type labels | open — ask the authors (A4) | 8 GB to ask |
-| **16** | **Neftel annotations derivable locally** | **NEW — the pipeline is already on disk, but yields 4 of 8 types** | advanced |
-| 10 | a myeloid-retaining reference | open | advanced |
-| 11 | paired bulk + single-cell, same subjects | **partly answered by 15** — GSE84465 is 4 patients, single-cell only | 8 GB |
-| 12 | immune ground truth | open, highest scientific value | 8 GB to find |
-| 13 | pathologist purity on Ivy GAP blocks | open, no compute needed | 8 GB |
+| 6 | RAM for the gene-space reconstruction | **DONE** 2026-09-14, on 8 GB | — |
+| 15 | GSE84465 (Darmanis) | **DONE** — fetched, tested, and my recommendation corrected | — |
+| 9 | **Neftel cell-type labels** | **DONE 2026-09-15 — the user supplied the authors' own `CellAssignment`** | — |
+| 16 | derive Neftel annotations locally | **NOT NEEDED** — superseded by item 9 | — |
+| **A18** | **separate atlas from platform** | **OPEN, highest priority** | me, 8 GB |
+| **A19** | **decide mRNA vs cell proportions (C3)** | **OPEN — a decision only you can take** | you |
+| A2 | link the registration corrections on OSF | written; needs posting | you, 10 min |
+| 12 / A5 | immune ground truth | open, highest external value | you |
+| 13 / A3 | pathologist purity on Ivy GAP H&E | open, no compute | you |
+| 14 / A6 / A20 | CDSeq, RNA-Sieve | open | me |
+| 2 / 8 / B2 | a second tissue | open | advanced machine |
+| 10 / B4 | myeloid-retaining reference | open | advanced machine |
 | 7 / 4 | Ivy GAP vital status | open, probably unobtainable | — |
-| 14 | CDSeq / RNA-Sieve | open | 8 GB to try |
+| 11 | paired bulk + single-cell, same subjects | partly answered by 15 | — |
+| 3 | ABSOLUTE purity | obtained; one frozen method only | — |
+
+**Two things now block the paper that did not exist a week ago, and both came from
+work you enabled:**
+
+- **D14** — the method ordering is not reproduced by either independent reference, and both
+  arms of the registered primary result share GBmap. A18 decides how that limitation is
+  written.
+- **D12** — the cell-size conversion has never been applied. A19 decides what the paper says
+  the study measures.
 
 ---
 
