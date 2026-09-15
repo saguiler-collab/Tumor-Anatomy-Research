@@ -10,20 +10,166 @@ lands, and how to confirm it worked. Ordered by what unblocks the most.
 
 ---
 
-## 0 · STATUS BOARD — added 2026-09-13
+## 0 · WHAT TO DO, IN ORDER, BY MACHINE — rewritten 2026-09-14
 
-| # | need | status | what it unblocks |
+Two lists. **Everything in list A runs on the 8 GB laptop** — most of it needs no compute at
+all, and the one download is small. **List B needs the advanced machine** and should not be
+started until A is done, because several items in B are cheaper once A has landed.
+
+Ordered within each list by value per unit of effort.
+
+### LIST A — the 8 GB laptop, starting now
+
+| # | do this | effort | why it is worth doing first |
 |---|---|---|---|
-| 1 | OSF registration | **DONE** 2026-09-10 | the pre-registration claim |
-| 5 | CIBERSORTx Supplementary Note 1 | **DONE** 2026-09-06 | the B-mode/S-mode decision |
-| **6** | **RAM / a bigger machine** | **BLOCKING NOW** | D10, and therefore 3 of 15 methods |
-| 7 | Ivy GAP vital status | open | the prognosis question (item 4) |
-| **8** | **a second tissue** | open | "case study" → "method" |
-| 9 | GSE131928 cell-type labels | open | a 2nd reference; SCDC ENSEMBLE |
-| 10 | a reference retaining myeloid subtypes | open | D8 — the constraint carrying the ranking |
-| 11 | paired bulk + single-cell, same subjects | open | Bisque at full strength |
-| 12 | immune ground truth (IHC / flow / CyTOF) | open | the T-cell over-call, the largest error mode |
-| 13 | pathologist purity on Ivy GAP blocks | open | the tumour under-call, clinically |
+| **A1** | **Download GSE84465 (Darmanis 2017)** | 20 min, ~300 MB | Turns the strongest validation this project has from **one** specimen into **five**. See item 15. |
+| **A2** | Publish the registration corrections | 20 min, browser | Tier 0.2. The registration is permanent and two statements in it are wrong. A published correction is stronger than one nobody checked. |
+| **A3** | Read tumour percentage off the Ivy GAP H&E images | hours, no compute | Item 13. Ivy GAP publishes the images; this is a reading exercise. Converts the 0.33–0.51 tumour under-call from a benchmark artefact into a tissue-level result. |
+| **A4** | Ask the Neftel authors for their cell-state assignments | 15 min, email | Item 9. Confirmed absent from all four GEO supplementary files. Deriving them locally is a list-B job and only yields 4 of 8 roster types anyway (item 16). |
+| **A5** | Hunt for an immune ground-truth cohort | hours, browser | Item 12, still the most scientifically valuable thing on either list. IHC/flow/CyTOF with matched bulk RNA-seq. |
+| **A6** | Install and wire **CDSeq** | 1–2 h | Item 14. The only *reference-free* candidate, so the only way to separate "the methods are wrong" from "the reference is wrong". Its source is already on disk. Try on 8 GB; if it thrashes, move it to B. |
+
+**Nothing in list A needs the results tree re-run.** A1 and A6 add new evidence beside the
+existing leaderboard; A2–A5 are external entirely.
+
+### LIST B — the advanced machine, after list A
+
+| # | do this | why it needs the bigger machine |
+|---|---|---|
+| **B1** | **One full `python scripts/run_all.py`** | Loads a 7.6 GB atlas and runs 17 methods; ~10 h. This is the item that replaces the archived DWLS and BayesPrism rows with the genuine packages, adopts whatever D12 decision is taken, and lands EPIC's `refProfiles.var`. Everything else in B is easier afterwards. |
+| **B2** | A second tissue | Item 2/8. A whole new cohort: download, ingest, reference, run. Also the only route past nine evaluable tumours. |
+| **B3** | Derive the Neftel annotations locally, if A4 got no answer | Item 16. inferCNV needed 16 GB *and* downsampling in the reference implementation. |
+| **B4** | A reference retaining Mono/DC/Mast | Item 10. Re-maps and rebuilds from the full atlas. |
+| **B5** | EcoTyper | 1 GB of package plus its own outputs; only worth it once a labelled second reference exists. |
+
+---
+
+## 0a · STATUS BOARD
+
+| # | need | status | machine |
+|---|---|---|---|
+| 1 | OSF registration | **DONE** 2026-09-10 | — |
+| 5 | CIBERSORTx Supplementary Note 1 | **DONE** 2026-09-06 | — |
+| 6 | RAM for the gene-space reconstruction | **DONE 2026-09-14** — reconstructed and verified, both gates passed | was 8 GB, worked |
+| **15** | **GSE84465 (Darmanis 2017)** | **NEW, and the top of list A** | 8 GB |
+| 2 / 8 | a second tissue | open | advanced |
+| 9 | GSE131928 cell-type labels | open — ask the authors (A4) | 8 GB to ask |
+| **16** | **Neftel annotations derivable locally** | **NEW — the pipeline is already on disk, but yields 4 of 8 types** | advanced |
+| 10 | a myeloid-retaining reference | open | advanced |
+| 11 | paired bulk + single-cell, same subjects | **partly answered by 15** — GSE84465 is 4 patients, single-cell only | 8 GB |
+| 12 | immune ground truth | open, highest scientific value | 8 GB to find |
+| 13 | pathologist purity on Ivy GAP blocks | open, no compute needed | 8 GB |
+| 7 / 4 | Ivy GAP vital status | open, probably unobtainable | — |
+| 14 | CDSeq / RNA-Sieve | open | 8 GB to try |
+
+---
+
+## 15 · GSE84465 (Darmanis 2017) — **the highest-value item on either list, and it is small**
+
+**Why it is top of the list.** `scripts/albiach_constraint_check.py` tests the pre-registered
+constraints against **measured** single-cell composition per anatomic region — no
+deconvolution, no inference from expression — and gets **3 of 4 testable constraints
+satisfied** (C1 p = 0.0001, C2 p = 0.0008, C7 by ordering). It also settles C1 and C7, the two
+the ISH panel could not adjudicate.
+
+Its one crippling limit is **n = 1 patient**. Every one of Albiach's 135,482 cells is donor
+`SL040`.
+
+Darmanis 2017 fixes exactly that:
+
+| | Albiach 2023 (on disk) | Darmanis 2017 (to download) |
+|---|---|---|
+| patients | **1** | **4** |
+| cells | 135,482 | 3,589 |
+| anatomic labels | 12 locations, 4 zones | **tumour core vs periphery** |
+| cell types | 15, author-annotated | 7, author-annotated |
+| endothelial/vascular | yes | yes (`vascular`) |
+| size | 1.5 GB | **~300 MB** |
+
+Together they give **five specimens** for the deconvolution-free validation, with
+cross-patient inference possible for the first time.
+
+**What to download.** From GEO accession **GSE84465**:
+
+1. `GSE84465_GBM_All_data.csv.gz` — the processed count matrix (3,589 cells).
+2. The series matrix, `GSE84465_series_matrix.txt.gz` — carries the metadata.
+
+**Do NOT process the SRA files.** The analysis in
+`pipeline packages/ repos/SCDC/public_gbm_scrnaseq_data_analysis-master/code/Darmanis_2017_GBM_scRNAseq.Rmd`
+realigns 3,589 SRA runs with STAR, which is days of compute for a matrix GEO already
+publishes. That Rmd is the provenance record, not the route.
+
+**The labels are already in the metadata** — no derivation, no clustering, no inferCNV. The
+Rmd's own line is explicit:
+
+```r
+gbm[["cell.type"]] <- str_remove_all(as.character(gse$characteristics_ch1.6), "cell type: ")
+```
+
+with `tissue` giving core versus periphery and `patient.ID` the four patients.
+
+**Where it goes.** `data/raw/darmanis_2017/`. Then a Darmanis check modelled on
+`scripts/albiach_constraint_check.py`, which reads annotations only and runs in seconds.
+
+**What changes.** C1, C2 and C7 get tested on four more specimens with **cross-patient**
+statistics. If they hold, the constraint file rests on measured composition in five
+glioblastomas rather than on expert expectation — which is the difference between a plausible
+constraint set and a validated one, and it is the strongest claim this project could make for
+the money.
+
+**Caveat to state in the paper.** Darmanis is Smart-seq2 on 3,589 cells across 4 patients, so
+per-patient cell counts are in the hundreds. Rare types (B cells, NK) will be unstable. C1,
+C2 and C7 concern tumour and oligodendrocyte, which are abundant, so those are the ones worth
+testing.
+
+---
+
+## 16 · The Neftel annotations can be derived locally — but only 4 of 8 roster types
+
+**Found 2026-09-14 in the pipeline packages.**
+`pipeline packages/ repos/scRNA_GBM_Neftel2019-main/scripts/01_GBM_scRNAseq_analysis.Rmd`
+is a complete 966-line derivation: per-sample MAD QC, scDblFinder, Neftel's own
+log2(TPM/10+1), Harmony, clustering, **marker-based cell type scoring**, inferCNV, a
+three-method malignant call, and UCell scoring of the AC/OPC/NPC/MES states.
+
+Both TPM matrices it needs are already on disk (1.5 GB 10x, 1.0 GB Smart-seq2), as is
+`GSE131928_single_cells_tumor_name_and_adult_or_peidatric.xlsx`, which gives **per-cell donor
+labels for 24,131 cells** — confirming 9 patients and giving the donor structure a cross-donor
+method needs.
+
+**So item 9 is not strictly blocked on the authors.** But two things temper it:
+
+1. **It resolves only Macrophage, T cell, Oligodendrocyte and malignant** — the only
+   non-malignant types Neftel's own pipeline scores. That is **4 of this project's 8 roster
+   types**, with no endothelial (which carries C3, C4 and C6), no NK, no B cell, no astrocyte.
+   So it cannot pair with GBmap as a full second reference, and **SCDC ENSEMBLE would still be
+   degenerate on the full roster**. It could support a declared 4-type sub-roster sensitivity
+   analysis, which is worth something but is not what item 9 promised.
+2. **The annotations would be OURS, not the authors'.** A reviewer will ask whether our own
+   clustering biased a reference toward our own roster. Author-supplied labels (A4) do not have
+   that problem, which is why asking is still first.
+
+The Rmd's own comments record that inferCNV needed **16 GB and downsampling to ~1,164 cells**.
+On 8 GB it is not worth attempting. List B.
+
+---
+
+## 17 · Audited and found to contain nothing further — 2026-09-14
+
+Recorded so nobody re-audits these:
+
+- **CIBERSORTx** — Supplementary Table 1d is already used for the B-mode/S-mode decision.
+  Tables 2a–2e are signature matrices for NSCLC, PBMC, follicular lymphoma and head and neck;
+  **none for glioblastoma**. Tables 3 and 4 concern CREBBP genotyping and high-resolution
+  DEGs. Nothing further to extract.
+- **ABSOLUTE** — source only (`src/`, `v1.5/`, `wolF/`). The purity data itself was obtained
+  separately; see item 3.
+- **MuSiC, SCDC, DWLS, Bisque** — package sources, already installed and running. The MuSiC
+  and SCDC sources were read to settle how `cell_size` and `ct.cell.size` are used (D1).
+- **Scaden** — paper PDF only. Already assessed and dropped, with the reason recorded.
+- **CDSeq** — R package source plus the paper. **Not wired**; see A6.
+- **EcoTyper** — 1 GB of package and example outputs. **Not wired**; list B.
+- **DWLS_other** — auxiliary scripts, nothing the installed package lacks.
 
 ---
 
@@ -299,7 +445,17 @@ implemented and S-mode is not.
 
 ---
 
-## 6 · RAM, or a machine with more of it — **BLOCKING 3 of 15 methods right now**
+## 6 · RAM for the gene-space reconstruction — **DONE 2026-09-14, on the 8 GB laptop**
+
+> Resolved without a bigger machine. `scripts/reconstruct_gene_space.py` recovered the
+> leaderboard's exact 657-gene space and both verification gates passed: the 88/22 donor split
+> reproduced by name, and the gene count reproduced exactly. The first attempt failed the
+> count gate at 513 genes because it omitted `restrict_to_genes`, which is what the gate is
+> for. DWLS and BayesPrism were then re-measured with all seven input-equivalence conditions
+> passing — DWLS 0.7846, BayesPrism 0.8154.
+>
+> It worked on 8 GB only with the browser and editor closed; two concurrent attempts thrashed
+> to a standstill. The text below is kept because that constraint still governs list B.
 
 **Why it blocks.** D10: the run persisted the gene *count* (657) but never the gene *list*, so
 both genuine-package re-measurements (DWLS, BayesPrism) silently ran on the 1,591-gene

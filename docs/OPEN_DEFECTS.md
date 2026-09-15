@@ -1370,6 +1370,17 @@ of the seven constraints — the same two the ISH check could not adjudicate.
 structure-dependent, associated with tumour differences up to 0.16 that survive
 stratification. **Not** established: that non-convergence *causes* them. Per-cell counts are
 8-18, the comparison is observational, and a sample that is hard to fit may be genuinely
-unusual rather than mis-fitted. The clean test is to re-run the non-converged samples with a
-higher iteration limit and see whether their estimates move — which changes an EPIC parameter
-and must be run as a declared diagnostic, reported beside the row and never substituted in.
+unusual rather than mis-fitted. The clean test would be to re-run the non-converged samples with a
+higher iteration limit — **and EPIC exposes no such control.** Its full signature is
+`bulk, reference, mRNA_cell, mRNA_cell_sub, sigGenes, scaleExprs, withOtherCells,
+constrainedSum, rangeBasedOptim`: no `maxit`, no `control` list, no way to reach the
+optimiser's iteration budget from outside. The two remaining routes are both more invasive
+than a parameter change — `rangeBasedOptim = TRUE` is a *different objective*, so a difference
+in the result would not isolate convergence, and patching EPIC's own `optim` call means
+reaching inside a published package to change its solver, which this project should not do to
+a leaderboard row.
+
+**So the 68% non-convergence is disclosable but not diagnosable from outside the package.**
+What can be done without touching EPIC is exactly what this entry does: report the rate,
+report that it is not structure-dependent, report the tumour differences that survive
+stratification, and state that the cause is not established.
