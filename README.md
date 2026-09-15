@@ -270,8 +270,16 @@ so the leaderboard means something.
 pre-registered 0.60 bar with the interval excluding zero. On the wider 270-sample cohort,
 **ρ = 0.7607**. The two ACS rankings agree with each other at **ρ = 0.985**.
 
-> **Anatomic concordance ranks deconvolution methods approximately the way ground truth
-> does — using no ground truth and no outcomes.**
+> **Anatomic concordance separates good deconvolution methods from bad ones — using no
+> ground truth and no outcomes. It does not reliably *order* them: that ordering is a
+> property of the reference atlas.**
+
+**Both halves matter, and the second was measured after registration.** The separation from
+the negative controls holds under every reference tested. The *ordering* does not: holding the
+atlas and changing the sequencing platform preserves it (rho 0.817), while holding the platform
+and changing the atlas destroys it (0.221). And both arms of the rho = 0.7501 above use GBmap,
+so part of that agreement is agreement about the reference rather than about the tissue. See
+`RESULTS.md` §5d and `docs/OPEN_DEFECTS.md` D14.
 
 ### And the honest caveat that goes with it
 

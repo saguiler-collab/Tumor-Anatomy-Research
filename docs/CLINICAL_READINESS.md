@@ -229,17 +229,31 @@ The honest summary is two-sided, and both sides belong in the paper.
 
 **In favour.** ACS ranks methods approximately as ground truth does (rho = 0.75, CI
 [0.33, 0.96]) using no ground truth and no outcomes. The one design property that measurably
-improves accuracy — cross-donor variance weighting — is also the one that improves ACS. That
-is the agreement the study was built to test, and it holds.
+improves accuracy — cross-donor variance weighting — is also the one that improves ACS. And
+three deconvolution-free validations support the constraints themselves: ISH energy (§5a),
+measured single-cell composition in a second specimen (§5b, 3 of 4 testable constraints,
+p ≤ 0.0008), and C1's direction across four patients (§5c).
+
+**In favour, with a caveat that turns out to be load-bearing.** That rho = 0.75 compares two
+rankings **that share a reference atlas**. §5d shows the ACS ordering is a property of GBmap:
+holding the atlas and changing the sequencing platform preserves it (rho 0.817), holding the
+platform and changing the atlas destroys it (0.221). So the agreement the study was built to
+test holds *on GBmap*, and what it measures is narrower than "anatomy tracks truth".
 
 **Against.** ACS cannot resolve the top of its own leaderboard, its ordering below the top
-rests largely on one constraint, and it is **structurally blind to the largest error mode in
-the panel** because T_cell carries no constraint. A method selected by anatomy could be one
-that invents T cells.
+rests largely on one constraint, it is **structurally blind to the largest error mode in the
+panel** because T_cell carries no constraint, and **the ordering it produces is a property of
+the reference atlas rather than of the methods**. A method selected by anatomy could be one
+that invents T cells, and would in any case be a different method under a different atlas.
 
-So anatomy is usable for *separating good methods from bad*, which is what the leaderboard's
-controls establish. It is not usable for *certifying a method for clinical use*, and this
-study should not be read as doing so. Whether a constraint set could be built that does cover
+So anatomy is usable for *separating good methods from bad* — which is what the leaderboard's
+controls establish, and which **holds under every reference tested**: no negative control
+approaches a real method in any arm. It is not usable for *ranking* methods against one
+another, because that ranking moves with the atlas, and it is not usable for *certifying a
+method for clinical use*. This study should not be read as doing either.
+
+That distinction is the honest summary of the whole project: **the separation is robust, the
+ordering is not.** Whether a constraint set could be built that does cover
 the failure modes is a real question for a second tissue — and it would need constraints on
 the immune compartment, which is precisely where near-definitional anatomic facts are hardest
 to pre-register.
