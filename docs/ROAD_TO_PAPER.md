@@ -78,17 +78,31 @@ family the conversion is applied once and lands within 0.005 of truth.
    music, scdc, scdc_ensemble, bisque and bayesprism, each stating what is measured and what
    is not.
 
-### 0.2 Publish the registration corrections · **EXTERNAL, 20 minutes**
+### 0.2 Publish the registration corrections · **WRITTEN 2026-09-15 — `docs/CORRECTIONS_REGISTRATION.md`**
 
-The registration is permanent and correct not to edit. Two statements in it are wrong:
+Six corrections, each giving the registered wording verbatim, what is true, how that was
+established, and whether the primary result moves:
 
-- *"Two published packages exceeded their wall-clock budget in one stage"* — true of
-  `2026-09-05T2154`, understates `2026-09-06T1103` (two stages) and the confirmatory run.
-- *"Fifteen deconvolution methods"* — the plan; both pilot runs it cites ran fourteen.
+| | correction | primary result moves? |
+|---|---|---|
+| C1 | "Fifteen deconvolution methods" — the pilots ran fourteen | no |
+| C2 | "exceeded their budget in one stage" — two stages; and both genuine packages are now measured | no |
+| C3 | "applied once and centrally" — **the conversion is applied nowhere; it is the identity** | no, but the study reports mRNA proportions, not cell proportions |
+| C4 | the ordering is **reference-dependent**, and both arms of the primary result use GBmap | **yes — rho = 0.750 is narrower than claimed** |
+| C5 | 41 tumours → 37 | no |
+| C6 | Neftel 21 donors → 9 patients / 21 samples | no |
 
-**Steps.** Write the correction into the paper's methods section and into `RESULTS.md`,
-phrased as a correction *beside* the registration. Do not amend the OSF record. A
-registration with a published correction is stronger than one nobody checked.
+C4 is the one that matters, and it was not foreseeable at registration: the registered primary
+outcome compares two rankings that **share a reference**, so part of the agreement is agreement
+about GBmap rather than about the tissue.
+
+**The registration is NOT amended.** That is the point of one. What remains is to put this file
+into the paper's methods section and to link it from the OSF project page as a public
+correction — a registration with a correction a reader can check is worth more than one nobody
+re-examined.
+
+**Remaining external step:** post a link to `docs/CORRECTIONS_REGISTRATION.md` on the OSF
+project wiki (<https://osf.io/vuh64>). 10 minutes, browser only.
 
 ### 0.3 Settle how DWLS and BayesPrism are reported · **DONE 2026-09-14**
 
