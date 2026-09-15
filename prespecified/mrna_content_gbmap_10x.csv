@@ -1,0 +1,9 @@
+cell_type,mean_umi_per_cell,relative_to_median
+Tumor,8301.15,1.672456
+Macrophage_Microglia,7005.2,1.411358
+T_cell,3697.26,0.744897
+NK_cell,4691.11,0.945131
+B_cell,3472.62,0.699639
+Endothelial,4576.56,0.922052
+Oligodendrocyte,5235.79,1.054869
+Astrocyte,10060.08,2.026832
