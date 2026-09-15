@@ -713,6 +713,57 @@ def albiach_section(results_dir: Path) -> str:
     return "\n".join(out) + "\n"
 
 
+def darmanis_section(results_dir: Path) -> str:
+    """C1 across four patients, stratified by FACS gate. The only cross-patient constraint test."""
+    d = _load_json(results_dir / "darmanis_constraint_check.json")
+    if d is None:
+        return ""
+    scored = [r for r in d["per_gate"] if r.get("scored")]
+    out = ["\n## 5c. C1 across FOUR patients — Darmanis 2017\n",
+           f"Darmanis et al. (2017, GSE84465) dissected **{d['n_patients']} glioblastomas** "
+           f"into tumour core and periphery and annotated {d['n_cells']:,} cells. This is the "
+           f"**only cross-patient test of any constraint** in this project.",
+           "",
+           "**It is not a composition test, and the reason is important.** " + d["why_not_composition"],
+           "",
+           "**The design that works instead.** Within a fixed FACS sorting gate, compare the "
+           "fraction of cells that are *neoplastic* in the core against the periphery. Holding "
+           "the gate constant holds the selection bias constant, and what remains is C1's "
+           "claim: tumour cells are denser in cellular tumour than at the margin.",
+           "",
+           "| sorting gate | core | periphery | difference | permutation p | patients supporting |",
+           "|---|---|---|---|---|---|"]
+    for r in sorted(scored, key=lambda x: -x["difference"]):
+        out.append(f"| {r['gate']} | {r['neoplastic_fraction_tumour']:.3f} "
+                   f"| {r['neoplastic_fraction_periphery']:.3f} "
+                   f"| **{r['difference']:+.3f}** | {r['null_p_one_sided']:.4f} "
+                   f"| {r['n_patients_supporting']}/{r['n_patients_scored']} |")
+    for r in d["per_gate"]:
+        if not r.get("scored"):
+            out.append(f"| {r['gate']} | — | — | — | — | not scored: {r['why']} "
+                       f"(core {r['n_tumour']}, periphery {r['n_periphery']}) |")
+    out.append("")
+    out.append(f"**{d['n_gates_supporting_C1']} of {d['n_gates_scored']} gates support C1's "
+               f"direction, {d['n_gates_supporting_at_p_lt_0.05']} at p < 0.05** on "
+               f"{d['n_permutations']:,}-draw within-gate permutation nulls. The two strong "
+               f"gates agree in **every** patient they can be scored in (3/3 each).")
+    out.append("")
+    out.append("**The two weak gates are weak for a reason, not by accident.** The CD45 and GC "
+               "gates select microglia and oligodendrocytes, so almost nothing inside them is "
+               "neoplastic in *either* region (0.006 vs 0.002, 0.017 vs 0.000). There is no "
+               "signal to differ. The HEPACAM gate is the informative one: glioblastoma cells "
+               "are astrocyte-like and are captured by it, so 97% of core cells in that gate "
+               "are neoplastic against 18% at the periphery — where the gate catches real "
+               "astrocytes instead.")
+    out.append("")
+    out.append("**What this cannot test.** C2 needs oligodendrocyte abundance per region, "
+               "which needs unbiased composition. C3, C4 and C6 need a microvascular region; "
+               "C5 needs a peri-necrotic one; C7 needs three ordered regions and this "
+               "dissection has two. So: one constraint, one design, four patients. Narrow, "
+               "and the first cross-patient evidence the project has.")
+    return "\n".join(out) + "\n"
+
+
 def render(results_dir: Path) -> str:
     anat = results_dir / "anatomic"
     full = anat / "full_database"
@@ -792,6 +843,7 @@ def render(results_dir: Path) -> str:
 
     A(ish_section(results_dir))
     A(albiach_section(results_dir))
+    A(darmanis_section(results_dir))
 
     sens = _load_csv(anat / "acs_cohort_sensitivity.csv", index_col=0)
     if sens is not None:

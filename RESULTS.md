@@ -332,6 +332,30 @@ Mossa Albiach et al. (2023) dissected one glioblastoma into **27 samples across 
 **Four limits, all structural.** One donor — every cell is from `SL040`, so the 27 samples give within-tumour replication and no cross-patient inference at all. The zone-to-structure mapping is an interpretation. Three of seven constraints are untestable because Albiach has no microvascular-proliferation zone, which removes C3, C4 and C6. And single-cell dissociation under-represents tumour cells, so absolute fractions are immune-inflated (macrophages 0.33–0.65) — which is why only ordinal comparisons of the same cell type across regions are scored, a per-type constant bias being unable to reverse those.
 
 
+## 5c. C1 across FOUR patients — Darmanis 2017
+
+Darmanis et al. (2017, GSE84465) dissected **4 glioblastomas** into tumour core and periphery and annotated 3,589 cells. This is the **only cross-patient test of any constraint** in this project.
+
+**It is not a composition test, and the reason is important.** Only 665 of 3589 cells are unpanned, and the unpanned PERIPHERY is 13 cells from 2 patient(s). A composition over sorted cells measures the sort, not the tissue, so the unbiased-composition route is not viable and the stratified test is used instead.
+
+**The design that works instead.** Within a fixed FACS sorting gate, compare the fraction of cells that are *neoplastic* in the core against the periphery. Holding the gate constant holds the selection bias constant, and what remains is C1's claim: tumour cells are denser in cellular tumour than at the margin.
+
+| sorting gate | core | periphery | difference | permutation p | patients supporting |
+|---|---|---|---|---|---|
+| Astrocytes(HEPACAM) | 0.970 | 0.183 | **+0.786** | 0.0001 | 3/3 |
+| Neurons(Thy1) | 0.517 | 0.007 | **+0.510** | 0.0001 | 3/3 |
+| Oligodendrocytes(GC) | 0.017 | 0.000 | **+0.017** | 0.3865 | 1/2 |
+| Microglia(CD45) | 0.006 | 0.002 | **+0.004** | 0.2897 | 2/4 |
+| Endothelial(BSC) | — | — | — | — | not scored: fewer than 30 cells in one region (core 122, periphery 1) |
+| Unpanned | — | — | — | — | not scored: fewer than 30 cells in one region (core 652, periphery 13) |
+
+**4 of 4 gates support C1's direction, 2 at p < 0.05** on 20,000-draw within-gate permutation nulls. The two strong gates agree in **every** patient they can be scored in (3/3 each).
+
+**The two weak gates are weak for a reason, not by accident.** The CD45 and GC gates select microglia and oligodendrocytes, so almost nothing inside them is neoplastic in *either* region (0.006 vs 0.002, 0.017 vs 0.000). There is no signal to differ. The HEPACAM gate is the informative one: glioblastoma cells are astrocyte-like and are captured by it, so 97% of core cells in that gate are neoplastic against 18% at the periphery — where the gate catches real astrocytes instead.
+
+**What this cannot test.** C2 needs oligodendrocyte abundance per region, which needs unbiased composition. C3, C4 and C6 need a microvascular region; C5 needs a peri-necrotic one; C7 needs three ordered regions and this dissection has two. So: one constraint, one design, four patients. Narrow, and the first cross-patient evidence the project has.
+
+
 ## 6. Does deconvolving all 270 samples change the ranking?
 
 | method | ACS (122 anatomic) | ACS (270 deconvolved) | delta | rank change |

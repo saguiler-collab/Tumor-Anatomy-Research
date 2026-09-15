@@ -22,7 +22,8 @@ Ordered within each list by value per unit of effort.
 
 | # | do this | effort | why it is worth doing first |
 |---|---|---|---|
-| **A1** | **Download GSE84465 (Darmanis 2017)** | 20 min, ~300 MB | Turns the strongest validation this project has from **one** specimen into **five**. See item 15. |
+| ~~A1~~ | ~~Download GSE84465~~ | **DONE 2026-09-14** | Fetched and tested. It does **not** give a composition replication — the unpanned periphery is 13 cells. It gives the project's **first cross-patient constraint test** (C1, 4 patients, RESULTS.md §5c) and is the **best second-reference candidate** (5 of 8 roster types, 4 donors). Item 15 has the correction. |
+| **A1b** | **Build the Darmanis second reference** | 2–4 h | Would make `SCDC ENSEMBLE` non-degenerate on a declared 5-type sub-roster, and give every method a reference-sensitivity check. This is what item 9 was for, and Darmanis reaches it without the authors. |
 | **A2** | Publish the registration corrections | 20 min, browser | Tier 0.2. The registration is permanent and two statements in it are wrong. A published correction is stronger than one nobody checked. |
 | **A3** | Read tumour percentage off the Ivy GAP H&E images | hours, no compute | Item 13. Ivy GAP publishes the images; this is a reading exercise. Converts the 0.33–0.51 tumour under-call from a benchmark artefact into a tissue-level result. |
 | **A4** | Ask the Neftel authors for their cell-state assignments | 15 min, email | Item 9. Confirmed absent from all four GEO supplementary files. Deriving them locally is a list-B job and only yields 4 of 8 roster types anyway (item 16). |
@@ -64,65 +65,84 @@ existing leaderboard; A2–A5 are external entirely.
 
 ---
 
-## 15 · GSE84465 (Darmanis 2017) — **the highest-value item on either list, and it is small**
+## 15 · GSE84465 (Darmanis 2017) — **FETCHED AND TESTED 2026-09-14. It delivers less than I claimed, and something else instead.**
 
-**Why it is top of the list.** `scripts/albiach_constraint_check.py` tests the pre-registered
-constraints against **measured** single-cell composition per anatomic region — no
-deconvolution, no inference from expression — and gets **3 of 4 testable constraints
-satisfied** (C1 p = 0.0001, C2 p = 0.0008, C7 by ordering). It also settles C1 and C7, the two
-the ISH panel could not adjudicate.
+> **Correction to my own recommendation.** I put this at the top of list A on the grounds that
+> it would turn the deconvolution-free composition validation from one specimen into five. **It
+> does not.** I fetched it (20.5 MB, not the ~300 MB I estimated) and tested it, and the
+> composition route is not viable. What it does deliver is narrower and still worth having.
 
-Its one crippling limit is **n = 1 patient**. Every one of Albiach's 135,482 cells is donor
-`SL040`.
+### Why the composition route fails
 
-Darmanis 2017 fixes exactly that:
+Darmanis is **heavily FACS-panned**. Of 3,589 cells only **665 are `Unpanned`**; the rest were
+sorted on CD45, HEPACAM, Thy1, GC or BSC. A composition computed over sorted cells measures the
+sort, not the tissue.
 
-| | Albiach 2023 (on disk) | Darmanis 2017 (to download) |
+And among the unpanned cells the **periphery is 13 cells** — twelve from `BT_S4`, one from
+`BT_S6`, **none at all** from `BT_S1` or `BT_S2`:
+
+| patient | unpanned periphery cells |
+|---|---|
+| BT_S1 | 0 |
+| BT_S2 | 0 |
+| BT_S4 | 12 |
+| BT_S6 | 1 |
+
+So the unbiased-composition route gives one patient's worth of periphery. That is no better
+than Albiach's n = 1 and far thinner. **Had I run the obvious analysis over all 3,589 cells it
+would have produced confident, invalid numbers.**
+
+### What it does deliver — the first cross-patient constraint test in the project
+
+`scripts/darmanis_constraint_check.py`. Within a **fixed sorting gate**, compare the fraction
+of cells that are neoplastic in the core against the periphery. Holding the gate constant holds
+the selection bias constant, and what remains is exactly C1's claim.
+
+| gate | core | periphery | difference | p | patients |
+|---|---|---|---|---|---|
+| Astrocytes(HEPACAM) | 0.970 | 0.183 | **+0.786** | 0.0001 | **3/3** |
+| Neurons(Thy1) | 0.517 | 0.007 | **+0.510** | 0.0001 | **3/3** |
+| Oligodendrocytes(GC) | 0.017 | 0.000 | +0.017 | 0.387 | 1/2 |
+| Microglia(CD45) | 0.006 | 0.002 | +0.004 | 0.290 | 2/4 |
+
+**4 of 4 gates support C1's direction, 2 decisively, and the two strong gates agree in every
+patient they can be scored in.** RESULTS.md §5c. This is the only cross-patient evidence for
+any constraint in the project — Albiach (§5b) is n = 1 by construction.
+
+It tests **C1 only**. C2 needs unbiased composition; C3/C4/C6 need a microvascular region; C5
+needs a peri-necrotic one; C7 needs three ordered regions and this has two.
+
+### The other thing it is good for, which I had not considered: a SECOND REFERENCE
+
+Panning ruins composition and is **irrelevant to a reference**, which needs per-type expression
+profiles rather than per-region abundances. Sorting actually helps, by enriching rare types.
+
+| | cells | patients |
 |---|---|---|
-| patients | **1** | **4** |
-| cells | 135,482 | 3,589 |
-| anatomic labels | 12 locations, 4 zones | **tumour core vs periphery** |
-| cell types | 15, author-annotated | 7, author-annotated |
-| endothelial/vascular | yes | yes (`vascular`) |
-| size | 1.5 GB | **~300 MB** |
+| Immune cell | 1,847 | 4 |
+| Neoplastic | 1,091 | 4 |
+| OPC | 406 | 4 |
+| Astrocyte | 88 | 4 |
+| Oligodendrocyte | 85 | 4 |
+| Vascular | 51 | 4 |
 
-Together they give **five specimens** for the deconvolution-free validation, with
-cross-patient inference possible for the first time.
+That is **5 of this project's 8 roster types** — Tumor, Macrophage_Microglia (from Immune),
+Oligodendrocyte, Endothelial (from Vascular), Astrocyte — across **4 donors**, so cross-donor
+variance is estimable and MuSiC and SCDC can use it. Compare the alternatives: Neftel gives 4
+of 8 with 9 patients but needs the labels derived (item 16); Albiach gives 8 of 8 with 1 donor,
+which a cross-donor method cannot use.
 
-**What to download.** From GEO accession **GSE84465**:
+**So Darmanis is the best available second-reference candidate**, and it would make
+`SCDC ENSEMBLE` non-degenerate on a declared 5-type sub-roster — the thing item 9 was for.
 
-1. `GSE84465_GBM_All_data.csv.gz` — the processed count matrix (3,589 cells).
-2. The series matrix, `GSE84465_series_matrix.txt.gz` — carries the metadata.
+**Caveats to state.** Astrocyte (88 cells), Oligodendrocyte (85) and Vascular (51) are thin,
+and per patient thinner still (Astrocyte runs 3 to 51). Darmanis pools all lymphoid and myeloid
+cells into one `Immune cell` label, so T, NK and B cannot be separated. It is Smart-seq2, where
+GBmap is 87% 10x — a platform difference that is a confound and an opportunity, since it is the
+regime CIBERSORTx's S-mode exists for.
 
-**Do NOT process the SRA files.** The analysis in
-`pipeline packages/ repos/SCDC/public_gbm_scrnaseq_data_analysis-master/code/Darmanis_2017_GBM_scRNAseq.Rmd`
-realigns 3,589 SRA runs with STAR, which is days of compute for a matrix GEO already
-publishes. That Rmd is the provenance record, not the route.
-
-**The labels are already in the metadata** — no derivation, no clustering, no inferCNV. The
-Rmd's own line is explicit:
-
-```r
-gbm[["cell.type"]] <- str_remove_all(as.character(gse$characteristics_ch1.6), "cell type: ")
-```
-
-with `tissue` giving core versus periphery and `patient.ID` the four patients.
-
-**Where it goes.** `data/raw/darmanis_2017/`. Then a Darmanis check modelled on
-`scripts/albiach_constraint_check.py`, which reads annotations only and runs in seconds.
-
-**What changes.** C1, C2 and C7 get tested on four more specimens with **cross-patient**
-statistics. If they hold, the constraint file rests on measured composition in five
-glioblastomas rather than on expert expectation — which is the difference between a plausible
-constraint set and a validated one, and it is the strongest claim this project could make for
-the money.
-
-**Caveat to state in the paper.** Darmanis is Smart-seq2 on 3,589 cells across 4 patients, so
-per-patient cell counts are in the hundreds. Rare types (B cells, NK) will be unstable. C1,
-C2 and C7 concern tumour and oligodendrocyte, which are abundant, so those are the ones worth
-testing.
-
----
+**Where it is.** `data/raw/darmanis_2017/` — the count matrix, the series matrix, and
+`cell_metadata.csv` extracted from it (3,589 rows; cell type, tissue, patient, sorting gate).
 
 ## 16 · The Neftel annotations can be derived locally — but only 4 of 8 roster types
 
