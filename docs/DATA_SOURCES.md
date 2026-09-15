@@ -514,3 +514,66 @@ annotation choices recorded with the same discipline as the constraint file.
 types exist for a second multi-donor reference. Neither file currently on disk satisfies
 that: Neftel has 9 patients (21 samples) and no labels; Albiach has labels and one
 donor.
+
+---
+
+## Darmanis 2017 (GSE84465) — fetched 2026-09-14, two distinct uses
+
+**Source.** GEO GSE84465, Darmanis et al. 2017, *Single-cell RNA-seq analysis of infiltrating
+neoplastic cells at the migrating front of human glioblastoma*. `GSE84465_GBM_All_data.csv.gz`
+(20.5 MB, 23,465 genes x 3,589 cells, raw counts, space-delimited despite the `.csv`) and
+`GSE84465_series_matrix.txt.gz`. Both under `data/raw/darmanis_2017/`, with
+`cell_metadata.csv` extracted from the series matrix: cell type, tissue, patient, plate, well
+and **sorting gate**.
+
+**What it contains.** 4 patients, tumour core and periphery, 7 author-annotated cell types.
+Labels come straight from the GEO metadata (`characteristics_ch1.6`) — no derivation, no
+clustering, no inferCNV.
+
+### Use 1 — the only cross-patient constraint test in this project
+
+`scripts/darmanis_constraint_check.py`, rendered in `RESULTS.md` §5c. **C1's direction only**,
+tested within a fixed FACS gate so the selection bias is held constant. 4 of 4 scored gates
+support it, two at p = 0.0001 with 3/3 patients each.
+
+**It is NOT a composition test.** Only 665 of 3,589 cells are `Unpanned`, and the unpanned
+periphery is **13 cells** — twelve from BT_S4, one from BT_S6, none from BT_S1 or BT_S2. A
+composition over sorted cells measures the sort. This was my own initial recommendation and it
+was wrong; see `docs/EXTERNAL_ACTIONS.md` item 15.
+
+### Use 2 — a second deconvolution reference
+
+`scripts/build_darmanis_reference.py` -> `data/reference/darmanis_2017/`
+(profile.csv, sigma.csv, cell_size.csv, provenance.json). Panning ruins composition and is
+**irrelevant to a reference**, which needs per-type profiles rather than per-region
+abundances; sorting helps by enriching rare types.
+
+| roster type | from Darmanis label | cells | donors |
+|---|---|---|---|
+| Tumor | Neoplastic | 1,091 | 4 |
+| Macrophage_Microglia | Immune cell | 1,847 | 4 |
+| Astrocyte | Astocyte *(GEO's spelling)* | 88 | 4 |
+| Oligodendrocyte | Oligodendrocyte | 85 | 4 |
+| Endothelial | Vascular | 51 | 4 |
+
+22,799 genes after restricting to the genes the Ivy GAP bulk carries. `cell_size` spread
+**1.63** — computed from RAW library sizes captured before normalisation, so unlike GBmap's
+this reference can actually drive a cell-size conversion (see D12).
+
+**Validated on marker placement:** PTPRC, CD68, MBP, PLP1, PECAM1, VWF and EGFR all peak in
+the expected column. **GFAP peaks in Tumor, not Astrocyte** — which is not a defect but
+independent corroboration of the invariant that Astrocyte is unidentifiable against Tumor in
+glioblastoma, where the tumour cells are astrocytic in lineage.
+
+**Limits, all structural.** `T_cell`, `NK_cell` and `B_cell` are **not recoverable** —
+Darmanis pools every lymphoid and myeloid cell into one `Immune cell` label, so mapping it onto
+Macrophage_Microglia is an approximation that includes T cells. `OPC` (406 cells) and `Neuron`
+(21) are EXCLUDED rather than folded in; putting OPC into Oligodendrocyte would inflate exactly
+the type C2 is about. Astrocyte, Oligodendrocyte and Vascular are thin (88, 85, 51) and thinner
+per donor. It is Smart-seq2 where GBmap is 87% 10x — a platform confound, and also the regime
+CIBERSORTx's S-mode exists for.
+
+**So it supports a DECLARED 5-type sub-roster only** and cannot replace GBmap on the full
+eight. What it makes possible: `SCDC ENSEMBLE` non-degenerate for the first time (D2), and a
+reference-sensitivity check that separates "how these methods behave" from "how these methods
+behave *on GBmap*".
