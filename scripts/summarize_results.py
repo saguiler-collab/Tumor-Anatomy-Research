@@ -639,6 +639,80 @@ def ish_section(results_dir: Path) -> str:
     return "\n".join(out) + "\n"
 
 
+def albiach_section(results_dir: Path) -> str:
+    """
+    The constraints against MEASURED single-cell composition, from a second specimen.
+
+    The strongest validation available to this project, and the only one that involves no
+    deconvolution AND no inference from expression: counted cells, annotated by the authors,
+    per anatomic region. It also settles the two constraints the ISH check could not.
+    """
+    d = _load_json(results_dir / "albiach_constraint_check.json")
+    if d is None:
+        return ""
+    pv = d["provenance"]
+    rows = d["per_constraint"]
+    testable = [r for r in rows if r["verdict"] in ("SATISFIED", "VIOLATED")]
+
+    out = ["\n## 5b. The constraints against MEASURED composition — a second specimen\n",
+           f"Mossa Albiach et al. (2023) dissected one glioblastoma into "
+           f"**{pv['n_samples']} samples across {pv['n_locations']} anatomically labelled "
+           f"locations** and annotated **{pv['n_cells_in_file']:,} cells** into 15 types. "
+           f"{pv['n_cells_mapped']:,} map onto this project's roster.",
+           "",
+           "**No deconvolution, and no inference from expression.** The ISH check (§5a) reads "
+           "transcript signal and has to argue from it; this counts annotated cells. It is "
+           "the strongest form of the constraint argument available here.",
+           "",
+           f"**Exploratory. The constraint file is frozen at "
+           f"`{str(d['constraint_freeze_hash'])[:16]}…` and does not move on this.**",
+           "",
+           "| constraint | claim | measured | permutation p | verdict |",
+           "|---|---|---|---|---|"]
+    for r in rows:
+        if r["verdict"] == "NOT TESTABLE":
+            out.append(f"| {r['constraint']} | {r.get('claim', '—')} | — | — | "
+                       f"not testable: {r.get('why', '')} |")
+        elif r.get("kind") == "pairwise":
+            out.append(f"| {r['constraint']} | {r['claim']} | "
+                       f"{r['hi']} {r['mean_hi']:.4f} vs {r['lo']} {r['mean_lo']:.4f} | "
+                       f"{r['null_p_one_sided']:.4f} | **{r['verdict']}** |")
+        elif r.get("kind") == "monotone":
+            seq = " < ".join(f"{s} {m:.4f}" for s, m in zip(r["sequence"], r["means"]))
+            out.append(f"| {r['constraint']} | {r['claim']} | {seq} | — | "
+                       f"**{r['verdict']}** |")
+    out.append("")
+    out.append(f"**{d['n_satisfied']} of {d['n_testable']} testable constraints are "
+               f"satisfied**, on {d['n_permutations']:,}-draw within-zone permutation nulls.")
+    out.append("")
+    out.append("**This settles what the ISH panel could not.** §5a found C1 and C7 "
+               "marker-dependent — CD44 satisfied C1 at 0.900 while SOX2 and PTPRZ1 "
+               "contradicted it at 0.000 and 0.056 — and concluded that no marker in that "
+               "panel measures tumour cell *density*. Counted cells do. C1 is satisfied at "
+               "0.534 against 0.040 (p = 0.0001) and C7's ordering holds "
+               "(0.040 < 0.471 < 0.534). The two constraints ISH left open are the two this "
+               "closes.")
+    out.append("")
+    out.append("**C5 comes out violated, and the likeliest reason is the region mapping "
+               "rather than the biology.** Ivy GAP's PAN is the *hypercellular "
+               "pseudopalisading rim around* necrosis; Albiach's nearest label is `Necrotic "
+               "core`, the dying centre. Macrophages accumulate in the rim, so a PAN "
+               "constraint tested on the core is tested on the wrong side of that boundary. "
+               "The mapping is declared with a confidence per row in the artefact, and this "
+               "row is marked WEAK. It is reported, not resolved.")
+    out.append("")
+    out.append("**Four limits, all structural.** One donor — every cell is from `SL040`, so "
+               "the 27 samples give within-tumour replication and no cross-patient inference "
+               "at all. The zone-to-structure mapping is an interpretation. Three of seven "
+               "constraints are untestable because Albiach has no microvascular-proliferation "
+               "zone, which removes C3, C4 and C6. And single-cell dissociation "
+               "under-represents tumour cells, so absolute fractions are immune-inflated "
+               "(macrophages 0.33–0.65) — which is why only ordinal comparisons of the same "
+               "cell type across regions are scored, a per-type constant bias being unable to "
+               "reverse those.")
+    return "\n".join(out) + "\n"
+
+
 def render(results_dir: Path) -> str:
     anat = results_dir / "anatomic"
     full = anat / "full_database"
@@ -717,6 +791,7 @@ def render(results_dir: Path) -> str:
         A("")
 
     A(ish_section(results_dir))
+    A(albiach_section(results_dir))
 
     sens = _load_csv(anat / "acs_cohort_sensitivity.csv", index_col=0)
     if sens is not None:

@@ -305,6 +305,33 @@ The reading that fits is that these markers track different tumour programmes ra
 **Power.** 11 of 24 marker-constraint rows rest on fewer than five donors, and 2 on none at all (EGFR is in the panel but yielded no evaluable structure pair). The endothelial and myeloid results rest on 6-8 blocks. That is thin, and the support they give the constraint set is correspondingly weak — real, independent, and small.
 
 
+## 5b. The constraints against MEASURED composition — a second specimen
+
+Mossa Albiach et al. (2023) dissected one glioblastoma into **27 samples across 12 anatomically labelled locations** and annotated **135,482 cells** into 15 types. 131,714 map onto this project's roster.
+
+**No deconvolution, and no inference from expression.** The ISH check (§5a) reads transcript signal and has to argue from it; this counts annotated cells. It is the strongest form of the constraint argument available here.
+
+**Exploratory. The constraint file is frozen at `2d1fb47c98832adf…` and does not move on this.**
+
+| constraint | claim | measured | permutation p | verdict |
+|---|---|---|---|---|
+| C1 | Tumor: CT > LE | CT 0.5342 vs LE 0.0401 | 0.0001 | **SATISFIED** |
+| C2 | Oligodendrocyte: LE > CT | LE 0.1761 vs CT 0.0499 | 0.0008 | **SATISFIED** |
+| C3 | — | — | — | not testable: no Albiach zone maps to MVP |
+| C4 | — | — | — | not testable: no Albiach zone maps to MVP |
+| C5 | Macrophage_Microglia: PAN > LE | PAN 0.3654 vs LE 0.6472 | 0.9998 | **VIOLATED** |
+| C6 | — | — | — | not testable: no Albiach zone maps to MVP |
+| C7 | Tumor: LE < IT < CT | LE 0.0401 < IT 0.4710 < CT 0.5342 | — | **SATISFIED** |
+
+**3 of 4 testable constraints are satisfied**, on 20,000-draw within-zone permutation nulls.
+
+**This settles what the ISH panel could not.** §5a found C1 and C7 marker-dependent — CD44 satisfied C1 at 0.900 while SOX2 and PTPRZ1 contradicted it at 0.000 and 0.056 — and concluded that no marker in that panel measures tumour cell *density*. Counted cells do. C1 is satisfied at 0.534 against 0.040 (p = 0.0001) and C7's ordering holds (0.040 < 0.471 < 0.534). The two constraints ISH left open are the two this closes.
+
+**C5 comes out violated, and the likeliest reason is the region mapping rather than the biology.** Ivy GAP's PAN is the *hypercellular pseudopalisading rim around* necrosis; Albiach's nearest label is `Necrotic core`, the dying centre. Macrophages accumulate in the rim, so a PAN constraint tested on the core is tested on the wrong side of that boundary. The mapping is declared with a confidence per row in the artefact, and this row is marked WEAK. It is reported, not resolved.
+
+**Four limits, all structural.** One donor — every cell is from `SL040`, so the 27 samples give within-tumour replication and no cross-patient inference at all. The zone-to-structure mapping is an interpretation. Three of seven constraints are untestable because Albiach has no microvascular-proliferation zone, which removes C3, C4 and C6. And single-cell dissociation under-represents tumour cells, so absolute fractions are immune-inflated (macrophages 0.33–0.65) — which is why only ordinal comparisons of the same cell type across regions are scored, a per-type constant bias being unable to reverse those.
+
+
 ## 6. Does deconvolving all 270 samples change the ranking?
 
 | method | ACS (122 anatomic) | ACS (270 deconvolved) | delta | rank change |
