@@ -336,6 +336,31 @@ remains a hypothesis. See `docs/RELATED_WORK.md`.
 
 ---
 
+## 6a. What this study measures: two nested problems
+
+**Decided 2026-09-15 — see [docs/TWO_PROBLEMS.md](docs/TWO_PROBLEMS.md).**
+
+> **Problem 1.** Can we accurately infer the RNA contributions?
+> ↓
+> **Problem 2.** Can we convert those contributions into actual cellular abundance?
+
+**Methodological deconvolution is reported in mRNA proportions. Clinical translation happens in
+cell proportions.** The leaderboard above is Problem 1, and that is a correct description of what
+it has always been: `docs/OPEN_DEFECTS.md` D12 found the mRNA-to-cell conversion was never
+applied, so every published number is an mRNA proportion.
+
+That is not only a correction. The packages in this panel **disagree about which quantity they
+return** — measured, not assumed: MuSiC, SCDC, EPIC and BayesPrism return mRNA share (0.7502 on a
+probe whose true mRNA share is 0.7500), while **Bisque returns cell share** (0.5000). And the
+per-type mRNA-content factors needed for Problem 2 span **737×** in one source, 1.6× in another,
+and are **unrecoverable** from a third. Problem 2 is a measurement problem with its own error
+budget, not a post-processing step.
+
+The research question follows: *which factors govern the robustness of bulk RNA deconvolution, and
+under what conditions can RNA-level estimates be translated into cellular abundance?*
+
+---
+
 ## 6b. Is any of this clinically usable?
 
 Short answer: **not yet, and the reasons are measured rather than hedged.** See

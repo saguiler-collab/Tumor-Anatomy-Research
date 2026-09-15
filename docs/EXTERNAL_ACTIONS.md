@@ -22,7 +22,8 @@ depending on what A18 finds.
 |---|---|---|---|
 | ~~A18~~ | ~~Separate atlas from platform~~ | **DONE 2026-09-15** | Settled by a 2x2 built from GBmap's own assay subsets. Hold the atlas, change platform: ordering survives (**+0.817**). Hold platform, change the atlas: it collapses (**+0.221**). **It is the atlas**, costing ~4x what platform costs. D14. |
 | **A2** | **Link the registration corrections from the OSF project wiki** | 10 min, browser | `docs/CORRECTIONS_REGISTRATION.md` is written. Post the link at <https://osf.io/vuh64>. A registration with a correction a reader can check beats one nobody re-examined. |
-| **A19** | **Decide C3: does this study report mRNA proportions or cell proportions?** | a decision, not compute | D12. The conversion has never been applied. Two defensible options, both recorded; the choice must not be made on which improves a score. Everything downstream of the paper's wording depends on it. |
+| ~~A19~~ | ~~Decide C3: mRNA or cell proportions?~~ | **DECIDED 2026-09-15 by the user** | **Both, as two nested problems.** Methodological deconvolution in mRNA proportions (Problem 1); clinical translation in cell proportions (Problem 2). Recorded in `docs/TWO_PROBLEMS.md`. It is a better answer than either option offered, and it exposed D15. |
+| **A21** | **Re-run the benchmark scoring BOTH arms** | 1 full run, list B | Problem 1 against `truth_mrna`, Problem 2 against `truth` after a declared conversion. Publish before/after per method. Bisque must be handled explicitly — it is the one method already in cell-fraction units. |
 | **A5** | Hunt for an immune ground-truth cohort (IHC / flow / CyTOF with matched bulk) | hours, browser | Still the highest scientific value externally. Every method over-calls T cells 4.6–7.9× in high-purity tumour and **ACS cannot see it** — `T_cell` carries no constraint. Real measured immune content either confirms that on tissue or shows it is a pseudobulk artefact. |
 | **A3** | Read tumour percentage off the Ivy GAP H&E images | hours, no compute | Ivy GAP publishes the images. Converts the 0.33–0.51 tumour under-call from a benchmark artefact into a tissue-level result. |
 | **A6** | Wire **CDSeq** (reference-free) | 1–2 h | Now more valuable than when first listed. D14 makes "is it the methods or the reference?" the central question, and a reference-free method is the only one that answers it from the other side. |
@@ -51,7 +52,8 @@ depending on what A18 finds.
 | 9 | **Neftel cell-type labels** | **DONE 2026-09-15 — the user supplied the authors' own `CellAssignment`** | — |
 | 16 | derive Neftel annotations locally | **NOT NEEDED** — superseded by item 9 | — |
 | A18 | separate atlas from platform | **DONE** — it is the atlas, not the platform | — |
-| **A19** | **decide mRNA vs cell proportions (C3)** | **OPEN — a decision only you can take** | you |
+| A19 | decide mRNA vs cell proportions (C3) | **DECIDED** — two nested problems, `docs/TWO_PROBLEMS.md` | — |
+| **A21** | score both arms against their own truth | **OPEN** — needs one full run | advanced machine |
 | A2 | link the registration corrections on OSF | written; needs posting | you, 10 min |
 | 12 / A5 | immune ground truth | open, highest external value | you |
 | 13 / A3 | pathologist purity on Ivy GAP H&E | open, no compute | you |

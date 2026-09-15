@@ -23,6 +23,7 @@ keeping, marked RESOLVED at the top.
 | **D11** EPIC returns the within-subset mRNA share, not the full-space one | **OPEN** — but see D12: the conversion it is applied to is the identity, so the practical effect on the published numbers is nil |
 | **D12** the cell-size correction has never been applied — it is the identity | **OPEN, high** — supersedes most of D1; no number changes, but the registration says otherwise |
 | **D13** EPIC runs with `refProfiles.var` unset, so its gene weighting is off; its output is mislabelled as a cell fraction | **OPEN, high** — EPIC is joint-2nd at 0.9846 |
+| **D15** the accuracy arm scores mRNA-share estimates against CELL-fraction truth | **OPEN, high** — follows from D12; affects every MAE/RMSE/bias. Both truths are now emitted; which to score against is answered by the two-problem framing |
 | **D14** the ACS ordering does not survive a change of reference atlas, and GBmap is the outlier | **OPEN, highest** — bears on the headline, not on one method. Confound RESOLVED 2026-09-15 by a 2x2: holding the atlas and changing platform preserves the ordering (0.817), holding platform and changing the atlas destroys it (0.221). **It is the atlas.** |
 
 ---
@@ -1522,3 +1523,84 @@ all untouched — none of them uses a deconvolution reference at all. The **sepa
 methods from the negative controls** also holds under every reference: no control approaches a
 real method in any arm. What is reference-dependent is the **ordering among real methods**,
 which is precisely what the leaderboard claims to provide.
+
+
+---
+
+## D15 · The accuracy arm scores mRNA-share estimates against CELL-fraction truth
+
+**Severity: high. It affects every MAE, RMSE and bias in the benchmark, and therefore the
+accuracy half of the primary result. Found 2026-09-15, following from D12.**
+
+### What is wrong
+
+`pseudobulk.py` is explicit about what its truth is:
+
+```python
+truth: pd.DataFrame     # mixtures x cell types, rows sum to 1 (CELL fractions)
+```
+
+and its `generate` docstring warns, in terms:
+
+> The truth returned is CELL fractions — the proportion of *cells* … scoring cell-fraction
+> estimates against RNA-fraction truth is a classic way to [get this wrong]
+
+**D12 established that the mRNA-to-cell conversion is the identity in this pipeline.** So the
+estimates being scored are **mRNA proportions**. The benchmark has been comparing mRNA share
+against cell fractions — the exact error the file warns about, arriving because the conversion
+meant to bridge the two was never applied.
+
+### How large the mismatch is
+
+The two truths are now both emitted (`PseudobulkSet.truth_mrna`). On a synthetic reference with
+known cell sizes:
+
+| | max per-mixture difference | mean difference, Tumor | mean difference, Endothelial |
+|---|---|---|---|
+| mRNA share − cell fraction | **0.157** | **−0.069** | **+0.044** |
+
+Rank correlation between the two truths within a mixture averages 0.960, so the *ordering* of
+cell types is largely preserved while the *values* differ by up to 0.157. That is why this
+damages MAE, RMSE and bias far more than it damages anything rank-based.
+
+### It explains an anomaly I could not previously account for
+
+Bisque has the **smallest tumour bias in the panel (−0.0256** against MuSiC's −0.0757) and the
+**narrowest conformal interval on tumour (±0.489** against MuSiC's ±0.557), despite ranking
+10th of 14 on ACS and 9th on MAE. I recorded that as unexplained.
+
+**Bisque is the only method in the panel whose output is a CELL fraction** (D1: it returns
+0.5000 on the probe where every other package returns ~0.7502). So Bisque is the only method
+being scored in the same units as the truth. Every other method is penalised by its own
+cell-size factors, and Bisque is not.
+
+That is a coherent explanation of a previously loose end, and it is also a warning: part of the
+accuracy ranking is a ranking of *whose output happens to match the truth's units*.
+
+### Fixed: the generator now emits both truths
+
+`PseudobulkSet.truth_mrna` is the same mixtures' composition expressed as each type's share of
+the mRNA pool. The mixture expression matrix is still summed over all picked cells at once,
+exactly as before, so **archived mixtures are bit-identical** — the per-type mRNA totals are
+accumulated separately rather than by re-deriving the mixture from them, which would risk a
+float-associativity difference in an archived artefact.
+
+### What remains, and it is not a bug fix
+
+Which truth a method should be scored against is now a **design question**, and the project's
+framing answers it (see `docs/TWO_PROBLEMS.md`):
+
+- **Problem 1 — can the RNA contributions be inferred?** Score against `truth_mrna`. This is
+  what the methods actually do and what this study has in fact been measuring.
+- **Problem 2 — can those be converted into cellular abundance?** Score against `truth`, after
+  a declared conversion.
+
+Doing this properly requires a full benchmark re-run, and it will change every accuracy number
+and may change the accuracy ranking. Two rules apply:
+
+1. **Publish before and after per method.** The ranking may move; that must be visible.
+2. **Bisque must be handled explicitly**, not silently. It returns cell fractions, so under
+   Problem 1 it is the one method that needs converting *backwards* to be comparable — or it
+   must be reported separately with the reason. Leaving it as-is would advantage it under
+   Problem 2 and disadvantage it under Problem 1, in both cases for a reason unrelated to its
+   accuracy.

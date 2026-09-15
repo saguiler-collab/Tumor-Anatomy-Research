@@ -68,8 +68,20 @@ class PseudobulkSet:
     """Mixtures plus the composition each was built from."""
     expression: pd.DataFrame       # genes x mixtures, linear CPM-like
     truth: pd.DataFrame            # mixtures x cell types, rows sum to 1 (CELL fractions)
-    donors: pd.Series              # which held-out donor each mixture drew from
-    niche: pd.Series               # the template used, or "flat"
+    #: The SAME mixtures' composition expressed as each type's share of the mRNA pool,
+    #: rather than of the cells. Added 2026-09-15 because the study is now framed as two
+    #: nested problems and they need different truths:
+    #:
+    #:   Problem 1 -- can the RNA contributions be inferred?      -> score against truth_mrna
+    #:   Problem 2 -- can those be converted to cell abundance?   -> score against truth
+    #:
+    #: Until this existed there was only the cell-fraction truth, and D12 showed the
+    #: mRNA-to-cell conversion is the identity in this pipeline, so every accuracy number was
+    #: an mRNA-share estimate scored against a CELL-fraction truth. The docstring of
+    #: `generate` warned against exactly that. See OPEN_DEFECTS D15.
+    truth_mrna: pd.DataFrame | None = None
+    donors: pd.Series = None       # which held-out donor each mixture drew from
+    niche: pd.Series = None        # the template used, or "flat"
 
     def __len__(self) -> int:
         return self.expression.shape[1]
@@ -142,7 +154,7 @@ def generate(expression: pd.DataFrame, meta: pd.DataFrame, donors: list[str],
                 pools[(donor, ctype)] = list(sel)
 
     niches = list(NICHE_TEMPLATES)
-    cols, truths, used_donor, used_niche = {}, [], [], []
+    cols, truths, truths_mrna, used_donor, used_niche = {}, [], [], [], []
 
     for i in range(n_mixtures):
         donor = str(rng.choice(donors))
@@ -154,6 +166,7 @@ def generate(expression: pd.DataFrame, meta: pd.DataFrame, donors: list[str],
         counts = rng.multinomial(total_cells, target)
 
         picked: list[str] = []
+        picked_by_type: dict[str, list[str]] = {}
         realised = np.zeros(len(types))
         for k, ctype in enumerate(types):
             pool = pools.get((donor, ctype))
@@ -161,6 +174,7 @@ def generate(expression: pd.DataFrame, meta: pd.DataFrame, donors: list[str],
                 continue
             take = rng.choice(pool, size=int(counts[k]), replace=True)
             picked.extend(take)
+            picked_by_type[ctype] = list(take)
             realised[k] = counts[k]
 
         if not picked:
@@ -172,9 +186,21 @@ def generate(expression: pd.DataFrame, meta: pd.DataFrame, donors: list[str],
         # sampler's shortfall.
         realised = realised / realised.sum()
 
+        # The mixture is summed over ALL picked cells at once, exactly as before, so the
+        # expression matrix is bit-identical to what earlier runs produced. The per-type mRNA
+        # totals are accumulated separately rather than by re-deriving `mix` from them, which
+        # would risk a float-associativity difference in an archived artefact.
         mix = expression[picked].sum(axis=1)
         total = mix.sum()
         cols[f"mix{i:05d}"] = (mix / total * 1e6) if total > 0 else mix
+
+        mrna = np.zeros(len(types))
+        for k, ctype in enumerate(types):
+            ids = picked_by_type.get(ctype)
+            if ids:
+                mrna[k] = float(expression[ids].to_numpy().sum())
+        mrna_sum = mrna.sum()
+        truths_mrna.append(mrna / mrna_sum if mrna_sum > 0 else mrna)
         truths.append(realised)
         used_donor.append(donor)
         used_niche.append(niche or "flat")
@@ -186,6 +212,7 @@ def generate(expression: pd.DataFrame, meta: pd.DataFrame, donors: list[str],
     return PseudobulkSet(
         expression=pd.DataFrame(cols, index=expression.index),
         truth=pd.DataFrame(np.vstack(truths), index=names, columns=types),
+        truth_mrna=pd.DataFrame(np.vstack(truths_mrna), index=names, columns=types),
         donors=pd.Series(used_donor, index=names, name="donor"),
         niche=pd.Series(used_niche, index=names, name="niche"),
     )
