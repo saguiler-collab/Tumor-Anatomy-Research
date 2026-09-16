@@ -289,6 +289,18 @@ a linear model genuinely holds there and that arm survives. The **anatomic arm i
 its bulk is real linear FPKM. That is one defect explaining why the benchmark looked healthy
 while accuracy on tissue was poor.
 
+**And correcting it makes anatomic concordance WORSE, which is the part that matters.**
+Rebuilding the reference from the atlas's own counts — removing the violation — lowers ACS for
+**every one of the 14 methods**, by 0.02 to 0.26, mean about 0.12. That is not an artefact of
+gene selection: it holds when each reference nominates its own markers at matched density, and
+quanTIseq, which ignores the supplied reference entirely, is unchanged to exactly 0.0000. So the
+registered analysis was, unintentionally, scoring better *because* of the defect.
+
+This is reported as a finding about the **selector**, not a reason to keep log data. The mixing
+model is not put to a vote and the counts build remains the defensible one. But a
+ground-truth-free selector that rewards a preprocessing error is not measuring what it is being
+asked to measure, and that belongs in the paper beside the defect itself.
+
 **Effect on the primary result: under measurement, and it may be substantial.** It predicts
 two things the project already observes — the systematic tumour under-call of 0.33–0.51 at high
 purity, and ordinal results (ACS) looking healthier than magnitudes (MAE, bias), since `log1p`

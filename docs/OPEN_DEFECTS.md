@@ -1824,27 +1824,49 @@ reference it is handed (`r_bridge.OWN_SIGNATURE_METHODS`). Across the log and li
 ACS is **0.6000 in both, delta exactly +0.0000**, while 13 of 14 other methods moved. That is
 the built-in check that the two arms differed in the reference and in nothing else.
 
-### What this run does NOT establish, and why the level drop is not readable
+### The level drop IS real — the gene-space confound was tested and did not explain it
 
-Every method's ACS **fell** with the linear reference — by 0.06 to 0.23, mean about 0.11. That
-is the opposite of what D16 predicts, and it is tempting to read it as the log matrix being
-better. **It cannot be read that way, because the gene space is confounded with the arm.**
+Every method's ACS **fell** with the linear reference, by 0.06 to 0.23. That was initially not
+readable, because the 657 markers were selected on the **log** reference, so the linear arm was
+being scored through its rival's opinion of which genes are informative. `--gene-space per_arm`
+was added for that reason and has now been run: each reference nominates its own markers, at
+**matched density** (200 per cell type, so the marker-count effect of C10 is held constant).
 
-`data/bench/signature_genes.json` records its own chain: `build_from_h5ad(gbmap_core.h5ad) ->
-... -> select_signature_genes`. That is the default matrix, so the 657 markers were chosen
-**on the log-space reference**. Arm B was scored through arm A's opinion of which genes are
-informative. `reference_sensitivity.py` already warns that this space is "the wrong space to
-use for a finding that the alternative does worse" — and that is precisely this finding.
+**The drop survives.** All 14 methods still score lower on the linear reference — deltas from
+−0.0154 to −0.2615, mean about −0.12 — and quanTIseq, which ignores the supplied reference
+entirely, is again **unchanged to exactly 0.0000**, confirming the arms differ in the reference
+and nothing else.
 
-The ORDERING comparison is not affected in the same way: both arms see the identical gene set,
-and the handicap applies across methods rather than to the rank correlation between them. That
-is why the Spearman figures above stand while the levels do not.
+> **So ACS genuinely prefers the log-space reference: the one that violates the linear mixing
+> model the registration declares.** This is not a gene-space artefact.
 
-`--gene-space per_arm` now lets each reference nominate its own markers, which is the
-comparison that would make the levels readable. It has not been run. **Until it is, no claim is
-made about which expression space produces better anatomic concordance** — and when it is run,
-ACS preferring one over the other is a finding about ACS, not a reason to choose a reference.
-The log matrix is wrong on model grounds; the mixing model is not put to a vote.
+It is a finding **about ACS**, not a reason to prefer log data. The mixing model is not put to a
+vote, and `matrix="raw/X"` remains the defensible build. What it shows is that anatomic
+concordance can be *maximised* by a preprocessing choice that is wrong on model grounds — which
+is exactly the failure mode a ground-truth-free selector must not have.
+
+### And it revises this entry's own claim about how much expression space costs
+
+The comparison above reported Spearman **0.9161** between the log and linear orderings and
+concluded that expression space "costs almost nothing". **That number was measured with both
+arms sharing one gene space**, and the shared space was selected on the log reference. With each
+reference nominating its own markers the agreement falls to **0.6852**, with 13 of 14 methods
+moving rank and a largest move of 8.
+
+| comparison | gene space | Spearman |
+|---|---|---|
+| GBmap_log vs GBmap_linear | shared, 657, selected on log | **0.9161** |
+| GBmap_log vs GBmap_linear | **per-arm, 200/type each** | **0.6852** |
+| GBmap_linear vs Neftel | shared, 657 | 0.5099 |
+| GBmap_linear vs Darmanis | shared, 657 | 0.3655 |
+
+**"Expression space costs almost nothing" is withdrawn.** On the shared gene space the atlas
+plainly dominates (0.9161 against 0.5099 and 0.3655). Per-arm, expression space costs
+considerably more — and **the atlas comparisons have not been rerun per-arm**, so the two rows
+are not like-for-like and no claim is made that the atlas still dominates under per-arm
+selection. What survives is narrower and still useful: the atlas matters more than expression
+space *when both are measured the same way*, and how much either matters depends on a gene-space
+choice that neither is supposed to depend on.
 
 ### How this was found: CDSeq is BLOCKED
 

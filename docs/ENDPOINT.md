@@ -84,12 +84,15 @@ Rebuilding the same atlas from its own counts to break a confound (D16):
 | comparison | atlas | expression space | Spearman |
 |---|---|---|---|
 | GBmap_10x vs GBmap_SS2 | same | same | +0.8170 |
-| GBmap_log vs GBmap_linear | same | different | **+0.9161** |
+| GBmap_log vs GBmap_linear | same | different | **+0.9161** (shared genes) / **+0.6852** (per-arm) |
 | GBmap_linear vs Neftel | different | same | **+0.5099** |
 | GBmap_linear vs Darmanis | different | same | **+0.3655** |
 
-Changing platform or expression space within one atlas costs little. **Changing the atlas leaves
-about half the ordering.** And the registered primary outcome compares two rankings that
+Changing platform costs little. Changing expression space costs little **when both arms share a
+gene space** and appreciably more when each reference nominates its own (0.9161 → 0.6852), which
+is itself a symptom of §2d. **Changing the atlas leaves about half the ordering** — and the
+atlas rows have not been rerun per-arm, so they are compared like-for-like only on the shared
+space. And the registered primary outcome compares two rankings that
 **both** use GBmap — the ACS arm deconvolves against it, the accuracy arm builds its mixtures
 from its cells (C4). Part of rho = 0.7501 is two GBmap-based rankings agreeing about GBmap.
 
@@ -114,6 +117,15 @@ single pair.
   CIs, from indistinguishable-from-null to significant, **non-monotonically**. The whole
   leaderboard spans ~0.60 to 1.00. A nuisance parameter moves ACS across three-quarters of the
   range it is being used to rank fifteen methods across.
+- **ACS prefers the reference that violates the mixing model.** The registration states the model
+  is *"additive on the linear scale"* and that data is *"never log-transformed for
+  deconvolution"*. The reference was in fact built from log values (**C7**). Rebuilding it from
+  the atlas's own counts — correcting the defect — makes **every one of the 14 methods score
+  lower**, by 0.02 to 0.26, mean about 0.12. That is not a gene-space artefact: it holds when
+  each reference nominates its own markers at matched density, and quanTIseq, which ignores the
+  supplied reference, is unchanged to exactly 0.0000. **Fixing a model violation costs anatomic
+  concordance.** A selector that rewards a preprocessing error is not measuring what it is being
+  asked to measure.
 
 ### 2e. The reference-free test — and it cuts BOTH ways, which is the useful part
 
