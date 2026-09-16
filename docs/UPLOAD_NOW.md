@@ -42,7 +42,7 @@ Save to the project folder, do not commit the PDFs:
 
 ---
 
-## TOMORROW, better machine — do these two, in this order, then stop
+## TOMORROW, better machine — ONE job left, then stop
 
 ### B1 · One full `run_all.py` rebuilt from `raw/X` · **~10 h, unattended**
 ```
@@ -56,11 +56,12 @@ and BayesPrism rows, and produces the Problem 1 / Problem 2 numbers.
 (+0.9161 — expression space barely moves the ordering), so this converts a stated limitation
 into a measured one. Start it before bed and let it run.
 
-### A6 · CDSeq on the anatomic arm · **~30 min, measured not guessed**
-Reference-free, so it is the only instrument that tests "is the ordering a property of the
-atlas?" **without using an atlas.** Everything is ready: CDSeq 1.0.9 installed, counts fetched
-and gated, feasibility measured (300 genes × 12 samples = 11.7 s; use `dilution_factor=100` —
-at 1 it is 8×10⁹ draws and does not finish).
+### ~~A6 · CDSeq~~ · **DONE 2026-09-15, on the slow laptop — nothing to do**
+Reference-free ACS **0.6829** with no atlas at all (p = 0.0009) and **0.7561** with the atlas
+used only to name its output, against `control_random` 0.5122 which fails its own null. It ties
+DWLS exactly and sits at the bottom of the real methods. **It cuts both ways**: the anatomy is
+recoverable without an atlas, *and* the atlas earns its place, since 13 of 14 reference-using
+methods beat it. `docs/ENDPOINT.md` §2e.
 
 **Then stop.** Two weeks is not enough for a second tissue, and the ceiling of nine evaluable
 tumours is a limitation to state, not to fix.
@@ -83,6 +84,13 @@ tumours is a limitation to state, not to fix.
   The published verdict is a legitimate anchor and you have cited it correctly.
 
 ---
+
+**Running here overnight, and nothing depends on it.** The per-arm gene-space comparison —
+D16's one explicitly-unrun question, whether ACS prefers the log reference or the linear one when
+each nominates its own markers. Slow (nu-SVR at 1,593 genes) and possibly hours. If it finishes
+I will fold the number in; if it does not, the paper is unaffected, because the honest sentence
+is already written: *if ACS were to prefer the model-violating reference, that is a finding about
+ACS, not a reason to choose a reference.*
 
 ## Still genuinely open, and honest to leave open
 
