@@ -26,6 +26,25 @@ the ACS ranking and the ranking from real ground truth (bootstrap CI [0.328, 0.9
 14 methods). No correction below changes that number. Three change what it *means*, and they
 are the reason this update exists.
 
+**Which registered sentences are affected.** Each correction below quotes the registered
+wording verbatim so a reader can check it against the entry at <https://osf.io/dm2t8>:
+
+| registered sentence | section | correction |
+|---|---|---|
+| *"Counts are normalised to CPM, **never log-transformed for deconvolution**, the mixing model is additive on the linear scale."* | Analysis Plan → Transformations | **C7** — true of the bulk, **false of the reference** |
+| *"Converted from mRNA share to cell share by a per-type mRNA-content factor, **applied once and centrally**."* | Variables → Measured variables | **C3** — applied **nowhere**; the conversion is the identity |
+| *"**Accuracy: mean absolute error against known composition**"* | Variables → Measured variables | **C12** — the two sides are in different units |
+| *"T cells, because this project's own benchmark places them at the **detection floor**"* | Overview → Foreknowledge | **C11** — backwards; T cells are the largest **over**-call, 4.6–7.9x |
+| *"GBmap … **is never scored and contributes no anatomic claim**."* | Sampling → Data collection | **C13** — true, and it understates GBmap's role in the result |
+| *"**Fifteen** cell-type deconvolution methods…"* | Research Design → Study design | **C1** — both cited pilot runs ran fourteen |
+| *"Two published packages exceeded their wall-clock budget in **one stage**"* | Other → Deviations | **C2** — two stages; both since measured as the genuine packages |
+| *"A wider 270-sample cohort spanning **37 patients**"* | Research Design → Study design | **C5** — 37 **tumours**; the Sample-size section says it correctly |
+| *"C7 carries double weight because a three-step monotone chain is far harder to satisfy by chance"* | Research Design → Study design | **C14** — sound, but **C6** carries the ranking |
+| *"Genes are restricted to a marker subset selected from the reference alone"* | Analysis Plan → Transformations | **C14** — outcome-blind as claimed; subset **size** moves ACS by 0.31 |
+
+Three further entries are not corrections to registered text: **C4** and **C10** are material
+findings the registration did not foresee, and **C8** is a pre-specification.
+
 **What a reader must now be told, in order of how much it matters to the registered question:**
 
 **1. The agreement is narrower than "anatomy tracks truth." Both arms share one reference
@@ -211,11 +230,23 @@ invariance, and the paper must say so rather than let the reader assume otherwis
 
 ## C5 · Cohort figures quoted from the project documentation
 
-> **Registered / protocol:** *"270 laser-microdissected RNA-seq samples across 41 tumors"*
+> **Registered, under *Research Design → Study design*:** *"A wider 270-sample cohort spanning
+> **37 patients**"* — and under *Sampling → Sample size*: *"The release contains 270 RNA-seq
+> samples from **37 tumors**."*
+>
+> **Project protocol, separately:** *"270 laser-microdissected RNA-seq samples across 41 tumors"*
 
-**Correction.** The 2014-11-25 RNA-seq release contains **37** tumours: 10 anatomic + 34
-ISH-cluster, with 7 contributing to both. The 270 / 122 / 10 figures are exact. The 41 likely
-counts the whole Ivy GAP project including tumours that contributed no RNA-seq.
+**The registration's *Sample size* figure is correct and its *Study design* figure is not, and
+they disagree with each other.** Measured against the archive and reconciled against the live
+portal: **270 samples, 37 TUMOURS** — 10 anatomic + 34 ISH-cluster, with 7 contributing to both.
+So *"37 tumors"* is exact; *"37 patients"* is the wrong unit. Ivy GAP as a whole is 42 tumours
+from 41 patients, which is where the protocol's 41 comes from — it counts tumours that
+contributed no RNA-seq.
+
+The 270 / 122 / 10 / 9 figures are exact, and the anatomic structure counts agree with the
+portal's own table exactly (CT 30, IT 24, LE 19, MVP 25, PAN 24). Nine samples exist on the live
+portal but not in the 2014-11-25 archive — a release skew, all in the ISH-cluster study, not a
+parsing error.
 
 **Effect on the primary result:** none. No constraint, threshold or cohort rule reads the number.
 
@@ -233,12 +264,14 @@ the adult subset**.
 
 ## C7 · The reference is built from log-transformed values, and the registration's expression-space assumption is therefore false
 
-> **Registered:** the deconvolution model is stated as bulk expression being a non-negative
-> mixture of per-type reference profiles — the linear mixing model every one of the fifteen
-> methods assumes.
+> **Registered, under *Analysis Plan → Transformations*, verbatim:** *"Counts are normalised to
+> CPM, **never log-transformed for deconvolution**, the mixing model is additive on the linear
+> scale."*
 
-**Correction.** The reference profiles are **not in linear expression space.** The GBmap
-`.h5ad` carries two matrices and the pipeline reads `X`, which is
+**Correction. This registered sentence is false as it applies to the reference.** The intent
+was right and the bulk side is exactly as described — Ivy GAP FPKM, rescaled per column, never
+logged. But the **reference profiles are not in linear expression space.** The GBmap `.h5ad`
+carries two matrices and the pipeline reads `X`, which is
 `log1p(counts x one size factor per cell)`. Verified to float32 precision: the implied size
 factor is constant *within* a cell to 3.67e-07 (float32 epsilon), `corr(s_i, 1/total counts)`
 is 0.999847, and `corr(expm1(X), raw counts)` within a cell is 1.000000 against 0.631419 for
@@ -246,7 +279,15 @@ is 0.999847, and `corr(expm1(X), raw counts)` within a cell is 1.000000 against 
 `docs/OPEN_DEFECTS.md` D16.
 
 So every method solved `bulk (linear FPKM) ~= profile (log space) @ w`. `log1p` compresses a
-100x marker to about 4.6x, which is a violation of the mixing model, not a change of units.
+100x marker to about 4.6x. **The mixing model is not additive on the linear scale on both
+sides**, which is precisely what the registered sentence asserts, and it is a violation of the
+model rather than a change of units.
+
+The asymmetry is worth stating because it is diagnostic: the **pseudobulk arm is internally
+consistent** — its mixtures are summed from the same log matrix the profile is averaged from, so
+a linear model genuinely holds there and that arm survives. The **anatomic arm is not**, because
+its bulk is real linear FPKM. That is one defect explaining why the benchmark looked healthy
+while accuracy on tissue was poor.
 
 **Effect on the primary result: under measurement, and it may be substantial.** It predicts
 two things the project already observes — the systematic tumour under-call of 0.33–0.51 at high
@@ -431,6 +472,156 @@ computed. What moves is its interpretation, and this is the correction a reader 
 Reported as **INCONCLUSIVE** on nine evaluable tumours rather than as a refutation, which is
 what the power supports. Full analysis, including what is explicitly *not* claimed, in
 `docs/EXTERNAL_VALIDATION.md`. Nothing in `constraints.py` was touched; its hash is unchanged.
+
+---
+
+## C11 · The T-cell exclusion was registered for a reason the data contradicts
+
+> **Registered, under *Overview → Explanation of foreknowledge*, verbatim:** *"two exclusions
+> made in advance (**T cells, because this project's own benchmark places them at the detection
+> floor**; and the 148 expression-labelled samples, as circular)"* — and in the frozen constraint
+> file itself: *"This pipeline's own synthetic benchmark puts T cells at the detection floor, so
+> a T-cell constraint would score noise."*
+
+**Correction: the stated mechanism is not merely inaccurate, it is backwards.** T cells are not
+at a detection floor. They are the **largest over-call in the entire panel.** In high-purity
+mixtures, true mean T-cell content is **0.044** and the methods predict:
+
+| MuSiC | BayesPrism | NNLS | CIBERSORTx | SCDC |
+|---|---|---|---|---|
+| 0.202 (**4.6x**) | 0.234 (5.3x) | 0.263 (6.0x) | 0.339 (7.7x) | 0.350 (**7.9x**) |
+
+The methods are not failing to *detect* T cells. They are **inventing** them — T cells are where
+the missing tumour mass goes when every method under-calls tumour by 0.33–0.51.
+
+**The conclusion drawn from the false premise happens to survive, and that should be said
+plainly rather than used as cover.** A constraint on a population estimated at five to eight
+times its true value would indeed score noise, so excluding `T_cell` was the right call. It was
+made for the wrong reason, and the registration states that reason.
+
+**The exclusion stands and the constraint file is not edited.** Changing it would alter the
+hash and void every result computed under it, which is the rule this project set itself.
+
+**Effect on the primary result: none numerically, and it is material to interpretation.** The
+exclusion is exactly what makes the anatomy test **structurally blind to the panel's largest
+error mode**. A method could invent T cells without limit and still score ACS = 1.000. Any claim
+that this framework can certify a method for clinical use has to carry that sentence.
+`docs/CLINICAL_READINESS.md` §3.
+
+---
+
+## C12 · The accuracy arm scored mRNA proportions against cell-fraction truth
+
+> **Registered, under *Variables → Measured variables*, verbatim:** *"**Accuracy: mean absolute
+> error against known composition**, donor-equally aggregated, excluding the Astrocyte column."*
+
+**Correction.** The two sides of that error are in **different units**. `pseudobulk.py` declares
+its truth as `# mixtures x cell types, rows sum to 1 (CELL fractions)` and its own docstring
+warns that *"scoring cell-fraction estimates against RNA-fraction truth is a classic way to get
+this wrong."* Because the mRNA-to-cell conversion is the identity in this pipeline (**C3**), the
+estimates being scored are **mRNA proportions**. The benchmark made the exact error its source
+file warns against, and it arrived by way of the bridge that was never built.
+
+This follows from C3 rather than being independent of it: had the conversion been applied, the
+units would have matched.
+
+**Effect on the primary result: it affects the accuracy half.** Every MAE, RMSE and bias in the
+benchmark compares mRNA share with cell share. The **rank** correlation is more robust than the
+magnitudes — the two quantities are monotonically related within a type — but the accuracy
+*values* are not the quantity the registration names. `docs/OPEN_DEFECTS.md` D15. The fix is
+implemented (`truth_mrna`, computed from pre-normalisation library sizes and gated so it is
+never derived from a log matrix) and awaits the full re-run.
+
+---
+
+## C13 · "GBmap ... is never scored and contributes no anatomic claim" — true, and it understates GBmap's role
+
+> **Registered, under *Sampling → Data collection procedures*, verbatim:** *"Reference dataset:
+> GBmap Core, a 338,564-cell single-cell atlas of glioblastoma, used only to build the cell-type
+> reference profiles and the synthetic mixtures. **It is never scored and contributes no anatomic
+> claim.**"*
+
+**Both sentences are literally true and the second is misleading**, which is why it needs a
+correction rather than a retraction. GBmap is never scored, and it makes no anatomic claim. But
+it **substantially determines the ordering that the study reports**:
+
+- with expression space controlled, only **+0.5099** (Neftel) and **+0.3655** (Darmanis) of the
+  ACS ordering survives a change of atlas (**C4**);
+- an independent group, using **imaging mass cytometry** on matched tissue, scored GBmap-derived
+  markers at **r = 0.06** for immune cells — near chance, and worst of the four approaches they
+  tested (**C10**);
+- and both arms of the registered primary outcome use it, so rho = 0.7501 is substantially two
+  GBmap-based rankings agreeing about GBmap.
+
+**Effect: the registered sentence should be read as scoped to anatomic claims only.** It is not
+a statement that the reference is neutral with respect to the result, and a reader would
+reasonably take it as one. The atlas is the single most influential choice in the study.
+
+---
+
+## C14 · Two registered rationales that measurement qualifies rather than refutes
+
+Neither is an error. Both are statements the registration makes as *reasons*, which later
+measurement puts a number on, and a reader checking the registration against the results will
+notice both.
+
+### "C7 carries double weight because a three-step monotone chain is far harder to satisfy by chance"
+
+> **Registered, under *Research Design → Study design*, verbatim.**
+
+The premise is sound — a three-step chain *is* harder to satisfy by chance. But the weighting
+does not make C7 the constraint that decides anything. **C6 does.** Dropping C6 and rescoring
+moves the ordering to rho = 0.678 with **13 of 14 methods changing rank**; dropping any other
+single constraint moves it far less, and C3 is unanimous across methods and so separates
+nothing. So the ranking rests largely on **one** pairwise constraint that carries **single**
+weight, while the double weight sits on a constraint that is not load-bearing for the ordering.
+`docs/OPEN_DEFECTS.md` D8.
+
+### "Genes are restricted to a marker subset selected from the reference alone, with no reference to any outcome or structure"
+
+> **Registered, under *Analysis Plan → Transformations*, verbatim.**
+
+**True as written, and outcome-blindness is not the whole of the problem.** The selection is
+genuinely blind to outcome and to structure. What it is not blind to is the **reference**, and
+the *size* of the resulting subset turns out to move the score on its own: holding the atlas,
+the algorithm, the bulk, the constraints and the tumours fixed and changing **only markers per
+cell type**, ACS moved **0.3846 → 0.6923** — non-overlapping CIs, non-monotone, and from
+indistinguishable-from-null (p = 0.4357) to significant (p = 0.0016). That swing of **0.31** is
+about three-quarters of the range across which the leaderboard ranks fifteen methods. **C10**,
+`docs/EXTERNAL_VALIDATION.md`.
+
+So the registered sentence describes a real safeguard against one failure mode, and a different
+one was left uncontrolled: not *which* genes, but *how many*.
+
+---
+
+## What the registration got RIGHT, including one prediction it nailed
+
+A corrections file that lists only errors misrepresents the document it corrects. Three things
+in this registration were pre-specified, load-bearing, and vindicated:
+
+**The "no single best method" prediction was correct, and it was specific.**
+
+> **Registered:** *"Is any single method identifiable as best? Hypothesis: no. With nine
+> evaluable tumors and a weighted denominator of 65, ACS is expected to be too coarse to
+> separate adjacent methods; any such claim is reported INCONCLUSIVE unless a paired bootstrap
+> separates them."*
+
+Measured: **a four-way tie at 0.9846** (NNLS, SVR, elastic net, EPIC) and a three-way tie at
+0.9692 (CIBERSORTx, CIBERSORTx S-mode, Bisque). MuSiC's first place rests on **one satisfied
+pair out of 57**. The registration predicted the exact failure mode, gave the mechanism, and
+fixed the reporting rule in advance. That is what a registration is for.
+
+**The negative-control commitment held.** *"If controls score highly, that is published as the
+finding rather than answered by retuning the constraints."* The controls scored **0.3385**
+(random) and **0.1385** (shuffled signature), neither beating its null, and the separation from
+real methods holds under **every** reference atlas tested. The constraint file was never edited
+— including when C5 failed its own external check, and when the pre-specified IMC prediction
+failed (**C10**).
+
+**The declared exclusions were enforced in code, not by convention.** The 148
+expression-labelled samples never reached the scoring set; an assertion aborts the run if one
+does.
 
 ---
 

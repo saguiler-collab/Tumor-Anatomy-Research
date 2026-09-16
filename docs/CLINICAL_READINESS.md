@@ -123,9 +123,15 @@ glioblastoma would be reported as T-cell infiltrated by every method in this pan
 ### And ACS is structurally blind to it
 
 The frozen constraint file carries constraints on **Tumor, Macrophage_Microglia, Endothelial
-and Oligodendrocyte**. `T_cell` carries none — it is *explicitly excluded*, for a defensible
-reason recorded at registration (no anatomic fact about T-cell distribution across these five
-structures is near-definitional enough to pre-register).
+and Oligodendrocyte**. `T_cell` carries none — it is *explicitly excluded*. **This document previously described
+that exclusion as resting on "no anatomic fact about T-cell distribution being
+near-definitional enough to pre-register". That is not what was registered.** The registered
+reason, in `constraints.py` and in the OSF entry, is that *"this pipeline's own synthetic
+benchmark puts T cells at the detection floor, so a T-cell constraint would score noise"* — and
+the table above contradicts its mechanism outright. T cells are not at a detection floor; they
+are the panel's largest **over**-call. The exclusion survives on a different argument (a
+population estimated at 5–8x truth would also score noise), and the correction is published as
+`CORRECTIONS_REGISTRATION.md` **C11** rather than edited into the frozen file.
 
 The consequence is not defensible to leave unsaid: **the anatomy test cannot see the single
 largest error mode in the panel.** A method could invent T cells without limit and score 1.000
