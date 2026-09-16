@@ -11,6 +11,28 @@ Deconvolution in Glioblastoma**
 the orientation: what the project is, why it exists, what it found, and what it cannot
 claim.
 
+> ## THE ANSWER, as of 2026-09-15 — see **[docs/ENDPOINT.md](docs/ENDPOINT.md)**
+>
+> **Anatomic concordance is a valid DETECTOR of whether a deconvolution method is working,
+> and an INVALID RANKER of which one works best.**
+>
+> The constraints are real biology, confirmed in two external single-cell datasets that were
+> never deconvolved (Albiach: Tumor CT>LE **13.34-fold**, p = 0.00005; Darmanis: 4 of 4 gates
+> across 4 patients). Every real method beats its permutation null at p = 0.0001 while
+> `control_random` (0.3385) and `control_shuffled_signature` (0.1385) do not, under **every**
+> reference atlas tested.
+>
+> But the ordering fails four ways: against published ground-truth benchmarks (Mann-Whitney
+> **p = 0.50**); against **imaging mass cytometry** in a **pre-registered** test that failed in
+> the direction named in advance as most damaging (**p = 0.0090**); across reference atlases
+> (only **+0.3655 to +0.5099** survives); and it moves **0.31 on marker-set size alone** — about
+> three-quarters of the range it is used to rank fifteen methods across. It also cannot resolve
+> its own top: a **four-way tie at 0.9846**, with MuSiC's win resting on one pair out of 57.
+>
+> The registered outcome (rho = 0.7501) passed its pre-registered bar, and every analysis that
+> breaks its shared dependence on one atlas weakens it.
+
+
 > ### Registration: **live at <https://osf.io/dm2t8>**
 >
 > The constraint file was written, frozen and SHA-256 hashed
