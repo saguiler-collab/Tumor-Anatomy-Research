@@ -53,6 +53,12 @@ declare now, not a result to wait for.
 converting RNA shares to cell abundance is now **pre-specified and committed before use** (C8),
 because choosing it afterwards would be selection on an outcome.
 
+**And one item is the project's first external validation — which did not pass.** C10: a
+pre-specified prediction that ACS would reproduce a ranking established by imaging mass
+cytometry failed, in the direction named in advance as most damaging, and the follow-up showed
+ACS moving by 0.31 on nothing but marker-set size. Reported as INCONCLUSIVE on nine tumours. It
+does not change rho = 0.7501; it changes what that number can be said to mean.
+
 **And one item is a retraction of a correction, made the same day it was written.** C9 claimed
 no public read counts exist for Ivy GAP. They do — the Allen Institute portal serves per-sample
 RSEM `genes.results` files carrying `expected_count`, which GEO does not mirror. All 270 have
@@ -381,6 +387,50 @@ bitten by once.)*
   integers, is declared at the point of use.
 
 **Registered wording affected:** none directly. This corrects a correction.
+
+---
+
+## C10 · The first external validation of the registered hypothesis, and it did not pass
+
+> **Registered:** the primary outcome is Spearman rho between the ACS ranking and the ranking
+> from real ground truth on held-out synthetic mixtures. The registration did not foresee any
+> test of ACS against a ground truth measured **outside** this project.
+
+**This is new evidence, not a correction to registered text, and it is material.**
+
+Ajaib et al. (**Neuro-Oncology** 2023;25(7):1236–1248) applied single-cell resolution **imaging
+mass cytometry** — 33 antibodies, protein — to ten IDHwt GBM samples with matched bulk RNA-seq,
+and scored deconvolution approaches against it. Their core contrast is one algorithm,
+MCPcounter, differing only in marker set: GBM-specific **r = 0.37** (immune) / 0.43
+(neoplastic), MCPcounter default 0.27, **GBmap-derived 0.06** / 0.22, CIBERSORTx 0.05 / 0.02.
+
+A prediction was pre-specified and committed before the run: **ACS(MCP_GBM) > ACS(MCP_GBmap)**.
+
+**It failed.** ACS gave MCP_GBmap **0.6667** against MCP_GBM's **0.5128**; paired over the same
+nine tumours, delta **+0.1389**, 95% CI [+0.0444, +0.2500], **p = 0.0090**. ACS ranked the
+marker set that protein ground truth places near chance **above** the one it places first, and
+MCP_GBM did not beat its own permutation null (p = 0.0694). The pre-specification had named this
+exact outcome in advance as the most damaging one.
+
+**A confound named in advance turned out to be real**, and it does not rescue the prediction so
+much as deepen the problem. Rebuilding GBmap's markers at Ajaib's density and changing nothing
+else reverses the direction — GBmap falls to **0.3846**, below MCP_GBM, and becomes
+indistinguishable from its null (p = 0.4357). But the same table shows ACS moving from
+**0.3846 to 0.6923** on *nothing but the number of marker genes per cell type*, with
+non-overlapping CIs, non-monotonically. **That swing of 0.31 is about three-quarters of the
+range across which the published leaderboard ranks fifteen methods.**
+
+**Effect on the registered primary result.** The number does not move: rho = 0.7501 stands as
+computed. What moves is its interpretation, and this is the correction a reader most needs:
+
+> The registered outcome measures agreement between two rankings that share a reference atlas.
+> On its first test against a ground truth from outside the project, ACS did not reproduce the
+> external ordering — and ACS was shown to be movable, by an amount comparable to the spread it
+> is used to rank methods across, by a preprocessing choice unrelated to the tissue.
+
+Reported as **INCONCLUSIVE** on nine evaluable tumours rather than as a refutation, which is
+what the power supports. Full analysis, including what is explicitly *not* claimed, in
+`docs/EXTERNAL_VALIDATION.md`. Nothing in `constraints.py` was touched; its hash is unchanged.
 
 ---
 

@@ -647,3 +647,88 @@ sample and writes nothing if any fails.
 not a raw integer count. Rounding, where a model needs integers, is declared at the point of use
 rather than done silently in the loader.
 
+---
+
+# Vendored third-party resources
+
+Everything under `pipeline_packages /` is someone else's work, kept locally so a run is
+reproducible without a network. Nothing there is modified. This section records what each item
+is, where it came from, what it is used for here, and — where it matters — what it does **not**
+contain.
+
+## GBMdeconvoluteR (Ajaib et al.) — marker sets, and an external ground truth
+
+**Source.** `pipeline_packages / repos/GBMDeconvoluteR/GBMDeconvoluteR-main`, the authors'
+Shiny application, GPL-3. Live instance: <https://gbmdeconvoluter.leeds.ac.uk>.
+
+**Paper.** Ajaib S, Lodha D, Pollock S, Hemmings G, Finetti MA, Gusnanto A, Chakrabarty A,
+Ismail A, Wilson E, Varn FS, Hunter B, Filby A, Brockman AA, McDonald D, Verhaak RGW, Ihrie RA,
+Stead LF. *"GBMdeconvoluteR accurately infers proportions of neoplastic and immune cell
+populations from bulk glioblastoma transcriptomic data."* **Neuro-Oncology**
+2023;25(7):1236–1248. PDF vendored alongside the repo.
+
+**What the tool is.** MCPcounter given GBM-tissue-specific marker genes. Not a new algorithm —
+a new marker set for an existing one, which is precisely why it is useful here.
+
+**What the `data/` directory contains** — marker gene sets, all `.rds`:
+
+| file | contents |
+|---|---|
+| `Ajaib_et_al_2022_GBM_Immune_markers.rds` | 183 genes over 8 immune populations: TAM 39, Microglia 49, Mast 26, NK 26, T 16, Monocytes 14, B 8, DC 5 |
+| `Moreno_et_al_2022_lvl3_immune_markers.rds` | 784 genes over 16 populations (50 each, Plasma B 34), including Astrocyte, Endothelial, Oligodendrocyte, OPC, Neuron, Mural, Radial glial |
+| `Moreno_et_al_2022_lvl3_neoplastic_markers.rds` | AC, MES, NPC, OPC |
+| `Neftel_et_al_2019_four_state_neoplastic_markers.rds` | AC, MES, NPC, OPC |
+| `Neftel_et_al_2019_all_neoplastic_markers.rds` | AC, G1S, G2M, MES1, MES2, NPC1, NPC2, OPC |
+| `Wang_et_al_2017_GBM_TI_markers.rds` | 11,529 tumour-intrinsic gene symbols, used by the tool to filter neoplastic markers |
+| `TGCA_GBM_example.rds` | 19,938 genes x 18 TCGA samples, the app's worked example |
+| `plot_colors.rds`, `plot_order.rds` | presentation only |
+
+**Single-cell datasets the markers were derived from**, per the paper's Table 1: **GSE141383**
+(~18k cells, 5 primary IDHwt GBM), **GSE163120** (~21k primary + ~43k recurrent),
+**GSE135437**, **GSE138794**, and **GSE131928** (Neftel, ~23k cells, used for their CIBERSORTx
+reference profile). None of these are downloaded here; only the derived marker lists are used.
+
+**WHAT IT DOES NOT CONTAIN, and this matters.** The repo holds **no imaging mass cytometry data
+and no matched bulk RNA-seq**. The IMC validation cohort — ten IDHwt GBM samples, five paired
+primary/recurrent, a 33-antibody panel, with bulk RNA-seq on the same tissue — is the authors'
+own (Leeds Institute of Medical Research). The vendored PDF carries no data-availability
+statement, and the per-sample IMC counts are not public through this route. So the IMC data
+itself is **not** available to re-analyse; what is available is the authors' **published
+verdict**, which is what this project uses.
+
+**How it is used here.** Two ways, both recorded rather than assumed:
+
+1. **As marker sets** for the genuine MCPcounter, in `scripts/imc_anchored_test.py`. Populations
+   are rewritten into this project's eight-type roster and any population without a roster
+   equivalent — monocytes, DC, mast cells, neutrophils, fibroblasts, mural, radial glial — is
+   **dropped, never folded into a neighbouring type**.
+2. **As an external ground truth**, via the paper's reported IMC correlations. See
+   `prespecified/imc_anchored_prediction.md` and `CORRECTIONS_REGISTRATION.md` C10.
+
+## MCPcounter
+
+**Source.** <https://github.com/ebecht/MCPcounter>, installed from source, version **1.2.0**.
+Its default marker file (`Signatures/genes.txt`, 111 genes over 10 populations) is cached at
+`data/raw/mcp_default_genes.txt` so a run does not depend on GitHub being reachable.
+
+**Why it is in this project.** MCPcounter returns **abundance scores, not proportions.** They do
+not sum to one and are not comparable across cell types — only within a cell type across
+samples. That is a property of the method, and it has a consequence worth stating plainly:
+**ACS can score a method of this class and the pseudobulk accuracy arm structurally cannot**, so
+the registered primary outcome could never have included one.
+
+## CDSeq
+
+**Source.** `pipeline_packages / repos/CDSeq/CDSeq_R_Package-master`, version **1.0.9**
+(2021-03-12), Kang et al. Installed from source.
+
+**Why it is here.** Reference-free deconvolution: it estimates cell types de novo and uses a
+reference only to *label* them. That makes it the one instrument able to test whether the ACS
+ordering is a property of the reference atlas (C4) without using a reference at all. It was
+blocked until Ivy GAP read counts were obtained — see the retraction in C9.
+
+**Measured cost.** The Gibbs sampler walks every **read**, not every gene, so `dilution_factor`
+is the lever: 300 genes x 12 samples at `dilution_factor=1` is 53M reads x 150 iterations = 8e9
+draws and did not finish in four minutes, while the same run at `dilution_factor=100` took
+**11.7 s**.
+
