@@ -58,7 +58,7 @@ depending on what A18 finds.
 | A18 | separate atlas from platform **and expression space** | **DONE** — the atlas, not the platform and not the expression space; magnitude corrected | — |
 | **D16** | GBmap read from a log matrix, not counts | **FOUND 2026-09-15.** Real model violation; forced the D14 correction; does NOT explain D14. Fixing it fully needs B1. | advanced machine |
 | A22 | Ivy GAP **read counts** | **RESOLVED** — they ARE public; 270 RSEM files fetched. C9 retracted. | — |
-| A6 | CDSeq on the anatomic arm | **UNBLOCKED** — the one instrument that tests C4 without a reference | me |
+| A6 | CDSeq on the anatomic arm | **DONE 2026-09-15.** Reference-free ACS **0.6829** (no atlas at all, p = 0.0009) and **0.7561** (atlas for labelling only), against `control_random` 0.5122 which fails its own null. Ties DWLS exactly and sits at the bottom of the real methods. **Cuts both ways** — the anatomy is recoverable without an atlas, AND the atlas earns its place. ENDPOINT §2e | — |
 | A23 | commit the pre-specification | **DONE** — authorised and committed | — |
 | A19 | decide mRNA vs cell proportions (C3) | **DECIDED** — two nested problems, `docs/TWO_PROBLEMS.md` | — |
 | **A21** | score both arms against their own truth | **OPEN** — needs one full run | advanced machine |

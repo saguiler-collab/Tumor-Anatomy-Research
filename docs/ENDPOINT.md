@@ -115,6 +115,53 @@ single pair.
   leaderboard spans ~0.60 to 1.00. A nuisance parameter moves ACS across three-quarters of the
   range it is being used to rank fifteen methods across.
 
+### 2e. The reference-free test — and it cuts BOTH ways, which is the useful part
+
+Run 2026-09-15. Every other method in the panel is handed GBmap, so none of them can separate
+"the methods recover the anatomy" from "GBmap recovers the anatomy". **CDSeq estimates cell types
+de novo from the bulk alone**, which makes it the only instrument that can. It was blocked until
+the Ivy GAP read counts were obtained (**C9**, a retraction).
+
+Genes were chosen by **variance in the bulk**, not from the leaderboard's 657 markers — those
+were selected on GBmap, and using them would reintroduce the dependence this arm exists to
+remove. Every method is scored on the **same 41 constraint–tumour pairs**.
+
+| | ACS | p |
+|---|---|---|
+| MuSiC, CIBERSORTx S-mode | 1.0000 | 0.0001 |
+| elastic net, EPIC, NNLS, SVR | 0.9756 | 0.0001 |
+| BayesPrism, SCDC | 0.9268 | 0.0001 |
+| Bisque | 0.8780 | 0.0001 |
+| **DWLS** | **0.7561** | 0.0002 |
+| **CDSeq — atlas for labelling only** | **0.7561** | 0.0002 |
+| **CDSeq — no atlas at all** | **0.6829** | 0.0009 |
+| `control_random` | 0.5122 | **0.2233 — fails its null** |
+| `control_shuffled_signature` | 0.1951 | 0.9977 |
+
+**Reading one: the constraints are recoverable without any atlas.** A method that never saw
+GBmap — not for estimation, not even for naming its own output — reaches **0.6829 at
+p = 0.0009**, decisively above a random control that does not beat its own null. The anatomic
+signal is in the bulk, not manufactured by the reference. This is the strongest support the
+**detector** claim has.
+
+**Reading two, and it is a genuine counterweight to this project's own thesis: the reference
+earns its place.** CDSeq lands at the *bottom* of the real methods, tying DWLS exactly. Thirteen
+of fourteen reference-using methods beat it. So the reference is not merely a source of
+arbitrary ordering — it contributes real signal that bulk-only estimation does not recover.
+
+**That matters for honesty about C4.** "The ordering is substantially a property of GBmap" is
+established. "GBmap contributes nothing but its own bias" is **not**, and this measurement is
+what rules it out. Both sentences belong in the paper.
+
+**The caveat is severe and is the reason the two CDSeq rows differ.** CDSeq returns anonymous
+cell types, and mapping them onto the roster changed the answer: correlating with the GBmap
+profile called four of eight estimated types **Tumor**; marker enrichment called **none** of them
+Tumor and three of them Astrocyte. The de novo types are not cleanly identifiable against this
+eight-type roster, and a reference-free method that cannot name its own output is of limited
+clinical use whatever it scores.
+
+Artefacts: `results/cdseq_anatomic.json`, `results/cdseq_matched_comparison.json`.
+
 ---
 
 ## Part 3 — The clinical findings, which stand on their own

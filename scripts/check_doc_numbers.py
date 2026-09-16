@@ -31,12 +31,23 @@ WHAT IT DELIBERATELY DOES NOT CHECK
     Requiring the table's own header to declare an ACS column is what makes the result
     trustworthy. A checker that cries wolf is worse than none, because it gets ignored.
 
+  * WHETHER A MEASURED NUMBER IS THE RIGHT ONE FOR ITS CONTEXT. This is the honest limit,
+    and it got looser when subset re-scorings were added. The check is "some artefact holds
+    this value for this method", not "this is the value this sentence should quote". DWLS,
+    for instance, now legitimately has more than twenty distinct ACS values across the
+    leaderboard, the full-database run, two genuine-package re-measurements and several
+    restricted-subset comparisons. A number that is real but quoted in the wrong place —
+    a 41-pair subset score presented as a leaderboard score — passes this checker and is
+    caught only by reading. Denominators are printed beside every subset score for that
+    reason.
+
     python scripts/check_doc_numbers.py           # report
     python scripts/check_doc_numbers.py --strict  # non-zero exit on any mismatch
 """
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -72,6 +83,42 @@ SKIP = ("/.git/", "/node_modules/", "/pipeline_packages/",
         "/results_archive/", "/results_superseded/")
 
 
+def _artefact_rescorings() -> dict[str, set[float]]:
+    """
+    ACS values a method legitimately shows because it was RE-SCORED on a restricted
+    constraint subset, harvested from the artefacts themselves.
+
+    Subset re-scorings are a real and growing class — the IMC marker-source comparison and
+    the CDSeq reference-free arm both score every method on the constraints two arms share,
+    so the same method correctly shows several different ACS values. Those values must still
+    be checkable, and hand-listing them in DECLARED_REMEASUREMENTS would be exactly the
+    "add the value to silence the warning" this script refuses. So they are read back out of
+    the JSON that produced them: a document may print a number only if some artefact holds it.
+
+    Any `{<method>: {"acs": <float>, ...}}` mapping anywhere in a results json counts.
+    """
+    found: dict[str, set[float]] = {}
+
+    def walk(node, key=None):
+        if isinstance(node, dict):
+            if "acs" in node and isinstance(node.get("acs"), (int, float)) and key:
+                name = str(key).split("__")[0].strip().lower()
+                v = float(node["acs"])
+                found.setdefault(name, set()).update({round(v, 4), round(v, 3)})
+            for k, v in node.items():
+                walk(v, k)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v, key)
+
+    for f in sorted((ROOT / "results").glob("*.json")):
+        try:
+            walk(json.loads(f.read_text()))
+        except (ValueError, OSError):
+            continue
+    return found
+
+
 def _leaderboards() -> tuple[pd.Series, pd.Series | None]:
     canon = pd.read_csv(ROOT / "results/anatomic/acs_leaderboard.csv")
     canon = canon.set_index("method")["acs"]
@@ -90,6 +137,7 @@ def _aliases(methods) -> dict[str, str]:
 def scan() -> tuple[list[tuple], int, int]:
     canon, full = _leaderboards()
     alias = _aliases(canon.index)
+    rescored = _artefact_rescorings()
 
     files = [p for p in ROOT.rglob("*.md")
              if not any(s in str(p).replace(str(ROOT), "") for s in SKIP)]
@@ -122,6 +170,7 @@ def scan() -> tuple[list[tuple], int, int]:
                 ok |= {round(float(full[name]), 4), round(float(full[name]), 3)}
             for v in DECLARED_REMEASUREMENTS.get(name, {}):
                 ok |= {round(v, 4), round(v, 3)}
+            ok |= rescored.get(name, set())          # subset re-scorings, read from artefacts
             if val not in ok:
                 problems.append((f.relative_to(ROOT), ln, name, val,
                                  sorted(ok), line.strip()[:100]))
