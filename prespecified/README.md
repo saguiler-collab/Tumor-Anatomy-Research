@@ -11,6 +11,7 @@ before the quantity is used**, so the commit date is the evidence that the order
 | file | what it fixes | registered as |
 |---|---|---|
 | `mrna_content_gbmap_10x.csv` | the per-type mRNA-content vector that converts RNA contributions to cellular abundance in Problem 2 | `CORRECTIONS_REGISTRATION.md` **C8** |
+| `imc_anchored_prediction.md` | the ordering ACS must reproduce if anatomic concordance tracks an orthogonal **protein** ground truth (imaging mass cytometry) | `CORRECTIONS_REGISTRATION.md` **C10** |
 
 ## `mrna_content_gbmap_10x.csv`
 
