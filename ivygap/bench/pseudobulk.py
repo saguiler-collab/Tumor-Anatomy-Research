@@ -79,6 +79,14 @@ class PseudobulkSet:
     #: mRNA-to-cell conversion is the identity in this pipeline, so every accuracy number was
     #: an mRNA-share estimate scored against a CELL-fraction truth. The docstring of
     #: `generate` warned against exactly that. See OPEN_DEFECTS D15.
+    #:
+    #: `None` unless `generate` was given `cell_mrna`, each cell's total BEFORE
+    #: per-cell normalisation. That is not a formality. Derived from the normalised
+    #: matrix instead, this frame is bit-identical to `truth` — every column sums to
+    #: 1e6, so a type's share of the mRNA equals its share of the cells by construction
+    #: — and Problem 1 becomes indistinguishable from Problem 2 (OPEN_DEFECTS D16).
+    #: It is further only MEANINGFUL when those totals came from a counts matrix: read
+    #: from GBmap's `X`, they are sums of log1p values.
     truth_mrna: pd.DataFrame | None = None
     donors: pd.Series = None       # which held-out donor each mixture drew from
     niche: pd.Series = None        # the template used, or "flat"
@@ -128,7 +136,8 @@ def _sample_composition(rng: np.random.Generator, types: list[str],
 
 def generate(expression: pd.DataFrame, meta: pd.DataFrame, donors: list[str],
              n_mixtures: int, seed: int = config.RANDOM_SEED,
-             niche_fraction: float = 0.5) -> PseudobulkSet:
+             niche_fraction: float = 0.5,
+             cell_mrna: pd.Series | None = None) -> PseudobulkSet:
     """
     Pool cells from `donors` into `n_mixtures` mixtures of known composition.
 
@@ -194,13 +203,21 @@ def generate(expression: pd.DataFrame, meta: pd.DataFrame, donors: list[str],
         total = mix.sum()
         cols[f"mix{i:05d}"] = (mix / total * 1e6) if total > 0 else mix
 
-        mrna = np.zeros(len(types))
-        for k, ctype in enumerate(types):
-            ids = picked_by_type.get(ctype)
-            if ids:
-                mrna[k] = float(expression[ids].to_numpy().sum())
-        mrna_sum = mrna.sum()
-        truths_mrna.append(mrna / mrna_sum if mrna_sum > 0 else mrna)
+        # mRNA SHARE, and it has to come from PRE-normalisation library sizes
+        # (OPEN_DEFECTS D16). Summing `expression` here — the first version of this — is
+        # the identity: every column of that matrix is normalised to 1e6, so the sum over
+        # a type's cells is exactly 1e6 * n_cells and `truth_mrna` came out bit-identical
+        # to `truth`. Two different truths, the same numbers, and Problem 1 and Problem 2
+        # indistinguishable. `cell_mrna` is each cell's total BEFORE normalisation; with
+        # no such input there is no mRNA truth, and a missing input is never imputed.
+        if cell_mrna is not None:
+            mrna = np.zeros(len(types))
+            for k, ctype in enumerate(types):
+                ids = picked_by_type.get(ctype)
+                if ids:
+                    mrna[k] = float(cell_mrna.reindex(ids).to_numpy().sum())
+            mrna_sum = mrna.sum()
+            truths_mrna.append(mrna / mrna_sum if mrna_sum > 0 else mrna)
         truths.append(realised)
         used_donor.append(donor)
         used_niche.append(niche or "flat")
@@ -212,7 +229,8 @@ def generate(expression: pd.DataFrame, meta: pd.DataFrame, donors: list[str],
     return PseudobulkSet(
         expression=pd.DataFrame(cols, index=expression.index),
         truth=pd.DataFrame(np.vstack(truths), index=names, columns=types),
-        truth_mrna=pd.DataFrame(np.vstack(truths_mrna), index=names, columns=types),
+        truth_mrna=(pd.DataFrame(np.vstack(truths_mrna), index=names, columns=types)
+                    if truths_mrna else None),
         donors=pd.Series(used_donor, index=names, name="donor"),
         niche=pd.Series(used_niche, index=names, name="niche"),
     )
@@ -220,7 +238,8 @@ def generate(expression: pd.DataFrame, meta: pd.DataFrame, donors: list[str],
 
 def build_train_test(expression: pd.DataFrame, meta: pd.DataFrame,
                      n_test: int = config.N_TEST_PSEUDOBULK,
-                     seed: int = config.RANDOM_SEED
+                     seed: int = config.RANDOM_SEED,
+                     cell_mrna: pd.Series | None = None
                      ) -> tuple[PseudobulkSet, list[str], list[str]]:
     """
     The benchmark's standard setup: split donors, build test mixtures from the held-out
@@ -228,5 +247,6 @@ def build_train_test(expression: pd.DataFrame, meta: pd.DataFrame,
     reference from `train_donors` so no test donor is ever inside the reference.
     """
     train_donors, test_donors = split_donors(meta, seed=seed)
-    test_set = generate(expression, meta, test_donors, n_test, seed=seed + 1)
+    test_set = generate(expression, meta, test_donors, n_test, seed=seed + 1,
+                        cell_mrna=cell_mrna)
     return test_set, train_donors, test_donors

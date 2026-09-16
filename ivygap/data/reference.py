@@ -32,6 +32,7 @@ MuSiC is trying to measure, exactly backwards.
 
 from __future__ import annotations
 
+import hashlib
 import json
 
 import gzip
@@ -255,6 +256,21 @@ def _balanced_cell_sample(obs: pd.DataFrame, max_cells_per_donor_type: int,
     }
 
 
+def _variant_key(sampling: dict) -> str:
+    """
+    A short, stable fingerprint of WHICH BUILD produced a sampling record.
+
+    Only the fields that change what cells and what values went in — not the measured
+    outputs, which would make every re-run look like a new variant.
+    """
+    fields = ("matrix", "seed", "max_cells_per_donor_type", "target_total_cells",
+              "per_type_floor", "annotation_column", "donor_column", "sha256",
+              "cell_filter_applied", "n_cells_after_cell_filter", "gene_id_space",
+              "n_genes_kept")
+    payload = "|".join(f"{k}={sampling.get(k)!r}" for k in fields)
+    return hashlib.sha256(payload.encode()).hexdigest()[:12]
+
+
 def build_from_h5ad(path: Path, name: str = "gbmap",
                     annotation_column: str = "annotation_level_3",
                     donor_column: str = "donor_id",
@@ -264,6 +280,7 @@ def build_from_h5ad(path: Path, name: str = "gbmap",
                     max_total_cells: int = MAX_TOTAL_CELLS,
                     gene_name_column: str | None = "feature_name",
                     restrict_to_genes=None,
+                    matrix: str = "X",
                     export: bool = True,
                     seed: int = config.RANDOM_SEED,
                     **kwargs) -> tuple[ReferenceBundle, pd.DataFrame, pd.DataFrame]:
@@ -405,7 +422,18 @@ def build_from_h5ad(path: Path, name: str = "gbmap",
         rows = obs["_row"].to_numpy()
         assert np.all(np.diff(rows) > 0), "row indices must be strictly increasing"
 
-        X = sparse_dataset(f["X"])[rows]                  # only the chosen cells
+        # WHICH MATRIX (OPEN_DEFECTS D16). `f["X"]` in GBmap is NOT linear expression:
+        # it is log1p(counts * s_i) with one size factor per cell, verified to float32
+        # precision (within-cell spread of the implied s_i is 3.7e-07, and
+        # corr(expm1(X), raw counts) within a cell is 1.000000). Averaging it gives a
+        # profile in LOG space while the bulk is linear FPKM, which is not the mixing
+        # model any method here assumes. `matrix="raw/X"` reads the genuine integer
+        # counts instead. The default stays "X" so archived results remain reproducible;
+        # it is not the defensible choice.
+        if matrix not in f:
+            raise KeyError(f"{path.name} has no matrix {matrix!r}. Present: "
+                           f"{[k for k in ('X', 'raw/X') if k in f]}")
+        X = sparse_dataset(f[matrix])[rows]               # only the chosen cells
         X = X[:, gene_mask]
         X = X.toarray() if hasattr(X, "toarray") else np.asarray(X)
         X = np.asarray(X, dtype="float32")
@@ -424,6 +452,14 @@ def build_from_h5ad(path: Path, name: str = "gbmap",
     expression = (expression.div(totals, axis=1) * 1e6).fillna(0.0)
 
     meta = obs.drop(columns=["_row"])
+    # Each cell's total BEFORE normalisation, carried on `meta` so it survives every
+    # downstream `.loc` the benchmark does. `pseudobulk.generate` needs it to define an
+    # mRNA truth at all: derived from the normalised matrix instead, the mRNA share equals
+    # the cell share by construction (OPEN_DEFECTS D16). It is a genuine library size only
+    # when `matrix` was a counts matrix; read from GBmap's `X` these are sums of log1p
+    # values, which is why the column records where it came from.
+    meta["library_size"] = raw_totals.reindex(meta.index).to_numpy()
+    meta["library_size_from"] = matrix
     sampling.update({
         "source_file": str(path),
         "sha256": config.sha256_file(path),
@@ -435,14 +471,35 @@ def build_from_h5ad(path: Path, name: str = "gbmap",
         "n_duplicate_symbols_dropped": n_dup,
         "annotation_column": annotation_column,
         "donor_column": donor_column,
+        "matrix": matrix,
     })
 
     ref = build_reference(expression, meta, name=name, cell_totals=raw_totals, **kwargs)
     # ReferenceBundle is frozen by design, so the sampling record lives on disk rather
     # than on the object. That is the right place for it anyway: "which cells built this
     # reference" has to survive the process that built them.
-    (config.REFERENCE_DIR / f"reference_sampling_{name}.json").write_text(
-        json.dumps(sampling, indent=2, default=str))
+    #
+    # DO NOT CLOBBER (OPEN_DEFECTS D17). Every variant build — an assay subset, a different
+    # matrix — used to land on `reference_sampling_{name}.json` under the default name, and
+    # `scripts/figure_data.py` reads exactly that path for the leaderboard's sampling
+    # figures. So a sensitivity build silently replaced the published record with its own
+    # numbers. A variant now gets its own file and the canonical one is left alone.
+    sampling["build_variant"] = _variant_key(sampling)
+    canonical = config.REFERENCE_DIR / f"reference_sampling_{name}.json"
+    dest = canonical
+    if canonical.exists():
+        try:
+            prior = json.loads(canonical.read_text()).get("build_variant")
+        except (ValueError, OSError):
+            prior = None
+        if prior is not None and prior != sampling["build_variant"]:
+            dest = canonical.with_name(
+                f"reference_sampling_{name}__{sampling['build_variant']}.json")
+            sampling["not_the_canonical_record"] = (
+                f"This build differs from the one recorded in {canonical.name}, which was "
+                f"left untouched. Do not read this file as the primary reference's "
+                f"provenance.")
+    dest.write_text(json.dumps(sampling, indent=2, default=str))
     if export:
         export_cell_level(expression, meta, name)
     return ref, expression, meta

@@ -20,20 +20,22 @@ depending on what A18 finds.
 
 | # | do this | effort | why |
 |---|---|---|---|
-| ~~A18~~ | ~~Separate atlas from platform~~ | **DONE 2026-09-15** | Settled by a 2x2 built from GBmap's own assay subsets. Hold the atlas, change platform: ordering survives (**+0.817**). Hold platform, change the atlas: it collapses (**+0.221**). **It is the atlas**, costing ~4x what platform costs. D14. |
+| ~~A18~~ | ~~Separate atlas from platform~~ | **DONE, then REOPENED, then ANSWERED 2026-09-15** | The 2x2 ruled platform out (**+0.817**) and I read that as "it is the atlas". **D16 found a third uncontrolled variable**: GBmap's `X` is log-transformed and my alternatives were linear, so every agreeing arm was log-vs-log. Measured it. **Expression space costs almost nothing (+0.9161) — the atlas really is the driver — but with it controlled, Neftel rises 0.038 -> +0.5099 and Darmanis 0.138 -> +0.3655.** The conclusion stands; the claim that the ordering *collapses* is withdrawn, and about half of it survives. No action from you. |
 | **A2** | **Link the registration corrections from the OSF project wiki** | 10 min, browser | `docs/CORRECTIONS_REGISTRATION.md` is written. Post the link at <https://osf.io/vuh64>. A registration with a correction a reader can check beats one nobody re-examined. |
 | ~~A19~~ | ~~Decide C3: mRNA or cell proportions?~~ | **DECIDED 2026-09-15 by the user** | **Both, as two nested problems.** Methodological deconvolution in mRNA proportions (Problem 1); clinical translation in cell proportions (Problem 2). Recorded in `docs/TWO_PROBLEMS.md`. It is a better answer than either option offered, and it exposed D15. |
 | **A21** | **Re-run the benchmark scoring BOTH arms** | 1 full run, list B | Problem 1 against `truth_mrna`, Problem 2 against `truth` after a declared conversion. Publish before/after per method. Bisque must be handled explicitly — it is the one method already in cell-fraction units. |
 | **A5** | Hunt for an immune ground-truth cohort (IHC / flow / CyTOF with matched bulk) | hours, browser | Still the highest scientific value externally. Every method over-calls T cells 4.6–7.9× in high-purity tumour and **ACS cannot see it** — `T_cell` carries no constraint. Real measured immune content either confirms that on tissue or shows it is a pseudobulk artefact. |
 | **A3** | Read tumour percentage off the Ivy GAP H&E images | hours, no compute | Ivy GAP publishes the images. Converts the 0.33–0.51 tumour under-call from a benchmark artefact into a tissue-level result. |
-| **A6** | Wire **CDSeq** (reference-free) | 1–2 h | Now more valuable than when first listed. D14 makes "is it the methods or the reference?" the central question, and a reference-free method is the only one that answers it from the other side. |
+| ~~A6~~ | ~~Wire **CDSeq** on the anatomic arm~~ | **BLOCKED — needs data you may be able to get** | CDSeq is a multinomial **read-count** model. The Ivy GAP bulk is FPKM rescaled to 1e6 — non-integer, columns summing to exactly 1000000.0 — and the published archive contains **four files**: `fpkm_table.csv`, `columns-samples.csv`, `rows-genes.csv`, `README.txt`. **No counts exist to give it.** See A22. A partial path needs nothing from you: CDSeq *can* run on the pseudobulk arm, whose mixtures rebuild from `raw/X` counts, and that still answers "is it the methods or the reference?" from the reference-free side. I will do that. |
+| ~~A22~~ | ~~Ask the Allen Institute for Ivy GAP read counts~~ | **CLOSED 2026-09-15 — do not send the email** | You supplied **GSE107559**, which answers it definitively and better than a reply would have. GEO states *"Raw data not provided for this record"* and *"The raw RNA-Seq and SNP array data will be submitted to dbGaP."* Its FPKM table is **bit-identical** to the archive we already load (25,874 lines, same SHA-256), so the two public distributions are the same data and **neither has counts**. Counts sit behind dbGaP controlled access (PRJNA420740), which needs an institutional signing official. Recorded as a **limitation** in **C9**, not as pending work. |
+| ~~A23~~ | ~~May I commit `prespecified/`?~~ | **AUTHORISED and DONE 2026-09-15** | Committed before the vector is used to compute any ranking, which is what makes it a pre-specification rather than a rationalisation. |
 | **A20** | Wire **RNA-Sieve** (native per-sample intervals) | 2–3 h | The only candidate that addresses the uncertainty gap at source rather than by conformal post-hoc calibration. `CLINICAL_READINESS.md` §4. |
 
 ### LIST B — the advanced machine
 
 | # | do this | why it needs the bigger machine |
 |---|---|---|
-| **B1** | One full `python scripts/run_all.py` | 7.6 GB atlas, 17 methods, ~10 h. Replaces the archived DWLS and BayesPrism rows with the genuine packages, lands EPIC's `refProfiles.var`, and applies whatever A19 decides. **Do A18 and A19 first** — both change what this run should do. |
+| **B1** | One full `python scripts/run_all.py` — **now MUST be built from `raw/X`** | 7.6 GB atlas, 17 methods, ~10 h. D16 changed what this run is for. It is no longer only "replace the reimplementation rows": the reference itself has to be rebuilt from the atlas's **counts** rather than its log-transformed matrix, which touches the profile, the pseudobulk mixtures, the cell-size vector and the single-cell export the R packages read. Also lands EPIC's `refProfiles.var` and Problem 1/Problem 2 scoring. **Do not start it before A18 reports** — if the log transform is what moved the ordering, this run is the paper's primary result rather than a robustness check. |
 | **B2** | A second tissue | Item 2/8. The only route past nine evaluable tumours, and now also the only way to test whether reference sensitivity is specific to Ivy GAP. |
 | **B4** | A reference retaining Mono/DC/Mast | Item 10, to test D8 directly. |
 | **B5** | EcoTyper | 1 GB of package; cell *states* rather than types. Lowest priority. |
@@ -51,7 +53,10 @@ depending on what A18 finds.
 | 15 | GSE84465 (Darmanis) | **DONE** — fetched, tested, and my recommendation corrected | — |
 | 9 | **Neftel cell-type labels** | **DONE 2026-09-15 — the user supplied the authors' own `CellAssignment`** | — |
 | 16 | derive Neftel annotations locally | **NOT NEEDED** — superseded by item 9 | — |
-| A18 | separate atlas from platform | **DONE** — it is the atlas, not the platform | — |
+| A18 | separate atlas from platform **and expression space** | **DONE** — the atlas, not the platform and not the expression space; magnitude corrected | — |
+| **D16** | GBmap read from a log matrix, not counts | **FOUND 2026-09-15.** Real model violation; forced the D14 correction; does NOT explain D14. Fixing it fully needs B1. | advanced machine |
+| A22 | Ivy GAP **read counts** | **CLOSED** — GSE107559 proves they are not public; dbGaP only. Now limitation **C9** | — |
+| A23 | commit the pre-specification | **DONE** — authorised and committed | — |
 | A19 | decide mRNA vs cell proportions (C3) | **DECIDED** — two nested problems, `docs/TWO_PROBLEMS.md` | — |
 | **A21** | score both arms against their own truth | **OPEN** — needs one full run | advanced machine |
 | A2 | link the registration corrections on OSF | written; needs posting | you, 10 min |
@@ -64,14 +69,18 @@ depending on what A18 finds.
 | 11 | paired bulk + single-cell, same subjects | partly answered by 15 | — |
 | 3 | ABSOLUTE purity | obtained; one frozen method only | — |
 
-**Two things now block the paper that did not exist a week ago, and both came from
-work you enabled:**
+**Three things now block the paper, and all three came from work you enabled:**
 
-- **D14** — the method ordering is not reproduced by either independent reference, and both
-  arms of the registered primary result share GBmap. A18 decides how that limitation is
-  written.
-- **D12** — the cell-size conversion has never been applied. A19 decides what the paper says
-  the study measures.
+- **D14** — the ordering is reference-dependent. A18 has now answered *how* dependent: about
+  half survives an independent atlas (0.3655–0.5099), not almost none. That is a limitation to
+  state, no longer an alarm.
+- **D12** — the cell-size conversion has never been applied, and **D16 showed the obvious fix
+  is not enough**: the totals the code would pass are sums of log values, worth ~43% of the
+  true correction. A19's two-problem framing decides what the paper says the study measures;
+  the vector itself is now pre-specified (**C8**) and waiting on **A23**.
+- **D16** — the reference was built from log-transformed values treated as linear. The accuracy
+  arm is internally consistent and survives; the **anatomic arm is not**, and that is the arm
+  the thesis rests on. Closing it needs **B1** on the advanced machine, rebuilt from `raw/X`.
 
 ---
 
@@ -111,7 +120,7 @@ the selection bias constant, and what remains is exactly C1's claim.
 | gate | core | periphery | difference | p | patients |
 |---|---|---|---|---|---|
 | Astrocytes(HEPACAM) | 0.970 | 0.183 | **+0.786** | 0.0001 | **3/3** |
-| Neurons(Thy1) | 0.517 | 0.007 | **+0.510** | 0.0001 | **3/3** |
+| Neurons(Thy1) | 0.517 | 0.007 | **+0.5099** | 0.0001 | **3/3** |
 | Oligodendrocytes(GC) | 0.017 | 0.000 | +0.017 | 0.387 | 1/2 |
 | Microglia(CD45) | 0.006 | 0.002 | +0.004 | 0.290 | 2/4 |
 

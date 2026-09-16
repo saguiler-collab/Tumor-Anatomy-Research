@@ -59,7 +59,22 @@ def run(expression: pd.DataFrame, meta: pd.DataFrame, prefer_r: bool = True,
     t_start = time.time()
 
     # --- donor split, then reference from training donors only ---------------
-    test_set, train_donors, test_donors = pb.build_train_test(expression, meta, n_test=n_test)
+    # PROBLEM 1's TRUTH (OPEN_DEFECTS D16). `cell_mrna` is each cell's pre-normalisation
+    # total. Two conditions, and the second is the one that is easy to miss: the column has
+    # to exist, and it has to have come from a COUNTS matrix. Sums of log1p values are not
+    # mRNA, so supplying them would put a meaningless truth under a meaningful name — worse
+    # than having none. Absent either condition, `truth_mrna` is None and Problem 1 is
+    # simply not scored.
+    cell_mrna = None
+    if "library_size" in meta.columns:
+        src = str(meta["library_size_from"].iloc[0]) if "library_size_from" in meta else "?"
+        if "raw" in src or src == "counts":
+            cell_mrna = meta["library_size"].astype("float64")
+        else:
+            print(f"  Problem 1 NOT scored: library sizes came from {src!r}, which is not a "
+                  f"counts matrix, so they are not mRNA totals (OPEN_DEFECTS D16)")
+    test_set, train_donors, test_donors = pb.build_train_test(expression, meta, n_test=n_test,
+                                                              cell_mrna=cell_mrna)
     train_cells = meta.index[meta["donor"].astype(str).isin(train_donors)]
     reference = build_reference(expression[train_cells], meta.loc[train_cells],
                                 name=config.PRIMARY_REFERENCE)

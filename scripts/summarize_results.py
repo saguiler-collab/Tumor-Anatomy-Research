@@ -773,6 +773,13 @@ def reference_sensitivity_section(results_dir: Path) -> str:
     """
     d = _load_json(results_dir / "reference_sensitivity_darmanis.json")
     n = _load_json(results_dir / "reference_sensitivity_neftel.json")
+    # The linear-GBmap arms (OPEN_DEFECTS D16). Read from the artefacts rather than written
+    # into the prose, so a re-run cannot leave the text asserting a number the files no
+    # longer contain.
+    lin = _load_json(results_dir / "reference_sensitivity_gbmap_linear.json")
+    lin_n = _load_json(results_dir / "reference_sensitivity_gbmap_linear_vs_neftel.json")
+    lin_d = _load_json(results_dir / "reference_sensitivity_gbmap_linear_vs_darmanis.json")
+    have_linear = bool(lin and lin_n and lin_d)
     if d is None and n is None:
         return ""
     out = ["\n## 5d. Does the ordering survive a change of reference atlas?\n",
@@ -785,12 +792,16 @@ def reference_sensitivity_section(results_dir: Path) -> str:
            "| comparison | Spearman between ACS orderings | methods whose rank moves |",
            "|---|---|---|"]
     if d:
+        sup = (f" *(superseded: {lin_d['spearman_between_orderings']:+.4f})*"
+               if have_linear else "")
         out.append(f"| GBmap vs **Darmanis** (5 types, 4 donors) | "
-                   f"**{d['spearman_between_orderings']:+.3f}** | "
+                   f"**{d['spearman_between_orderings']:+.3f}**{sup} | "
                    f"{d['n_ranks_moved']} of {d['n_methods']} |")
     if n:
+        sup = (f" *(superseded: {lin_n['spearman_between_orderings']:+.4f})*"
+               if have_linear else "")
         out.append(f"| GBmap vs **Neftel** (4 types, 20 donors) | "
-                   f"**{n['spearman_between_orderings']:+.3f}** | "
+                   f"**{n['spearman_between_orderings']:+.3f}**{sup} | "
                    f"{n['n_ranks_moved']} of {n['n_methods']} |")
     out.append("| **Darmanis vs Neftel** | **+0.710** | — |")
     out.append("| GBmap 5-type vs GBmap 4-type *(same atlas, different roster)* | "
@@ -807,7 +818,7 @@ def reference_sensitivity_section(results_dir: Path) -> str:
                "alternatives; the two Bayesian models do the reverse. **DWLS is last under all "
                "three**, which is the one stable fact.")
     out.append("")
-    out.append("**The platform confound is resolved: it is the ATLAS.** Both alternatives are "
+    out.append("**The platform confound is resolved.** Both alternatives are "
                "Smart-seq2 while GBmap is 87% 10x, so *\"GBmap is the outlier\"* and *\"10x is "
                "the outlier\"* were perfectly confounded. GBmap carries its own Smart-seq2 "
                "subset — 9,275 cells, 24 donors — and building references from it and from "
@@ -821,12 +832,69 @@ def reference_sensitivity_section(results_dir: Path) -> str:
     out.append("")
     out.append("Hold the atlas and change the platform — same donors' tumours, same annotation "
                "pipeline — and the ordering **survives at 0.817**. Hold the platform and change "
-               "the atlas, Smart-seq2 against Smart-seq2, and it **collapses to 0.221**. As "
-               "ordering lost: platform costs 0.183, the atlas costs **0.779**, roughly four "
-               "times as much, and the two are close to additive.")
+               "the atlas, Smart-seq2 against Smart-seq2, and it drops to **0.221**. Platform "
+               "is not the driver.")
     out.append("")
-    out.append("So the leaderboard's ordering is a property of **GBmap** — not of 10x "
-               "sequencing, not of the roster, and not of thin cell types in the alternatives. "
+    if have_linear:
+        rs = lin["spearman_between_orderings"]
+        rn = lin_n["spearman_between_orderings"]
+        rd = lin_d["spearman_between_orderings"]
+        out.append("### But a third variable was uncontrolled, and correcting it changes the "
+                   "magnitude")
+        out.append("")
+        out.append("Every comparison above read GBmap from its `X` matrix, which is "
+                   "**log-transformed** — `log1p(counts x one size factor per cell)`, verified "
+                   "to float32 precision — while both alternatives were built in **linear** "
+                   "space, Darmanis from raw counts and Neftel from inverted TPM "
+                   "(`docs/OPEN_DEFECTS.md` D16). So every arm that *agreed* was log-vs-log "
+                   "and every arm that *disagreed* was log-vs-linear: atlas and expression "
+                   "space were confounded.")
+        out.append("")
+        out.append("Rebuilding the same atlas, the same cells, the same seed and the same gene "
+                   "space from GBmap's own counts — one argument changed — separates them:")
+        out.append("")
+        out.append("| comparison | atlas | expression space | Spearman |")
+        out.append("|---|---|---|---|")
+        out.append("| GBmap_10x vs GBmap_SS2 | same | same (log) | **+0.817** |")
+        out.append(f"| **GBmap_log vs GBmap_linear** | **same** | **DIFFERENT** | **{rs:+.4f}** |")
+        out.append(f"| GBmap_log vs Neftel | different | different | "
+                   f"{n['spearman_between_orderings']:+.3f} |")
+        out.append(f"| **GBmap_linear vs Neftel** | **different** | **same (linear)** | "
+                   f"**{rn:+.4f}** |")
+        out.append(f"| GBmap_log vs Darmanis | different | different | "
+                   f"{d['spearman_between_orderings']:+.3f} |")
+        out.append(f"| **GBmap_linear vs Darmanis** | **different** | **same (linear)** | "
+                   f"**{rd:+.4f}** |")
+        out.append("")
+        out.append(f"**The conclusion holds; the magnitude does not.** Changing expression "
+                   f"space while holding the atlas costs almost nothing — **{rs:.4f}**, the "
+                   f"highest agreement anywhere in this project, above even a change of "
+                   f"sequencing platform. So the log transform is not what moved the ordering, "
+                   f"and the atlas remains the dominant factor. But once both sides are "
+                   f"linear, Neftel rises from "
+                   f"{n['spearman_between_orderings']:.4f} to **{rn:.4f}** and Darmanis from "
+                   f"{d['spearman_between_orderings']:.4f} to **{rd:.4f}**. **The claim that "
+                   f"the ordering collapses under a change of atlas is withdrawn.** About half "
+                   f"of it survives.")
+        out.append("")
+        out.append("*Internal control:* quanTIseq ignores the supplied reference and uses its "
+                   "built-in TIL10 signature. Across the log and linear arms its ACS is "
+                   "**0.6000 in both — delta exactly 0.0000**, while 13 of the other 14 "
+                   "methods moved. The arms differed in the reference and in nothing else.")
+        out.append("")
+        out.append("*A caveat on levels, not on ordering:* every method's ACS **fell** with "
+                   "the linear reference (0.06-0.23). That cannot be read as the log matrix "
+                   "being better, because the 657 markers were themselves selected on the log "
+                   "reference, so the linear arm was scored through its rival's choice of "
+                   "informative genes. The rank correlations are unaffected — both arms see "
+                   "identical genes — but the levels are not comparable until each reference "
+                   "nominates its own markers, which has not been run. And if ACS were to "
+                   "prefer the model-violating reference, that would be a finding about ACS, "
+                   "not a reason to choose a reference.")
+        out.append("")
+    out.append("So the leaderboard's ordering is substantially a property of **GBmap** — not "
+               "of 10x sequencing, not of the roster, not of expression space, and not of thin "
+               "cell types in the alternatives. "
                "Both assay arms used the 4-type sub-roster, because GBmap's Smart-seq2 subset "
                "has zero B cells and two NK cells; the comparison is sound on the four types "
                "where every arm is well populated and says nothing about the rest.")

@@ -62,6 +62,7 @@ sys.path.insert(0, str(ROOT))
 from ivygap import config                                          # noqa: E402
 from ivygap.anatomic.acs import score as acs_score                 # noqa: E402
 from ivygap.data.load_ivygap import load_cached                    # noqa: E402
+from ivygap.data.reference import select_signature_genes           # noqa: E402
 from ivygap.data.reference import ReferenceBundle, build_from_h5ad  # noqa: E402
 from ivygap.deconv.base import DeconvolutionInput                  # noqa: E402
 from ivygap.deconv.registry import build_methods                   # noqa: E402
@@ -82,6 +83,14 @@ ALTERNATIVES = {
                         ["Tumor", "Macrophage_Microglia", "T_cell", "Oligodendrocyte"]),
     "gbmap_tenx": (ROOT / "data/reference/gbmap_tenx",
                    ["Tumor", "Macrophage_Microglia", "T_cell", "Oligodendrocyte"]),
+    # The SAME atlas read from raw/X instead of X — linear counts instead of
+    # log1p(counts * s_i). This is the arm that separates EXPRESSION SPACE from ATLAS
+    # (OPEN_DEFECTS D16): every agreeing arm of the D14 2x2 was log-vs-log and every
+    # disagreeing arm was log-vs-linear, so the two were confounded. It carries the full
+    # roster, so as `--reference` it runs at leaderboard resolution against the published
+    # GBmap build, and as `--baseline` it substitutes for GBmap in the Neftel and Darmanis
+    # comparisons with expression space held linear on both sides.
+    "gbmap_linear": (ROOT / "data/reference/gbmap_linear", list(config.CELL_TYPES)),
 }
 
 
@@ -91,8 +100,13 @@ def load_alt(name: str, sub_roster: list[str]) -> ReferenceBundle:
     sig = pd.read_csv(d / "sigma.csv", index_col=0)[sub_roster]
     cs = pd.read_csv(d / "cell_size.csv", index_col=0)["cell_size"].reindex(sub_roster)
     prov = json.loads((d / "provenance.json").read_text())
+    # Donor count: the explicit roster where a build recorded one, otherwise the count it
+    # recorded. Some builds write only `n_donors_total`, and failing the whole comparison
+    # over a missing name list would be a schema complaint, not a scientific one.
+    n_donors = (len(prov["donors"]) if "donors" in prov
+                else int(prov["n_donors_total"]))
     return ReferenceBundle(name=name, profile=prof, sigma=sig, cell_size=cs,
-                           n_donors=len(prov["donors"]), donor_profiles=None,
+                           n_donors=n_donors, donor_profiles=None,
                            has_cross_donor_variance=True)
 
 
@@ -147,6 +161,16 @@ def main() -> int:
                     help="arm A. 'gbmap_atlas' rebuilds the full atlas; anything else is a "
                          "stored reference, which is how the assay-subset comparisons are "
                          "run without loading 7.6 GB twice.")
+    ap.add_argument("--gene-space", choices=["leaderboard", "per_arm"],
+                    default="leaderboard",
+                    help="'leaderboard' (default) runs BOTH arms on the 657 genes the "
+                         "published run used. Those genes were selected on the LOG-space "
+                         "GBmap reference, so they favour arm A whenever arm A is that "
+                         "reference: the LEVELS are then not comparable, only the ordering "
+                         "is. 'per_arm' selects each arm's markers from its OWN reference, "
+                         "which makes the levels comparable and the orderings less so, "
+                         "since the two arms no longer see the same genes. Report which "
+                         "was used; neither is the right answer to every question.")
     ap.add_argument("--out", default="")
     args = ap.parse_args()
     ALT_DIR, SUB_ROSTER = ALTERNATIVES[args.reference]
@@ -215,18 +239,42 @@ def main() -> int:
         print(f"BLOCKED: only {len(shared)} shared genes; {config.MIN_GENES_SHARED} required.")
         return 2
 
-    bulk = expr.loc[shared, anat]
-    bulk = bulk / bulk.sum(axis=0) * 1e6
     man = meta.loc[anat]
+
+    def arm_genes(ref, label):
+        """
+        Which genes this arm runs on. Under 'per_arm' each reference nominates its own
+        markers, so neither is scored through the other's choice of what is informative.
+        """
+        if args.gene_space == "leaderboard":
+            return shared
+        picked = select_signature_genes(ref, n_per_type=config.SIGNATURE_GENES_PER_TYPE)
+        g = [x for x in picked if x in bulk_genes]
+        print(f"  {label}: {len(g)} of its own markers usable in the bulk")
+        return g
+
+    def run_arm(tag, ref, label):
+        g = arm_genes(ref, label)
+        if len(g) < config.MIN_GENES_SHARED:
+            print(f"BLOCKED: {label} has only {len(g)} usable genes.")
+            return None, g
+        b = expr.loc[g, anat]
+        b = b / b.sum(axis=0) * 1e6
+        return score_arm(tag, ref.subset_genes(g), b, man,
+                         args.permutations, args.boot, SUB_ROSTER), g
 
     print(f"\n=== arm A: {args.baseline} reference, {len(SUB_ROSTER)}-type "
           f"sub-roster ===")
-    arm_a = score_arm(f"{args.baseline}_{len(SUB_ROSTER)}", gb.subset_genes(shared), bulk,
-                      man, args.permutations, args.boot, SUB_ROSTER)
+    arm_a, genes_a = run_arm(f"{args.baseline}_{len(SUB_ROSTER)}", gb, args.baseline)
     print(f"\n=== arm B: {args.reference} reference, {len(SUB_ROSTER)}-type "
           f"sub-roster ===")
-    arm_b = score_arm(f"{args.reference}_{len(SUB_ROSTER)}", dar.subset_genes(shared),
-                      bulk, man, args.permutations, args.boot, SUB_ROSTER)
+    arm_b, genes_b = run_arm(f"{args.reference}_{len(SUB_ROSTER)}", dar, args.reference)
+    if arm_a is None or arm_b is None:
+        return 2
+    if args.gene_space == "per_arm":
+        ov = len(set(genes_a) & set(genes_b))
+        print(f"\n  gene spaces: arm A {len(genes_a)}, arm B {len(genes_b)}, "
+              f"overlap {ov} ({ov / max(len(set(genes_a) | set(genes_b)), 1):.1%} Jaccard)")
 
     common = [m for m in arm_a if "acs" in arm_a[m] and m in arm_b and "acs" in arm_b[m]]
     a = pd.Series({m: arm_a[m]["acs"] for m in common})

@@ -362,8 +362,8 @@ Every number above rests on one single-cell atlas. Two independent alternative r
 
 | comparison | Spearman between ACS orderings | methods whose rank moves |
 |---|---|---|
-| GBmap vs **Darmanis** (5 types, 4 donors) | **+0.138** | 10 of 13 |
-| GBmap vs **Neftel** (4 types, 20 donors) | **+0.038** | 12 of 13 |
+| GBmap vs **Darmanis** (5 types, 4 donors) | **+0.138** *(superseded: +0.3655)* | 10 of 13 |
+| GBmap vs **Neftel** (4 types, 20 donors) | **+0.038** *(superseded: +0.5099)* | 12 of 13 |
 | **Darmanis vs Neftel** | **+0.710** | — |
 | GBmap 5-type vs GBmap 4-type *(same atlas, different roster)* | **+0.908** | — |
 
@@ -371,16 +371,37 @@ Every number above rests on one single-cell atlas. Two independent alternative r
 
 MuSiC, NNLS and EPIC lead under GBmap and fall to the bottom third under both alternatives; the two Bayesian models do the reverse. **DWLS is last under all three**, which is the one stable fact.
 
-**The platform confound is resolved: it is the ATLAS.** Both alternatives are Smart-seq2 while GBmap is 87% 10x, so *"GBmap is the outlier"* and *"10x is the outlier"* were perfectly confounded. GBmap carries its own Smart-seq2 subset — 9,275 cells, 24 donors — and building references from it and from GBmap's 10x cells alone completes a 2x2:
+**The platform confound is resolved.** Both alternatives are Smart-seq2 while GBmap is 87% 10x, so *"GBmap is the outlier"* and *"10x is the outlier"* were perfectly confounded. GBmap carries its own Smart-seq2 subset — 9,275 cells, 24 donors — and building references from it and from GBmap's 10x cells alone completes a 2x2:
 
 | | same atlas | different atlas |
 |---|---|---|
 | **same platform** | — | GBmap_SS2 vs Neftel **+0.221** |
 | **different platform** | GBmap_10x vs GBmap_SS2 **+0.817** | GBmap_10x vs Neftel **+0.038** |
 
-Hold the atlas and change the platform — same donors' tumours, same annotation pipeline — and the ordering **survives at 0.817**. Hold the platform and change the atlas, Smart-seq2 against Smart-seq2, and it **collapses to 0.221**. As ordering lost: platform costs 0.183, the atlas costs **0.779**, roughly four times as much, and the two are close to additive.
+Hold the atlas and change the platform — same donors' tumours, same annotation pipeline — and the ordering **survives at 0.817**. Hold the platform and change the atlas, Smart-seq2 against Smart-seq2, and it drops to **0.221**. Platform is not the driver.
 
-So the leaderboard's ordering is a property of **GBmap** — not of 10x sequencing, not of the roster, and not of thin cell types in the alternatives. Both assay arms used the 4-type sub-roster, because GBmap's Smart-seq2 subset has zero B cells and two NK cells; the comparison is sound on the four types where every arm is well populated and says nothing about the rest.
+### But a third variable was uncontrolled, and correcting it changes the magnitude
+
+Every comparison above read GBmap from its `X` matrix, which is **log-transformed** — `log1p(counts x one size factor per cell)`, verified to float32 precision — while both alternatives were built in **linear** space, Darmanis from raw counts and Neftel from inverted TPM (`docs/OPEN_DEFECTS.md` D16). So every arm that *agreed* was log-vs-log and every arm that *disagreed* was log-vs-linear: atlas and expression space were confounded.
+
+Rebuilding the same atlas, the same cells, the same seed and the same gene space from GBmap's own counts — one argument changed — separates them:
+
+| comparison | atlas | expression space | Spearman |
+|---|---|---|---|
+| GBmap_10x vs GBmap_SS2 | same | same (log) | **+0.817** |
+| **GBmap_log vs GBmap_linear** | **same** | **DIFFERENT** | **+0.9161** |
+| GBmap_log vs Neftel | different | different | +0.038 |
+| **GBmap_linear vs Neftel** | **different** | **same (linear)** | **+0.5099** |
+| GBmap_log vs Darmanis | different | different | +0.138 |
+| **GBmap_linear vs Darmanis** | **different** | **same (linear)** | **+0.3655** |
+
+**The conclusion holds; the magnitude does not.** Changing expression space while holding the atlas costs almost nothing — **0.9161**, the highest agreement anywhere in this project, above even a change of sequencing platform. So the log transform is not what moved the ordering, and the atlas remains the dominant factor. But once both sides are linear, Neftel rises from 0.0379 to **0.5099** and Darmanis from 0.1384 to **0.3655**. **The claim that the ordering collapses under a change of atlas is withdrawn.** About half of it survives.
+
+*Internal control:* quanTIseq ignores the supplied reference and uses its built-in TIL10 signature. Across the log and linear arms its ACS is **0.6000 in both — delta exactly 0.0000**, while 13 of the other 14 methods moved. The arms differed in the reference and in nothing else.
+
+*A caveat on levels, not on ordering:* every method's ACS **fell** with the linear reference (0.06-0.23). That cannot be read as the log matrix being better, because the 657 markers were themselves selected on the log reference, so the linear arm was scored through its rival's choice of informative genes. The rank correlations are unaffected — both arms see identical genes — but the levels are not comparable until each reference nominates its own markers, which has not been run. And if ACS were to prefer the model-violating reference, that would be a finding about ACS, not a reason to choose a reference.
+
+So the leaderboard's ordering is substantially a property of **GBmap** — not of 10x sequencing, not of the roster, not of expression space, and not of thin cell types in the alternatives. Both assay arms used the 4-type sub-roster, because GBmap's Smart-seq2 subset has zero B cells and two NK cells; the comparison is sound on the four types where every arm is well populated and says nothing about the rest.
 
 **And it exposes a shared dependence in the headline.** The rho = 0.750 above compares the ACS ranking with the pseudobulk-accuracy ranking, and **both arms use GBmap** — the ACS arm deconvolves Ivy GAP against it, the pseudobulk arm builds its mixtures from its cells. A method that suits GBmap scores well on both, so part of that agreement is agreement about the reference rather than about the tissue. That does not make rho = 0.750 wrong; it means it measures something narrower than *anatomy tracks truth* — agreement between two GBmap-based rankings. See `docs/OPEN_DEFECTS.md` D14.
 

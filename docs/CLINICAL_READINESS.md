@@ -235,10 +235,13 @@ measured single-cell composition in a second specimen (§5b, 3 of 4 testable con
 p ≤ 0.0008), and C1's direction across four patients (§5c).
 
 **In favour, with a caveat that turns out to be load-bearing.** That rho = 0.75 compares two
-rankings **that share a reference atlas**. §5d shows the ACS ordering is a property of GBmap:
-holding the atlas and changing the sequencing platform preserves it (rho 0.817), holding the
-platform and changing the atlas destroys it (0.221). So the agreement the study was built to
-test holds *on GBmap*, and what it measures is narrower than "anatomy tracks truth".
+rankings **that share a reference atlas**. §5d shows the ACS ordering is substantially a
+property of GBmap: holding the atlas and changing the sequencing platform preserves it
+(rho 0.817) or the expression space (0.9161), while changing the atlas with both controlled
+leaves only about half of it (0.5099 against Neftel, 0.3655 against Darmanis). So the agreement
+the study was built to test holds *on GBmap*, and what it measures is narrower than "anatomy
+tracks truth". *(Corrected 2026-09-15: the earlier figure of 0.221 was confounded with
+expression space — see OPEN_DEFECTS D16.)*
 
 **Against.** ACS cannot resolve the top of its own leaderboard, its ordering below the top
 rests largely on one constraint, it is **structurally blind to the largest error mode in the

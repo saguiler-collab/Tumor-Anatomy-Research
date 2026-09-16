@@ -577,3 +577,24 @@ CIBERSORTx's S-mode exists for.
 eight. What it makes possible: `SCDC ENSEMBLE` non-degenerate for the first time (D2), and a
 reference-sensitivity check that separates "how these methods behave" from "how these methods
 behave *on GBmap*".
+
+---
+
+## Independent confirmation of the bulk matrix — 2026-09-15
+
+The Ivy GAP FPKM table is published twice, four years apart, by different routes. Both were
+compared here rather than assumed equivalent:
+
+| | lines | SHA-256 (first 16) |
+|---|---|---|
+| Allen Institute archive, `gene_expression_matrix_2014-11-25.zip` | 25,874 | `72a97ea792a81098` |
+| **GEO GSE107559**, `GSE107559_ivygap_fpkm_table.csv.gz` | 25,874 | `72a97ea792a81098` |
+
+**Bit-identical.** The input this study deconvolves is the same matrix the Ivy GAP authors
+deposited alongside Puchalski et al., *Science* 2018;360(6389):660–663 (PMID 29748285), so the
+provenance of the bulk does not rest on one download.
+
+The same record also establishes what is **not** available: *"Raw data not provided for this
+record"*, and *"The raw RNA-Seq and SNP array data will be submitted to dbGaP."* There are no
+public read counts for Ivy GAP by either route. See `CORRECTIONS_REGISTRATION.md` **C9**.
+

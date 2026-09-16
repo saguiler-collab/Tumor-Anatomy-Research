@@ -50,18 +50,29 @@ Separating the problems makes the disagreement visible instead of absorbing it.
 
 **Estimand.** Each cell type's share of the bulk mRNA pool.
 
-**Truth.** `PseudobulkSet.truth_mrna`, added 2026-09-15: the same mixtures' composition expressed
-as each type's share of the mRNA, computed from the cells actually drawn.
+**Truth.** `PseudobulkSet.truth_mrna`. **Its first implementation was a no-op and has been
+replaced** (`OPEN_DEFECTS.md` D16): it summed the mixture's own expression matrix over each
+type's cells, and every column of that matrix is normalised to 1e6, so the sum came to exactly
+`1e6 x n_cells` and the mRNA truth was **bit-identical to the cell truth**. Problem 1 and
+Problem 2 had the same truth under two names. It is now computed from each cell's total
+*before* normalisation, and it is `None` when those totals are unavailable rather than
+imputed — `tests/test_mrna_truth_is_not_the_cell_truth.py` asserts the two truths differ, with
+a negative control showing they correctly coincide when no type carries more mRNA than another.
 
 **This is what the study has in fact been measuring all along**, because the conversion was the
 identity. Reporting it as Problem 1 is therefore not a change of result; it is a correct
-description of the existing one.
+description of the existing one — **with one caveat that D16 has since added.** The reference
+profiles are in log space, not linear expression, so what was measured is each type's share of
+a log-transformed pool against a linear-FPKM bulk. Problem 1's *estimand* is right; the
+existing numbers for it are pending the linear rebuild.
 
 **What the project already knows about Problem 1**, and it is the substantive part:
 
-- **The ordering is a property of the reference atlas, not of the methods.** Holding the atlas and
-  changing the sequencing platform preserves it (rho 0.817); holding the platform and changing the
-  atlas destroys it (0.221). `RESULTS.md` §5d, D14.
+- **The ordering is not a property of the methods** — it moves when the reference changes.
+  Holding the atlas and changing platform preserves it (rho 0.817); changing the atlas destroys
+  it (0.221). **Whether the cause is the atlas or the expression space is now under
+  measurement**: every agreeing arm of that 2x2 was log-vs-log and every disagreeing arm was
+  log-vs-linear, so the two were confounded (D16). `RESULTS.md` §5d, D14.
 - **Separation from the negative controls is robust** under every reference tested. No control
   approaches a real method in any arm.
 - **One design property measurably helps: weighting genes by cross-donor consistency.**
@@ -82,10 +93,22 @@ That needs a per-type mRNA-content vector, and **this is where the project's rea
 lives**:
 
 - **The conversion has never been applied** (D12), because `run_benchmark` rebuilds the reference
-  from an already-normalised matrix without passing `cell_totals`.
-- **When it is available, it is not small.** The frozen factors span **737×** (B cell 3,624 to
-  Astrocyte 197,731). The Darmanis reference gives a 1.63× spread; GBmap's assay subsets 1.58–1.60×.
-  Three sources, three answers.
+  from an already-normalised matrix without passing `cell_totals`. **And the obvious fix is not
+  enough:** the `cell_totals` that build captures are sums of **log1p** values, which compress
+  Tumor/T_cell from 2.245 to 1.292 — so wiring them through would apply the correction at ~43%
+  of its magnitude and look solved (D16). D16 has to be fixed first.
+- **"Three sources, three answers" is RESOLVED, and the disagreement was an artefact.** The
+  **737×** spread (B cell 3,624 to Astrocyte 197,731) is **platform confounding, not biology**.
+  GBmap pools 10x and Smart-seq2; SS2 cells carry ~100× the reads of 10x cells (Tumor 785,065
+  vs 8,301) and the platform mix differs sharply by type (T_cell 52,590 10x against 101 SS2).
+  Within 10x alone the spread is **2.897×**, and within SS2 the ordering does not even survive
+  (Tumor/T_cell 0.926), because full-length read count tracks library prep rather than input
+  RNA. So the three "answers" were one biological signal plus one artefact of pooling.
+  **The vector is now pre-specified** on mechanism — UMIs count molecules — as GBmap's 10x
+  per-type mean UMI count, in `prespecified/mrna_content_gbmap_10x.csv` and registered as
+  `CORRECTIONS_REGISTRATION.md` **C8**, fixed before its effect on any ranking was computed.
+  Its Tumor/T_cell of 2.245 sits beside the predecessor's independent 1.69 and the literature's
+  1.58–1.63 — reassurance, not the selection criterion.
 - **It is unrecoverable from some data entirely.** Neftel's published matrix is TPM, already
   normalised per cell, so per-cell mRNA content is gone at source. That reference cannot support
   Problem 2 at all, and says so in its provenance.

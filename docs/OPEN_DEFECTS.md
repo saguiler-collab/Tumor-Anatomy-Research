@@ -23,8 +23,10 @@ keeping, marked RESOLVED at the top.
 | **D11** EPIC returns the within-subset mRNA share, not the full-space one | **OPEN** — but see D12: the conversion it is applied to is the identity, so the practical effect on the published numbers is nil |
 | **D12** the cell-size correction has never been applied — it is the identity | **OPEN, high** — supersedes most of D1; no number changes, but the registration says otherwise |
 | **D13** EPIC runs with `refProfiles.var` unset, so its gene weighting is off; its output is mislabelled as a cell fraction | **OPEN, high** — EPIC is joint-2nd at 0.9846 |
+| **D17** variant reference builds overwrote the primary reference's sampling record | **FIXED** 2026-09-15 — a figure script reads that path, so a sensitivity build's numbers could be published as the leaderboard's. Variant builds now get their own file. |
+| **D16** the GBmap reference is built from LOG-transformed data treated as linear | **OPEN, highest** — model violation in the signature every number was solved against, and it may be the real cause of D14 rather than "the atlas" |
 | **D15** the accuracy arm scores mRNA-share estimates against CELL-fraction truth | **OPEN, high** — follows from D12; affects every MAE/RMSE/bias. Both truths are now emitted; which to score against is answered by the two-problem framing |
-| **D14** the ACS ordering does not survive a change of reference atlas, and GBmap is the outlier | **OPEN, highest** — bears on the headline, not on one method. Confound RESOLVED 2026-09-15 by a 2x2: holding the atlas and changing platform preserves the ordering (0.817), holding platform and changing the atlas destroys it (0.221). **It is the atlas.** |
+| **D14** the ACS ordering does not survive a change of reference atlas, and GBmap is the outlier | **OPEN, highest** — bears on the headline, not on one method. 2x2 showed platform is not the driver (0.817 vs 0.221). But **D16 supplies a confound the 2x2 does not break**: every agreeing arm is log-vs-log and every disagreeing arm is log-vs-linear. The observation stands; the attribution to "the atlas" is IN QUESTION. |
 
 ---
 
@@ -1395,6 +1397,17 @@ stratification, and state that the cause is not established.
 **Severity: this is the most consequential finding in the project. It bears on the headline
 claim, not on a single method. Measured 2026-09-14.**
 
+> **CORRECTED 2026-09-15 — read this before the numbers below.** The comparisons in this entry
+> were confounded: GBmap was read from a **log-transformed** matrix while both alternatives
+> were built in **linear** space (D16). Rebuilding GBmap from its own counts and repeating them
+> keeps the **conclusion** — the ordering is a property of the atlas — but **overturns the
+> magnitude**. Neftel rises from **0.038 to 0.5099** and Darmanis from **0.138 to 0.3655**, while
+> changing expression space alone within GBmap costs almost nothing (**0.9161**). So roughly
+> half the ordering survives an atlas change. The claim that it collapses to near zero is
+> **withdrawn**; the tables below are kept as the superseded measurement. The corrected table
+> is in D16, and the reading in the three sections that follow is revised at the end of this
+> entry.
+
 ### What was measured
 
 Two independent alternative references were built from other groups' data using **those
@@ -1411,7 +1424,9 @@ only thing varying is which cells built the reference.
 | GBmap 5-type vs GBmap 4-type | **+0.908** | — |
 
 Artefacts: `results/reference_sensitivity_darmanis.json`,
-`results/reference_sensitivity_neftel.json`.
+`results/reference_sensitivity_neftel.json`. **Both superseded** by
+`results/reference_sensitivity_gbmap_linear_vs_darmanis.json` and
+`..._gbmap_linear_vs_neftel.json`, which control expression space.
 
 ### The three readings, and why only one survives
 
@@ -1527,6 +1542,39 @@ which is precisely what the leaderboard claims to provide.
 
 ---
 
+### REVISED READING — 2026-09-15, after expression space was controlled
+
+The three readings above were argued against a 0.038/0.138 collapse. With the confound removed
+the numbers are 0.5099 and 0.3655, and two of the three readings need restating.
+
+**"The alternatives are just bad references."** Still ruled out, and now more comfortably.
+Darmanis and Neftel agree with each other at 0.710, and each now agrees with GBmap at 0.37–0.51
+rather than at ~0.1. Three references that partially agree is a far more ordinary picture than
+one outlier against two.
+
+**"It is the roster, not the reference."** Unaffected. That control held the atlas and the
+expression space fixed, so the confound never touched it (0.908).
+
+**"GBmap is the outlier."** **This is the part that does not survive as stated.** GBmap-linear
+agrees with Neftel at 0.5099 — better than Neftel and Darmanis's 0.710 only by comparison, but
+no longer the near-zero that made "outlier" the natural word. What the corrected numbers
+support is weaker and more useful: **the ordering is roughly half a property of the atlas and
+half shared across atlases**, and no single reference reproduces another's ranking closely
+enough for a leaderboard built on one to be presented as a property of the methods.
+
+**What the paper should say.** Not "the ordering collapses under a change of reference", which
+is now measurably false, but: *ACS rankings are reference-dependent — about half the ordering is
+preserved across independent atlases (Spearman 0.37–0.51), while changing sequencing platform
+(0.82) or expression space (0.92) within one atlas costs much less. A ranking computed against a
+single reference should be reported with that dependence stated.* That is a defensible limitation
+rather than an alarm, and it is the honest version.
+
+**The lesson, which belongs in the methods.** The original 2x2 was a real design and it gave a
+real answer about platform. It still missed a variable, because both of its arms were built by
+me from the same code path and the alternatives were not. **A near-controlled contrast is only as
+good as the list of things you thought to hold fixed** — and the way this one was caught was not
+by re-reading the design but by asking an unrelated question about CDSeq's input format.
+
 ## D15 · The accuracy arm scores mRNA-share estimates against CELL-fraction truth
 
 **Severity: high. It affects every MAE, RMSE and bias in the benchmark, and therefore the
@@ -1604,3 +1652,265 @@ and may change the accuracy ranking. Two rules apply:
    must be reported separately with the reason. Leaving it as-is would advantage it under
    Problem 2 and disadvantage it under Problem 1, in both cases for a reason unrelated to its
    accuracy.
+
+
+---
+
+## D16 · The GBmap reference is built from LOG-transformed data treated as linear, and it puts D14's conclusion in question
+
+**Severity: high. It affects the signature matrix every published number was solved against,
+and it forced a correction to D14's published magnitude. Found and measured 2026-09-15.**
+
+**It is NOT, however, the cause of D14** — that hypothesis was tested and rejected; see below.
+Recording that here because the hypothesis was stated before it was measured.
+
+### What the two matrices are
+
+`gbmap_core.h5ad` carries two. `build_from_h5ad` reads `f["X"]`.
+
+| | `X` — what the pipeline read | `raw/X` — what it ignored |
+|---|---|---|
+| integer? | **no** | **yes** |
+| per-cell total | ~1,300–2,200 | 3,473–10,060 (10x per-type means) |
+| nonzero support | identical to `raw/X` | identical to `X` (Jaccard **1.000**, 300 scattered cells) |
+
+### The transform, pinned to float32 precision
+
+For every nonzero entry, solve for the per-cell factor implied by `X = log1p(counts * s_i)`:
+
+```
+within-cell relative spread of s_i   median 3.67e-07   max 5.29e-07     (float32 eps)
+corr(s_i, 1 / total counts)          0.999847
+corr(expm1(X), raw counts) in a cell 1.000000
+corr(X,       raw counts) in a cell  0.631419
+```
+
+The within-cell spread of `s_i` is **float32 epsilon**, so the identification is exact:
+
+> **`X` = log1p(counts x one size factor per cell).** Library-size normalisation, then log1p.
+
+Two things this does *not* claim. The size factor's absolute scale is not pinned — `s_i *
+total` is ~5,010 with 24% spread, so GBmap normalised against a denominator computed on a gene
+set that is not the 27,632 genes in `raw/X`. That is a provenance curiosity and the defect does
+not rest on it. And the CELLxGENE field `uns['X_approximate_distribution'] = 'count'` names the
+distribution family the values approximate; it is not a statement that `X` holds counts, and it
+must not be read as licence to treat them as linear.
+
+### Why it is a model violation, not a scaling quibble
+
+The profile is a **mean over cells of `X`** — a mean of log values. Every method then solves
+
+    bulk (linear FPKM)  ~=  profile (log space) @ w
+
+`log1p` compresses high expressers: a marker at 100x its background in linear space sits at
+about 4.6x in log space. Least squares against a compressed signature is not the mixing model
+any of the fifteen methods assumes.
+
+### What it predicts, and the project observes
+
+**The systematic tumour under-call — the study's largest clinical finding.** Every method
+under-calls tumour by 0.33–0.51 at high purity (`CLINICAL_READINESS.md` §3). Compressing the
+signature's dynamic range shrinks the apparent magnitude of the dominant component.
+
+**Ordinal results healthier than magnitudes.** `log1p` is monotone, so a marker still peaks in
+its own type and rank statistics largely survive; ACS is ordinal, MAE and bias are not. That
+the rank-based results look reasonable while the magnitudes are poor is exactly what a monotone
+distortion of the signature predicts.
+
+### It also breaks the D12 fix, which was not previously visible
+
+`build_from_h5ad` avoids the normalise-then-measure trap deliberately, and says so in a comment
+— it captures `raw_totals` before normalising and passes them as `cell_totals`. But
+`raw_totals` is the per-cell sum of **`X`**, so it is a sum of log values, not a library size.
+Measured on 8,528 cells stratified by (type, platform), within 10x:
+
+| | LOG space (`cell_totals` as passed) | COUNT space (true) |
+|---|---|---|
+| cell_size spread max/min | 1.576 | **2.897** |
+| Tumor / T_cell | 1.292 | **2.245** |
+
+So repairing D12 by wiring `cell_totals` through — the obvious fix — would apply a correction
+at **about 43%** of its true magnitude and call the problem solved. D12 and D16 have to be
+fixed together, and D16 first.
+
+**And the pooled vector is worse than useless.** Over both platforms the count spread is
+**73.9x**, not 2.9x. GBmap mixes 10x and Smart-seq2; SS2 cells carry ~100x the read count of
+10x cells (Tumor 785,065 vs 8,301) and the platform mix differs sharply by type (T_cell is
+52,590 10x against 101 SS2; Astrocyte 77 against 80). A cell_size vector pooled over both
+measures **platform, not mRNA content** — and within SS2 alone Tumor/T_cell is 0.926, i.e. the
+ordering does not even survive, because full-length read counts track library prep rather than
+input RNA. Only the **10x** vector is admissible for an mRNA-content claim, and the ~737x
+figure circulating as a candidate for Problem 2 is the signature of a pooled, confounded
+estimate. Measured in `results/gbmap_cell_size_by_space.json`.
+
+### Which arm it breaks, and which it does not — this is the useful part
+
+The two arms are not equally affected, and the difference is diagnostic.
+
+**The accuracy arm is internally CONSISTENT.** `pseudobulk.make_pseudobulk` builds each mixture
+as `expression[picked].sum(axis=1)` from the same log-space matrix the profile is averaged from
+(`run_benchmark.py:311` -> `build_train_test`). A sum of per-cell log vectors against a mean of
+per-cell log vectors is a linear model that genuinely holds. So the donor-held-out benchmark is
+a fair test of the *solvers* — and that is why it looks healthy.
+
+**The anatomic arm is INCONSISTENT.** The Ivy GAP bulk is linear FPKM. There the model is
+linear-bulk against log-profile, and it does not hold. The anatomic arm is the one the thesis
+rests on.
+
+That asymmetry explains the pattern the project has been unable to account for: a reasonable
+pseudobulk benchmark alongside poor absolute accuracy on real tissue. It is not two unrelated
+observations; it is one defect that spares the arm where both sides share the distortion.
+
+**And `truth_mrna` currently measures the wrong thing.** It was added for Problem 1 as a share
+of per-type mRNA, but it is computed as `expression[ids].to_numpy().sum()` on the log matrix —
+a share of summed log1p values, which is not an mRNA share. Problem 1 cannot be scored against
+it until it is recomputed from `raw/X`.
+
+### The R packages are handed log values in a file named `sc_counts`
+
+`export_cell_level` writes `expression` — the log-space matrix — to
+`sc_counts_{name}.csv.gz`, and `r_bridge.set_cell_source` hands it to MuSiC, SCDC, BayesPrism,
+Bisque and DWLS as their single-cell input. Measured on the committed export:
+
+```
+sc_counts_gbmap.csv.gz   15,311 cells
+  integer-valued: False
+  nonzero min 123.5818   median 497.2839   max 3586.2158
+```
+
+Non-integer, and floored near 123 rather than 1. **BayesPrism is a Bayesian count model** and
+MuSiC and SCDC derive cross-subject variance from counts; each one's input contract is violated,
+and the filename asserts the opposite of what the file contains. This bears directly on the
+re-measured "genuine package" numbers (DWLS 0.7846, BayesPrism 0.8154): the inputs were verified
+equivalent *to each other*, which they were, but both were in log space.
+
+### It put D14's ATTRIBUTION in question — and the measurement has now answered
+
+D14 concluded the ACS ordering is a property of the atlas, on a 2x2 over atlas and platform.
+But every agreeing arm of that 2x2 was log-vs-log and every disagreeing arm was log-vs-linear:
+my alternative references were built from raw counts (Darmanis) and inverted TPM (Neftel), so
+"different atlas" and "different expression space" were confounded in exactly the pattern D14
+read as atlas. `scripts/build_gbmap_linear_reference.py` rebuilt the same atlas, same cells,
+same seed, same sampler, same 657-gene space, changing one argument — `matrix="raw/X"` — and
+the three new arms break the confound.
+
+| comparison | atlas | expression space | Spearman |
+|---|---|---|---|
+| GBmap_10x vs GBmap_SS2 | same | same (log) | 0.8170 |
+| **GBmap_log vs GBmap_linear** | **same** | **DIFFERENT** | **0.9161** |
+| GBmap_log vs Neftel | different | different | 0.0379 |
+| **GBmap_linear vs Neftel** | **different** | **same (linear)** | **0.5099** |
+| GBmap_log vs Darmanis | different | different | 0.1384 |
+| **GBmap_linear vs Darmanis** | **different** | **same (linear)** | **0.3655** |
+
+**D14's direction survives; its magnitude does not.**
+
+Changing expression space while holding the atlas costs almost nothing: **0.9161**, the highest
+agreement of any comparison in the project, higher even than changing sequencing platform within
+the same atlas (0.8170). So the log transform cannot be what destroyed the ordering.
+
+Changing the atlas with expression space now held constant still destroys it: **0.5099** and
+**0.3655**. The atlas is the dominant factor, which is what D14 said.
+
+But the **size** of the effect was inflated by the uncontrolled variable, and substantially:
+Neftel went from 0.0379 to **0.5099** once both sides were linear — a 13-fold rise — and
+Darmanis from 0.1384 to **0.3655**. The published claim that the ordering "collapses" to near
+zero under a change of atlas is **not supportable**. What is supportable is that roughly half
+the ordering survives an atlas change, and that the remainder is a real atlas effect rather than
+an artefact of how the reference was read.
+
+**Internal control.** quanTIseq reads only its built-in TIL10 signature and ignores the
+reference it is handed (`r_bridge.OWN_SIGNATURE_METHODS`). Across the log and linear arms its
+ACS is **0.6000 in both, delta exactly +0.0000**, while 13 of 14 other methods moved. That is
+the built-in check that the two arms differed in the reference and in nothing else.
+
+### What this run does NOT establish, and why the level drop is not readable
+
+Every method's ACS **fell** with the linear reference — by 0.06 to 0.23, mean about 0.11. That
+is the opposite of what D16 predicts, and it is tempting to read it as the log matrix being
+better. **It cannot be read that way, because the gene space is confounded with the arm.**
+
+`data/bench/signature_genes.json` records its own chain: `build_from_h5ad(gbmap_core.h5ad) ->
+... -> select_signature_genes`. That is the default matrix, so the 657 markers were chosen
+**on the log-space reference**. Arm B was scored through arm A's opinion of which genes are
+informative. `reference_sensitivity.py` already warns that this space is "the wrong space to
+use for a finding that the alternative does worse" — and that is precisely this finding.
+
+The ORDERING comparison is not affected in the same way: both arms see the identical gene set,
+and the handicap applies across methods rather than to the rank correlation between them. That
+is why the Spearman figures above stand while the levels do not.
+
+`--gene-space per_arm` now lets each reference nominate its own markers, which is the
+comparison that would make the levels readable. It has not been run. **Until it is, no claim is
+made about which expression space produces better anatomic concordance** — and when it is run,
+ACS preferring one over the other is a finding about ACS, not a reason to choose a reference.
+The log matrix is wrong on model grounds; the mixing model is not put to a vote.
+
+### How this was found: CDSeq is BLOCKED
+
+CDSeq is a multinomial read-count model. The Ivy GAP bulk is FPKM rescaled to 1e6 —
+non-integer, column sums exactly 1000000.0 — and the published archive contains **four files**
+(`fpkm_table.csv`, `columns-samples.csv`, `rows-genes.csv`, `README.txt`). No counts. Checking
+whether the single-cell side could supply them instead is what surfaced `raw/X`, and with it
+the fact that the pipeline had been reading the wrong matrix all along. CDSeq stays BLOCKED on
+the anatomic arm pending Ivy GAP read counts; it *could* run on the pseudobulk arm, whose
+mixtures can be rebuilt from `raw/X`.
+
+---
+
+## D17 · Every variant reference build silently overwrote the primary reference's provenance record, and a figure script reads that file
+
+**Severity: moderate. No published number changes; the record of how the published reference
+was sampled was destroyed, and a figure script would have reported a sensitivity build's
+numbers as the leaderboard's. Found and FIXED 2026-09-15.**
+
+### What happened
+
+`build_from_h5ad` wrote its sampling record to `reference_sampling_{name}.json`, and `name`
+defaults to `"gbmap"`. Every variant build — the assay subsets for D14, the linear build for
+D16 — took that default, so each one overwrote the primary reference's record with its own.
+
+Caught by timestamp. `data/reference/reference_sampling_gbmap.json` at 17:11 matched the
+`gbmap_tenx` directory to the minute and carried `cell_filter_applied: true` with
+`n_cells_kept: 10046` — the **10x-only** build's numbers, under the primary reference's
+filename. My own `raw/X` build then overwrote that in turn (18:49, `matrix: raw/X`).
+
+### Why it mattered beyond tidiness
+
+`scripts/figure_data.py:62` reads that exact path:
+
+```python
+sampling = _json(config.REFERENCE_DIR / "reference_sampling_gbmap.json")
+```
+
+So the reference-composition figure would have reported whichever sensitivity build ran last as
+the leaderboard's sampling. `/data/` is gitignored, so there was no committed copy to fall back
+on either.
+
+### What was actually lost: nothing irrecoverable, and here is why
+
+`_balanced_cell_sample` is a function of `obs` and the seed alone — donor, cell type, and the
+caps. It never sees the expression matrix. With no cell filter, the published build and the
+`raw/X` build therefore sampled the **same cells**, so the recovered record is exact apart from
+the `matrix` field: **15,311 cells, 110 donors**, and the per-type counts in the restored file.
+
+That is worth stating precisely, because the earlier figure of 10,046 cells / 64 donors that
+sat in this file was never the primary reference's — it was the 10x subset's.
+
+**Independently corroborated, and by an artefact that predates the clobbering.**
+`sc_counts_gbmap.csv.gz` was exported on 2026-09-13, before any variant build existed, and its
+header carries exactly **15,311 cells** — the same count the `raw/X` rebuild produced on
+2026-09-15. Two builds two days apart, different matrices, identical cell count. That is the
+sampler being a function of `obs` and the seed alone, shown rather than argued.
+
+### The fix
+
+`_variant_key` fingerprints the fields that determine *which cells and which values* went in —
+matrix, seed, the caps, the annotation and donor columns, the source hash, whether a cell
+filter ran, the gene space — and deliberately not the measured outputs, which would make every
+honest re-run look like a new variant. A build whose key differs from the record already on
+disk now writes `reference_sampling_{name}__{key}.json` and leaves the canonical file alone,
+stamping its own copy with `not_the_canonical_record`. An identical re-run still overwrites,
+which is what idempotence should do.
+
+Covered by `tests/test_sampling_record_not_clobbered.py`.
