@@ -210,20 +210,35 @@ record is part of the result.
 1. Anatomic constraints in glioblastoma are **real and independently verifiable** — confirmed in
    two external single-cell datasets that were never deconvolved.
 2. Deconvolution methods **satisfy them far above chance**, and negative controls do not. ACS is
-   a working **detector**.
+   a working **detector**. The constraints are recoverable **without any atlas at all**: CDSeq,
+   estimating cell types de novo from the bulk and never touching GBmap even to name its own
+   output, reaches **0.6829 at p = 0.0009** against a random control that fails its own null.
 3. **ACS is not a valid method selector.** It fails against published ground-truth benchmarks
    (p = 0.50), fails a pre-registered test against protein ground truth (p = 0.0090, wrong
    direction), cannot resolve the top of its own leaderboard (a four-way tie), rests largely on
    one constraint, and moves by 0.31 on marker-set size alone.
 4. The apparent success of the registered outcome (rho = 0.7501) is **substantially a shared
    dependence on one reference atlas**, and every analysis that breaks that dependence weakens
-   it.
+   it. **But the atlas is not merely a source of bias.** Reference-free estimation lands at the
+   bottom of the real methods, tying DWLS, with 13 of 14 reference-using methods above it — so
+   the reference contributes real signal that bulk-only estimation does not recover. "The
+   ordering is substantially a property of GBmap" is supported; "GBmap contributes nothing but
+   its own bias" is refuted.
 5. Separately and robustly: **current deconvolution methods are not clinically usable for immune
    content in GBM**, and anatomy-based evaluation is structurally blind to that failure.
 
 **The honest headline is not "anatomy works" and not "anatomy fails". It is: anatomy tells you
 whether a method is working, not which one is best — and the difference between those two
 questions is where the field has been assuming rather than measuring.**
+
+**Why the negative result is credible, and this belongs in the paper rather than being left for
+a reader to notice.** The hypothesis was registered with its constraint file frozen and hashed
+before any deconvolution output was seen; the decision rule was fixed in code; the adverse
+outcome of the external test was named in advance as adverse; and when the test failed, the
+constraint file was not edited — nor was it edited when one of its own constraints failed an
+external check. Three claims made during this work were published and then **withdrawn after
+measurement**, and the retractions are kept in place. A result produced under those conditions
+is worth more than a positive one produced without them.
 
 ---
 
