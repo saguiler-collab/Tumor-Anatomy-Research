@@ -598,3 +598,52 @@ The same record also establishes what is **not** available: *"Raw data not provi
 record"*, and *"The raw RNA-Seq and SNP array data will be submitted to dbGaP."* There are no
 public read counts for Ivy GAP by either route. See `CORRECTIONS_REGISTRATION.md` **C9**.
 
+---
+
+## Read counts — obtained 2026-09-15, and they close the provenance chain
+
+The published Ivy GAP matrix is normalised FPKM. The **counts underneath it are public**, on the
+Allen Institute portal's download page rather than in GEO, as one RSEM `genes.results` file per
+sample:
+
+```
+gene_id  transcript_id(s)  length  effective_length  expected_count  TPM  FPKM
+1        NM_130786_3       1766.00  1604.54          45.56           3.41  2.28
+```
+
+25,873 genes, ~1.5 MB each, 270 samples. Fetched by `scripts/fetch_ivygap_counts.py` into
+`data/raw/ivygap_counts/` with a per-file SHA-256 recorded. Assembled by
+`scripts/build_ivygap_counts_matrix.py`.
+
+The portal also publishes **anonymized BAMs**, unauthenticated, 414 MB each (~112 GB for 270),
+manifest in `FPKM/bam_manifest.csv`. Not used: RSEM has already counted, and recounting would
+substitute this pipeline's choices for the authors'. They remain available if a read-level
+question ever needs them.
+
+### What these files establish about the published matrix
+
+Mapping RSEM's **Entrez** ids onto Ivy GAP's internal **`gene_id`** through `rows-genes.csv`:
+
+| check | result |
+|---|---|
+| genes mapped / shared with the published matrix | 25,873 / 25,873 |
+| `corr(published FPKM, per-sample raw FPKM)` | **1.00000000** |
+| published ÷ raw, across genes within a sample | **one constant**, CV **1.4e-15** |
+
+The published matrix is exactly **raw FPKM × one scale factor per sample** — the authors'
+normalisation "based on genes not enriched in particular anatomic structures". So:
+
+1. these per-sample files are provably the **source** of the matrix this study deconvolves;
+2. that normalisation is a **no-op for this pipeline**, which rescales every bulk column to sum
+   to 1e6 before deconvolving, and a per-sample constant is removed exactly by that step. This
+   had been an untested assumption.
+
+**The id spaces are both numeric, and a position-based join looks like it works.** It shares
+7,741 of 25,873 ids by coincidence and gives `corr = 0.12` while producing a full-looking
+matrix. `build_ivygap_counts_matrix.py` therefore gates on the two checks above for **every**
+sample and writes nothing if any fails.
+
+**`expected_count` is RSEM's posterior expectation and is fractional** (45.56, not 46). It is
+not a raw integer count. Rounding, where a model needs integers, is declared at the point of use
+rather than done silently in the loader.
+

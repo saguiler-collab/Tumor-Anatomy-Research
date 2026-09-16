@@ -49,11 +49,18 @@ internally consistent and survives this; the **anatomic arm is not**, and that i
 anatomy test rests on. The full re-run on linear data is pending. This is a limitation to
 declare now, not a result to wait for.
 
-**Two further items are declarations rather than corrections.** The mRNA-content vector for
+**One further item is a declaration rather than a correction.** The mRNA-content vector for
 converting RNA shares to cell abundance is now **pre-specified and committed before use** (C8),
-because choosing it afterwards would be selection on an outcome. And the Ivy GAP read counts
-that several methods require **do not exist publicly** (C9), which bounds the method panel by
-data availability rather than by choice.
+because choosing it afterwards would be selection on an outcome.
+
+**And one item is a retraction of a correction, made the same day it was written.** C9 claimed
+no public read counts exist for Ivy GAP. They do — the Allen Institute portal serves per-sample
+RSEM `genes.results` files carrying `expected_count`, which GEO does not mirror. All 270 have
+been fetched. This also closed the provenance chain on the published matrix for the first time:
+it is exactly raw FPKM times one scale factor per sample (`corr = 1.00000000`, factor CV
+1.4e-15), and that scaling is a no-op for this pipeline, which renormalises every bulk column
+anyway. **Reference-free deconvolution can now be pointed at Ivy GAP itself**, which is the one
+instrument that can test C4 without a reference.
 
 **What has NOT changed:** the constraint file and its hash, the anatomic sample definition, the
 within-tumour permutation null, the exclusion of ISH cluster samples, the negative controls, and
@@ -299,46 +306,81 @@ the conversion was the identity there (D12).
 
 ---
 
-## C9 · The Ivy GAP read counts do not exist publicly, which bounds the method panel
+## C9 · RETRACTED THE SAME DAY IT WAS WRITTEN — the Ivy GAP read counts ARE public, and they are now in hand
 
-> **Registered:** the method panel is specified as a fixed list of deconvolution methods, with
-> no statement that any were excluded for want of a compatible input.
+**This entry originally claimed that no public read counts exist for Ivy GAP, and that the
+count-based methods were therefore bounded by data availability. That was wrong. It is kept
+here rather than deleted, because a correction file that quietly edits its own errors is worth
+nothing.**
 
-**Correction: one class of method is excluded by data availability, and it should be named
-rather than left as a gap in the panel.** Reference-free deconvolution — CDSeq is the
-representative — models the bulk as multinomial **read counts**. Ivy GAP publishes **FPKM
-only**.
+### What the retracted entry said, and what it rested on
 
-**Established twice, from two independent distributions of the same data.**
+It asserted: *"Ivy GAP publishes FPKM only"*, on two pieces of evidence — the 2014-11-25 Allen
+Institute archive contains four files and none of them are counts, and **GEO GSE107559** states
+**"Raw data not provided for this record"** with *"The raw RNA-Seq and SNP array data will be
+submitted to dbGaP."* Both of those statements are true. The conclusion drawn from them was not.
 
-The 2014-11-25 Allen Institute archive contains four files — `fpkm_table.csv`,
-`columns-samples.csv`, `rows-genes.csv`, `README.txt` — and the expression values are
-non-integer with columns summing to exactly 1000000.0.
+**The error: GEO is one distribution channel and the Allen Institute portal is another.** The
+portal's own download page publishes, per sample, both *"un-normalized gene-level FPKM and TPM
+values"* and *"anonymized BAM files"*. Neither appears in GEO. I concluded from the most
+authoritative-looking source instead of enumerating the channels.
 
-**GEO GSE107559** (*Ivy Glioblastoma Atlas Project (RNA-Seq)*, Puchalski et al., **Science**
-2018;360(6389):660–663, PMID 29748285) carries the same three data files and states plainly:
-**"Raw data not provided for this record"**, and in the series summary, *"The raw RNA-Seq and
-SNP array data will be submitted to dbGaP."* Its FPKM table is **bit-identical** to the
-archive's — 25,874 lines, SHA-256 `72a97ea792a81098…` on both — so the two distributions are
-the same data, and neither carries counts.
+### What is actually available
 
-**Why this matters to the registered question rather than being mere housekeeping.** The
-central worry about the ACS ordering is that it may be a property of the reference atlas (C4).
-A **reference-free** method is the one instrument that could test that from the other side,
-because it uses no reference at all. That instrument cannot be pointed at Ivy GAP. The study
-therefore cannot fully separate "this is how methods rank" from "this is how methods rank
-against this atlas" on the anatomic arm, and says so.
+Per sample, the portal serves the **RSEM `genes.results`** file — 25,873 genes, ~1.5 MB:
 
-**What remains possible, and is not a substitute.** CDSeq can be run on the pseudobulk arm,
-whose mixtures rebuild from the single-cell atlas's own integer counts. That tests the
-reference-free comparison on synthetic mixtures, not on tissue.
+```
+gene_id  transcript_id(s)  length  effective_length  expected_count  TPM  FPKM
+1        NM_130786_3       1766.00  1604.54          45.56           3.41  2.28
+```
 
-**What would unblock it.** Counts or aligned reads for the 122 anatomic RNA-seq samples, which
-per the GEO record go to **dbGaP** (BioProject PRJNA420740) under controlled access requiring an
-institutional signing official. That is outside this project's reach and is recorded as a
-limitation, not as pending work.
+**`expected_count` is the count layer.** All 270 samples have been fetched
+(`scripts/fetch_ivygap_counts.py`, provenance and per-file SHA-256 in
+`data/raw/ivygap_counts/provenance.json`). Anonymized BAMs are also public and unauthenticated
+(414 MB each, ~112 GB for 270); they are **not** needed, because RSEM has already counted, and
+re-counting would substitute this pipeline's choices for the authors'.
 
-**Effect on the primary result:** none. It bounds what the panel could ever have contained.
+### And it closes the provenance chain on the published matrix, which nothing else had
+
+Mapping RSEM's Entrez ids onto Ivy GAP's internal `gene_id` through `rows-genes.csv`:
+
+| check | result |
+|---|---|
+| genes mapped / shared with the published matrix | **25,873 / 25,873** |
+| `corr(published FPKM, per-sample raw FPKM)` | **1.00000000** |
+| published ÷ raw, across genes within a sample | **a single constant**, CV **1.4e-15** |
+| the constant, three samples | 0.8596, 1.0576, 1.0647 |
+
+So the published "normalized" matrix is exactly **raw FPKM × one scale factor per sample** —
+the normalisation the authors describe as being based on genes not enriched in particular
+anatomic structures. Two consequences:
+
+1. **The per-sample RSEM files are provably the source of the matrix this study deconvolves.**
+   Verified to float precision, not assumed.
+2. **That normalisation is a no-op for this pipeline**, which rescales every bulk column to sum
+   to 1e6 before deconvolving. A per-sample constant is removed exactly by that step. Worth
+   stating because it was an untested assumption until now.
+
+*(The alignment matters and was nearly got wrong: both id spaces are numeric, so a
+position-based join silently "works" — it shares 7,741 of 25,873 ids by coincidence and gives
+`corr = 0.12`. The same trap as the reference row-alignment bug this project has already been
+bitten by once.)*
+
+### Effect on the registered result and on the panel
+
+**No published number moves.** What changes is what is *possible*:
+
+- **CDSeq is unblocked on the anatomic arm.** That matters specifically for **C4**: the central
+  worry is that the ACS ordering is a property of the reference atlas, and a reference-free
+  method is the one instrument that can test it without a reference. It can now be pointed at
+  Ivy GAP itself, not only at synthetic mixtures.
+- **The bulk's true library sizes are known** (12.5M, 14.9M, 16.8M expected counts in the three
+  samples checked), which the two-problem framing needs.
+- `expected_count` is RSEM's **posterior expectation** and is fractional (45.56, not 46). It is
+  not a raw integer count and is not presented as one; rounding, where a model requires
+  integers, is declared at the point of use.
+
+**Registered wording affected:** none directly. This corrects a correction.
 
 ---
 
