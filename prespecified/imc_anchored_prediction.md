@@ -98,3 +98,57 @@ as such. Specifically:
 It is **not** a use of ACS to select anything, and **not** a tuning of ACS. The constraint file
 is frozen and hashed; no constraint, weight or sample rule is touched. ACS is the object being
 tested here, exactly as the protocol intends.
+
+---
+
+# ADDENDUM, written before the experiment was run
+
+While preparing the run I established a structural fact about the marker sets that changes how
+the comparison must be scored. It is recorded here, before any ACS was computed, because
+discovering it afterwards and quietly adjusting would destroy the point of pre-specifying.
+
+## The fact
+
+The seven frozen constraints need exactly four cell types: **Tumor** (C1, C7),
+**Oligodendrocyte** (C2), **Endothelial** (C3, C4), **Macrophage_Microglia** (C5, C6). The four
+marker sets do not cover the same four:
+
+| marker set | Tumor | Oligodendrocyte | Endothelial | Macrophage_Microglia | constraints expressible |
+|---|---|---|---|---|---|
+| **MCP_GBM** (Ajaib immune + Neftel neoplastic) | yes | **no** | **no** | yes (TAM + Microglia) | C1, C5, C6, C7 |
+| **MCP_GBM_moreno** (Moreno lvl3 + Neftel) | yes | yes | yes | yes | all 7 |
+| **MCP_default** (MCPcounter's own 111 genes) | **no** | **no** | yes | approx. (Monocytic lineage) | C3, C4, C5, C6 |
+| **MCP_GBmap** (this project's GBmap markers) | yes | yes | yes | yes | all 7 |
+
+Scoring each arm on whatever it happens to cover would compare ACS values computed over
+**different constraint subsets**, and D8 already established that C6 alone carries most of the
+ranking. That comparison would be meaningless, and it would flatter whichever arm happened to
+draw the easier constraints.
+
+## How it is handled, fixed now
+
+**Every pairwise comparison is scored on the constraints BOTH arms can express**, by setting the
+non-shared cell types to NaN so the scorer drops exactly those pairs from the weighted
+denominator. That uses the existing, tested partial-coverage path — the same one quanTIseq goes
+through — and touches neither `constraints.py` nor its hash.
+
+**The primary test becomes MCP_GBM vs MCP_GBmap on C1, C5, C6, C7** — Tumor and
+Macrophage_Microglia, which are exactly the two cell types the IMC panel also measured, and the
+pair the paper's contrast maps onto most directly (immune 0.37 vs 0.06; neoplastic 0.43 vs 0.22).
+
+> **PRIMARY PREDICTION, restated and unchanged in direction: ACS(MCP_GBM) > ACS(MCP_GBmap) on
+> the shared four constraints.**
+
+**MCP_default is demoted to a secondary arm.** It cannot express Tumor at all, so it cannot join
+the primary comparison; it is scored against the others on C5 and C6 only, and the three-way
+ordering in the original prediction is therefore reported as two pairwise tests rather than one
+ranking. This is a loss of power that I am declaring rather than papering over.
+
+**MCP_GBM_moreno is added as a secondary arm** because it is the only GBM-specific set with full
+constraint coverage, so it is the one that can be compared with MCP_GBmap on all seven. Its
+result is secondary because the paper's 0.37 refers to the Ajaib markers, not Moreno's.
+
+## What would still falsify the prediction
+
+Unchanged: MCP_GBmap scoring at or above MCP_GBM on the shared constraints. Naming the adverse
+outcome in advance is the whole point, and the coverage fix does not soften it.
