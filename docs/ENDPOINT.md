@@ -96,7 +96,7 @@ space. And the registered primary outcome compares two rankings that
 **both** use GBmap — the ACS arm deconvolves against it, the accuracy arm builds its mixtures
 from its cells (C4). Part of rho = 0.7501 is two GBmap-based rankings agreeing about GBmap.
 
-### 2c. It cannot resolve the top of its own leaderboard
+### 2c. It cannot resolve the top of its own leaderboard, and it is blind to magnitude
 
 | rank | method | ACS |
 |---|---|---|
@@ -117,6 +117,14 @@ single pair.
   CIs, from indistinguishable-from-null to significant, **non-monotonically**. The whole
   leaderboard spans ~0.60 to 1.00. A nuisance parameter moves ACS across three-quarters of the
   range it is being used to rank fifteen methods across.
+- **ACS is invisible to a change that moves tumour content by 8 points.** EPIC's published
+  contribution is variance weighting; the harness never supplied it, so what ran was a
+  constrained least squares with uniform weights. Restoring it changes the estimates
+  substantially — mean absolute difference **0.0829** on Tumor, 0.0529 on Astrocyte, and
+  **0.3539** at maximum on a single value — and changes EPIC's ACS by **exactly 0.0000**
+  (0.9846 both ways, identical CIs). The mechanism is plain: **ACS is a rank statistic**, so any
+  change preserving the ordering across structures is invisible to it by construction. That is
+  fine for a detector and disqualifying for certifying accuracy. `ROAD_TO_PAPER.md` 0.4.
 - **ACS prefers the reference that violates the mixing model.** The registration states the model
   is *"additive on the linear scale"* and that data is *"never log-transformed for
   deconvolution"*. The reference was in fact built from log values (**C7**). Rebuilding it from

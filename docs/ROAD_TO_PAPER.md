@@ -138,7 +138,67 @@ and the donor split.
 
 ---
 
-### 0.4 EPIC · **BLOCKING, and larger than first recorded (D11 + D13)**
+### 0.4 EPIC · **RESOLVED 2026-09-17 — and it produced the project's sharpest single finding**
+
+**Measured, `results/epic_close_out.json`.** All three points are settled, and one of them turned
+out to matter far more for the paper than for EPIC.
+
+**The decision, made on the invariant and not on the score.** EPIC's published contribution is
+variance weighting via `refProfiles.var`; the harness never supplied it and the package warned.
+By *never report a degenerate method under its own name*, **the variance-weighted run is EPIC**
+and the uniform-weight run is not. That was stated in `scripts/epic_close_out.py` before the
+numbers were computed — and it is moot anyway, because:
+
+| | ACS | 95% CI | p |
+|---|---|---|---|
+| EPIC, variance-weighted *(as published)* | **0.9846** | [0.9531, 1.0000] | 0.0001 |
+| EPIC, uniform weights *(as run)* | **0.9846** | [0.9531, 1.0000] | 0.0001 |
+
+**delta = +0.0000.** So the correction changes nothing about EPIC's rank, and no one need wonder
+whether it was adopted to improve it.
+
+**But it changes the estimates a great deal.** Mean absolute difference between the two runs:
+
+| Tumor | Astrocyte | Oligodendrocyte | Macrophage | Endothelial | B cell | T cell | NK |
+|---|---|---|---|---|---|---|---|
+| **0.0829** | 0.0529 | 0.0393 | 0.0149 | 0.0134 | 0.0106 | 0.0013 | 0.0012 |
+
+**Maximum absolute difference anywhere: 0.3539.**
+
+> **Restoring a method's defining feature moves its tumour estimate by 8 points on average and
+> up to 35 points on a single sample, and moves its anatomic concordance score by exactly
+> nothing.**
+
+The mechanism is not mysterious and should be stated rather than dramatised: **ACS is a rank
+statistic.** It compares (tumour, structure) means ordinally within a cell type, so any change
+that preserves the ordering across structures is invisible to it by construction. That is
+acceptable for a detector and disqualifying for certifying accuracy — and it is the same
+property that lets ACS be moved 0.31 by marker count (**C10**) while ignoring a 0.35 change in
+the numbers themselves. See `ENDPOINT.md` §2d.
+
+**Point 3, `otherCells`, is now recorded and is not serious.** Max **2.79e-03**, median
+**3.34e-09** across the probed samples. The harness dropping EPIC's ninth column changes almost
+nothing — but that is now a measurement rather than an assumption.
+
+**Point 1, convergence, is recorded and PARTIAL.** `convergeCode` is 0 for 21 of 25 probed
+samples and 1 for **4** — about 16% non-convergence, well below the 68% an earlier probe
+suggested, with fit Spearman never below 0.9965. **The diagnostic covers 25 of 122 anatomic
+samples**, so 16% is a subset estimate and not a cohort figure. Closing that needs the full-cohort
+capture, which B1 will produce; it is recorded as a limitation rather than rounded off.
+
+**What remains for EPIC, and it is a labelling decision rather than a defect:** its column is an
+mRNA proportion, because `mRNA_cell` is `NULL` and EPIC's default keys
+(`Bcells`/`Macrophages`/`Tcells`/`NKcells`) match none of this roster's eight names, so the
+conversion is the identity at machine precision (2.776e-17, D11/D13). That is the same estimand
+question as **C3**/**D12** for every other method, and it is answered the same way: the paper
+says plainly what is being reported.
+
+---
+
+<details>
+<summary>The original blocking entry, kept for the record</summary>
+
+### 0.4 EPIC · ~~BLOCKING, and larger than first recorded (D11 + D13)~~
 
 EPIC is joint-2nd on the ACS leaderboard at 0.9846. Three things are wrong with how it is
 run, all measured against the installed package on 2026-09-14.
@@ -180,6 +240,8 @@ directory deleted with the run.
 **None of these may be adopted because they improve EPIC's rank.** Point 1 is a recording gap,
 point 2 comes from a package warning, point 3 is measured at machine precision. All three are
 score-independent and the decisions must be too.
+
+</details>
 
 ---
 

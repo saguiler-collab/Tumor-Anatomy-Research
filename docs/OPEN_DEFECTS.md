@@ -20,9 +20,9 @@ keeping, marked RESOLVED at the top.
 | **D8** one constraint carries the ranking below the top | measured, disclosed |
 | **D9** false pre-registration violation published | FIXED; residual weakness disclosed |
 | **D10** re-measurements used a different gene space | mechanism FIXED; the two measurements must be redone |
-| **D11** EPIC returns the within-subset mRNA share, not the full-space one | **OPEN** — but see D12: the conversion it is applied to is the identity, so the practical effect on the published numbers is nil |
+| **D11** EPIC returns the within-subset mRNA share, not the full-space one | **OPEN, and now bounded** — see D12: the conversion is the identity, so the effect on the published numbers is nil, and `otherCells` is measured at max 2.79e-03, so the within-subset/full-space gap is small rather than assumed small. It is the same estimand question as C3 for every method, answered by saying plainly what is reported |
 | **D12** the cell-size correction has never been applied — it is the identity | **OPEN, high** — supersedes most of D1; no number changes, but the registration says otherwise |
-| **D13** EPIC runs with `refProfiles.var` unset, so its gene weighting is off; its output is mislabelled as a cell fraction | **OPEN, high** — EPIC is joint-2nd at 0.9846 |
+| **D13** EPIC runs with `refProfiles.var` unset, so its gene weighting is off; its output is mislabelled as a cell fraction | **MEASURED and CLOSED** 2026-09-17 — restoring variance weighting changes the estimates materially (mean 0.0829 on Tumor, max 0.3539) and changes ACS by **exactly 0.0000**. `otherCells` max 2.79e-03. Convergence 4 of 25 probed samples fail (PARTIAL). The variance-weighted run is the one that is EPIC, decided on the invariant before the scores were seen. `ROAD_TO_PAPER.md` 0.4 |
 | **D17** variant reference builds overwrote the primary reference's sampling record | **FIXED** 2026-09-15 — a figure script reads that path, so a sensitivity build's numbers could be published as the leaderboard's. Variant builds now get their own file. |
 | **D16** the GBmap reference is built from LOG-transformed data treated as linear | **OPEN, highest** — model violation in the signature every number was solved against, and it may be the real cause of D14 rather than "the atlas" |
 | **D15** the accuracy arm scores mRNA-share estimates against CELL-fraction truth | **OPEN, high** — follows from D12; affects every MAE/RMSE/bias. Both truths are now emitted; which to score against is answered by the two-problem framing |
@@ -1182,6 +1182,19 @@ should be too, and stated in the paper either way.
 ---
 
 ## D13 · EPIC runs with its defining feature disabled, and its output is mislabelled
+
+> **CLOSED 2026-09-17, and the closure is worth more to the paper than to EPIC.** Restoring
+> `refProfiles.var` changes EPIC's estimates substantially — mean absolute difference **0.0829**
+> on Tumor, **0.3539** at maximum — and changes its ACS by **exactly 0.0000** (0.9846 both ways,
+> identical confidence intervals). `otherCells` is measured at max **2.79e-03**, so point 3 is
+> real but negligible. Convergence fails on **4 of 25** probed samples, which is partial and
+> recorded as such. The variance-weighted run is the one that counts as EPIC, decided on this
+> project's invariant and written down before the scores existed. Full write-up in
+> `docs/ROAD_TO_PAPER.md` 0.4; artefact `results/epic_close_out.json`.
+>
+> **What it demonstrates about ACS:** a rank statistic cannot see magnitude. An 8-point mean
+> shift in tumour content that preserves the ordering across structures is invisible to it by
+> construction. `ENDPOINT.md` §2d.
 
 **Severity: high. EPIC is joint-2nd on the ACS leaderboard at 0.9846. Found 2026-09-14 by
 interrogating the installed package.**
