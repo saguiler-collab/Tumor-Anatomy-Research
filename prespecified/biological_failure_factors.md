@@ -109,3 +109,52 @@ this document.**
 - **The reference is GBmap-derived for every method**, so this measures methods-on-a-GBmap-
   reference, and cannot separate "the biology breaks deconvolution" from "the biology is
   under-represented in GBmap".
+
+---
+
+# ADDENDUM, written before the model was fitted
+
+Building the covariate table surfaced three structural facts. None involves the outcome — they
+are properties of the predictors alone — and all three are recorded here, before any fit, because
+finding them afterwards and adjusting would destroy the point of pre-specifying.
+
+## 1. F6 and F7 are severely underpowered, and nearly the same variable
+
+| factor | non-null | positives |
+|---|---|---|
+| is_mesenchymal (F5) | 150 | **52** (34.7%) |
+| **idh1_mutant (F6)** | 148 | **8** (5.4%) |
+| **gcimp (F7)** | 151 | **8** (5.3%) |
+
+And they are not independent: **Spearman +0.868**, with 7 of 8 samples carrying both.
+
+That is biologically correct — IDH1 mutation *causes* the G-CIMP phenotype — but it means F6 and
+F7 are close to a single variable measured twice, and eight positives cannot support separating
+them. **Neither the model nor the factor list is changed**; what is fixed here, in advance, is
+the rule for reading them:
+
+> **A null result for F6 or F7 is uninformative** and will be reported as *underpowered*, not as
+> evidence of absence. A positive result for either will be reported as a single
+> IDH-mutant/G-CIMP signal rather than as two independent findings, because these data cannot
+> distinguish them.
+
+The honest version of this test needs an IDH-mutant-enriched cohort. **That is exactly what
+TCGA-LGG is**, where IDH mutation is the majority class rather than 5% — so F6/F7 move from
+"cannot be tested here" to "the natural question for the validation cohort", which strengthens
+the case for LGG rather than weakening it.
+
+## 2. Ploidy and genome doublings are correlated (+0.619), as expected
+
+F3 is close to the discrete version of F2. The joint model handles this — they share variance and
+the coefficients split it — so **neither will be interpreted alone**; the pair is read together.
+
+## 3. The design is nonetheless well conditioned
+
+Condition number of the standardised design matrix with all seven factors: **6.6**. Collinearity
+is present and is not severe enough to destabilise the fit; the concern above is power, not
+numerical conditioning.
+
+## What does not change
+
+The seven factors, their directions, the joint OLS, the sign test across twelve methods, Holm
+across seven, alpha = 0.05, and the falsification criterion. All as written above.

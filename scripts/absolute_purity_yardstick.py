@@ -116,6 +116,7 @@ def main() -> int:
                               bulk_full=bulk.loc[:, cols])
     print(f"\nrunning methods on {sub.shape[1]} samples x {sub.shape[0]:,} genes:")
     out: dict[str, dict] = {}
+    per_sample: dict[str, pd.Series] = {}
     for m in build_methods(prefer_r=True):
         try:
             est = m.fit_predict(data)
@@ -133,6 +134,10 @@ def main() -> int:
             print(f"  {m.name:26s} SKIPPED — only {ok.sum()} finite estimates")
             out[m.name] = {"skipped": f"only {int(ok.sum())} finite estimates"}
             continue
+        # PERSIST THE PER-SAMPLE ESTIMATES. The aggregate correlation cannot support the
+        # failure-factor study (prespecified/biological_failure_factors.md), whose outcome is
+        # the per-sample signed error. Writing them here avoids a second 30-minute run.
+        per_sample[m.name] = pd.Series(t, index=list(sub.columns))
         rho = float(stats.spearmanr(t[ok], purity[ok]).statistic)
         pr = float(stats.pearsonr(t[ok], purity[ok]).statistic)
         out[m.name] = {
@@ -185,6 +190,13 @@ def main() -> int:
     }
     (config.RESULTS_DIR / "absolute_purity_yardstick.json").write_text(
         json.dumps(report, indent=2))
+    if per_sample:
+        est = pd.DataFrame(per_sample)
+        est.insert(0, "absolute_purity", purity)
+        est.index.name = "sample"
+        est.to_csv(config.RESULTS_DIR / "absolute_purity_per_sample.csv")
+        print(f"wrote results/absolute_purity_per_sample.csv "
+              f"({est.shape[0]} samples x {est.shape[1] - 1} methods + purity)")
     print("\nwrote results/absolute_purity_yardstick.json")
     return 0
 
