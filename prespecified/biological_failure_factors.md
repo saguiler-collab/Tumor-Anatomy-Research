@@ -158,3 +158,47 @@ numerical conditioning.
 
 The seven factors, their directions, the joint OLS, the sign test across twelve methods, Holm
 across seven, alpha = 0.05, and the falsification criterion. All as written above.
+
+---
+
+# ADDENDUM 2 — how F5 is carried into LGG, declared before it is related to any error
+
+F5 was pre-specified as the **Verhaak categorical call** `EXPRESSION_SUBTYPE == Mesenchymal`.
+That classification **does not exist for TCGA-LGG** — lower-grade glioma is classified by IDH
+status and 1p/19q codeletion — so F5 cannot be validated in LGG with the same variable.
+
+Substituting a different variable and presenting it as the same pre-specified test would be the
+quiet swap this project refuses. So:
+
+**F5's validation in LGG is a LABELLED SECONDARY ANALYSIS**, using a continuous mesenchymal
+program score computed identically in both cohorts from the Neftel four-state neoplastic markers
+already vendored in the GBMdeconvoluteR drop (`scripts/mes_score.py`).
+
+**Score definition, fixed here:** per sample, the mean rank-percentile of a state's marker genes
+within that sample's own expression profile, then `MES − mean(AC, NPC, OPC)`. Within-sample
+percentiles make it independent of library size and comparable across cohorts with no
+cross-cohort normalisation.
+
+**The hypothesis and the direction are unchanged.** Mesenchymal character should depress the
+tumour estimate. Only the measurement changes, and the change is declared rather than absorbed.
+
+## The score was validated against the Verhaak call, NOT against error
+
+On the 150 GBM samples carrying a Verhaak class:
+
+| variable | MES-classified median | other subtypes | one-sided p | AUC |
+|---|---|---|---|---|
+| `MES` raw | 0.9671 | 0.9531 | 6.5e-08 | 0.762 |
+| **`MES − mean(AC,NPC,OPC)`** | **0.0316** | **0.0040** | **1.3e-11** | **0.831** |
+
+**The contrast form is chosen, and the basis for choosing it is stated so it cannot be
+mistaken for outcome-selection.** It was selected because (a) it agrees better with the
+Verhaak call that F5 was originally defined on, and (b) subtracting the other three states
+controls for MES markers simply being highly expressed genes, which is a reason that exists
+independently of any result. **It was not compared against deconvolution error before being
+chosen.** The outcome of this study is error; agreement with a subtype label is variable
+definition, not outcome selection.
+
+AUC 0.831 is good agreement and is not identity, which is expected — a continuous program score
+and a categorical classifier are different constructs. That imperfection is why this is
+secondary.
