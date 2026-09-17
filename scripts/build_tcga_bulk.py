@@ -31,6 +31,7 @@ The predecessor project is READ-ONLY from here. Nothing under it is written or m
 """
 from __future__ import annotations
 
+import argparse
 import gzip
 import json
 import re
@@ -46,9 +47,15 @@ from ivygap import config                                          # noqa: E402
 
 PRED = Path("/Users/tatopro9130/Downloads/cancer_judging_machine-master 22"
             "/public/03_Reference_Free_TME/00_inputs")
-STAR = PRED / "TCGA-GBM.star_counts.tsv"
 GTF = PRED / "gencode.v36.annotation.gtf.gz"
-OUT = config.PROCESSED_DIR / "tcga_gbm_bulk_cpm.csv.gz"
+
+#: cohort -> the STAR table it is built from. LGG was fetched from the Xena GDC hub so it is
+#: the same pipeline, the same Ensembl versioning and the same log2(x+1) transform as GBM --
+#: verified, not assumed: 100% of small inverted values sit on the 0.5 grid in both.
+COHORTS = {
+    "gbm": PRED / "TCGA-GBM.star_counts.tsv",
+    "lgg": ROOT / "TCGA_LGG" / "TCGA-LGG.star_counts.tsv",
+}
 GRID = 0.5          # the underlying quantity's spacing, measured not assumed
 
 
@@ -69,6 +76,12 @@ def gene_map() -> dict[str, str]:
 
 
 def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--cohort", choices=sorted(COHORTS), default="gbm")
+    args = ap.parse_args()
+    STAR = COHORTS[args.cohort]
+    OUT = config.PROCESSED_DIR / f"tcga_{args.cohort}_bulk_cpm.csv.gz"
     for p in (STAR, GTF):
         if not p.exists():
             print(f"BLOCKED: {p} not found."); return 2
@@ -149,7 +162,8 @@ def main() -> int:
         "normalisation": "CPM on the linear scale; columns sum to 1e6",
         "output": str(OUT.relative_to(ROOT)),
     }
-    (config.PROCESSED_DIR / "tcga_gbm_bulk_provenance.json").write_text(
+    prov["cohort"] = args.cohort
+    (config.PROCESSED_DIR / f"tcga_{args.cohort}_bulk_provenance.json").write_text(
         json.dumps(prov, indent=2))
     print(f"\nwrote {OUT.relative_to(ROOT)}  ({cpm.shape[0]:,} genes x {cpm.shape[1]} samples)")
     print(f"column sums: min {cpm.sum(axis=0).min():,.0f} max {cpm.sum(axis=0).max():,.0f}")

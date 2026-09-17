@@ -54,7 +54,6 @@ from ivygap.deconv.base import DeconvolutionInput                  # noqa: E402
 from ivygap.deconv.registry import build_methods                   # noqa: E402
 from ivygap.data.reference import load_frozen_reference            # noqa: E402
 
-BULK = config.PROCESSED_DIR / "tcga_gbm_bulk_cpm.csv.gz"
 ABS_T = config.RAW_DIR / "tcga" / "TCGA_mastercalls.abs_tables_JSedit.fixed.txt"
 PURITY_COL = "Cancer DNA fraction"
 
@@ -64,6 +63,13 @@ def key4(s: str) -> str:
 
 
 def main() -> int:
+    import argparse                                              # noqa: PLC0415
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--cohort", choices=["gbm", "lgg"], default="gbm")
+    args = ap.parse_args()
+    BULK = config.PROCESSED_DIR / f"tcga_{args.cohort}_bulk_cpm.csv.gz"
+    tag = "" if args.cohort == "gbm" else f"_{args.cohort}"
     for p in (BULK, ABS_T):
         if not p.exists():
             print(f"BLOCKED: {p} missing."); return 2
@@ -188,14 +194,15 @@ def main() -> int:
         ],
         "methods": out,
     }
-    (config.RESULTS_DIR / "absolute_purity_yardstick.json").write_text(
+    report["cohort"] = args.cohort
+    (config.RESULTS_DIR / f"absolute_purity_yardstick{tag}.json").write_text(
         json.dumps(report, indent=2))
     if per_sample:
         est = pd.DataFrame(per_sample)
         est.insert(0, "absolute_purity", purity)
         est.index.name = "sample"
-        est.to_csv(config.RESULTS_DIR / "absolute_purity_per_sample.csv")
-        print(f"wrote results/absolute_purity_per_sample.csv "
+        est.to_csv(config.RESULTS_DIR / f"absolute_purity_per_sample{tag}.csv")
+        print(f"wrote results/absolute_purity_per_sample{tag}.csv "
               f"({est.shape[0]} samples x {est.shape[1] - 1} methods + purity)")
     print("\nwrote results/absolute_purity_yardstick.json")
     return 0
