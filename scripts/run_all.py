@@ -140,6 +140,16 @@ def main() -> int:
                     help="run end-to-end on a generated reference, no downloads")
     ap.add_argument("--no-r", action="store_true",
                     help="force the all-Python implementations")
+    ap.add_argument("--matrix", choices=["X", "raw/X"], default="X",
+                    help="WHICH MATRIX the reference is built from (OPEN_DEFECTS D16). "
+                         "'X' is GBmap's log1p(counts * size factor) and is what every "
+                         "archived result used; it is the DEFAULT only so those results stay "
+                         "reproducible. 'raw/X' is the genuine integer counts and is the "
+                         "defensible build: the registration states the mixing model is "
+                         "'additive on the linear scale' and that data is 'never "
+                         "log-transformed for deconvolution', which is true of the bulk and "
+                         "was false of the reference. Choosing 'raw/X' also makes the mRNA "
+                         "truth for Problem 1 meaningful, since library sizes are then real.")
     ap.add_argument("--n-test", type=int, default=config.N_TEST_PSEUDOBULK)
     ap.add_argument("--permutations", type=int, default=10_000,
                     help="within-tumour label permutations for the ACS null "
@@ -267,8 +277,13 @@ def main() -> int:
             # export=False: the cell-level export is written per gene set, on demand,
             # by the R bridge. Writing it for all 16,758 genes takes ~49 minutes and
             # 1.1 GB, and no method ever reads beyond its own gene space.
+            if args.matrix != "X":
+                print(f"  MATRIX: {args.matrix} — the genuine counts, not GBmap's "
+                      f"log-transformed X (OPEN_DEFECTS D16). This is NOT what the "
+                      f"archived results used.")
             _, sc_expression, sc_meta = build_from_h5ad(
-                gbmap, restrict_to_genes=bulk.index, export=False)
+                gbmap, restrict_to_genes=bulk.index, export=False,
+                matrix=args.matrix)
             r_bridge.set_cell_source(config.PRIMARY_REFERENCE,
                                      sc_expression, sc_meta)
             print(f"cell-level atlas: {sc_expression.shape[1]:,} cells, "

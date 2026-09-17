@@ -44,17 +44,55 @@ Save to the project folder, do not commit the PDFs:
 
 ## TOMORROW, better machine — ONE job left, then stop
 
-### B1 · One full `run_all.py` rebuilt from `raw/X` · **~10 h, unattended**
-```
-python scripts/build_gbmap_linear_reference.py     # ~10 min, already written
-python scripts/run_all.py                          # overnight
-```
-Closes **D16** (the reference was log-transformed and treated as linear), lands the genuine DWLS
-and BayesPrism rows, and produces the Problem 1 / Problem 2 numbers.
+### B1 · One full `run_all.py` · **~10 h, unattended**
 
-**It is not required for any claim the paper makes.** D16's direction is already measured
-(+0.9161 — expression space barely moves the ordering), so this converts a stated limitation
-into a measured one. Start it before bed and let it run.
+**Run the pre-flight first. It takes 6 minutes and it exists because you get one shot:**
+
+```
+python scripts/preflight_b1.py --matrix X
+```
+
+It checks the atlas and both its matrices, the bulk, every R package, disk, the Problem 1
+gate, and runs the test suite. It changes nothing and exits non-zero if the run would be
+unsafe. **It currently says GO.**
+
+**Then archive the current results, because `run_all.py` overwrites them:**
+
+```
+cp -R results results_PRE_B1_$(date +%Y%m%dT%H%M)
+nohup python3 scripts/run_all.py --matrix X > b1.log 2>&1 &
+```
+
+#### I am changing my earlier recommendation: use `--matrix X`, not `raw/X`
+
+I previously wrote that B1 "must be rebuilt from `raw/X`". **Two things I learned afterwards
+change that, and with ten days left the calculus is different.**
+
+**First, `--matrix` did not exist.** `run_all.py` called `build_from_h5ad` with the default,
+so the command I gave you would have silently rebuilt the *log* reference while you believed
+you were fixing D16. That is now a real flag, threaded through and recorded in the run.
+
+**Second, the pre-flight found all 8 R packages load.** The archived run fell back to Python
+for DWLS and BayesPrism, which is corrections **C1** and **C2**. A run with `--matrix X` is
+deterministic and reproduces the archived study *except* for those rows — so it replaces
+exactly the numbers the corrections say are wrong, **and invalidates nothing else.**
+
+**Third, D16's effect is already measured**, so `raw/X` would not be buying information you
+lack. The per-arm comparison established that a linear reference lowers ACS for all 14 methods
+(mean −0.12) and moves the ordering to 0.6852. Re-running everything on it would replace every
+number in every document ten days before your deadline, to confirm a direction you already know.
+
+| | `--matrix X` **(recommended)** | `--matrix raw/X` |
+|---|---|---|
+| closes C1 / C2 (genuine packages) | **yes** | yes |
+| documents invalidated | **none** | essentially all of them |
+| fixes D16 | no — stays a measured limitation | yes |
+| Problem 1 scoreable | no | yes |
+| safe with 10 days left | **yes** | no |
+
+**So: `--matrix X` tomorrow.** If you get a second night and want the linear study as a
+robustness appendix, run `--matrix raw/X` into a copied tree then. It is a second study, not a
+correction to this one, and the paper does not depend on it.
 
 ### ~~A6 · CDSeq~~ · **DONE 2026-09-15, on the slow laptop — nothing to do**
 Reference-free ACS **0.6829** with no atlas at all (p = 0.0009) and **0.7561** with the atlas
