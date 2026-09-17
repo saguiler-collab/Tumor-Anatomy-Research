@@ -175,6 +175,54 @@ def main() -> int:
               f"{r['n_in_predicted_direction']:4d}/{r['n_methods']:<4d} "
               f"{r['sign_test_p']:8.4f} {holm:8.4f}  {v}")
 
+    # --- F1 IS PARTLY DEFINITIONAL, AND THE CORRECT STATISTIC IS THE RECOVERY FRACTION ---
+    #
+    # The outcome is e = estimate - purity, so regressing e on purity is mechanically negative:
+    # a method carrying NO information about tumour content gives slope exactly -1.0, and only
+    # a method tracking purity perfectly gives 0. The sign test therefore cannot discover that
+    # "error depends on purity" -- that is arithmetic, not biology.
+    #
+    # What is informative is the MAGNITUDE. `recovered = 1 + slope` is the fraction of the true
+    # purity variation the method actually captures. This is reported in place of F1's sign
+    # test, and F1's sign test is marked as uninformative rather than deleted.
+    #
+    # Factors that are NOT subtracted from the outcome -- F2..F7 -- do not have this problem,
+    # and because the model is joint they are already adjusted for purity.
+    rec = {}
+    for m in methods:
+        e = (est.loc[keep, m] - purity.loc[keep]).to_numpy(dtype="float64")
+        slope = float(np.polyfit(purity.loc[keep].to_numpy(dtype="float64"), e, 1)[0])
+        rec[m] = {"slope": round(slope, 4), "recovered_fraction": round(1 + slope, 4),
+                  "pearson_r_with_purity": round(float(np.corrcoef(
+                      est.loc[keep, m], purity.loc[keep])[0, 1]), 4)}
+    med = float(np.median([v["recovered_fraction"] for v in rec.values()]))
+    print(f"\nF1 RECOVERY (the interpretable form): methods recover a median "
+          f"{med:.1%} of the true purity variation")
+    for m, v in sorted(rec.items(), key=lambda kv: kv[1]["recovered_fraction"]):
+        print(f"  {m:16s} slope {v['slope']:+.3f}  recovers {v['recovered_fraction']:6.1%}"
+              f"  r = {v['pearson_r_with_purity']:+.3f}")
+    results["purity"]["sign_test_is_definitional"] = True
+    results["purity"]["interpretable_statistic"] = {
+        "what": "fraction of true purity variation recovered, = 1 + slope of (estimate - "
+                "purity) on purity. 0 means no information, 1 means perfect.",
+        "median_recovered_fraction": round(med, 4), "per_method": rec}
+
+    # --- pre-specified repeat without degenerate methods ------------------------------
+    nd = [m for m in methods if m not in degen]
+    print(f"\nPRE-SPECIFIED REPEAT without the {len(degen)} degenerate methods "
+          f"({len(nd)} remain):")
+    for f, (direction, outcome) in FACTORS.items():
+        b = pd.Series({m: coefs[outcome][m][f] for m in nd if m in coefs[outcome]})
+        ok = int((b < 0).sum() if direction == "neg" else (b > 0).sum())
+        p_nd = float(stats.binomtest(ok, len(b), 0.5).pvalue)
+        results[f]["without_degenerate"] = {
+            "n_methods": len(b), "n_in_predicted_direction": ok,
+            "sign_test_p": round(p_nd, 5), "median_beta": round(float(b.median()), 5)}
+        same = (ok >= 0.75 * len(b)) == (results[f]["n_in_predicted_direction"]
+                                         >= 0.75 * results[f]["n_methods"])
+        print(f"  {f:20s} {ok:2d}/{len(b):<2d} p={p_nd:.4f}  "
+              f"{'consistent with the primary' if same else 'DIFFERS from the primary'}")
+
     hits = [f for f, r in results.items() if r["supported"]]
     print(f"\n{len(hits)} of {len(FACTORS)} factors supported: {hits or 'NONE'}")
     if not hits:
@@ -189,6 +237,10 @@ def main() -> int:
            "alpha": ALPHA, "correction": "Holm across seven primary tests",
            "degenerate_methods": sorted(degen),
            "factors": results, "supported": hits,
+           "f1_caveat": "F1's sign test is DEFINITIONAL -- e = estimate - purity, so the "
+                        "slope is mechanically -1 for a method with no information. The "
+                        "interpretable statistic is the recovery fraction, reported under "
+                        "factors.purity.interpretable_statistic.",
            "falsified": not hits}
     (config.RESULTS_DIR / "failure_factors_gbm.json").write_text(json.dumps(out, indent=2))
     print("\nwrote results/failure_factors_gbm.json")
