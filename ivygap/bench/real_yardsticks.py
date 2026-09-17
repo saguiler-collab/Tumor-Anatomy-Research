@@ -106,13 +106,45 @@ def load_absolute_purity() -> tuple[dict[str, float], dict]:
     Kept as a real function rather than an omission so the pipeline reports a specific
     blocker instead of an absence, and so wiring it later is a change in one place.
     """
+    # COMPUTED YARDSTICK, if it exists. `scripts/absolute_purity_yardstick.py` runs every
+    # method on TCGA-GBM against the frozen signature and correlates each Tumor column with
+    # ABSOLUTE's DNA-derived purity. When that artefact is present this yardstick is REAL and
+    # is returned; when it is absent the historical blocker is reported instead, unchanged.
+    computed = config.RESULTS_DIR / "absolute_purity_yardstick.json"
+    if computed.exists():
+        try:
+            rep = json.loads(computed.read_text())
+            scores = {m: float(v["spearman_vs_purity"])
+                      for m, v in rep.get("methods", {}).items()
+                      if "spearman_vs_purity" in v and not v.get("is_control")}
+            if scores:
+                return scores, {
+                    "available": True,
+                    "is_real_ground_truth": True,
+                    "source": str(computed.relative_to(config.PROJECT_ROOT)),
+                    "measurement": "ABSOLUTE tumour purity from DNA copy number "
+                                   "(PanCanAtlas), Spearman against each method's Tumor "
+                                   "column on TCGA-GBM.",
+                    "n_samples": rep.get("n_samples"),
+                    "n_methods": len(scores),
+                    "independent": rep.get("independent", ""),
+                    "not_independent": rep.get("not_independent", ""),
+                    "caveats": rep.get("frozen_signature_caveats", []),
+                }
+        except (ValueError, OSError, KeyError) as exc:            # pragma: no cover
+            return {}, {"available": False, "is_real_ground_truth": True,
+                        "reason": f"BLOCKED: {computed.name} is present but unreadable "
+                                  f"({type(exc).__name__}). A malformed artefact is "
+                                  f"reported, never silently ignored."}
+
     path = TCGA_BENCHMARK_DIR / "orthogonal_validation.csv"
     prov = {
         "available": False,
         "is_real_ground_truth": True,
         "reason": "the predecessor project recorded ABSOLUTE purity as BLOCKED — no "
                   "purity file was ever located — so the correlation exists for one "
-                  "frozen method only and cannot be recomputed for the others.",
+                  "frozen method only and cannot be recomputed for the others. Run "
+                  "scripts/absolute_purity_yardstick.py to compute it.",
     }
     if path.exists():
         df = pd.read_csv(path)

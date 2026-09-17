@@ -64,16 +64,33 @@ def test_method_names_are_mapped_explicitly_not_by_lowercasing():
             f"{prov['methods_not_mapped']}")
 
 
-def test_blocked_yardstick_reports_a_reason_not_silence():
+def test_absolute_purity_is_never_silent_about_its_state():
     """
-    ABSOLUTE purity returns nothing — but it must say why, and the reason must name the
-    actual blocker rather than being generic.
+    The invariant is NOT "ABSOLUTE purity is blocked" — that was merely true when this test
+    was written, and `scripts/absolute_purity_yardstick.py` can now compute it. The invariant
+    is that the yardstick never returns silently: unavailable means a specific reason naming
+    the blocker, available means real scores plus the provenance a reader needs to judge them.
+
+    Written state-agnostically on purpose. A test that pins the current state forces the next
+    person to weaken it, and a weakened test is worse than a state-agnostic one.
     """
     scores, prov = ry.load_absolute_purity()
-    assert scores == {}
-    assert prov["available"] is False
-    assert "BLOCKED" in prov["reason"]
-    assert prov["is_real_ground_truth"] is True
+    assert prov["is_real_ground_truth"] is True, "this yardstick is measured, not simulated"
+
+    if prov["available"]:
+        assert scores, "available with no scores is the silence this test exists to prevent"
+        assert all(isinstance(v, float) for v in scores.values())
+        assert all(-1.0 <= v <= 1.0 for v in scores.values()), "these are correlations"
+        # The independence claim must travel WITH the numbers. This yardstick is
+        # independent on the ground-truth side and not on the reference side, and a reader
+        # who gets the scores without that sentence will overclaim.
+        assert prov.get("not_independent"), (
+            "an independent-yardstick claim must carry its own limit; the reference is "
+            "GBmap-derived and the provenance has to say so")
+        assert prov.get("n_samples")
+    else:
+        assert scores == {}
+        assert "BLOCKED" in prov["reason"]
 
 
 def test_all_three_protocol_yardsticks_are_represented():

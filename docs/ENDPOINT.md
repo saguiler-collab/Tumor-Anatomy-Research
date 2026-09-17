@@ -6,6 +6,51 @@ hypothesis, and what is deliberately left undone.
 
 ---
 
+## The closing measurement: the registered outcome, computed against BOTH yardsticks
+
+The registration asks whether the ACS ranking agrees with a ranking from real ground truth. It
+reported **rho = 0.7501**, above the pre-registered bar of 0.60. Correction **C4** observed that
+both arms of that comparison use GBmap. That was an argument. This is the measurement:
+
+| yardstick | shares with the ACS arm | rho | 95% CI | meets the registered bar? |
+|---|---|---|---|---|
+| synthetic pseudobulk | **GBmap** — mixtures built from its cells | **+0.7501** | [0.328, 0.957] | **yes** |
+| **ABSOLUTE purity, from DNA** | **nothing** | **+0.0698** (p = 0.83) | **[−0.510, +0.769]** | **no** |
+| ... excluding 3 degenerate methods | | **−0.1044** (p = 0.79) | [−0.753, +0.743] | no |
+
+**The registered criterion is definitively not met against an independent yardstick** — it
+requires rho >= 0.60 *and* a CI excluding zero, and this fails both.
+
+**But it is a failure to reproduce, not a refutation, and the difference matters.** With twelve
+methods the interval is wide enough to contain 0.7501 itself. What twelve points cannot do is
+distinguish "no relationship" from "a relationship this test is too small to see". Per this
+project's own rule, an underpowered result is reported as **INCONCLUSIVE** — which is an answer.
+
+What is *not* inconclusive: the pre-registered bar was cleared against a yardstick sharing the
+reference and missed against one that does not.
+
+**Descriptively, the ordering is close to inverted.** The two methods ACS ranks *last* have the
+*highest* correlation with DNA purity:
+
+| method | ACS | rho vs DNA purity |
+|---|---|---|
+| MuSiC | **1.0000** | 0.4271 |
+| SVR | 0.9846 | 0.7184 |
+| EPIC | 0.9846 | 0.3732 |
+| Bisque | 0.9231 | **0.0284** |
+| Bayesian | **0.7692** | **0.7421** |
+| DWLS | **0.7385** *(last)* | **0.6865** |
+
+**What differs between the arms, because this is not a like-for-like re-run.** ACS is scored on
+Ivy GAP against the h5ad-built GBmap reference; the purity correlations are scored on TCGA-GBM
+(154 samples with a DNA call) against the vendored frozen signature. Cohort *and* reference
+build differ. What is constant is the set of named methods being ranked — the same form the
+registered outcome takes, since its own two arms are also different cohorts.
+
+Artefacts: `results/absolute_purity_yardstick.json`, `results/yardstick_agreement.json`.
+
+---
+
 ## The one-sentence finding
 
 > **Anatomic concordance is a valid detector of whether a deconvolution method is working, and
