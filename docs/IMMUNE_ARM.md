@@ -278,6 +278,37 @@ used.
 
 Artefact: `results/spillover_lgg.json`.
 
+### What "the reference holds 5× more T than B" does and does not mean
+
+Three different quantities get called "the reference composition", and the argument above depends
+on which one is meant. All three are measured here so the claim cannot drift:
+
+| quantity | T_cell | B_cell | T:B |
+|---|---|---|---|
+| **GBmap core atlas**, all 338,564 cells | 0.1724 (54,257) | 0.0040 (1,250) | **43.4×** |
+| **Balanced subsample** the reference is built from (15,311 cells, cap 50/donor/type) | **0.1653** (2,531) | **0.0320** (490) | **5.17×** |
+| **Profile mass** on the 1,615-gene marker space, within {T, B, NK} | 0.3027 | 0.3350 | **0.90×** |
+
+The **5.17×** quoted above is the middle row — the subsample, which is the right one, because
+those are the cells whose mean expression became the reference the methods were handed.
+
+Two things follow, and they pull in opposite directions:
+
+1. **The comparison is conservative.** The atlas itself holds T cells **43×** more abundant than
+   B cells; the balanced sampler caps cells per (donor, type) and compresses that to 5.17× by
+   design. So the reference *understates* how dominant T cells are in glioma, and the methods
+   still invert the order.
+2. **Cell abundance is not profile brightness.** On the marker space the T_cell profile carries
+   slightly *less* mass than B_cell (0.3027 vs 0.3350 within the lymphoid triple; 5.17% vs 13.26%
+   across all eight types). A rare cell type with a bright, distinctive profile is easier to
+   detect than an abundant one with a dim profile — which is the most likely shape of an
+   explanation here, and is **not** the same claim as the spillover hypothesis that was tested and
+   rejected above.
+
+*(The recurrence of "5.17" in two rows of this section is a coincidence: 5.17× is the T:B cell
+ratio and 5.17% is T_cell's share of profile mass across all eight types. They are unrelated
+quantities and neither is evidence for the other.)*
+
 ### Limits, as declared in advance
 
 - EpiDISH's reference is a **blood** reference applied to **brain tumour** tissue. It is used here
