@@ -297,6 +297,46 @@ sample methylation also got the other way.
   four methods find no lymphocytes, the rest put them in the wrong column — and conflating them
   made the result look tidier than it is.
 
+### Does equal footing FIX the inversion? Partly — and it makes the other failure worse
+
+The inversion above was measured against the frozen signature, where four methods were degraded
+stand-ins. So the obvious question is whether giving every method its intended inputs repairs it.
+Measured on GBM, same 155-sample methylation truth, same 56 matched samples, changing only the
+reference (`--reference h5ad`, sigma + donor profiles + registered cells):
+
+| | frozen signature | h5ad (sigma) |
+|---|---|---|
+| methods scored | 12 | 14 |
+| **agree with methylation on T > B** (mean) | **0 of 12** | **3 of 14** |
+| reproduce the full T>NK>B ordering | 0 of 12 | 2 of 14 |
+| **return ZERO lymphoid signal in most samples** | **4 of 12** | **6 of 14** |
+
+**Both things move, in opposite directions.**
+
+**The misassignment partly repairs.** Zero methods agreed with methylation on the frozen
+signature; **3 do once the reference carries what they were designed to consume**, and two
+reproduce the full three-way ordering that nothing reproduced before. The clearest case is
+`bisque`, which goes from placing B above T on 40.0% of samples to **3.6%** — i.e. it gets the
+lymphoid order right on 96.4% of samples once given donor structure. (`bisque` remains
+non-comparable for the tumour-content ranking, because TCGA cannot supply its paired-subject
+requirement; that exclusion is about a different question and does not apply here.)
+
+**The absence gets worse.** Methods returning *exactly zero* T, B and NK across most samples rise
+from **4 of 12** to **6 of 14** — now including `scdc`, `scdc_ensemble` and `svr`, which had
+returned lymphoid signal on every sample under the frozen signature. `svr` goes from scoring all
+56 samples to **13**.
+
+So equal footing does not simply improve matters. It trades one failure for another: **fewer
+methods put lymphocytes in the wrong column, and more methods report no lymphocytes at all.**
+
+**This is not a comfortable result and it is not being smoothed.** It means the lymphoid
+compartment of a glioma is not reliably recoverable by any method in this panel under *either*
+reference — the failure merely changes shape. And it is a caution against the reading that the
+h5ad arm is simply "the fixed version": on the question the previous section asked, it is better;
+on whether a method reports lymphocytes at all, it is worse.
+
+Artefacts: `results/lymphoid_ordering.json` (frozen), `results/lymphoid_ordering_h5ad.json`.
+
 ### Secondary, NOT registered: the full lymphoid ordering
 
 The same measurement yields NK at no extra cost, so the three-way ordering is reported here.

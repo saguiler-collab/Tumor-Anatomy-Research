@@ -23,6 +23,7 @@ keeping, marked RESOLVED at the top.
 | **D11** EPIC returns the within-subset mRNA share, not the full-space one | **OPEN, and now bounded** — see D12: the conversion is the identity, so the effect on the published numbers is nil, and `otherCells` is measured at max 2.79e-03, so the within-subset/full-space gap is small rather than assumed small. It is the same estimand question as C3 for every method, answered by saying plainly what is reported |
 | **D12** the cell-size correction has never been applied — it is the identity | **OPEN, high** — supersedes most of D1; no number changes, but the registration says otherwise |
 | **D13** EPIC runs with `refProfiles.var` unset, so its gene weighting is off; its output is mislabelled as a cell fraction | **MEASURED and CLOSED** 2026-09-17 — restoring variance weighting changes the estimates materially (mean 0.0829 on Tumor, max 0.3539) and changes ACS by **exactly 0.0000**. `otherCells` max 2.79e-03. Convergence 4 of 25 probed samples fail (PARTIAL). The variance-weighted run is the one that is EPIC, decided on the invariant before the scores were seen. `ROAD_TO_PAPER.md` 0.4 |
+| **D19** a fallback to a Python reimplementation is recorded without its REASON | **OPEN, medium-low** — nothing is mislabelled, but `dwls` falling rank 3 → 12 cannot be read as "bad method" vs "timed out" from the artefact. All R packages are installed, so these are runtime failures, not absent software. |
 | **D18** `_run_bounded`'s timeout never fires for methods that start an R socket cluster | **OPEN, medium** — orphaned cluster workers hold the inherited stdout pipe, so `communicate()` blocks past the budget (BayesPrism ran 93 min against a 2400 s budget). Decides WHICH IMPLEMENTATION produces a number as a function of machine load. Mitigated by an external watchdog, which lives outside the repo; the real fix is not yet applied. |
 | **D17** variant reference builds overwrote the primary reference's sampling record | **FIXED** 2026-09-15 — a figure script reads that path, so a sensitivity build's numbers could be published as the leaderboard's. Variant builds now get their own file. |
 | **D16** the GBmap reference is built from LOG-transformed data treated as linear | **OPEN, highest** — model violation in the signature every number was solved against, and it may be the real cause of D14 rather than "the atlas" |
@@ -1919,6 +1920,40 @@ the anatomic arm pending Ivy GAP read counts; it *could* run on the pseudobulk a
 mixtures can be rebuilt from `raw/X`.
 
 ---
+
+---
+
+## D19 · A method's fallback to a Python reimplementation is recorded WITHOUT its reason
+
+**Severity: medium-low. Nothing is mislabelled — but the label cannot be acted on. Found
+2026-09-18.**
+
+`results/absolute_purity_yardstick*.json` records `"implementation": "python-reimplementation"`
+for `dwls` and `bayesprism` in both GBM runs. That much is correct and is exactly the invariant
+working: **no reimplementation is ever reported under the published package's name.**
+
+What is missing is **why**. Checked directly: `Rscript` is on PATH and **every** R package is
+installed — MuSiC, SCDC, BisqueRNA, EPIC, quantiseqr, **DWLS**, **BayesPrism**. So these are
+runtime fallbacks, not absent software, and the three possible causes are not distinguishable
+from the artefact:
+
+1. the method exceeded `timeout_for(...)` (DWLS's budget is 2,400 s),
+2. the R script raised, or
+3. the run was terminated externally — which is what happened to BayesPrism in the h5ad leg, by
+   me (D18).
+
+**Why it matters.** `dwls` falls from rank 3 to rank 12 in the equal-footing comparison. That is
+reported as a real movement, and it is defensible *because* dwls is the same Python
+reimplementation on both sides — verified in `equal_footing_ranking.py`'s implementation check.
+But if a reader asks "is DWLS bad, or did DWLS time out?", the artefact cannot answer, and
+"python-reimplementation" reads as a deliberate choice rather than a fallback from a failure.
+
+**The fix.** `run_r_method` should record the fallback reason (`timeout` / exception class /
+killed) alongside `implementation_`, so a ranking can be read without re-running anything.
+
+**Not done here,** and the reason is scope rather than difficulty: the LGG h5ad leg is in flight
+against these same code paths, and changing them mid-run would produce two cohorts whose
+provenance records were written by different code.
 
 ---
 
