@@ -175,6 +175,40 @@ while over-calling immune 2.27×.
 vs 0.003) while the reference holds 5× more T than B. An identifiability failure, reported as
 needing its own test since no direction was pre-specified for it.
 
+## 7c · Result 4c — the anomaly was pre-registered, tested, and CONFIRMED
+
+*Source: `results/lymphoid_ordering_lgg.json`, `results/methylation_celltypes_lgg.json`,
+`docs/IMMUNE_ARM.md` §6*
+
+The B-over-T observation in §7b had no per-type truth to check it against. One was then obtained,
+and **the prediction was registered before it was computed**, with an explicit falsifier:
+*"methylation showing B ≥ T [...] That outcome would be reported and the anomaly withdrawn."*
+
+**Per-type truth:** EpiDISH RPC on `centDHSbloodDMC.m` (333 HM450 CpGs), **530 TCGA-LGG
+samples**. Both sides renormalised within {T, B, NK}, so the leukocyte-subcomposition vs
+all-cell-fraction denominator difference cancels by construction — verified in
+`tests/test_lymphoid_ordering.py`, not merely asserted.
+
+**The prediction held.** Methylation: **T 0.476 > NK 0.321 > B 0.203**; T ranks first
+in **79.2%** of samples, B in **4.0%**.
+
+**Every method disagrees. 12 of 12 place B above T** — 8 of 8 when restricted to
+methods comparable on this reference, so it is not an artefact of degraded stand-ins. **0 of 12
+reproduce the true ordering.** `elastic_net` puts **97.7%** of lymphoid signal in B; `music` and
+`nnls` return **exactly 0.0000** for T in all 510 samples.
+
+This is an **identifiability failure, not a proportion error**: lymphocyte signal is assigned to
+the wrong column. Its being unanimous across NNLS, SVR, Bayesian and probabilistic-model families
+makes it a property of the problem as posed rather than a quirk of one solver — and it
+**replicates the GBM observation in a second tissue**, which is what turns an anomaly into a
+finding.
+
+**A mechanism was proposed and rejected.** The frozen signature gives T_cell only **5.17%** of
+profile mass against B_cell's **13.26%**, and B_cell is the immune profile most correlated with
+Macrophage_Microglia (**r = +0.552**). That suggested macrophage spillover into B. The prediction
+— B tracking Macrophage more than T does — was tested and **failed: 5 of 10, p = 0.623**. The
+explanation is **not adopted**, and is reported as rejected rather than dropped.
+
 ## 8 · Result 5 — where the failure lives
 
 *Source: `results/mes_by_niche.json`*

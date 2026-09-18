@@ -120,14 +120,182 @@ glioblastoma, where T cells are the dominant lymphocyte and B cells are rare, th
 against both the biology and the reference the methods were given.
 
 This is an **identifiability failure**, not a proportion error: the solvers are placing lymphocyte
-signal in the wrong column. It is reported as an observation requiring its own test, not as an
-established mechanism — it was not pre-specified and no direction was fixed for it.
+signal in the wrong column. It was not pre-specified and no direction was fixed for it, so it was
+reported here as an observation requiring its own test.
+
+**That test was then pre-registered and run. See section 6 — the anomaly is confirmed against
+DNA methylation and replicates into a second tissue.**
+
+---
+
+## 6 · The B-over-T anomaly is CONFIRMED against an orthogonal per-type measurement
+
+Section 5 recorded the B-over-T inversion as "an observation requiring its own test, not an
+established mechanism". That test was then **pre-registered before it was run**
+(`prespecified/immune_failure_factors.md`, per-cell-type addendum), with the prediction fixed in
+advance and an explicit falsifier:
+
+> **PREDICTION: DNA methylation will show T cells > B cells.**
+> **What would falsify it:** methylation showing **B ≥ T**. That would mean the methods may be
+> right and my "anomaly" was an artefact [...] **That outcome would be reported and the anomaly
+> withdrawn.**
+
+### The result: the prediction held
+
+DNA methylation (EpiDISH RPC, `centDHSbloodDMC.m`, 333 HM450 CpGs) on **530 TCGA-LGG samples**:
+
+**T > B in 93.2% of samples** — mean T 0.4769 vs B 0.2040.
+
+### And every method disagrees with it
+
+| method | est. T | est. B | calls higher |
+|---|---|---|---|
+| bayesian | 0.0237 | 0.8330 | **B** |
+| bayesprism | 0.3038 | 0.4265 | **B** |
+| bisque | 0.1511 | 0.3412 | **B** |
+| cibersortx | 0.0316 | 0.8787 | **B** |
+| dwls | 0.4656 | 0.4842 | **B** |
+| elastic_net | 0.0108 | 0.9768 | **B** |
+| epic | 0.2854 | 0.4208 | **B** |
+| music | 0.0000 | 0.9575 | **B** |
+| nnls | 0.0000 | 0.9575 | **B** |
+| scdc | 0.2793 | 0.6521 | **B** |
+| scdc_ensemble | 0.2793 | 0.6521 | **B** |
+| svr | 0.0008 | 0.9356 | **B** |
+| **methylation (truth)** | **0.4769** | **0.2040** | **T** |
+
+**12 of 12 methods put B above T. The orthogonal measurement puts T above B in
+93.2% of samples.** The anomaly is not withdrawn; it is confirmed, and it
+replicates from GBM into a second tissue.
+
+### Why this comparison is like-for-like
+
+Both sides are renormalised **within the same three types** (T_cell, B_cell, NK_cell) before
+comparison (`scripts/methylation_celltypes.py`). The methylation estimate is a leukocyte
+sub-composition and the deconvolution estimate is a fraction of all cells, but after
+renormalisation within the lymphoid triple both are *relative composition among lymphocytes*.
+**The denominator difference is therefore removed by construction**, which is what makes the
+directional comparison legitimate at all.
+
+### What this is, and what it is not
+
+This is an **identifiability failure**, not a proportion error. The solvers are not merely
+mis-scaling lymphocyte abundance; they are assigning lymphocyte signal to the **wrong column**.
+A method can be given a reference holding 5× more T than B, run on tissue whose methylation says
+T outnumbers B roughly 2.3:1, and still return B as the dominant lymphocyte — unanimously, across
+twelve methods spanning NNLS, SVR, Bayesian, and probabilistic-model families.
+
+That it is **unanimous across method families** is the important part. It is not a quirk of one
+solver's regularisation; it is a property of the problem as posed — a direction in gene space
+along which T-cell and B-cell signal are not separable given this reference and this tissue.
+
+### Secondary, NOT registered: the full lymphoid ordering
+
+The same measurement yields NK at no extra cost, so the three-way ordering is reported here.
+**It was not pre-registered, no direction was fixed for it, and it is therefore exploratory** —
+only T > B is confirmatory. It is included because it shows the inversion is not a narrow T/B
+quirk.
+
+Methylation truth within {T, B, NK} on 530 samples:
+**T 0.4758 > NK 0.3208 > B 0.2034**. Per sample, **T ranks first in
+79.2%** and **B ranks first in 4.0%**.
+
+| method | T | NK | B | ordering |
+|---|---|---|---|---|
+| bayesian | 0.0237 | 0.1433 | 0.8330 | B>NK>T |
+| bayesprism | 0.3038 | 0.2697 | 0.4265 | B>T>NK |
+| bisque | 0.1511 | 0.5077 | 0.3412 | NK>B>T |
+| cibersortx | 0.0316 | 0.0897 | 0.8787 | B>NK>T |
+| dwls | 0.4656 | 0.0502 | 0.4842 | B>T>NK |
+| elastic_net | 0.0108 | 0.0124 | 0.9768 | B>NK>T |
+| epic | 0.2854 | 0.2939 | 0.4208 | B>NK>T |
+| music | 0.0000 | 0.0425 | 0.9575 | B>NK>T |
+| nnls | 0.0000 | 0.0425 | 0.9575 | B>NK>T |
+| scdc | 0.2793 | 0.0687 | 0.6521 | B>T>NK |
+| scdc_ensemble | 0.2793 | 0.0687 | 0.6521 | B>T>NK |
+| svr | 0.0008 | 0.0636 | 0.9356 | B>NK>T |
+| **methylation (truth)** | **0.4758** | **0.3208** | **0.2034** | **T>NK>B** |
+
+**0 of 12 methods reproduce the true ordering. Every method places B first.**
+
+Two of them place it there almost totally: `elastic_net` puts **97.7%** of lymphoid signal in B
+and `music`/`nnls` put **95.8%** there while returning **exactly 0.0000** for T. A solver
+returning a hard zero for the dominant lymphocyte in the tissue is not making a quantitative
+error — the T-cell column is not identifiable for it at all.
+
+Restricted to the 8 methods comparable on this reference (`ivygap/deconv/comparability.py`),
+the count is unchanged: **0 agree on T > B**. The inversion is not an artefact of
+including degraded stand-ins.
+
+Artefact: `results/lymphoid_ordering_lgg.json`. Verified by
+`tests/test_lymphoid_ordering.py`, which includes an inverted-signal control and a test that
+adding an arbitrarily large Tumor column does not move the lymphoid ordering — i.e. the
+denominator really is removed by construction rather than merely claimed to be.
+
+### A mechanism was proposed, tested, and REJECTED
+
+The inversion invites an explanation, and the frozen signature offers an obvious one. On the
+1,615-gene marker space the eight profiles are **not** balanced in magnitude, even though marker
+*ownership* is balanced by construction (200 genes each):
+
+| cell type | share of profile mass |
+|---|---|
+| Oligodendrocyte | 22.17% |
+| Astrocyte | 16.93% |
+| Endothelial | 15.26% |
+| **B_cell** | **13.26%** |
+| NK_cell | 12.01% |
+| Macrophage_Microglia | 10.65% |
+| **T_cell** | **5.17%** |
+| Tumor | 4.55% |
+
+**The T_cell column carries 2.6× less mass than B_cell** and is the weakest immune column in the
+matrix. And `B_cell` is the immune profile most correlated with `Macrophage_Microglia`
+(**r = +0.552**, the largest off-diagonal among immune types) — the dominant immune population in
+glioma.
+
+That suggested a mechanism: **B absorbs macrophage/microglia spillover.** It makes a testable
+prediction — across samples, the B estimate should track the Macrophage estimate more closely
+than the T estimate does — so it was tested rather than asserted.
+
+**It failed.** 5 of 10 methods show r(B,M) > r(T,M); sign-test **p = 0.623**. That is a
+coin flip.
+
+**The spillover explanation is therefore not adopted.** The inversion is a measured fact; the
+profile-mass asymmetry is a measured fact about the reference; the causal link between them is
+**not established by these data**, and is recorded here as a rejected hypothesis rather than
+quietly dropped. Whether the inversion is a property of *this reference* or of the deconvolution
+problem itself is tested directly by rebuilding the reference from `gbmap_core.h5ad` — that is
+the `--reference h5ad` arm, and it is the decisive experiment, not this correlation.
+
+One incidental confirmation did come out of it: `music` and `nnls` return **zero variance** in
+T_cell across all 510 samples (the correlation is undefined), which independently confirms the
+hard-zero reading above — for those solvers the T-cell column is not merely small, it is never
+used.
+
+Artefact: `results/spillover_lgg.json`.
+
+### Limits, as declared in advance
+
+- EpiDISH's reference is a **blood** reference applied to **brain tumour** tissue. It is used here
+  only for the *lymphoid sub-composition*, where the CpGs are lineage markers, not for absolute
+  scale.
+- `Macrophage_Microglia` is **not measurable by this route** and is not compared: microglia are
+  brain-resident and appear in no blood reference, and substituting `Mono` would invent a
+  correspondence the reference does not have.
+- This is **LGG**. The anomaly was first seen in GBM. The pre-specification required checking
+  whether it exists in LGG at all before testing it — it does, in 12 of 12 methods, which is what
+  makes this a replication rather than a single observation.
+
+Artefacts: `results/methylation_celltypes_lgg.json`, `results/methylation_celltypes_lgg.csv`.
 
 ---
 
 ## What this arm cannot do, as declared in advance
 
-Leukocyte fraction is **one aggregate number**. It cannot verify a per-type magnitude. The T-cell
+Leukocyte fraction is **one aggregate number**. It cannot verify a per-type magnitude. (Methylation
+can, for the lymphoid types only — that is section 6, and it is a different measurement from the
+leukocyte fraction discussed here.) The T-cell
 decomposition above is therefore evidence about **estimates**, not about per-type truth: it shows
 the methods' tissue T-cell values are two orders of magnitude below their pseudobulk values, which
 is enough to withdraw the over-call claim, but it does not establish what the true T-cell fraction

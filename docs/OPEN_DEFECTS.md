@@ -1671,6 +1671,32 @@ and may change the accuracy ranking. Two rules apply:
 
 ## D16 · The GBmap reference is built from LOG-transformed data treated as linear, and it puts D14's conclusion in question
 
+### 2026-09-18 — the defect nearly reached the headline, and how it was caught
+
+`scripts/absolute_purity_yardstick.py --reference h5ad` exists to produce the **defensible**
+ranking: it rebuilds the reference from `gbmap_core.h5ad` so that MuSiC gets cross-donor
+variance, EPIC gets `refProfiles.var`, and CIBERSORTx S-mode gets its cells
+(`docs/EQUAL_FOOTING.md`). It called `build_from_h5ad(...)` **without passing `matrix`**, and
+that parameter defaults to `"X"`.
+
+So the arm whose entire purpose was to remove a known degradation was about to reintroduce
+**this** one — a log-space signature solved against linear FPKM bulk — into the result that
+replaces the headline ranking. A 16-minute run was killed at the reference-build stage and
+restarted with `matrix="raw/X"`.
+
+**How it was caught:** not by a test. The run was silent for 15 minutes, and checking *why* it
+was silent meant reading the reference builder, where the comment two lines above the read says
+the default `"X"` "is not the defensible choice". Nothing in the pipeline would have flagged it:
+the shapes are identical, the gene space is identical, the run completes, and the numbers are
+plausible.
+
+**This is a gap in the guard rails, not a one-off.** The defect is recorded here as measured and
+understood, and the default was deliberately left at `"X"` to keep archived results
+reproducible — but "the safe value is documented in a comment" is not a control. A caller that
+does not pass `matrix` gets the indefensible matrix silently. Any future caller of
+`build_from_h5ad` that solves against linear bulk must pass `matrix="raw/X"`, and the fact that
+this has to be said in prose is the residual risk.
+
 **Severity: high. It affects the signature matrix every published number was solved against,
 and it forced a correction to D14's published magnitude. Found and measured 2026-09-15.**
 

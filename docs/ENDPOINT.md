@@ -235,12 +235,20 @@ These do not depend on the ranking question and are directly reportable.
 
 - **Every method under-calls tumour by 0.33–0.51 at high purity** — exactly where real tissue
   sits. Error grows monotonically with tumour content.
-- **The missing mass becomes T cells**, over-called **4.6–7.9×** *in the pseudobulk benchmark.*
-  **WITHDRAWN 2026-09-18 as a claim about tissue — it is a simulator artefact.** Against
-  methylation-derived leukocyte fraction on 141 TCGA-GBM samples, the same methods place T cells at
-  **0.0002–0.0085**, two orders of magnitude below their pseudobulk estimates, and the immune
-  compartment as a whole is **under**-called (median 0.661× after the pre-specified mRNA
-  correction). `docs/IMMUNE_ARM.md`. **WITHDRAWN 2026-09-18 as a clinical claim — it is a simulator artefact.** On TCGA-GBM tissue, measured against methylation-derived leukocyte fraction, the same methods place T cells at **0.0002–0.0085**, two orders of magnitude below their pseudobulk estimates, and the immune compartment as a whole is UNDER-called (median 0.661x after the pre-specified mRNA correction). See `docs/IMMUNE_ARM.md`.
+- **The missing mass becomes T cells**, over-called **4.6–7.9×** — *in the pseudobulk
+  benchmark only.* **WITHDRAWN 2026-09-18 as a claim about tissue: it is a simulator artefact.**
+  On TCGA-GBM tissue, measured against methylation-derived leukocyte fraction, the same methods
+  place T cells at **0.0002–0.0085**, two orders of magnitude below their pseudobulk estimates,
+  and the immune compartment as a whole is **UNDER**-called (median 0.661× after the
+  pre-specified mRNA correction). `docs/IMMUNE_ARM.md`.
+- **Methods put B cells above T cells — all of them, in both tissues, and this is wrong.**
+  Pre-registered before measurement with an explicit falsifier, then tested against DNA
+  methylation (EpiDISH RPC, 333 HM450 CpGs) on 530 TCGA-LGG samples. Methylation puts T above B
+  in **93.2%** of samples; **12 of 12 methods put B above T.** Both sides are renormalised within
+  {T, B, NK}, so the denominator difference is removed by construction. This is an
+  **identifiability failure** — lymphocyte signal assigned to the wrong column — and its being
+  unanimous across NNLS, SVR, Bayesian and probabilistic-model families makes it a property of
+  the problem as posed, not a quirk of one solver. `docs/IMMUNE_ARM.md` §6.
 - **ACS is structurally blind to it.** `T_cell` carries no constraint, by pre-registered design,
   because no anatomic fact about T-cell distribution was defensible enough to register.
 - **1 of 15 methods reports uncertainty at all**, and its intervals cover **9.25%** against a

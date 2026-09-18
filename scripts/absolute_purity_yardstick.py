@@ -110,8 +110,15 @@ def main() -> int:
         from ivygap.deconv import r_bridge                                # noqa: PLC0415
         print("rebuilding the reference from gbmap_core.h5ad (carries sigma + donor "
               "profiles) ...")
+        # `matrix="raw/X"` IS NOT OPTIONAL HERE (OPEN_DEFECTS D16). `build_from_h5ad`
+        # defaults to `X`, and GBmap's `X` is log1p(counts * s_i) -- verified to float32
+        # precision -- not linear expression. Averaging it yields a profile in LOG space
+        # while this bulk is linear FPKM, which is not the mixing model any method here
+        # assumes. The default exists so archived results stay reproducible; reference.py
+        # says in as many words that it "is not the defensible choice". This arm exists
+        # precisely to produce a DEFENSIBLE ranking, so it reads the genuine counts.
         ref, sc_expr, sc_meta = build_from_h5ad(
-            config.REFERENCE_DIR / "gbmap_core.h5ad",
+            config.REFERENCE_DIR / "gbmap_core.h5ad", matrix="raw/X",
             restrict_to_genes=bulk.index, export=False)
         r_bridge.set_cell_source(config.PRIMARY_REFERENCE, sc_expr, sc_meta)
         print(f"  {sc_expr.shape[1]:,} cells, {sc_meta['donor'].nunique()} donors; "
@@ -136,8 +143,11 @@ def main() -> int:
     picked = select_signature_genes(ref.subset_genes(shared_genes),
                                     n_per_type=config.SIGNATURE_GENES_PER_TYPE)
     genes = [g for g in picked if g in bulk.index]
-    print(f"reference: frozen GBmap-derived signature, {len(shared_genes):,} genes shared "
-          f"with the bulk")
+    # LABEL WHAT WAS ACTUALLY USED (OPEN_DEFECTS D17). This line previously said "frozen"
+    # unconditionally, so an h5ad run wrote a log claiming a reference it did not use.
+    _label = ("GBmap rebuilt from raw/X counts (sigma + donor profiles)"
+              if args.reference == "h5ad" else "frozen GBmap-derived signature")
+    print(f"reference: {_label}, {len(shared_genes):,} genes shared with the bulk")
     print(f"  scored on {len(genes):,} markers "
           f"({config.SIGNATURE_GENES_PER_TYPE}/type, chosen from the reference alone)")
     if len(genes) < config.MIN_GENES_SHARED:
