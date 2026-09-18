@@ -123,6 +123,7 @@ def main() -> int:
     print(f"\nrunning methods on {sub.shape[1]} samples x {sub.shape[0]:,} genes:")
     out: dict[str, dict] = {}
     per_sample: dict[str, pd.Series] = {}
+    per_sample_full: list[pd.DataFrame] = []
     for m in build_methods(prefer_r=True):
         try:
             est = m.fit_predict(data)
@@ -144,6 +145,13 @@ def main() -> int:
         # failure-factor study (prespecified/biological_failure_factors.md), whose outcome is
         # the per-sample signed error. Writing them here avoids a second 30-minute run.
         per_sample[m.name] = pd.Series(t, index=list(sub.columns))
+        # FULL ESTIMATES, all roster types. The Tumor column alone cannot support the immune
+        # arm (prespecified/immune_failure_factors.md), whose outcome needs
+        # Macrophage + T + NK + B summed. Persisting only Tumor meant the immune arm required
+        # a complete re-run; it is written once here so that cannot happen again.
+        full = est.reindex(index=list(sub.columns), columns=list(config.CELL_TYPES))
+        full.insert(0, "method", m.name)
+        per_sample_full.append(full.reset_index().rename(columns={"index": "sample"}))
         rho = float(stats.spearmanr(t[ok], purity[ok]).statistic)
         pr = float(stats.pearsonr(t[ok], purity[ok]).statistic)
         out[m.name] = {
@@ -202,6 +210,12 @@ def main() -> int:
         est.insert(0, "absolute_purity", purity)
         est.index.name = "sample"
         est.to_csv(config.RESULTS_DIR / f"absolute_purity_per_sample{tag}.csv")
+        if per_sample_full:
+            allf = pd.concat(per_sample_full, ignore_index=True)
+            allf.to_csv(config.RESULTS_DIR / f"estimates_full{tag}.csv", index=False)
+            print(f"wrote results/estimates_full{tag}.csv "
+                  f"({allf['method'].nunique()} methods x {allf['sample'].nunique()} samples "
+                  f"x {len(config.CELL_TYPES)} types)")
         print(f"wrote results/absolute_purity_per_sample{tag}.csv "
               f"({est.shape[0]} samples x {est.shape[1] - 1} methods + purity)")
     print(f"\nwrote results/absolute_purity_yardstick{tag}.json")
