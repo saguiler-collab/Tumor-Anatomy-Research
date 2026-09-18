@@ -23,6 +23,7 @@ keeping, marked RESOLVED at the top.
 | **D11** EPIC returns the within-subset mRNA share, not the full-space one | **OPEN, and now bounded** — see D12: the conversion is the identity, so the effect on the published numbers is nil, and `otherCells` is measured at max 2.79e-03, so the within-subset/full-space gap is small rather than assumed small. It is the same estimand question as C3 for every method, answered by saying plainly what is reported |
 | **D12** the cell-size correction has never been applied — it is the identity | **OPEN, high** — supersedes most of D1; no number changes, but the registration says otherwise |
 | **D13** EPIC runs with `refProfiles.var` unset, so its gene weighting is off; its output is mislabelled as a cell fraction | **MEASURED and CLOSED** 2026-09-17 — restoring variance weighting changes the estimates materially (mean 0.0829 on Tumor, max 0.3539) and changes ACS by **exactly 0.0000**. `otherCells` max 2.79e-03. Convergence 4 of 25 probed samples fail (PARTIAL). The variance-weighted run is the one that is EPIC, decided on the invariant before the scores were seen. `ROAD_TO_PAPER.md` 0.4 |
+| **D18** `_run_bounded`'s timeout never fires for methods that start an R socket cluster | **OPEN, medium** — orphaned cluster workers hold the inherited stdout pipe, so `communicate()` blocks past the budget (BayesPrism ran 93 min against a 2400 s budget). Decides WHICH IMPLEMENTATION produces a number as a function of machine load. Mitigated by an external watchdog, which lives outside the repo; the real fix is not yet applied. |
 | **D17** variant reference builds overwrote the primary reference's sampling record | **FIXED** 2026-09-15 — a figure script reads that path, so a sensitivity build's numbers could be published as the leaderboard's. Variant builds now get their own file. |
 | **D16** the GBmap reference is built from LOG-transformed data treated as linear | **OPEN, highest** — model violation in the signature every number was solved against, and it may be the real cause of D14 rather than "the atlas" |
 | **D15** the accuracy arm scores mRNA-share estimates against CELL-fraction truth | **OPEN, high** — follows from D12; affects every MAE/RMSE/bias. Both truths are now emitted; which to score against is answered by the two-problem framing |
@@ -1916,6 +1917,69 @@ whether the single-cell side could supply them instead is what surfaced `raw/X`,
 the fact that the pipeline had been reading the wrong matrix all along. CDSeq stays BLOCKED on
 the anatomic arm pending Ivy GAP read counts; it *could* run on the pseudobulk arm, whose
 mixtures can be rebuilt from `raw/X`.
+
+---
+
+---
+
+## D18 · `_run_bounded`'s timeout does not fire for methods that start an R socket cluster
+
+**Severity: medium. It does not corrupt a number, but it decides WHICH IMPLEMENTATION produces
+one, silently and as a function of how busy the machine is. Found 2026-09-18.**
+
+### What happened
+
+BayesPrism's budget is `timeout_for("bayesprism") == 2400`. In the GBM h5ad run its R master
+ran for **93 minutes** and `communicate(timeout=2400)` never raised `TimeoutExpired`. The method
+eventually recorded as `python-reimplementation`.
+
+### Why `_run_bounded` did not catch it
+
+`_run_bounded` was written for exactly this class of bug (see its docstring on DWLS/MAST) and
+does the right thing: `start_new_session=True`, then `os.killpg` on timeout. What it cannot do
+is fire a timeout that never arrives.
+
+BayesPrism starts a **`parallel` socket cluster**. The workers are separate R processes that
+connect back to the master over TCP (observed: `127.0.0.1:58442->127.0.0.1:11581`, three
+ESTABLISHED). They inherit the stdout/stderr pipes. When the master is killed the workers are
+**orphaned to ppid 1**, keep running, and keep the pipe open — so `communicate()` on the Python
+side stays blocked on a pipe that will never reach EOF, and the parent hangs even after the
+child it knows about is dead. Verified: killing the master alone left the Python parent blocked;
+killing the three orphaned workers released it.
+
+### The diagnostic trap, recorded because I fell into it
+
+**An R socket-cluster master sits at 0% CPU by design** while its workers compute. I read
+"0% CPU, CPU time frozen, 93 minutes elapsed" as a stalled process and killed it. It was not
+stalled — it was waiting on workers that were actively running at nice priority. `pgrep -P
+<master>` showed no children, which looked like confirmation, but cluster workers are not
+necessarily direct children and in this case had already been re-parented.
+
+**The correct check is `lsof -nP -iTCP:<cluster port>` and a scan for `ppid 1` R processes**, not
+CPU percentage of the master.
+
+### Current mitigation, and what it is not
+
+An external watchdog enforces the budgets (`quanTIseq` 900s, `BayesPrism` 2700s) and sweeps R
+processes orphaned to ppid 1. **That is a mitigation, not a fix** — it lives outside the
+repository, so a clean checkout reproduces the hang.
+
+### The real fix, not yet applied
+
+`_run_bounded` should not rely on the child's pipes reaching EOF. Either read with a deadline on
+the file descriptors directly, or close the parent's copies after killing the group and reap with
+`os.waitpid`, so an orphaned grandchild holding the write end cannot block the parent. It is left
+open rather than changed mid-run, because altering process handling while two multi-hour cohort
+legs are in flight would invalidate the runs it is meant to protect.
+
+### What it means for results already recorded
+
+`bayesprism` and `dwls` are recorded as `python-reimplementation` in both GBM runs, labelled as
+such and never reported under the published package's name. The exposure is that **whether a
+method runs as its R package or its reimplementation can depend on machine load**, which is not a
+scientific variable. `results/equal_footing_ranking.json` therefore records
+`implementation_frozen` and `implementation_h5ad` per method, and the ranking script recomputes
+Kendall tau with implementation-switched methods excluded.
 
 ---
 
