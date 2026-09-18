@@ -346,6 +346,37 @@ on whether a method reports lymphocytes at all, it is worse.
 
 Artefacts: `results/lymphoid_ordering.json` (frozen), `results/lymphoid_ordering_h5ad.json`.
 
+### A second mechanism was proposed for the ABSENCE mode, and also rejected
+
+The natural explanation for a method returning no lymphocytes is that it happens in **high-purity**
+samples, where the tumour dominates the signal — which would tie the absence mode neatly to this
+project's central finding that error grows with tumour content. It makes a one-sided prediction:
+samples with zero lymphoid signal should have *higher* DNA purity than the rest.
+
+**It does not hold.** One-sided Mann–Whitney per method, on the same DNA-purity truth:
+
+| cohort | methods where zero-lymphoid samples are significantly higher purity |
+|---|---|
+| GBM | **2 of 8** testable |
+| LGG | **1 of 8** testable |
+
+Several methods run the *other* way: in LGG, `bisque`'s zero-lymphoid samples are **0.101 lower**
+in purity and `cibersortx`'s **0.073 lower**. And the two worst offenders are flat — `music` and
+`nnls` return zero lymphoid signal in **443 of 510** LGG samples with **no purity relationship at
+all** (p = 0.95). When a method fails in 87% of samples there is little left for purity to explain.
+
+**The one exception is real and is reported as an exception:** `dwls` does lose the lymphoid
+compartment preferentially at high purity, consistently in both cohorts (GBM +0.167, p = 1.2e-05;
+LGG +0.067, p = 1.4e-07). That is a single-method effect, not the mechanism for the mode.
+
+**So the absence mode has no established cause either.** That is now **two** rejected explanations
+for the lymphoid failures — macrophage spillover for the misassignment, high purity for the
+absence — alongside the refuted signature-separability account. The failures are measured,
+replicated across two cohorts and two references, and **unexplained**. Stating that is more useful
+than a plausible story that does not survive its own test.
+
+Artefact: `results/zero_lymphoid_vs_purity.json`.
+
 ### Secondary, NOT registered: the full lymphoid ordering
 
 The same measurement yields NK at no extra cost, so the three-way ordering is reported here.
