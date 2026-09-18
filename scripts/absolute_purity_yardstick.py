@@ -151,7 +151,8 @@ def main() -> int:
         # a complete re-run; it is written once here so that cannot happen again.
         full = est.reindex(index=list(sub.columns), columns=list(config.CELL_TYPES))
         full.insert(0, "method", m.name)
-        per_sample_full.append(full.reset_index().rename(columns={"index": "sample"}))
+        # reset_index() names the column after the index ("sample_id"), never "index".
+        per_sample_full.append(full.rename_axis("sample").reset_index())
         rho = float(stats.spearmanr(t[ok], purity[ok]).statistic)
         pr = float(stats.pearsonr(t[ok], purity[ok]).statistic)
         out[m.name] = {

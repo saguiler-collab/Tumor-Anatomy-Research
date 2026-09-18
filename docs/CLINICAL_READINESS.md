@@ -112,7 +112,7 @@ True mean T-cell content in those mixtures is **0.044**. Predicted:
 |---|---|---|---|---|
 | 0.202 (**4.6×**) | 0.234 (5.3×) | 0.263 (6.0×) | 0.339 (7.7×) | 0.350 (**7.9×**) |
 
-**Every method invents T cells in high-purity tumour, by a factor of 4.6 to 7.9.** The
+**Every method invents T cells in high-purity tumour, by a factor of 4.6 to 7.9.** **WITHDRAWN 2026-09-18 as a clinical claim — it is a simulator artefact.** On TCGA-GBM tissue, measured against methylation-derived leukocyte fraction, the same methods place T cells at **0.0002–0.0085**, two orders of magnitude below their pseudobulk estimates, and the immune compartment as a whole is UNDER-called (median 0.661x after the pre-specified mRNA correction). See `docs/IMMUNE_ARM.md`. The
 Astrocyte sidecar — the population this project already flags as unidentifiable against Tumor
 — absorbs only a third to a fifth as much.
 

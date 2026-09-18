@@ -235,8 +235,12 @@ These do not depend on the ranking question and are directly reportable.
 
 - **Every method under-calls tumour by 0.33–0.51 at high purity** — exactly where real tissue
   sits. Error grows monotonically with tumour content.
-- **The missing mass becomes T cells**, over-called **4.6–7.9×**. This is the largest error mode
-  in the panel.
+- **The missing mass becomes T cells**, over-called **4.6–7.9×** *in the pseudobulk benchmark.*
+  **WITHDRAWN 2026-09-18 as a claim about tissue — it is a simulator artefact.** Against
+  methylation-derived leukocyte fraction on 141 TCGA-GBM samples, the same methods place T cells at
+  **0.0002–0.0085**, two orders of magnitude below their pseudobulk estimates, and the immune
+  compartment as a whole is **under**-called (median 0.661× after the pre-specified mRNA
+  correction). `docs/IMMUNE_ARM.md`. **WITHDRAWN 2026-09-18 as a clinical claim — it is a simulator artefact.** On TCGA-GBM tissue, measured against methylation-derived leukocyte fraction, the same methods place T cells at **0.0002–0.0085**, two orders of magnitude below their pseudobulk estimates, and the immune compartment as a whole is UNDER-called (median 0.661x after the pre-specified mRNA correction). See `docs/IMMUNE_ARM.md`.
 - **ACS is structurally blind to it.** `T_cell` carries no constraint, by pre-registered design,
   because no anatomic fact about T-cell distribution was defensible enough to register.
 - **1 of 15 methods reports uncertainty at all**, and its intervals cover **9.25%** against a

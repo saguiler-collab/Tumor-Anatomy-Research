@@ -137,6 +137,34 @@ to prediction. A stronger negative than either cohort alone.
 **Every method does worse in LGG, and the reference explanation is as plausible as the biological
 one** — a glioblastoma atlas applied to a different disease. Do not claim otherwise.
 
+## 7b · Result 4b — the second ground truth, and a retraction
+
+*Source: `results/immune_arm.json`, `docs/IMMUNE_ARM.md`*
+
+Leukocyte fraction from **DNA methylation** (Thorsson 2018) — a third molecule — on 141 TCGA-GBM
+samples. **Both pre-specified predictions failed.**
+
+**Methods UNDER-call immune content** (median error −0.1017; 3 of 12 positive, p = 0.146), and the
+under-call **survives** the pre-specified mRNA-content correction (median **0.661×**) that was
+declared in advance to work against this conclusion.
+
+**The 4.6–7.9× T-cell over-call is a simulator artefact.** On tissue: **0.0002–0.0085** against
+pseudobulk 0.202–0.350. Withdrawn as a clinical claim — the sixth withdrawal in this project, and
+the first corrected by a molecule the project had never used.
+
+**The two arms' biases are anti-correlated, ρ = −0.8028, p = 0.0017** — largely a compositional
+necessity (estimates sum to one) and reported as such, not as a discovery. Its real force is that
+the errors are *not independent*, so no method can be judged on one compartment alone.
+
+**The positive result: CIBERSORTx and SVR are best calibrated against BOTH molecules** —
+65.6%/61.5% tumour recovery, 1.03×/0.87× immune fold. A method ranking with orthogonal support,
+which the anatomy score could not produce. **Bisque** carries no tumour information (r = −0.006)
+while over-calling immune 2.27×.
+
+**Unpredicted observation:** methods place **more B cells than T cells** in GBM (CIBERSORTx 0.046
+vs 0.003) while the reference holds 5× more T than B. An identifiability failure, reported as
+needing its own test since no direction was pre-specified for it.
+
 ## 8 · Result 5 — where the failure lives
 
 *Source: `results/mes_by_niche.json`*
@@ -150,9 +178,11 @@ is the maximum", which is weak at five categories. Post hoc and labelled: PAN �
 
 ## 9 · Limitations — none of these belong in a footnote
 
-1. **Only the Tumor column has DNA ground truth.** Nothing here speaks to immune accuracy, which
-   is what deconvolution is most often used for — and where the pseudobulk arm shows T cells
-   over-called **4.6–7.9×**.
+1. ~~Only the Tumor column has DNA ground truth.~~ **RESOLVED** — the immune compartment now has
+   its own independent ground truth, methylation-derived leukocyte fraction (§7b). It produced a
+   **retraction**: the pseudobulk 4.6–7.9× T-cell over-call does not exist on tissue, where the
+   immune compartment is *under*-called. What remains unresolved is **per-type** immune truth;
+   leukocyte fraction is one aggregate number.
 2. **One reference for every method.** "The biology breaks deconvolution" cannot be separated
    from "the biology is under-represented in GBmap".
 3. **Purity confounds with almost everything**; the joint model adjusts only linearly.

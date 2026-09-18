@@ -60,6 +60,15 @@ def main() -> int:
         return 2
 
     full = pd.read_csv(full_p)
+    # SAMPLE COLUMN NAME. The estimate frames carry `index.name = "sample_id"`, so
+    # `reset_index()` names the column after the index, not "index" -- a rename to "sample"
+    # in the writer silently did nothing and this read raised KeyError. Detect it instead of
+    # assuming, because a wrong guess here would join nothing and report an empty arm.
+    scol = next((c for c in ("sample", "sample_id", "index") if c in full.columns), None)
+    if scol is None:
+        print(f"BLOCKED: no sample column in {full_p.name}; found {list(full.columns)[:4]}")
+        return 2
+    full = full.rename(columns={scol: "sample"})
     full["sample"] = full["sample"].astype(str)
     lf = pd.read_csv(LF_PATH, sep="\t", header=None,
                      names=["study", "barcode", "leukocyte_fraction"])
