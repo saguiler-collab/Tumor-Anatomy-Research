@@ -182,15 +182,59 @@ directional comparison legitimate at all.
 
 ### What this is, and what it is not
 
-This is an **identifiability failure**, not a proportion error. The solvers are not merely
-mis-scaling lymphocyte abundance; they are assigning lymphocyte signal to the **wrong column**.
-A method can be given a reference holding 5× more T than B, run on tissue whose methylation says
-T outnumbers B roughly 2.3:1, and still return B as the dominant lymphocyte — unanimously, across
-twelve methods spanning NNLS, SVR, Bayesian, and probabilistic-model families.
+This is a **misassignment**, not a proportion error. The solvers are not merely mis-scaling
+lymphocyte abundance; they are assigning lymphocyte signal to the **wrong column**. A method can
+be given a reference holding 5× more T than B, run on tissue whose methylation says T outnumbers
+B roughly 2.3:1, and still return B as the dominant lymphocyte — unanimously, across twelve
+methods spanning NNLS, SVR, Bayesian, and probabilistic-model families.
 
 That it is **unanimous across method families** is the important part. It is not a quirk of one
-solver's regularisation; it is a property of the problem as posed — a direction in gene space
-along which T-cell and B-cell signal are not separable given this reference and this tissue.
+solver's regularisation.
+
+> **CORRECTED 2026-09-18.** This paragraph previously called the result "a property of the
+> problem as posed — a direction in gene space along which T-cell and B-cell signal are not
+> separable". **That explanation was tested and is wrong**, and it is withdrawn. See below.
+
+### The "not separable" explanation was tested and REFUTED
+
+"The signature cannot separate T from B" is a claim about the **matrix**, testable with no tissue
+at all: build mixtures *from the reference itself* with a known T:B ratio and see whether a solver
+recovers it. `scripts/identifiability_probe.py` does exactly that, with the planted truth chosen
+to match the tissue (T:B = {d['planted_T_over_B']}, the methylation value) rather than to produce an outcome.
+
+**The signature separates T from B in every condition tested:**
+
+| condition | est T | est B | T:B | verdict |
+|---|---|---|---|---|
+| multiplicative noise CV = 0.0 | 0.0700 | 0.0300 | 2.33 | recovered |
+| multiplicative noise CV = 0.01 | 0.0701 | 0.0301 | 2.33 | recovered |
+| multiplicative noise CV = 0.05 | 0.0702 | 0.0302 | 2.33 | recovered |
+| multiplicative noise CV = 0.1 | 0.0698 | 0.0302 | 2.31 | recovered |
+| multiplicative noise CV = 0.25 | 0.0671 | 0.0299 | 2.24 | recovered |
+| multiplicative noise CV = 0.5 | 0.0627 | 0.0386 | 1.63 | recovered |
+| multiplicative noise CV = 1.0 | 0.0711 | 0.0537 | 1.32 | recovered |
+| reference missing `Tumor` | 0.2272 | 0.0878 | 2.59 | recovered |
+| reference missing `Macrophage_Microglia` | 0.1158 | 0.0551 | 2.10 | recovered |
+| reference missing `NK_cell` | 0.0966 | 0.0343 | 2.81 | recovered |
+| reference missing `Endothelial` | 0.0707 | 0.0315 | 2.24 | recovered |
+| reference missing `Oligodendrocyte` | 0.0779 | 0.0279 | 2.79 | recovered |
+| reference missing `Astrocyte` | 0.0690 | 0.0288 | 2.40 | recovered |
+
+Plain NNLS recovers **T:B = 2.33 exactly** on noiseless data, still recovers T > B at **100%
+multiplicative noise**, and still recovers it when an entire cell type is **deleted from the
+reference** — the standard explanation for misassigned signal. The condition number of the
+eight-type signature is **5.29**, which is well-conditioned, not marginal.
+
+**So the inversion is not caused by the signature's conditioning, not by noise, and not by a
+missing cell type.** Whatever produces it lives in the gap between this reference's expression
+space and real bulk tissue — platform and normalisation differences between a single-cell-derived
+profile and TCGA bulk, or genuine glioma biology the reference does not represent. **That cause is
+not identified, and this document does not claim one.**
+
+This matters practically: the failure is invisible to the checks a careful analyst would actually
+run. You cannot catch it by inspecting the condition number of your signature matrix, by adding
+noise, or by worrying about a missing cell type. It only appears when you have an orthogonal
+per-type measurement to check against — which is the argument for obtaining one.
 
 ### Secondary, NOT registered: the full lymphoid ordering
 

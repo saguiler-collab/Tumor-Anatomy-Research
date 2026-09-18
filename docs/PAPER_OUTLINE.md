@@ -198,8 +198,13 @@ methods comparable on this reference, so it is not an artefact of degraded stand
 reproduce the true ordering.** `elastic_net` puts **97.7%** of lymphoid signal in B; `music` and
 `nnls` return **exactly 0.0000** for T in all 510 samples.
 
-This is an **identifiability failure, not a proportion error**: lymphocyte signal is assigned to
-the wrong column. Its being unanimous across NNLS, SVR, Bayesian and probabilistic-model families
+This is a **misassignment, not a proportion error**: lymphocyte signal is assigned to the wrong
+column. **The obvious explanation — that the signature cannot separate T from B — was tested and
+refuted** (`scripts/identifiability_probe.py`): on mixtures built from the reference itself, plain
+NNLS recovers T:B = 2.33 exactly, still recovers T > B at 100% multiplicative noise, and still
+recovers it with an entire cell type deleted from the reference; the signature's condition number
+is 5.3. The cause lies in the gap between the reference's expression space and real bulk tissue,
+and **is not identified**. Its being unanimous across NNLS, SVR, Bayesian and probabilistic-model families
 makes it a property of the problem as posed rather than a quirk of one solver — and it
 **replicates the GBM observation in a second tissue**, which is what turns an anomaly into a
 finding.

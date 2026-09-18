@@ -267,10 +267,13 @@ These do not depend on the ranking question and are directly reportable.
   methylation (EpiDISH RPC, 255 of its 333 reference HM450 CpGs — the rest are all-NA in this
   matrix) on 530 TCGA-LGG samples. Methylation puts T above B
   in **93.2%** of samples; **12 of 12 methods put B above T.** Both sides are renormalised within
-  {T, B, NK}, so the denominator difference is removed by construction. This is an
-  **identifiability failure** — lymphocyte signal assigned to the wrong column — and its being
-  unanimous across NNLS, SVR, Bayesian and probabilistic-model families makes it a property of
-  the problem as posed, not a quirk of one solver. `docs/IMMUNE_ARM.md` §6.
+  {T, B, NK}, so the denominator difference is removed by construction. This is a **misassignment** — lymphocyte
+  signal put in the wrong column — unanimous across NNLS, SVR, Bayesian and probabilistic-model
+  families. **Its cause is not identified:** the natural explanation, that the signature cannot
+  separate T from B, was tested and refuted — on mixtures built from the reference itself NNLS
+  recovers the planted T:B exactly, survives 100% noise, and survives deleting a whole cell type
+  (condition number 5.3). It is invisible to every check short of an orthogonal per-type
+  measurement. `docs/IMMUNE_ARM.md` §6.
 - **ACS is structurally blind to it.** `T_cell` carries no constraint, by pre-registered design,
   because no anatomic fact about T-cell distribution was defensible enough to register.
 - **1 of 15 methods reports uncertainty at all**, and its intervals cover **9.25%** against a
