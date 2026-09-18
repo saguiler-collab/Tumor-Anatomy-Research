@@ -141,6 +141,23 @@ space. And the registered primary outcome compares two rankings that
 **both** use GBmap — the ACS arm deconvolves against it, the accuracy arm builds its mixtures
 from its cells (C4). Part of rho = 0.7501 is two GBmap-based rankings agreeing about GBmap.
 
+**And it is not only the atlas — it is what the reference CARRIES.** Measured 2026-09-18
+against DNA purity on TCGA-GBM, holding the atlas fixed and changing only whether the reference
+supplies cross-donor variance and donor profiles:
+
+> **Kendall tau between the frozen-signature ranking and the sigma-carrying ranking = +0.214**
+> on the 8 methods rankable under both, scored on the same 154 samples.
+
+Near-random. **MuSiC — whose entire published contribution is variance weighting — moves from
+excluded-as-arithmetically-NNLS (17.5% recovery) to FIRST at 60.2%**, and DWLS falls from rank 3
+to rank 12. The obvious confound was tested: only 1 of the 8 changed implementation
+(reimplementation → R package), and excluding it tau is **+0.143**, lower still.
+`docs/EQUAL_FOOTING.md`.
+
+This is a stronger statement than §2b's. A ranking that reshuffles when the *atlas* changes might
+be blamed on biology. A ranking that reshuffles when the **same atlas is merely supplied in the
+form the methods were designed to consume** is measuring the harness, not the methods.
+
 ### 2c. It cannot resolve the top of its own leaderboard, and it is blind to magnitude
 
 | rank | method | ACS |
