@@ -47,6 +47,21 @@ def main() -> int:
     # --- the headline measurement, side by side ---------------------------------------
     gr = g["factors"]["purity"]["interpretable_statistic"]
     lr = l["factors"]["purity"]["interpretable_statistic"]
+    # COMPARABILITY: the recovery ranking is exactly where the equal-footing confound bites,
+    # because the frozen signature disables MuSiC's and EPIC's defining feature while leaving
+    # CIBERSORTx and SVR untouched. Non-comparable methods are listed with their numbers and
+    # marked, never silently dropped and never ranked.
+    from ivygap.deconv import comparability as cmpb                       # noqa: PLC0415
+    ref_used = "frozen"
+    yp = config.RESULTS_DIR / "absolute_purity_yardstick.json"
+    if yp.exists():
+        ref_used = json.loads(yp.read_text()).get("reference", "frozen")
+    excluded = cmpb.non_comparable(ref_used)
+    print(f"reference: {ref_used}.  Methods marked * were NOT evaluated under their intended "
+          f"inputs and are excluded from the ranking:")
+    for m, why in excluded.items():
+        print(f"  * {m:22s} {why[:88]}")
+    print()
     print("RECOVERY OF TRUE TUMOUR-CONTENT VARIATION (1 = perfect, 0 = no information)\n")
     print(f"{'method':18s} {'GBM':>9s} {'LGG':>9s} {'change':>9s}")
     print("-" * 49)
@@ -56,10 +71,18 @@ def main() -> int:
             continue
         a = gr["per_method"][m]["recovered_fraction"]
         b = lr["per_method"][m]["recovered_fraction"]
-        rows[m] = {"gbm": a, "lgg": b, "change": b - a}
-        print(f"{m:18s} {a:8.1%} {b:8.1%} {b - a:+8.1%}")
+        flag = " *" if m in excluded else ""
+        rows[m] = {"gbm": a, "lgg": b, "change": b - a,
+                   "comparable": m not in excluded}
+        print(f"{m:18s} {a:8.1%} {b:8.1%} {b - a:+8.1%}{flag}")
     med_g, med_l = gr["median_recovered_fraction"], lr["median_recovered_fraction"]
-    print(f"\n{'median':18s} {med_g:8.1%} {med_l:8.1%} {med_l - med_g:+8.1%}")
+    print(f"\n{'median, all':18s} {med_g:8.1%} {med_l:8.1%} {med_l - med_g:+8.1%}")
+    comp = {m: v for m, v in rows.items() if v["comparable"]}
+    if comp:
+        cg = float(np.median([v["gbm"] for v in comp.values()]))
+        cl = float(np.median([v["lgg"] for v in comp.values()]))
+        print(f"{'median, comparable':18s} {cg:8.1%} {cl:8.1%} {cl - cg:+8.1%}"
+              f"   <- the figure to quote ({len(comp)} methods)")
 
     # --- factor-by-factor replication ---------------------------------------------------
     print("\n\nFACTOR REPLICATION\n")
@@ -103,7 +126,17 @@ def main() -> int:
                                "significance. A factor that reverses has not replicated "
                                "whatever its p-value.",
            "n_gbm": g["n_samples_complete_cases"], "n_lgg": l["n_samples_complete_cases"],
-           "recovery_fraction": {"gbm_median": med_g, "lgg_median": med_l,
+           "reference": ref_used,
+           "excluded_from_ranking": excluded,
+           "recovery_fraction": {"gbm_median_all": med_g, "lgg_median_all": med_l,
+                                 "gbm_median_comparable": (
+                                     round(float(np.median([v["gbm"] for v in rows.values()
+                                                            if v["comparable"]])), 4)
+                                     if any(v["comparable"] for v in rows.values()) else None),
+                                 "lgg_median_comparable": (
+                                     round(float(np.median([v["lgg"] for v in rows.values()
+                                                            if v["comparable"]])), 4)
+                                     if any(v["comparable"] for v in rows.values()) else None),
                                  "per_method": rows},
            "factors": rep}
     (config.RESULTS_DIR / "cross_cohort_validation.json").write_text(json.dumps(out, indent=2))

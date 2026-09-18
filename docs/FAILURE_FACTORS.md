@@ -9,6 +9,15 @@ was committed before any error-versus-factor relationship was examined.**
 > a median of 21.5% of the true variation in tumour content. The range across twelve methods is
 > −1.1% to 65.6%.**
 
+> **CORRECTED 2026-09-18 — the figure to quote is 33.1% / 23.3%, not 21.5% / 17.2%.**
+> The medians above pool **all** methods, including four that were never evaluated under their
+> intended inputs (Bisque needs paired bulk/single-cell subjects; MuSiC needs sigma; EPIC needs
+> `refProfiles.var`; SCDC ENSEMBLE needs a second reference). Restricting to the **8 comparable**
+> methods gives **median recovery 33.1% in GBM and 23.3% in LGG**. Including un-evaluable methods
+> understated the figure by about 12 points. `docs/EQUAL_FOOTING.md`,
+> `ivygap/deconv/comparability.py`.
+
+
 "Recovery fraction" is defined as `1 + slope`, where the slope regresses `estimate − purity` on
 purity. A method that tracks purity perfectly scores 1.0; a method carrying **no information at
 all** scores 0.0.
@@ -78,8 +87,8 @@ reported as evidence of absence afterwards.
 
 **Does:** deconvolution error in GBM is partly predictable from tumour biology — specifically
 from transcriptional subtype, and not from genomic instability. And the absolute performance
-figure, 21.5% of purity variation recovered, is a usable number for anyone deciding whether to
-trust a GBM deconvolution.
+figure — **33.1%** of purity variation recovered across the 8 comparable methods — is a usable
+number for anyone deciding whether to trust a GBM deconvolution.
 
 **Does not:** this is one cohort, one reference, and only the *Tumor* column has DNA ground
 truth. Nothing here speaks to immune-cell accuracy. The reference is GBmap-derived for every
@@ -110,7 +119,8 @@ it points the other way.
 
 | | GBM (n = 147) | LGG (n = 496) |
 |---|---|---|
-| **median recovery of true purity variation** | **21.5%** | **17.2%** |
+| **median recovery, comparable methods** | **33.1%** | **23.3%** |
+| median recovery, all methods *(understated — includes un-evaluable methods)* | 21.5% | 17.2% |
 | purity coefficient | **−0.13595** | **−0.13386** |
 | methods in the predicted direction | **12 / 12** | **12 / 12** |
 | Holm-corrected p | 0.0034 | **0.0024** |

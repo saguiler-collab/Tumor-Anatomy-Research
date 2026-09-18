@@ -94,6 +94,15 @@ Median **21.5%** of true purity variation recovered; range **−1.1%** (Bisque, 
 **65.6%** (CIBERSORTx). **Bisque's tumour column carries no information while returning a
 confident-looking number.**
 
+> **CORRECTED 2026-09-18 — the figure to quote is 33.1% / 23.3%, not 21.5% / 17.2%.**
+> The medians above pool **all** methods, including four that were never evaluated under their
+> intended inputs (Bisque needs paired bulk/single-cell subjects; MuSiC needs sigma; EPIC needs
+> `refProfiles.var`; SCDC ENSEMBLE needs a second reference). Restricting to the **8 comparable**
+> methods gives **median recovery 33.1% in GBM and 23.3% in LGG**. Including un-evaluable methods
+> understated the figure by about 12 points. `docs/EQUAL_FOOTING.md`,
+> `ivygap/deconv/comparability.py`.
+
+
 **State plainly:** regressing (estimate − purity) on purity is mechanically negative, so the
 *consistency* across methods is arithmetic. The **magnitude** is the finding.
 
@@ -117,7 +126,8 @@ evidence of absence.
 
 *Source: `results/failure_factors_lgg.json`, `results/cross_cohort_validation.json`*
 
-**Replicated.** Median recovery **21.5% → 17.2%**; purity coefficient **−0.13595 → −0.13386**,
+**Replicated.** Median recovery **33.1% → 23.3%** across the 8 comparable methods (21.5% → 17.2%
+if un-evaluable methods are pooled in, which understates it); purity coefficient **−0.13595 → −0.13386**,
 **12/12** methods both times, Holm **p = 0.0024**. Coefficients agree to two decimal places across
 two grades and 3.4× the sample size. The method ranking survives — CIBERSORTx and SVR top, Bisque
 recovering nothing (r = −0.000).

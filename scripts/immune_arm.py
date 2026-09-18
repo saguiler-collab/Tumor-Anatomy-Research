@@ -117,10 +117,32 @@ def main() -> int:
               f"err {np.mean(e):+.4f}  {per_method[m]['fold_over_call']}x  "
               f"rho {rho:+.4f}  recovers {per_method[m]['recovered_fraction']:.1%}")
 
-    errs = np.array([v["mean_error"] for v in per_method.values()])
+    # COMPARABILITY. A method whose intended input was unavailable did not fail to estimate --
+    # it was never evaluated. Including it in a ranking would report an experiment's limitation
+    # as a property of someone else's method. Excluded here, and REPORTED below under
+    # availability with its numbers intact.
+    from ivygap.deconv import comparability as cmp                        # noqa: PLC0415
+    yj_p = config.RESULTS_DIR / f"absolute_purity_yardstick{tag}.json"
+    ref_used, degen, failed = "frozen", set(), set()
+    if yj_p.exists():
+        yj = json.loads(yj_p.read_text())
+        ref_used = yj.get("reference", "frozen")
+        degen = {m for m, v in yj.get("methods", {}).items() if v.get("degenerate")}
+        failed = {m for m, v in yj.get("methods", {}).items() if "failed" in v}
+    excluded = cmp.non_comparable(ref_used, degen, failed)
+    comp = [m for m in per_method if m not in excluded]
+    print(f"\nreference: {ref_used}")
+    print(f"COMPARABLE ({len(comp)}): {comp}")
+    print(f"EXCLUDED from the comparison, reported under availability "
+          f"({len([m for m in per_method if m in excluded])}):")
+    for m in per_method:
+        if m in excluded:
+            print(f"  {m:22s} {excluded[m][:95]}")
+
+    errs = np.array([per_method[m]["mean_error"] for m in comp])
     n_over = int((errs > 0).sum())
     p1 = float(stats.binomtest(n_over, len(errs), 0.5).pvalue)
-    print(f"\nP1 — do methods OVER-call immune on tissue?")
+    print(f"\nP1 — do methods OVER-call immune on tissue? (comparable methods only)")
     print(f"  {n_over} of {len(errs)} methods have a positive mean error; "
           f"sign-test p = {p1:.5f}")
     print(f"  median across methods: {np.median(errs):+.4f}   "
@@ -131,7 +153,7 @@ def main() -> int:
     if tum_p.exists():
         tum = pd.read_csv(tum_p, index_col=0)
         pur = tum.pop("absolute_purity")
-        tb = {m: float((tum[m] - pur).mean()) for m in tum.columns if m in per_method}
+        tb = {m: float((tum[m] - pur).mean()) for m in tum.columns if m in comp}
         both = [(m, tb[m], per_method[m]["mean_error"]) for m in tb]
         opp = sum(1 for _, a, b in both if a < 0 < b)
         print(f"\nP2 — are the signs OPPOSITE between arms?")
@@ -154,6 +176,14 @@ def main() -> int:
                                  "cells carry ~2.245x less mRNA than tumour cells; both bias the "
                                  "estimate DOWNWARD, so an over-call finding is conservative.",
            "n_samples": len(shared),
+           "reference": ref_used,
+           "comparable_methods": comp,
+           "excluded_from_comparison": excluded,
+           "why_exclusion_matters": ("a method whose intended input was unavailable was not "
+                                     "evaluated; ranking it would report this experiment's "
+                                     "limitation as a property of the method. Excluded from "
+                                     "every statistic, reported with its numbers under "
+                                     "availability."),
            "P1_over_call": {"n_methods": len(errs), "n_positive": n_over,
                             "sign_test_p": round(p1, 5),
                             "median_mean_error": round(float(np.median(errs)), 4)},
