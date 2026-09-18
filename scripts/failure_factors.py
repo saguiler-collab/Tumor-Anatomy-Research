@@ -58,6 +58,56 @@ def k4(s): return "-".join(str(s).split("-")[:4])
 def k3(s): return "-".join(str(s).split("-")[:3])
 
 
+def k4s(s):
+    """
+    Barcode key with the ALIQUOT LETTER STRIPPED.
+
+    Expression columns are `TCGA-FG-6692-01A`; the MC3 matrix uses `TCGA-CS-4938-01`. A naive
+    four-field join shares ZERO samples between them and would have produced an empty IDH
+    column silently rather than failing. Stripping the letter gives 511.
+    """
+    f = str(s).split("-")
+    return "-".join(f[:3] + [f[3][:2]]) if len(f) > 3 else str(s)
+
+
+def build_covariates_lgg(samples: list[str]) -> pd.DataFrame:
+    """
+    LGG covariates. Four factors come from ABSOLUTE exactly as in GBM; IDH1 comes from the
+    MC3 gene-level mutation matrix; the mesenchymal variable is the SECONDARY continuous score
+    (addendum 2), because the Verhaak call does not exist for LGG.
+
+    F7 (G-CIMP) is NOT constructed. It is a methylation phenotype and MC3 does not carry it —
+    and it is not separately informative anyway: in GBM it correlated with IDH1 at +0.868, so
+    testing IDH1 properly here addresses that axis. Reported as not-testable rather than null.
+    """
+    a = pd.read_csv(ABS_T, sep="\t").dropna(subset=["Cancer DNA fraction"])
+    a["k"] = a["sample"].map(k4s)
+    a = a.drop_duplicates("k").set_index("k")
+    mc3 = pd.read_csv(ROOT / "TCGA_LGG" / "mc3_gene_level_LGG_mc3_gene_level.txt",
+                      sep="\t", index_col=0)
+    mc3.columns = [k4s(c) for c in mc3.columns]
+    idh = mc3.loc["IDH1"] if "IDH1" in mc3.index else None
+    mes = pd.read_csv(config.RESULTS_DIR / "mes_score_lgg.csv", index_col=0)
+    mes.index = [k4s(i) for i in mes.index]
+    mes = mes[~mes.index.duplicated()]
+
+    rows = {}
+    for smp in samples:
+        k = k4s(smp)
+        if k not in a.index:
+            continue
+        r = {"purity": pd.to_numeric(a.loc[k, "purity"], errors="coerce"),
+             "ploidy": pd.to_numeric(a.loc[k, "ploidy"], errors="coerce"),
+             "genome_doublings": pd.to_numeric(a.loc[k, "Genome doublings"], errors="coerce"),
+             "subclonal_fraction": pd.to_numeric(a.loc[k, "Subclonal genome fraction"],
+                                                 errors="coerce"),
+             "idh1_mutant": (float(idh[k]) if idh is not None and k in idh.index else np.nan),
+             "mes_score": (float(mes.loc[k, "MES_minus_mean_other"])
+                           if k in mes.index else np.nan)}
+        rows[smp] = r
+    return pd.DataFrame(rows).T
+
+
 def build_covariates(samples: list[str]) -> pd.DataFrame:
     a = pd.read_csv(ABS_T, sep="\t").dropna(subset=["Cancer DNA fraction"])
     a["k"] = a["sample"].map(k4)
