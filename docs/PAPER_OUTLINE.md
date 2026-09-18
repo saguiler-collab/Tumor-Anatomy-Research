@@ -8,26 +8,39 @@ travel with it. The LGG validation is complete and filled in; no placeholders re
 
 ## Working title
 
-**Bulk RNA deconvolution recovers only a fifth of tumour-content variation in glioma, and
-mesenchymal character predicts the shortfall**
+**Bulk RNA deconvolution cannot report the lymphoid compartment of a glioma, and the ranking of
+methods depends on how they are set up**
+
+*(Superseded 2026-09-18. The previous title — "recovers only a fifth of tumour-content variation
+in glioma, and mesenchymal character predicts the shortfall" — led with a finding that does NOT
+replicate: the mesenchymal association fails in LGG. The recovery figure does replicate and is
+kept in the abstract, but it is not the headline.)*
 
 ## The one-paragraph abstract shape
 
 Cell-type deconvolution of bulk RNA is widely used to estimate tumour and immune content, but
-there is no routine way to know when its output can be trusted. We first asked whether a
-tumour's own anatomy could serve as a ground-truth-free check, and found that anatomic
-concordance **detects** whether a method is working while failing to **rank** methods against
-four independent external yardsticks. We therefore used DNA-measured tumour purity as ground
-truth in 154 glioblastomas and found that deconvolution recovers a median of **21.5%** of the
-true variation in tumour content, ranging from **−1.1% to 65.6%** across twelve methods.
-Deconvolution error is partly predictable from tumour biology: **mesenchymal** transcriptional
-character predicts a larger under-call of tumour content, while genomic instability — ploidy,
-whole-genome doubling and subclonal fraction — does not. The recovery figure replicates in 496
-lower-grade gliomas (coefficient −0.134 against −0.136, 12/12 methods, Holm p = 0.0024) while the
-mesenchymal association does not, and IDH mutation is shown at full power not to predict error.
-In anatomically
-annotated tissue, mesenchymal character is concentrated in the hypoxic perinecrotic niche,
-locating the failure spatially.
+there is no routine way to know when its output can be trusted. We first asked whether a tumour's
+own anatomy could serve as a ground-truth-free check, and found that anatomic concordance
+**detects** whether a method is working while failing to **rank** methods against four independent
+external yardsticks. Using DNA-measured tumour purity as ground truth, deconvolution recovers a
+median of **21.5%** of the true variation in tumour content in 154 glioblastomas (range **−1.1% to
+65.6%** across twelve methods) and **17.2%** in 510 lower-grade gliomas, with the purity
+association replicating closely (coefficient −0.136 against −0.134, 12/12 methods, Holm
+p = 0.0024). We then obtained a second, per-cell-type ground truth from DNA methylation and found
+a failure that no aggregate measure exposes: methylation places T cells above B cells in **94.8%**
+of glioblastomas and **93.2%** of lower-grade gliomas, yet **no method reproduces this in either
+cohort**. The failure takes two distinct forms — **four of twelve methods return exactly zero T,
+B and NK cells in the majority of samples**, and of the eight that report lymphocytes at all,
+**eight of eight (LGG) and six of eight (GBM) place B cells above T cells**. The natural
+explanation, that the signature cannot separate the two, is **refuted**: on mixtures built from
+the reference itself, ordinary NNLS recovers the planted ratio exactly, survives 100% noise and
+survives deleting an entire cell type. Finally, the ranking of methods is itself unstable —
+supplying every method the inputs its published algorithm requires reshuffles the ranking almost
+completely (Kendall τ = **+0.214**), moving MuSiC from excluded-as-degenerate to first, and makes
+the systematic under-call of tumour content **worse** (7 of 12 methods under-calling, to 12 of
+12). Deconvolution error is partly predictable from tumour biology in glioblastoma —
+**mesenchymal** character predicts a larger under-call while genomic instability does not — but
+that association **does not replicate** in lower-grade glioma, and is reported as cohort-specific.
 
 ---
 
