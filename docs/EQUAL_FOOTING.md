@@ -113,6 +113,44 @@ python-reimplementation → R:SCDC). Excluding it, **tau = +0.143** — lower th
 swap; every large mover (dwls −9, elastic_net −5, bayesian −4, bayesprism +3) ran the *same*
 implementation in both runs.
 
+### Equal footing improves the RANKING and worsens the CALIBRATION — these are different questions
+
+Measured on the same 154 GBM samples, mean true purity 0.752:
+
+| | frozen signature | h5ad (sigma + raw counts) |
+|---|---|---|
+| median bias (estimate − purity) | **−0.0277** | **−0.4720** |
+| methods under-calling tumour | 7 of 12 | **12 of 12** |
+| Kendall tau agreement with the other ranking | — | **+0.214** |
+
+**The rebuilt reference tracks variation better and sits further from the truth.** That is not a
+contradiction, and it is not a reason to prefer one reference as simply "the right one":
+
+- **Recovery** is `1 + slope` of (estimate − truth) regressed on truth. It measures whether a
+  method *tracks* tumour content. It is **invariant to a constant offset** — verified directly:
+  shifting every MuSiC estimate by −0.30 or +0.50 leaves recovery at 60.2% to one decimal, and
+  `tests/test_recovery_is_bias_invariant` locks that in.
+- **Bias** measures whether a method lands on the right *level*, and is exactly what an offset
+  moves.
+
+So the tau = +0.214 reshuffle is **not** the calibration shift in disguise. The two findings are
+independent, and both belong in the paper:
+
+> **Giving every method its intended inputs changes which method wins, and does not fix the
+> systematic under-call of tumour content. The under-call gets worse.**
+
+**Why the calibration moves is NOT established.** The plausible cause is that the frozen
+signature is built from log-transformed values (D16) while the rebuilt one uses `raw/X` counts, so
+the Tumor profile's magnitude relative to the other seven types differs, shifting every absolute
+fraction. That is a hypothesis consistent with the numbers, not a measurement, and it is recorded
+as such — the frozen signature's near-zero median bias may equally be a coincidence of the log
+transform rather than a virtue. **Neither reference is endorsed as correctly calibrated here.**
+
+The project's standing clinical finding — *no method in this panel is fit to report a patient's
+tumour or immune content* — is **strengthened**, not weakened, by this. Under the reference that
+gives every method what it was designed to consume, **all twelve under-call tumour, by a median
+of 0.47 against a mean true purity of 0.75.**
+
 ### Three honest caveats
 
 1. **`bisque` and `scdc_ensemble` remain excluded under both references.** Their missing inputs

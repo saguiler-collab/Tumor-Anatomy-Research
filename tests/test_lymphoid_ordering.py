@@ -87,3 +87,25 @@ def test_renormalise_rejects_a_missing_type():
     """Never impute a missing input: a roster without NK must raise, not fill a zero."""
     with pytest.raises(KeyError):
         renormalise(TRUTH.drop(columns=["NK_cell"]))
+
+
+def test_recovery_is_bias_invariant():
+    """The ranking must not be the calibration shift in disguise.
+
+    `docs/EQUAL_FOOTING.md` reports that the rebuilt reference reshuffles the ranking
+    (tau +0.214) AND worsens the median bias (-0.028 -> -0.472). Those are only separable
+    claims if the recovery statistic ignores a constant offset. Recovery is `1 + slope` of
+    (estimate - truth) on truth, so it must be exactly invariant to adding a constant.
+    """
+    rng = np.random.default_rng(0)
+    truth = rng.uniform(0.2, 1.0, 400)
+    est = 0.4 * truth + 0.1 + rng.normal(0, 0.02, 400)
+
+    def recovery(e):
+        return 1.0 + np.polyfit(truth, e - truth, 1)[0]
+
+    base = recovery(est)
+    for shift in (-0.5, -0.3, 0.0, 0.25, 0.9):
+        assert np.isclose(recovery(est + shift), base, atol=1e-9), shift
+    # and it is NOT invariant to a change of slope, or it would measure nothing
+    assert not np.isclose(recovery(est * 2.0), base, atol=1e-6)
