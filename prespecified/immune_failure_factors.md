@@ -115,3 +115,46 @@ Using it as truth would be circular.
 Its one legitimate use, declared here: a **comparison arm** — how does this project's panel
 relate to the canonical published pan-cancer run on the same samples? Reported as
 method-versus-method agreement, never as accuracy.
+
+---
+
+# ADDENDUM — per-cell-type immune truth from DNA methylation, prediction fixed before computing
+
+Leukocyte fraction is one aggregate number, so the immune arm above could corroborate the
+*direction* of an over-call and never a per-type magnitude. **EpiDISH** (already installed) closes
+that with a DNA-methylation reference resolving **B, NK, CD4T, CD8T, Mono, Neutro, Eosino** from
+333 HM450 CpGs. All 333 are present in the TCGA-LGG methylation matrix with no missing values.
+
+Mapping to the roster: **CD4T + CD8T → T_cell**, **B → B_cell**, **NK → NK_cell**.
+
+**`Macrophage_Microglia` is NOT mapped and will not be compared.** Microglia are brain-resident
+and appear in no blood reference; `Mono` is a different population and substituting it would
+invent a correspondence the reference does not have. That type is reported **not measurable by
+this route**, which is a limitation of the method and not a result about it.
+
+## The prediction
+
+The immune arm found an unpredicted anomaly: **methods place more B cells than T cells in GBM**
+(CIBERSORTx 0.046 vs 0.003) while GBmap itself holds **5× more T than B**. That observation had no
+way to be checked, because no per-type truth existed. It does now.
+
+> **PREDICTION: DNA methylation will show T cells > B cells.**
+
+**Grounded, not guessed.** T cells are the dominant lymphocyte in glioma infiltrate; B cells are
+rare. The reference atlas agrees (T 0.165, B 0.032). If methylation also says T > B while the
+methods say B > T, the methods are placing lymphocyte signal in the wrong column — an
+**identifiability failure**, not a proportion error.
+
+**What would falsify it:** methylation showing **B ≥ T**. That would mean the methods may be
+right and my "anomaly" was an artefact of comparing estimates against a reference composition
+rather than against tissue. **That outcome would be reported and the anomaly withdrawn.**
+
+## Stated limits
+
+- EpiDISH's reference is a **blood** reference applied to **brain tumour** tissue. It estimates
+  the leukocyte sub-composition; it does not know about microglia, and its absolute scale is a
+  fraction of leukocytes rather than of all cells.
+- The comparison is therefore **within the immune compartment** — relative composition — and not
+  an absolute per-type fraction of the sample.
+- This is LGG, not GBM. The anomaly was measured in GBM. **Whether it exists in LGG at all is
+  checked first**; if it does not, this tests nothing about the GBM observation and will say so.
