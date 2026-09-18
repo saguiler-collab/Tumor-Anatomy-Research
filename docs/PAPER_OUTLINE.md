@@ -2,7 +2,7 @@
 
 **This is the writing scaffold, not a manuscript.** Each claim carries the artefact it comes
 from so a number can be checked in one step, and each section carries the limitation that must
-travel with it. Placeholders marked **[LGG PENDING]** fill in when the validation run completes.
+travel with it. The LGG validation is complete and filled in; no placeholders remain.
 
 ---
 
@@ -22,7 +22,10 @@ truth in 154 glioblastomas and found that deconvolution recovers a median of **2
 true variation in tumour content, ranging from **−1.1% to 65.6%** across twelve methods.
 Deconvolution error is partly predictable from tumour biology: **mesenchymal** transcriptional
 character predicts a larger under-call of tumour content, while genomic instability — ploidy,
-whole-genome doubling and subclonal fraction — does not. **[LGG PENDING]** In anatomically
+whole-genome doubling and subclonal fraction — does not. The recovery figure replicates in 496
+lower-grade gliomas (coefficient −0.134 against −0.136, 12/12 methods, Holm p = 0.0024) while the
+mesenchymal association does not, and IDH mutation is shown at full power not to predict error.
+In anatomically
 annotated tissue, mesenchymal character is concentrated in the hypoxic perinecrotic niche,
 locating the failure spatially.
 
@@ -110,10 +113,29 @@ mechanism was wrong. Genome doublings did not survive Holm. IDH1 and G-CIMP null
 **no information** — 8 positives each, recorded in advance so they could not be reported as
 evidence of absence.
 
-## 7 · Result 4 — external validation in lower-grade glioma
+## 7 · Result 4 — external validation in lower-grade glioma (n = 496)
 
-**[LGG PENDING]** — n = 496, IDH1-mutant **78.2%** against GBM's 5.4%. Replication judged on
-direction first, then consistency, then significance. `cross_cohort_validation.json`
+*Source: `results/failure_factors_lgg.json`, `results/cross_cohort_validation.json`*
+
+**Replicated.** Median recovery **21.5% → 17.2%**; purity coefficient **−0.13595 → −0.13386**,
+**12/12** methods both times, Holm **p = 0.0024**. Coefficients agree to two decimal places across
+two grades and 3.4× the sample size. The method ranking survives — CIBERSORTx and SVR top, Bisque
+recovering nothing (r = −0.000).
+
+**Did not replicate: mesenchymal character.** 6/12, p = 1.0000. Give all three reasons — the
+variable is the declared secondary and not the pre-specified one, LGG spans far less MES range
+(median −0.0440 against +0.0117), and the GBM effect was ~0.02 to begin with. **Present MES as a
+single-cohort finding awaiting replication, not a validated mechanism.**
+
+**A new informative null.** IDH1 had 8 positives in GBM (recorded in advance as uninformative) and
+**388 of 496** in LGG. Result 5/12, p = 1.0 — **IDH mutation does not predict deconvolution
+error**, at full power, where it is the majority class.
+
+**Genomic instability null in both** (n = 643 combined), with two GBM factors pointing *opposite*
+to prediction. A stronger negative than either cohort alone.
+
+**Every method does worse in LGG, and the reference explanation is as plausible as the biological
+one** — a glioblastoma atlas applied to a different disease. Do not claim otherwise.
 
 ## 8 · Result 5 — where the failure lives
 

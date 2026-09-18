@@ -93,3 +93,108 @@ agrees with the primary analysis on **all seven factors**. No conclusion depends
 that had silently reduced to another.
 
 Artefacts: `results/failure_factors_gbm.json`, `results/absolute_purity_per_sample.csv`.
+
+---
+
+# VALIDATION IN LOWER-GRADE GLIOMA — n = 496
+
+**Run 2026-09-17. The factors, directions, model and statistic are those fixed in
+`prespecified/biological_failure_factors.md` before the GBM discovery, and nothing was added,
+dropped or re-signed after seeing GBM.**
+
+Replication is judged on **direction first**, then consistency across the twelve methods, then
+significance. A factor can be significant in both cohorts and still have failed to replicate if
+it points the other way.
+
+## The headline quantity replicates, and tightly
+
+| | GBM (n = 147) | LGG (n = 496) |
+|---|---|---|
+| **median recovery of true purity variation** | **21.5%** | **17.2%** |
+| purity coefficient | **−0.13595** | **−0.13386** |
+| methods in the predicted direction | **12 / 12** | **12 / 12** |
+| Holm-corrected p | 0.0034 | **0.0024** |
+
+**The coefficients agree to two decimal places across two cohorts, two grades and 3.4× the
+sample size.** Bulk deconvolution recovers roughly a fifth of the real variation in tumour
+content in glioma, and that is now a replicated measurement rather than a single-cohort number.
+
+**Per method**, the ranking survives while every value drops:
+
+| method | GBM | LGG | change |
+|---|---|---|---|
+| CIBERSORTx | 65.6% | **43.6%** | −22.0% |
+| SVR | 61.5% | **41.2%** | −20.3% |
+| DWLS | 46.0% | 31.0% | −15.1% |
+| Bayesian | 44.8% | 29.4% | −15.4% |
+| EPIC | 24.4% | **35.0%** | **+10.6%** |
+| SCDC | 21.5% | 11.0% | −10.5% |
+| NNLS / MuSiC | 18.1% | 17.2% | −0.9% |
+| elastic net | 18.1% | 14.4% | −3.7% |
+| BayesPrism | 10.3% | 7.2% | −3.1% |
+| **Bisque** | −1.1% | **−0.0%** | +1.0% |
+
+**Bisque recovers nothing in either cohort** (r = −0.000 in LGG). EPIC is the only method that
+improves, and no claim is made about why.
+
+**Every other method performs worse in LGG, and that is interpretable two ways.** It may be a
+genuine property of lower-grade glioma — lower malignant fraction, different microenvironment —
+or simply that the reference is a *glioblastoma* atlas applied to a different disease. The joint
+model adjusts for purity but cannot separate these. **The reference explanation is at least as
+plausible as the biological one and is not dismissed.**
+
+## The mesenchymal finding did NOT replicate
+
+| | GBM | LGG |
+|---|---|---|
+| variable | Verhaak Mesenchymal *(pre-specified)* | continuous MES score *(declared secondary)* |
+| result | **11/12, Holm p = 0.0381** | **6/12, p = 1.0000 — chance** |
+
+**This is reported as a failure to replicate, not explained away.** Three things are true at once
+and all three belong in the paper:
+
+1. **The variable is not the same one.** LGG has no Verhaak class, so the test used the continuous
+   MES score declared in advance as a secondary. A secondary failing is weaker evidence than a
+   primary failing.
+2. **LGG has far less mesenchymal character to detect.** Median MES contrast is **−0.0440** in
+   LGG against **+0.0117** in GBM. A factor cannot show an effect across a range the cohort does
+   not span.
+3. **The GBM effect was small to begin with** — about 0.02 in tumour fraction, an order of
+   magnitude below purity's ~0.5. Small effects are exactly what fails to replicate.
+
+**The honest conclusion: the mesenchymal association is GBM-specific, under-powered in LGG, or
+both, and these data cannot distinguish those.** It should be presented as a single-cohort
+finding awaiting replication, not as a validated mechanism.
+
+## IDH1 is now an INFORMATIVE null — and that is new
+
+In GBM, IDH1 had **8 positives of 148** and its null was recorded in advance as carrying no
+information. In LGG it has **388 of 496 (78.2%)**.
+
+**Result: 5/12 methods, β = −0.00236, p = 1.0 — a clean null at full power.**
+
+> **IDH mutation status does not predict bulk deconvolution error**, in a cohort where IDH-mutant
+> is the majority class. That is a real negative result rather than an absence of data, and it
+> could only be obtained in LGG. It also settles the IDH/G-CIMP axis that GBM could not test.
+
+## Genomic instability: null in both cohorts
+
+Ploidy, genome doublings and subclonal fraction are null in **both** cohorts, and in GBM two of
+them pointed the *opposite* way to prediction. **Genomic instability does not break bulk
+deconvolution in glioma.** The pre-specified mechanism — that aneuploidy and subclonal
+heterogeneity should violate a one-profile-per-cell-type model — is not supported at n = 643
+across two cohorts. That is a stronger negative than either cohort alone.
+
+## Summary of the two-cohort study
+
+| claim | status |
+|---|---|
+| deconvolution recovers ~a fifth of tumour-content variation | **REPLICATED** — 21.5% / 17.2%, coefficients to 2 dp |
+| the method ranking by DNA agreement | **REPLICATED** — CIBERSORTx/SVR top, Bisque nothing, both cohorts |
+| mesenchymal character predicts error | **DID NOT REPLICATE** — GBM-specific, under-powered, or both |
+| genomic instability predicts error | **NULL in both** — mechanism not supported |
+| IDH mutation predicts error | **NULL at full power** in LGG — informative |
+
+Artefacts: `failure_factors_gbm.json`, `failure_factors_lgg.json`,
+`cross_cohort_validation.json`, `absolute_purity_per_sample{,_lgg}.csv`.
+

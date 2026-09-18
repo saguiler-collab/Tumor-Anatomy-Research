@@ -204,7 +204,7 @@ def main() -> int:
         est.to_csv(config.RESULTS_DIR / f"absolute_purity_per_sample{tag}.csv")
         print(f"wrote results/absolute_purity_per_sample{tag}.csv "
               f"({est.shape[0]} samples x {est.shape[1] - 1} methods + purity)")
-    print("\nwrote results/absolute_purity_yardstick.json")
+    print(f"\nwrote results/absolute_purity_yardstick{tag}.json")
     return 0
 
 
