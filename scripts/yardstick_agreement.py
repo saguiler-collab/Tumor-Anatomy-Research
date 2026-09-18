@@ -33,6 +33,7 @@ has silently reduced to another one contributes a duplicate point to a rank corr
 """
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -67,10 +68,32 @@ def boot_spearman(x, y, n=10000, seed=config.RANDOM_SEED):
 
 
 def main() -> int:
-    if not YARD.exists():
-        print(f"BLOCKED: {YARD.name} missing. Run scripts/absolute_purity_yardstick.py.")
+    # REFERENCE PARITY. The ACS arm scores Ivy GAP against the h5ad-BUILT GBmap reference,
+    # where MuSiC has cross-donor variance and runs as R:MuSiC. The purity arm defaulted to
+    # the vendored frozen signature, where sigma is all-zero and `music` is arithmetically
+    # NNLS. Correlating those two rankings means the row labelled `music` refers to a
+    # DIFFERENT ALGORITHM in each arm -- the label is constant, the method is not. This flag
+    # lets the purity arm be scored on the matching reference build so the comparison is
+    # between the same algorithms under the same name.
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--reference", choices=["frozen", "h5ad"], default="frozen",
+                    help="which purity-arm run to correlate against ACS. 'h5ad' matches the "
+                         "reference build the ACS arm itself uses.")
+    a = ap.parse_args()
+    yard = (config.RESULTS_DIR /
+            f"absolute_purity_yardstick{'_h5ad' if a.reference == 'h5ad' else ''}.json")
+    out_path = (config.RESULTS_DIR /
+                f"yardstick_agreement{'_h5ad' if a.reference == 'h5ad' else ''}.json")
+    if not yard.exists():
+        print(f"BLOCKED: {yard.name} missing. Run scripts/absolute_purity_yardstick.py"
+              f"{' --reference h5ad' if a.reference == 'h5ad' else ''}.")
         return 2
-    rep = json.loads(YARD.read_text())
+    print(f"purity arm: {yard.name}   (reference build: {a.reference})")
+    print(f"ACS arm:    {LB.name}     (reference build: h5ad -- fixed, it is how ACS was run)")
+    if a.reference == "h5ad":
+        print("  => both arms now use the h5ad-built GBmap reference, so `music` means "
+              "R:MuSiC in\n     both and the two rankings name the same algorithms.")
+    rep = json.loads(yard.read_text())
     lb = pd.read_csv(LB).set_index("method")
 
     rows = []
@@ -126,8 +149,8 @@ def main() -> int:
         "per_method": {m: {k: (None if pd.isna(v) else v) for k, v in r.items()}
                        for m, r in d.iterrows()},
     }
-    (config.RESULTS_DIR / "yardstick_agreement.json").write_text(json.dumps(out, indent=2))
-    print("\nwrote results/yardstick_agreement.json")
+    out_path.write_text(json.dumps(out, indent=2))
+    print(f"\nwrote {out_path.relative_to(config.PROJECT_ROOT)}")
     return 0
 
 

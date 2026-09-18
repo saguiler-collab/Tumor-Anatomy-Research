@@ -158,6 +158,39 @@ This is a stronger statement than §2b's. A ranking that reshuffles when the *at
 be blamed on biology. A ranking that reshuffles when the **same atlas is merely supplied in the
 form the methods were designed to consume** is measuring the harness, not the methods.
 
+### 2f. The last objection to the ranker refutation is now closed
+
+Every result above compared an ACS ranking scored on Ivy GAP **against the h5ad-built GBmap
+reference** with purity correlations scored on TCGA **against the vendored frozen signature**.
+That left one honest objection available: the two arms disagree because `music` names **R:MuSiC**
+in the ACS arm and, with an all-zero sigma, **arithmetically NNLS** in the purity arm. The label
+was constant; the algorithm was not. A rank correlation between two rankings whose rows mean
+different things is not evidence about anything.
+
+With the h5ad purity run in hand, that can be removed rather than argued about. Scoring **both
+arms on the same reference build**, so each method name refers to the same algorithm on both
+sides:
+
+| purity arm scored on | n methods | Spearman(ACS, purity recovery) | 95% CI | meets bar (≥0.60) |
+|---|---|---|---|---|
+| frozen signature (as published) | 12 | **+0.0698** | [-0.510, +0.769] | no |
+| frozen, excluding degenerate | 9 | **-0.1044** | [-0.753, +0.743] | no |
+| **h5ad — same build as the ACS arm** | **14** | **-0.0156** | [-0.723, +0.660] | **no** |
+| **h5ad, excluding degenerate** | **12** | **+0.0071** | [-0.760, +0.708] | **no** |
+
+**Reference parity does not rescue it.** On matched references the correlation is
+**-0.0156** across fourteen methods and **+0.0071** across the twelve that are comparable — indistinguishable
+from zero, on *more* methods than the published comparison had. The mismatch was a real defect in
+the comparison and it was worth removing; removing it changes nothing.
+
+So the refutation no longer rests on a comparison anyone can object to on those grounds. **ACS
+ranks methods; DNA purity ranks methods; on the same cohort-independent footing the two rankings
+are uncorrelated.**
+
+*(The bar was met only against the GBmap-derived pseudobulk yardstick, rho = 0.7501 — the arm that
+shares its atlas with ACS, which is correction C4's point. Every yardstick that shares nothing with
+ACS fails, and that is the pattern, not one bad run.)*
+
 ### 2c. It cannot resolve the top of its own leaderboard, and it is blind to magnitude
 
 | rank | method | ACS |
