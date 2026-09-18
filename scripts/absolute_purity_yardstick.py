@@ -67,9 +67,18 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--cohort", choices=["gbm", "lgg"], default="gbm")
+    ap.add_argument("--reference", choices=["frozen", "h5ad"], default="frozen",
+                    help="'frozen' is the vendored signature: sigma is ALL ZERO and there are "
+                         "no donor profiles, so MuSiC degenerates to NNLS, EPIC loses its "
+                         "variance weighting and S-mode cannot run (docs/EQUAL_FOOTING.md). "
+                         "'h5ad' rebuilds from gbmap_core.h5ad, which carries both -- the only "
+                         "setting under which a method RANKING is defensible. Default stays "
+                         "'frozen' so archived numbers reproduce.")
     args = ap.parse_args()
     BULK = config.PROCESSED_DIR / f"tcga_{args.cohort}_bulk_cpm.csv.gz"
     tag = "" if args.cohort == "gbm" else f"_{args.cohort}"
+    if args.reference == "h5ad":
+        tag += "_h5ad"
     for p in (BULK, ABS_T):
         if not p.exists():
             print(f"BLOCKED: {p} missing."); return 2
@@ -92,7 +101,27 @@ def main() -> int:
     print(f"  purity: median {np.median(purity):.3f}  range "
           f"{purity.min():.3f}-{purity.max():.3f}")
 
-    ref = load_frozen_reference()
+    if args.reference == "h5ad":
+        # EQUAL FOOTING. This is the whole point of the option: the rebuilt reference carries
+        # cross-donor variance and donor profiles, so MuSiC is not silently NNLS and EPIC is
+        # not silently uniform-weighted. The cells are ALSO registered, which is what lets
+        # CIBERSORTx S-mode run at all.
+        from ivygap.data.reference import build_from_h5ad                  # noqa: PLC0415
+        from ivygap.deconv import r_bridge                                # noqa: PLC0415
+        print("rebuilding the reference from gbmap_core.h5ad (carries sigma + donor "
+              "profiles) ...")
+        ref, sc_expr, sc_meta = build_from_h5ad(
+            config.REFERENCE_DIR / "gbmap_core.h5ad",
+            restrict_to_genes=bulk.index, export=False)
+        r_bridge.set_cell_source(config.PRIMARY_REFERENCE, sc_expr, sc_meta)
+        print(f"  {sc_expr.shape[1]:,} cells, {sc_meta['donor'].nunique()} donors; "
+              f"sigma all-zero: {bool((ref.sigma.to_numpy() == 0).all())}; "
+              f"cross-donor variance: {ref.has_cross_donor_variance}")
+    else:
+        ref = load_frozen_reference()
+        print(f"frozen signature: sigma all-zero "
+              f"{bool((ref.sigma.to_numpy() == 0).all())} -- MuSiC and EPIC run degenerate "
+              f"(docs/EQUAL_FOOTING.md)")
     shared_genes = [g for g in ref.profile.index if g in bulk.index]
 
     # MARKER SUBSET, and why. The full shared space is 17,611 genes and nu-SVR is superlinear
@@ -204,6 +233,14 @@ def main() -> int:
                           f"full 17,611-gene space did not finish.",
         "bulk_provenance": "data/processed/tcga_gbm_bulk_provenance.json — the input was "
                            "log2(x+1) despite being named counts, and was inverted first",
+        "reference": args.reference,
+        "equal_footing": ("h5ad: sigma and donor profiles present, so MuSiC and EPIC run with "
+                          "their defining features and S-mode can run. Bisque remains degraded "
+                          "-- it needs subjects assayed as both bulk and single cells, which "
+                          "TCGA does not have." if args.reference == "h5ad" else
+                          "frozen: sigma all-zero, so MuSiC is NNLS, EPIC is uniform-weighted "
+                          "and S-mode cannot run. A method RANKING from this reference is "
+                          "confounded -- see docs/EQUAL_FOOTING.md."),
         "frozen_signature_caveats": [
             "no cross-donor variance, so MuSiC degenerates to residual-weighted NNLS",
             "cell_size factors have real spread here (unlike D12's uniform vector), so the "
