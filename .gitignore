@@ -66,3 +66,11 @@ figures/plates.html
 # Published PDFs read for this project. Copyrighted; cited in
 # sources/SOURCES.md by DOI rather than redistributed here.
 celldecov_reference_papers/
+
+# Raw cohort archives live beside the repo, never in it. These are hundreds of MB to
+# multiple GB each, and `git add -A` would otherwise sweep them in: they show as
+# UNTRACKED, not ignored, which is one careless command away from a commit nobody can
+# push. Added 2026-09-18 after a 1.6 GB Xena matrix was considered.
+/TCGA_*/
+*.tsv.gz
+*.sampleMap_*
