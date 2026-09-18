@@ -117,11 +117,77 @@ def main() -> int:
               f"{str(tb):>17s}  {str(o == truth_ord):>10s}"
               f"{'  [not comparable]' if m in nc else ''}")
 
+    # PER-SAMPLE, not per-method-mean. Comparing two averages over a cohort can hide the
+    # case where a method is right on most samples and dragged over by a few. The honest
+    # statistic pairs each sample's methylation call against the same sample's estimate.
+    print(f"\nPER-SAMPLE AGREEMENT (paired within sample, not a comparison of two means)")
+    print(f"{'method':18s} {'n':>5s} {'method says B>T':>16s} {'meth says T>B':>14s} "
+          f"{'discordant':>11s} {'no lymph':>9s}")
+    print("-" * 80)
+    for m, g in full.groupby("method"):
+        g = g.drop_duplicates("k").set_index("k")
+        idx = [k for k in g.index if k in ros.index]
+        if len(idx) < 50:
+            continue
+        e = renormalise(g.loc[idx])
+        # DENOMINATOR. A row where the method assigned NOTHING to T, B and NK renormalises to
+        # NaN. Counting those as "did not say B>T" mixes two different statements -- "put B
+        # below T" and "found no lymphocytes at all" -- and silently disagrees with the mean
+        # above, which skips NaN. They are separated here and counted separately.
+        live = e.notna().all(axis=1).to_numpy()
+        n_empty = int((~live).sum())
+        el = e[live]
+        meth_l = ros.loc[idx, :][live]
+        est_bt = (el["B_cell"] > el["T_cell"]).to_numpy()
+        meth_tb = (meth_l["T_cell"] > meth_l["B_cell"]).to_numpy()
+        disc = float((est_bt & meth_tb).mean()) if live.sum() else float("nan")
+        res[m]["n_scored"] = int(live.sum())
+        res[m]["n_no_lymphoid_signal"] = n_empty
+        res[m]["frac_samples_est_B_over_T"] = round(float(est_bt.mean()), 4) if live.sum() else None
+        res[m]["frac_samples_discordant"] = round(disc, 4) if live.sum() else None
+        print(f"{m:18s} {int(live.sum()):5d} {est_bt.mean():15.1%} {meth_tb.mean():14.1%} "
+              f"{disc:10.1%} {n_empty:9d}")
+    scored = [v["frac_samples_discordant"] for v in res.values()
+              if v.get("frac_samples_discordant") is not None]
+    if scored:
+        print(f"\nEven the BEST method disagrees with methylation on {min(scored):.1%} of the "
+              f"samples it scored.")
+    empties = {m: v["n_no_lymphoid_signal"] for m, v in res.items()
+               if v.get("n_no_lymphoid_signal")}
+    if empties:
+        print("Methods returning NO lymphoid signal at all on some samples (excluded above, "
+              "not counted as agreement):")
+        for m, n0 in sorted(empties.items(), key=lambda kv: -kv[1]):
+            print(f"  {m:18s} {n0} sample(s)")
+
     n_tb = sum(v["T_exceeds_B"] for v in res.values())
     n_full = sum(v["full_ordering_correct"] for v in res.values())
     comp = {m: v for m, v in res.items() if v["comparable"]}
-    print(f"\nREGISTERED prediction (T > B): {n_tb} of {len(res)} methods agree with "
-          f"methylation.")
+    # DISCLOSE THE DENOMINATOR. "N of 12 methods put B above T" is a statement about MEANS,
+    # and for a method that returns exactly zero lymphoid content on most samples that mean
+    # rests on a small minority of the cohort. Reporting it without the sample count invites
+    # exactly the misreading this project keeps catching elsewhere.
+    n_tot = len(res)
+    substantive = {m: v for m, v in res.items()
+                   if v.get("n_scored", v["n"]) >= 0.5 * v["n"]}
+    empty_major = {m: v for m, v in res.items() if m not in substantive}
+    print(f"\nTWO DISTINCT FAILURE MODES, counted separately:")
+    print(f"\n  ABSENCE — {len(empty_major)} of {n_tot} methods return EXACTLY ZERO T, B and NK "
+          f"on\n  the majority of samples. For these the B-vs-T question is vacuous: they are "
+          f"not\n  placing B above T, they are reporting no lymphocytes at all.")
+    for m, v in sorted(empty_major.items(), key=lambda kv: -kv[1]["n_no_lymphoid_signal"]):
+        print(f"    {m:18s} zero lymphoid in {v['n_no_lymphoid_signal']} of {v['n']} "
+              f"({v['n_no_lymphoid_signal'] / v['n']:.1%})")
+    sub_bt = sum(1 for v in substantive.values()
+                 if (v.get("frac_samples_est_B_over_T") or 0) > 0.5)
+    print(f"\n  MISASSIGNMENT — of the {len(substantive)} methods that DO return lymphoid signal "
+          f"on most\n  samples, {sub_bt} place B above T on a majority of the samples they score.")
+    for m, v in sorted(substantive.items(),
+                       key=lambda kv: -(kv[1].get("frac_samples_est_B_over_T") or 0)):
+        print(f"    {m:18s} B>T on {v['frac_samples_est_B_over_T']:.1%} of {v['n_scored']} "
+              f"scored;  discordant with methylation {v['frac_samples_discordant']:.1%}")
+    print(f"\nREGISTERED prediction (T > B): {n_tb} of {n_tot} methods agree with methylation "
+          f"ON THE MEAN\n  (that mean skips samples with no lymphoid signal -- see above).")
     print(f"SECONDARY, not registered (full {truth_ord}): {n_full} of {len(res)} methods "
           f"reproduce it.")
     if comp:

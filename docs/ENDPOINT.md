@@ -262,18 +262,18 @@ These do not depend on the ranking question and are directly reportable.
   place T cells at **0.0002–0.0085**, two orders of magnitude below their pseudobulk estimates,
   and the immune compartment as a whole is **UNDER**-called (median 0.661× after the
   pre-specified mRNA correction). `docs/IMMUNE_ARM.md`.
-- **Methods put B cells above T cells — all of them, in both tissues, and this is wrong.**
-  Pre-registered before measurement with an explicit falsifier, then tested against DNA
-  methylation (EpiDISH RPC, 255 of its 333 reference HM450 CpGs — the rest are all-NA in this
-  matrix) on 530 TCGA-LGG samples. Methylation puts T above B
-  in **93.2%** of samples; **12 of 12 methods put B above T.** Both sides are renormalised within
-  {T, B, NK}, so the denominator difference is removed by construction. This is a **misassignment** — lymphocyte
-  signal put in the wrong column — unanimous across NNLS, SVR, Bayesian and probabilistic-model
-  families. **Its cause is not identified:** the natural explanation, that the signature cannot
-  separate T from B, was tested and refuted — on mixtures built from the reference itself NNLS
-  recovers the planted T:B exactly, survives 100% noise, and survives deleting a whole cell type
-  (condition number 5.3). It is invisible to every check short of an orthogonal per-type
-  measurement. `docs/IMMUNE_ARM.md` §6.
+- **Methods cannot report the lymphoid compartment of a glioma at all.** Pre-registered with
+  an explicit falsifier, then tested against DNA methylation in **both** cohorts (EpiDISH RPC;
+  255 of 333 reference CpGs in LGG, 258 in GBM — the rest are all-NA). Methylation puts T above B
+  in **94.8%** of GBM and **93.2%** of LGG samples; the true ratio is **4.76:1** in GBM and
+  **2.34:1** in LGG. Two distinct failures follow, and conflating them overstates how tidy the
+  result is: **four of twelve methods return *exactly zero* T, B and NK** in most samples
+  (`music`/`nnls` in 86.9% of LGG and 98.2% of GBM samples), and of the eight that do return
+  lymphocytes, **8 of 8 in LGG and 6 of 8 in GBM put B above T** per-sample. **Zero of twelve
+  reproduce the true ordering in either cohort.** Its cause is not identified — the natural
+  explanation, that the signature cannot separate T from B, was tested and refuted (NNLS recovers
+  the planted ratio exactly on mixtures built from the reference, survives 100% noise and the
+  deletion of a whole cell type; condition number 5.3). `docs/IMMUNE_ARM.md` §6.
 - **ACS is structurally blind to it.** `T_cell` carries no constraint, by pre-registered design,
   because no anatomic fact about T-cell distribution was defensible enough to register.
 - **1 of 15 methods reports uncertainty at all**, and its intervals cover **9.25%** against a

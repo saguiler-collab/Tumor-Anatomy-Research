@@ -193,10 +193,19 @@ all-cell-fraction denominator difference cancels by construction — verified in
 **The prediction held.** Methylation: **T 0.476 > NK 0.321 > B 0.203**; T ranks first
 in **79.2%** of samples, B in **4.0%**.
 
-**Every method disagrees. 12 of 12 place B above T** — 8 of 8 when restricted to
-methods comparable on this reference, so it is not an artefact of degraded stand-ins. **0 of 12
-reproduce the true ordering.** `elastic_net` puts **97.7%** of lymphoid signal in B; `music` and
-`nnls` return **exactly 0.0000** for T in all 510 samples.
+**No method reproduces it — but not all in the same way.** Separating the two failure modes,
+which a comparison of cohort means hides:
+
+**Mode 1 — absence.** Four of twelve return **exactly 0.0000** for T, B *and* NK on the majority
+of samples: `music`/`nnls` (86.9% of LGG samples, 98.2% of GBM), `bayesprism` (80.2% / 91.1%),
+`elastic_net` (56.1% / 85.7%). Against tissue whose methylation finds T cells dominant in ~95% of
+samples, reporting *no lymphocytes at all* is a more severe failure than reversing the ratio.
+
+**Mode 2 — misassignment.** Of the eight that do return lymphocytes, **8 of 8 in LGG and 6 of 8 in
+GBM place B above T on a majority of the samples they score**, paired per-sample. Discordance
+with methylation runs 47.7%–93.5% (LGG) and 40.0%–94.6% (GBM).
+
+**Zero of twelve reproduce the true T>NK>B ordering in either cohort.**
 
 This is a **misassignment, not a proportion error**: lymphocyte signal is assigned to the wrong
 column. **The obvious explanation — that the signature cannot separate T from B — was tested and

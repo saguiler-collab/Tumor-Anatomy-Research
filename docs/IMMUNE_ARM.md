@@ -236,6 +236,67 @@ run. You cannot catch it by inspecting the condition number of your signature ma
 noise, or by worrying about a missing cell type. It only appears when you have an orthogonal
 per-type measurement to check against — which is the argument for obtaining one.
 
+### CORRECTED 2026-09-18 — "12 of 12" was a statement about MEANS, and the denominator matters
+
+The count above is computed on per-method **means**. For several methods that mean is taken over
+a small minority of the cohort, because `renormalise` sends a sample with no lymphoid signal at
+all to NaN and `.mean()` skips it. Reporting "12 of 12 put B above T" without that denominator
+overstates a clean result and hides a second, more severe failure. Separated properly, there are
+**two distinct failure modes**:
+
+#### Mode 1 — ABSENCE. Four methods report no lymphocytes at all in most samples.
+
+These return **exactly 0.0000** for T_cell, B_cell *and* NK_cell — verified as exact zeros, not
+small values near zero:
+
+| method | GBM: samples with zero lymphoid | LGG: samples with zero lymphoid |
+|---|---|---|
+| `bayesprism` | 51 / 56 (91.1%) | 409 / 510 (80.2%) |
+| `elastic_net` | 48 / 56 (85.7%) | 286 / 510 (56.1%) |
+| `music` | 55 / 56 (98.2%) | 443 / 510 (86.9%) |
+| `nnls` | 55 / 56 (98.2%) | 443 / 510 (86.9%) |
+
+For these methods the B-versus-T question is **vacuous**. They are not placing B above T; they
+are reporting that the tumour contains no lymphocytes. Against tissue whose methylation says T
+cells are the dominant lymphocyte in ~95% of samples, **that is a more severe failure than
+getting the ratio backwards**, and it was invisible for as long as the comparison was made on
+means.
+
+`epic` is a near-miss in the same direction: no exact zeros, but a median lymphoid sum of
+**7.6e-05** in LGG.
+
+#### Mode 2 — MISASSIGNMENT. Among methods that do return lymphocytes, B is placed above T.
+
+Per-sample, paired within each sample rather than compared as two cohort averages:
+
+| method | GBM: B>T | GBM discordant | LGG: B>T | LGG discordant |
+|---|---|---|---|---|
+| `bayesian` | 100.0% of 56 | 94.6% | 100.0% of 510 | 93.5% |
+| `svr` | 90.2% of 51 | 84.3% | 96.5% of 482 | 90.9% |
+| `scdc` | 67.9% of 56 | 64.3% | 93.5% of 510 | 87.6% |
+| `scdc_ensemble` | 67.9% of 56 | 64.3% | 93.5% of 510 | 87.6% |
+| `cibersortx` | 89.6% of 48 | 83.3% | 90.3% of 462 | 85.3% |
+| `epic` | 48.2% of 56 | 46.4% | 57.2% of 510 | 54.7% |
+| `bisque` | 40.0% of 50 | 40.0% | 55.3% of 468 | 53.2% |
+| `dwls` | 54.0% of 50 | 50.0% | 52.0% of 323 | 47.7% |
+
+**8 of 8 in LGG and 6 of 8 in GBM place B above T on a majority of the samples they
+score.** "Discordant" is the fraction of samples where the method says B>T *and* methylation says
+T>B in that same sample — the honest pairing, since it never credits a method for agreeing on a
+sample methylation also got the other way.
+
+#### What survives, stated exactly
+
+- **The pre-registered prediction held.** Methylation puts T above B in **94.8%** (GBM) and
+  **93.2%** (LGG) of samples. Not withdrawn.
+- **No method reproduces it.** Zero of twelve, in either cohort, on the mean; and among the
+  eight that return lymphoid signal at all, the majority place B above T per-sample.
+- **The finding replicates across two cohorts** with independent methylation matrices, and the
+  true ratio is *larger* in GBM (T:B = 4.76) than in LGG (2.34).
+- **What is no longer claimed:** that this is one clean unanimous inversion. It is two failures —
+  four methods find no lymphocytes, the rest put them in the wrong column — and conflating them
+  made the result look tidier than it is.
+
 ### Secondary, NOT registered: the full lymphoid ordering
 
 The same measurement yields NK at no extra cost, so the three-way ordering is reported here.
