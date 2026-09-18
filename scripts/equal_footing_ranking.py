@@ -32,6 +32,17 @@ def _load(tag: str) -> dict:
     return json.loads(p.read_text())
 
 
+def _observed(tag: str) -> tuple[set[str], set[str]]:
+    """(degenerate, failed) as the run itself recorded them, from the yardstick JSON."""
+    rep = _load(tag)
+    methods = rep.get("methods", rep) if isinstance(rep, dict) else {}
+    degen = {m for m, v in methods.items()
+             if isinstance(v, dict) and v.get("degenerate")}
+    failed = {m for m, v in methods.items()
+              if isinstance(v, dict) and ("failed" in v or "skipped" in v)}
+    return degen, failed
+
+
 def _recovery(report: dict) -> dict[str, float]:
     """Recovery fraction = 1 + slope of (estimate - truth) on truth."""
     out = {}
@@ -81,10 +92,15 @@ def main() -> int:
         print(f"BLOCKED: no h5ad run for {cohort} yet "
               f"(results/absolute_purity_per_sample{base}_h5ad.csv missing)"); return 2
 
-    nc_frozen = non_comparable("frozen")
-    nc_h5ad = non_comparable("h5ad")
+    # OBSERVED degeneracy is unioned in, not assumed away. `non_comparable`'s static table
+    # says what each method REQUIRES; the run says what actually happened. A method that
+    # degenerated for a reason the table does not anticipate must still be excluded, or it
+    # enters the ranking under its own name -- which is the one thing the invariants forbid.
+    nc_frozen = non_comparable("frozen", *_observed(base))
+    nc_h5ad = non_comparable("h5ad", *_observed(base + "_h5ad"))
     print(f"=== {cohort.upper()}: does equal footing change the ranking? ===\n")
     print("NOT COMPARABLE on the frozen reference (degraded stand-ins, not the method):")
+    print("  [requirement = from the static input table; observed = what this run reported]")
     for m, why in sorted(nc_frozen.items()):
         print(f"  {m:20s} {why[:88]}")
     print("\nNOT COMPARABLE even with sigma (input the cohort cannot supply):")

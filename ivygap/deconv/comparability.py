@@ -68,18 +68,29 @@ def non_comparable(reference: str, degenerate: set[str] | None = None,
     """
     Methods excluded from a quantitative comparison on this reference, with the reason.
 
-    `reference` is "frozen" or "h5ad". The frozen signature carries a zero sigma and a single
-    reference, so it disables MuSiC, EPIC and SCDC ENSEMBLE and prevents S-mode running. The
-    h5ad-built reference supplies sigma, donor profiles and registered cells, so only Bisque
-    stays excluded — its requirement is a property of the COHORT, not of the reference.
+    `reference` is "frozen" or "h5ad". The frozen signature carries a zero sigma, so it
+    disables MuSiC and EPIC and prevents S-mode running. The h5ad-built reference supplies
+    sigma, donor profiles and registered cells, which restores those three.
+
+    Bisque, quanTIseq and SCDC ENSEMBLE stay excluded under BOTH references, because their
+    missing inputs are not properties of the reference build:
+
+    - Bisque needs subjects assayed as both bulk and single cells. That is a property of the
+      COHORT, and TCGA does not have it.
+    - quanTIseq needs its own TIL10 signature and a matching gene space.
+    - SCDC ENSEMBLE needs two or more references to weight across. **This pipeline supplies
+      exactly one** (`DeconvolutionInput(references=(ref,))`) no matter how that one is built,
+      so rebuilding from .h5ad does not help. Corrected 2026-09-18: ENSEMBLE was previously
+      listed as frozen-only, which would have admitted it to the h5ad ranking under its own
+      name while the run itself reported it [DEGENERATE] with numbers identical to SCDC.
 
     `degenerate` and `failed` are what the run actually observed. They are unioned in rather
     than trusted alone, so a method that degenerates for an unanticipated reason is still
     excluded instead of silently entering the ranking.
     """
     out: dict[str, str] = {}
-    always = ["bisque", "quantiseq"]
-    frozen_only = ["music", "epic", "scdc_ensemble", "cibersortx_smode"]
+    always = ["bisque", "quantiseq", "scdc_ensemble"]
+    frozen_only = ["music", "epic", "cibersortx_smode"]
     for m in always + (frozen_only if reference == "frozen" else []):
         need, why = INPUT_REQUIREMENTS[m]
         out[m] = f"requires {need}; {why}"
