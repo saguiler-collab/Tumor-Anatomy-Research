@@ -210,6 +210,30 @@ Macrophage_Microglia (**r = +0.552**). That suggested macrophage spillover into 
 — B tracking Macrophage more than T does — was tested and **failed: 5 of 10, p = 0.623**. The
 explanation is **not adopted**, and is reported as rejected rather than dropped.
 
+## 7d · Result 4d — equal footing changes the winner, not the shortfall
+
+*Source: `results/equal_footing_ranking.json`, `docs/EQUAL_FOOTING.md`*
+
+Four methods in the panel were being measured as something other than themselves: the vendored
+signature carries an all-zero sigma, so MuSiC is arithmetically NNLS, EPIC is uniform-weighted,
+SCDC ENSEMBLE has nothing to ensemble, and CIBERSORTx S-mode cannot run. Rebuilding the reference
+from the atlas's own counts (`matrix="raw/X"`, D16) supplies all of it.
+
+**The ranking does not survive it.** Kendall tau between the two rankings is **+0.214** on the 8
+methods rankable under both (**+0.143** excluding the single method that also changed
+implementation). **MuSiC goes from excluded-as-NNLS (17.5%) to first at 60.2%**; DWLS falls rank
+3 → 12. CIBERSORTx and SVR hold ranks 1→2 and 2→3, so the calibration claim in §7b stands.
+
+**The shortfall does survive it.** Median bias moves from −0.028 to −0.472 and the methods
+under-calling tumour go from 7 of 12 to **12 of 12**, against a mean true purity of 0.752.
+Recovery is bias-invariant by construction (tested), so these are independent findings, not one
+finding seen twice.
+
+**Stated as one sentence:** *giving every method the inputs it was designed to consume changes
+which method wins and makes the under-call worse.* Why the calibration moves is **not
+established** — the log-vs-counts difference is a plausible cause, not a measured one, and
+neither reference is endorsed as correctly calibrated.
+
 ## 8 · Result 5 — where the failure lives
 
 *Source: `results/mes_by_niche.json`*

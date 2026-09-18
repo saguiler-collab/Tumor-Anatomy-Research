@@ -251,7 +251,11 @@ Artefacts: `results/cdseq_anatomic.json`, `results/cdseq_matched_comparison.json
 These do not depend on the ranking question and are directly reportable.
 
 - **Every method under-calls tumour by 0.33–0.51 at high purity** — exactly where real tissue
-  sits. Error grows monotonically with tumour content.
+  sits. Error grows monotonically with tumour content. **This is not an artefact of denying the
+  methods their inputs.** Re-measured 2026-09-18 on a reference carrying cross-donor variance and
+  donor profiles, **12 of 12 methods under-call, by a median of 0.47 against a mean true purity of
+  0.75** — worse than the 7 of 12 on the frozen signature. Equal footing changes *which method
+  wins*; it does not fix *the level*. `docs/EQUAL_FOOTING.md`.
 - **The missing mass becomes T cells**, over-called **4.6–7.9×** — *in the pseudobulk
   benchmark only.* **WITHDRAWN 2026-09-18 as a claim about tissue: it is a simulator artefact.**
   On TCGA-GBM tissue, measured against methylation-derived leukocyte fraction, the same methods
