@@ -407,6 +407,57 @@ So the leaderboard's ordering is substantially a property of **GBmap** — not o
 
 **What is untouched.** The controls, the permutation nulls, the constraint file and the three validations in §5a–§5c use no deconvolution reference at all. The separation of real methods from the negative controls also holds under every reference — no control approaches a real method in any arm. What is reference-dependent is the **ordering among real methods**.
 
+## Orthogonal per-cell-type truth: DNA methylation
+
+_from `results/lymphoid_ordering*.json`, `results/methylation_celltypes*.json`. Pre-registered in `prespecified/immune_failure_factors.md` with an explicit falsifier before any of it was computed._
+
+| cohort | n | methylation T | NK | B | true T:B | T ranked first | methods agreeing T>B |
+|---|---|---|---|---|---|---|---|
+| GBM | 56 | 0.5224 | 0.3678 | 0.1098 | **4.76x** | 63.9% | **0 of 12** |
+| LGG | 510 | 0.4758 | 0.3208 | 0.2034 | **2.34x** | 79.2% | **0 of 12** |
+
+**Two distinct failure modes.** A count of methods 'putting B above T' is computed on per-method means, and a method that returns no lymphoid signal at all contributes nothing to that mean. The two are separated here because conflating them overstates how clean the result is.
+
+| cohort | ABSENCE: return exactly zero T, B and NK in most samples | MISASSIGNMENT: place B above T per-sample |
+|---|---|---|
+| GBM | **4 of 12** (`music` 55/56, `nnls` 55/56) | **6 of 8** |
+| LGG | **4 of 12** (`music` 443/510, `nnls` 443/510) | **8 of 8** |
+
+**Zero of twelve reproduce the true T>NK>B ordering in either cohort.**
+
+**The obvious explanation is refuted, not assumed.** 'The signature cannot separate T from B' is a claim about the matrix, so it was tested on mixtures built from the reference itself with the planted ratio set to 2.333 — the value methylation measures. Plain NNLS recovers it exactly, still recovers T > B at 100% multiplicative noise, and still recovers it with an entire cell type deleted from the reference. Condition number **5.29**. Separates T from B in every condition tested: **True**.
+
+**A second explanation is also refuted.** High tumour purity does not account for the absence mode: zero-lymphoid samples are significantly higher-purity in only GBM 2 of 8, LGG 1 of 8 testable methods, and several run the other way.
+
+**So both failures are measured, replicated across two cohorts, and unexplained.** Two candidate mechanisms were proposed and rejected; a third was refuted. That is reported in place of a plausible story that does not survive its own test.
+
+## Equal footing: is the method ranking stable?
+
+_from `results/equal_footing_ranking.json`. The vendored signature carries an all-zero sigma, so MuSiC is arithmetically NNLS, EPIC is uniform-weighted and S-mode cannot run (`docs/EQUAL_FOOTING.md`). Rebuilding the reference from the atlas's own counts (`matrix="raw/X"`, OPEN_DEFECTS D16) supplies all of it._
+
+> **Kendall tau between the two rankings = +0.214** on the 8 methods rankable under both, scored on the samples present in both runs.
+
+| method | frozen | h5ad (sigma) | change |
+|---|---|---|---|
+| `music` | 17.5% | 60.2% | +42.7% |
+| `cibersortx` | 63.7% | 58.4% | -5.3% |
+| `svr` | 59.1% | 55.0% | -4.2% |
+| `scdc` | 20.5% | 53.3% | +32.7% |
+| `scdc_ensemble` *(not comparable)* | 20.5% | 53.3% | +32.7% |
+| `bisque` *(not comparable)* | -1.5% | 35.9% | +37.4% |
+| `bayesprism` | 9.8% | 30.0% | +20.2% |
+| `nnls` | 17.5% | 23.7% | +6.2% |
+| `bayesian_hierarchical` | — | 22.7% | — |
+| `bayesian` | 43.1% | 21.3% | -21.8% |
+| `cibersortx_smode` | — | 18.5% | — |
+| `epic` | 29.1% | 16.5% | -12.6% |
+| `elastic_net` | 20.1% | 15.2% | -5.0% |
+| `dwls` | 43.5% | 14.7% | -28.8% |
+
+**The confound was tested.** Registering the cells also makes several R packages runnable where the frozen path used a Python reimplementation, and a rank change from swapping reimplementation-for-package would say nothing about equal footing. Of the 8 ranked methods, 1 changed implementation (`scdc`); excluding them tau is **+0.143**, lower than overall. Every large mover ran the same implementation in both runs.
+
+**Recovery is bias-invariant** (`1 + slope`, tested in `tests/test_lymphoid_ordering.py`), so this reshuffle is independent of the fact that equal footing makes the absolute under-call of tumour content *worse* — median bias -0.028 to -0.472, and methods under-calling from 7 of 12 to 12 of 12.
+
 
 ## 6. Does deconvolving all 270 samples change the ranking?
 

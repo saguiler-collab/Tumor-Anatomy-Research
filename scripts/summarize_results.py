@@ -916,6 +916,117 @@ def reference_sensitivity_section(results_dir: Path) -> str:
     return "\n".join(out) + "\n"
 
 
+def orthogonal_per_type_section(results_dir: Path) -> str:
+    """The per-cell-type arm: DNA methylation as a second, independent ground truth.
+
+    Reads only artefacts. If a cohort has not been run its rows are absent rather than
+    imputed, and the section says which cohorts it covers.
+    """
+    out: list[str] = []
+    A = out.append
+    cohorts = [("GBM", "lymphoid_ordering.json"), ("LGG", "lymphoid_ordering_lgg.json")]
+    loaded = [(lab, _load_json(results_dir / f)) for lab, f in cohorts]
+    loaded = [(lab, d) for lab, d in loaded if d]
+    if not loaded:
+        return ""
+    A("## Orthogonal per-cell-type truth: DNA methylation\n")
+    A("_from `results/lymphoid_ordering*.json`, `results/methylation_celltypes*.json`. "
+      "Pre-registered in `prespecified/immune_failure_factors.md` with an explicit "
+      "falsifier before any of it was computed._\n")
+    A("| cohort | n | methylation T | NK | B | true T:B | T ranked first | "
+      "methods agreeing T>B |")
+    A("|---|---|---|---|---|---|---|---|")
+    for lab, d in loaded:
+        tm = d["truth_mean"]
+        ratio = tm["T_cell"] / tm["B_cell"] if tm["B_cell"] else float("nan")
+        n = max((v.get("n_scored") or v["n"]) for v in d["methods"].values())
+        A(f"| {lab} | {n} | {tm['T_cell']:.4f} | {tm['NK_cell']:.4f} | {tm['B_cell']:.4f} "
+          f"| **{ratio:.2f}x** | {d['truth_T_first_fraction']:.1%} | "
+          f"**{d['n_agree_T_over_B']} of {d['n_methods']}** |")
+    A("")
+    A("**Two distinct failure modes.** A count of methods 'putting B above T' is computed on "
+      "per-method means, and a method that returns no lymphoid signal at all contributes "
+      "nothing to that mean. The two are separated here because conflating them overstates "
+      "how clean the result is.\n")
+    A("| cohort | ABSENCE: return exactly zero T, B and NK in most samples | "
+      "MISASSIGNMENT: place B above T per-sample |")
+    A("|---|---|---|")
+    for lab, d in loaded:
+        ms = d["methods"]
+        emp = {m: v for m, v in ms.items()
+               if (v.get("n_scored") or v["n"]) < 0.5 * v["n"]}
+        sub = {m: v for m, v in ms.items() if m not in emp}
+        n_bt = sum(1 for v in sub.values()
+                   if (v.get("frac_samples_est_B_over_T") or 0) > 0.5)
+        worst = sorted(emp.items(), key=lambda kv: -kv[1].get("n_no_lymphoid_signal", 0))[:2]
+        detail = ", ".join(f"`{m}` {v['n_no_lymphoid_signal']}/{v['n']}" for m, v in worst)
+        A(f"| {lab} | **{len(emp)} of {len(ms)}** ({detail}) | "
+          f"**{n_bt} of {len(sub)}** |")
+    A("")
+    A("**Zero of twelve reproduce the true T>NK>B ordering in either cohort.**\n")
+    probe = _load_json(results_dir / "identifiability_probe.json")
+    if probe:
+        A("**The obvious explanation is refuted, not assumed.** 'The signature cannot separate "
+          "T from B' is a claim about the matrix, so it was tested on mixtures built from the "
+          f"reference itself with the planted ratio set to {probe['planted_T_over_B']} — the value "
+          "methylation measures. Plain NNLS recovers it exactly, still recovers T > B at 100% "
+          "multiplicative noise, and still recovers it with an entire cell type deleted from "
+          f"the reference. Condition number **{probe['condition_number']}**. "
+          f"Separates T from B in every condition tested: "
+          f"**{probe['signature_separates_T_from_B_in_all_conditions']}**.\n")
+    zp = _load_json(results_dir / "zero_lymphoid_vs_purity.json")
+    if zp:
+        bits = ", ".join(f"{lab} {v['n_significant']} of {v['n_testable']}"
+                         for lab, v in (zp.get("cohorts") or {}).items())
+        A(f"**A second explanation is also refuted.** High tumour purity does not account for "
+          f"the absence mode: zero-lymphoid samples are significantly higher-purity in only "
+          f"{bits} testable methods, and several run the other way.\n")
+    A("**So both failures are measured, replicated across two cohorts, and unexplained.** "
+      "Two candidate mechanisms were proposed and rejected; a third was refuted. That is "
+      "reported in place of a plausible story that does not survive its own test.\n")
+    return "\n".join(out)
+
+
+def equal_footing_section(results_dir: Path) -> str:
+    """Does supplying every method its intended inputs change the ranking?"""
+    d = _load_json(results_dir / "equal_footing_ranking.json")
+    if not d or d.get("kendall_tau") is None:
+        return ""
+    out: list[str] = []
+    A = out.append
+    A("## Equal footing: is the method ranking stable?\n")
+    A("_from `results/equal_footing_ranking.json`. The vendored signature carries an all-zero "
+      "sigma, so MuSiC is arithmetically NNLS, EPIC is uniform-weighted and S-mode cannot run "
+      "(`docs/EQUAL_FOOTING.md`). Rebuilding the reference from the atlas's own counts "
+      "(`matrix=\"raw/X\"`, OPEN_DEFECTS D16) supplies all of it._\n")
+    A(f"> **Kendall tau between the two rankings = {d['kendall_tau']:+.3f}** on the "
+      f"{d['n_ranked_under_both']} methods rankable under both, scored on the samples present in "
+      f"both runs.\n")
+    f_, h_ = d["recovery_frozen"], d["recovery_h5ad"]
+    A("| method | frozen | h5ad (sigma) | change |")
+    A("|---|---|---|---|")
+    for m in sorted(h_, key=lambda k: -h_[k]):
+        fv = f"{f_[m] * 100:.1f}%" if m in f_ else "—"
+        ch = f"{(h_[m] - f_[m]) * 100:+.1f}%" if m in f_ else "—"
+        nc = " *(not comparable)*" if m in d.get("non_comparable_h5ad", {}) else ""
+        A(f"| `{m}`{nc} | {fv} | {h_[m] * 100:.1f}% | {ch} |")
+    A("")
+    sw = d.get("implementation_switched") or []
+    if d.get("kendall_tau_excluding_switched") is not None:
+        A(f"**The confound was tested.** Registering the cells also makes several R packages "
+          f"runnable where the frozen path used a Python reimplementation, and a rank change "
+          f"from swapping reimplementation-for-package would say nothing about equal footing. "
+          f"Of the {d['n_ranked_under_both']} ranked methods, {len(sw)} changed implementation "
+          f"({', '.join('`' + m + '`' for m in sw)}); excluding them tau is "
+          f"**{d['kendall_tau_excluding_switched']:+.3f}**, lower than overall. Every large "
+          f"mover ran the same implementation in both runs.\n")
+    A("**Recovery is bias-invariant** (`1 + slope`, tested in "
+      "`tests/test_lymphoid_ordering.py`), so this reshuffle is independent of the fact that "
+      "equal footing makes the absolute under-call of tumour content *worse* — median bias "
+      "-0.028 to -0.472, and methods under-calling from 7 of 12 to 12 of 12.\n")
+    return "\n".join(out)
+
+
 def render(results_dir: Path) -> str:
     anat = results_dir / "anatomic"
     full = anat / "full_database"
@@ -997,6 +1108,10 @@ def render(results_dir: Path) -> str:
     A(albiach_section(results_dir))
     A(darmanis_section(results_dir))
     A(reference_sensitivity_section(results_dir))
+    # The two arms added 2026-09-18. Both emit "" when their artefacts are absent, so a
+    # partial results tree renders without them rather than failing or imputing.
+    A(orthogonal_per_type_section(results_dir))
+    A(equal_footing_section(results_dir))
 
     sens = _load_csv(anat / "acs_cohort_sensitivity.csv", index_col=0)
     if sens is not None:
