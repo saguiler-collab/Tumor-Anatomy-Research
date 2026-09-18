@@ -202,3 +202,45 @@ definition, not outcome selection.
 AUC 0.831 is good agreement and is not identity, which is expected — a continuous program score
 and a categorical classifier are different constructs. That imperfection is why this is
 secondary.
+
+---
+
+# ADDENDUM 3 — the spatial layer, with its direction fixed before computing
+
+If mesenchymal character predicts deconvolution error (GBM discovery), the natural next question
+is **where in a tumour that character lives**. Ivy GAP is the only cohort here with H&E-guided
+anatomic labels, so it can answer it — and it is used for *interpretation*, not for statistical
+validation, because nine tumours cannot carry that weight.
+
+**Prediction, fixed before the score is related to structure:**
+
+> **The mesenchymal program score is HIGHEST in pseudopalisading cells around necrosis (PAN).**
+
+**Mechanism, stated so the prediction can fail.** The MES-like malignant state is established as
+hypoxia-associated (Neftel et al. 2019). PAN is, by definition, the rim of viable tumour cells
+palisading around a necrotic core — the most hypoxic niche the Ivy GAP roster contains. If MES
+character is hypoxia-driven it should peak there. Microvascular proliferation (MVP) is the
+plausible runner-up, being a hypoxia-driven angiogenic response.
+
+**A failure of this prediction is reportable and does not touch the GBM finding**, which stands
+on its own cohort with its own ground truth.
+
+## Design, and it obeys the same invariants as everything else here
+
+- The score is the **identical** `MES − mean(AC, NPC, OPC)` contrast used in GBM and LGG
+  (`scripts/mes_score.py`), computed on the Ivy GAP anatomic bulk.
+- **Samples are nested in tumours**, so estimates are collapsed to one value per
+  (tumour, structure) before anything is aggregated — the same rule ACS uses.
+- The null is **within-tumour permutation of structure labels**, 10,000 draws. Not a t-test
+  across samples, which would treat multiple blocks from one tumour as independent.
+- Only the five pre-registered primary structures are scored, and only H&E-labelled samples;
+  the 148 expression-labelled ISH samples are excluded as circular, exactly as in ACS.
+
+## What it can and cannot show
+
+**Can:** whether the biological property associated with error is spatially concentrated, which
+would give the failure mechanism an anatomical location and a reason a clinician would care.
+
+**Cannot:** establish that deconvolution error itself is higher in that niche. Ivy GAP has no
+per-sample ground truth, so error cannot be measured there at all. The link between niche and
+error is **inferential, through the score**, and will be stated that way rather than implied.
