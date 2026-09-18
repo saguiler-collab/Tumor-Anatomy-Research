@@ -23,6 +23,7 @@ SIGN across methods asks the question the hypothesis actually poses.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -52,6 +53,27 @@ FACTORS = {
     "gcimp":             ("pos", "abs"),
 }
 ALPHA = 0.05
+
+#: LGG's testable subset. Definitions, directions and model are those fixed in the
+#: pre-specification; only the SET is smaller, and the two absentees are declared rather
+#: than quietly dropped:
+#:
+#:   F5 (Verhaak Mesenchymal) does not exist for LGG -- lower-grade glioma is classified by
+#:      IDH status and 1p/19q -- so it is carried by the SECONDARY continuous MES score
+#:      (addendum 2) and reported separately, never as the pre-specified test.
+#:   F7 (G-CIMP) is a methylation phenotype MC3 does not carry, and correlated with IDH1 at
+#:      +0.868 in GBM, so it is not separately informative. Reported NOT-TESTABLE, not null.
+#:
+#: Holm therefore runs across FIVE primary tests in LGG rather than seven. Fewer tests is a
+#: weaker correction, so this is stated rather than left for a reader to infer.
+FACTORS_LGG = {
+    "purity":             ("neg", "signed"),
+    "ploidy":             ("pos", "abs"),
+    "genome_doublings":   ("pos", "abs"),
+    "subclonal_fraction": ("pos", "abs"),
+    "idh1_mutant":        ("pos", "abs"),
+}
+SECONDARY_LGG = {"mes_score": ("neg", "signed")}
 
 
 def k4(s): return "-".join(str(s).split("-")[:4])
@@ -148,6 +170,15 @@ def build_covariates(samples: list[str]) -> pd.DataFrame:
 
 
 def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--cohort", choices=["gbm", "lgg"], default="gbm")
+    args = ap.parse_args()
+    cohort = args.cohort
+    global PER_SAMPLE, FACTORS
+    if cohort == "lgg":
+        PER_SAMPLE = config.RESULTS_DIR / "absolute_purity_per_sample_lgg.csv"
+        FACTORS = {**FACTORS_LGG, **SECONDARY_LGG}
     if not PER_SAMPLE.exists():
         print(f"BLOCKED: {PER_SAMPLE.name} missing. Re-run "
               f"scripts/absolute_purity_yardstick.py (it now persists per-sample estimates).")
@@ -157,7 +188,8 @@ def main() -> int:
     methods = list(est.columns)
     print(f"per-sample estimates: {est.shape[0]} samples x {len(methods)} methods")
 
-    cov = build_covariates(list(est.index))
+    cov = (build_covariates_lgg(list(est.index)) if cohort == "lgg"
+           else build_covariates(list(est.index)))
     cov = cov.reindex(est.index)
     print("\nfactor coverage (non-null of %d samples):" % len(cov))
     for f in FACTORS:
@@ -209,7 +241,8 @@ def main() -> int:
                       "n_methods": n, "n_in_predicted_direction": ok,
                       "sign_test_p": round(p, 5),
                       "per_method_beta": {k: round(float(v), 5) for k, v in b.items()}}
-    order = sorted(raw, key=raw.get)
+    primary = set(FACTORS_LGG) if cohort == "lgg" else set(FACTORS)
+    order = sorted([f for f in raw if f in primary], key=raw.get)
     for i, f in enumerate(order):
         holm = min(1.0, raw[f] * (len(order) - i))
         holm = max(holm, max((min(1.0, raw[g] * (len(order) - j))
@@ -273,13 +306,25 @@ def main() -> int:
         print(f"  {f:20s} {ok:2d}/{len(b):<2d} p={p_nd:.4f}  "
               f"{'consistent with the primary' if same else 'DIFFERS from the primary'}")
 
+    for f in raw:
+        if f not in primary:                      # secondary: reported, never Holm-corrected
+            results[f]["holm_p"] = None
+            results[f]["secondary_not_prespecified_variable"] = True
+            results[f]["supported"] = False
+            r = results[f]
+            print(f"{f:20s} {r['direction']:>4s} {r['median_beta']:12.5f} "
+                  f"{r['n_in_predicted_direction']:4d}/{r['n_methods']:<4d} "
+                  f"{r['sign_test_p']:8.4f} {'--':>8s}  SECONDARY (not the pre-specified "
+                  f"variable)")
+
     hits = [f for f, r in results.items() if r["supported"]]
     print(f"\n{len(hits)} of {len(FACTORS)} factors supported: {hits or 'NONE'}")
     if not hits:
         print("\nThe pre-specified falsification condition is met: deconvolution error in GBM "
               "is NOT predictable from the biology measured here. That is the finding.")
 
-    out = {"prespecification": "prespecified/biological_failure_factors.md",
+    out = {"cohort": cohort,
+           "prespecification": "prespecified/biological_failure_factors.md",
            "hypothesis": "Biological properties of GBM that alter the relationship between "
                          "malignant-cell abundance and transcriptomic composition will predict "
                          "systematic errors in bulk RNA deconvolution.",
@@ -292,8 +337,9 @@ def main() -> int:
                         "interpretable statistic is the recovery fraction, reported under "
                         "factors.purity.interpretable_statistic.",
            "falsified": not hits}
-    (config.RESULTS_DIR / "failure_factors_gbm.json").write_text(json.dumps(out, indent=2))
-    print("\nwrote results/failure_factors_gbm.json")
+    (config.RESULTS_DIR / f"failure_factors_{cohort}.json").write_text(
+        json.dumps(out, indent=2))
+    print(f"\nwrote results/failure_factors_{cohort}.json")
     return 0
 
 
