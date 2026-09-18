@@ -377,6 +377,61 @@ than a plausible story that does not survive its own test.
 
 Artefact: `results/zero_lymphoid_vs_purity.json`.
 
+### What DOES survive: the model's premise is substantially violated
+
+Three explanations have now been rejected — macrophage spillover, high purity, and signature
+non-separability. The last of those is the informative one: the signature recovers the planted
+T:B ratio **exactly** under the additive model, at any noise level, even with a cell type deleted.
+That is only compatible with total failure on real tissue if **real bulk is not described by
+`b = Sx`** — the model every method in this panel assumes.
+
+That is measurable without any ground truth, and it was
+(`scripts/model_fit_residual.py`): fit the best non-negative combination of reference profiles to
+each sample and ask how much of its marker-space variance remains.
+
+| | GBM | LGG |
+|---|---|---|
+| samples × marker genes | 175 × 1597 | 534 × 1597 |
+| R² of the best additive fit (median) | **0.3621** | **0.2360** |
+| variance left **unexplained** | **63.8%** | **76.4%** |
+| samples where the model explains under half | 82.9% | 89.1% |
+
+**An R² of 0.36 means nothing without a floor and a ceiling**, so both were measured:
+
+| | GBM | LGG |
+|---|---|---|
+| real reference | **+0.3815** | **+0.2475** |
+| gene labels shuffled within each profile *(floor)* | -0.0077 | -0.0071 |
+| random non-negative basis, matched scale *(floor)* | +0.0016 | +0.0016 |
+| top-8 SVD of the bulk itself *(ceiling)* | +0.9803 | +0.9904 |
+| **reference as a fraction of the achievable** | **38.9%** | **25.0%** |
+
+Both readings matter and they pull against each other:
+
+- **The reference carries real structure.** At 0.3815 against floors of
+  -0.0077 and +0.0016, this is emphatically not "any eight vectors explain a
+  third of the data". Shuffling which gene belongs to which cell type destroys it completely.
+- **And it reaches a minority of what is achievable.** Eight dimensions *could* explain
+  **98.0%** (GBM) and **99.0%** (LGG) of the variance in these samples. The
+  reference reaches **38.9%** and **25.0%** of that.
+
+**This reconciles the two facts that otherwise contradict each other.** The signature *can*
+separate T from B; it simply is not being asked a question the data answers. A solver handed a
+basis that accounts for a quarter to a third of the achievable structure will place the residual
+somewhere, and where it places it is not governed by the biology the reference encodes.
+
+**What this does NOT establish.** It does not say *which* assumption fails — platform and
+normalisation mismatch between a single-cell-derived profile and TCGA bulk, unmodelled cell states,
+and outright non-additivity are all consistent with these numbers and are not distinguished here.
+It does not explain the *direction* of the failure: nothing above predicts that the residual lands
+in `B_cell` specifically rather than anywhere else. And R² depends on the marker space and the
+normalisation, so the absolute figure is not a universal constant of glioma deconvolution.
+
+It does bound the problem: **any explanation of these failures that assumes the mixing model holds
+is starting from a premise that is false for 64–76% of the signal.**
+
+Artefact: `results/model_fit_residual.json`.
+
 ### Secondary, NOT registered: the full lymphoid ordering
 
 The same measurement yields NK at no extra cost, so the three-way ordering is reported here.
