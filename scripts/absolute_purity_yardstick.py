@@ -115,7 +115,15 @@ def main() -> int:
         print("BLOCKED: gene space too small."); return 2
     sub = bulk.loc[genes, cols]
     sub = sub / sub.sum(axis=0) * 1e6                 # re-normalise on the marker space
-    manifest = pd.DataFrame(index=sub.columns)
+    # PATIENT IDENTITY. The hierarchical Bayesian method pools across patients and reads
+    # `manifest["patient_id"]`; without it the method FAILS and drops out of the panel
+    # entirely, which is an equal-footing problem rather than a missing feature. For TCGA the
+    # patient is the first three barcode fields, so this is recoverable and is supplied.
+    manifest = pd.DataFrame({"patient_id": ["-".join(str(c).split("-")[:3])
+                                            for c in sub.columns]}, index=sub.columns)
+    n_pat = manifest["patient_id"].nunique()
+    print(f"  manifest: {len(manifest)} samples across {n_pat} patients "
+          f"({len(manifest) - n_pat} sample(s) share a patient)")
 
     data = DeconvolutionInput(bulk=sub, references=(ref.subset_genes(genes),),
                               manifest=manifest, cell_types=tuple(ref.cell_types),
