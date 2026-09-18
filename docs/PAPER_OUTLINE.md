@@ -172,8 +172,9 @@ which the anatomy score could not produce. **Bisque** carries no tumour informat
 while over-calling immune 2.27×.
 
 **Unpredicted observation:** methods place **more B cells than T cells** in GBM (CIBERSORTx 0.046
-vs 0.003) while the reference holds 5× more T than B. An identifiability failure, reported as
-needing its own test since no direction was pre-specified for it.
+vs 0.003) while the reference holds 5× more T than B. Reported at the time as needing its own
+test, since no direction was pre-specified for it. **That test was then pre-registered and run —
+see §7c.**
 
 ## 7c · Result 4c — the anomaly was pre-registered, tested, and CONFIRMED
 
@@ -213,10 +214,10 @@ refuted** (`scripts/identifiability_probe.py`): on mixtures built from the refer
 NNLS recovers T:B = 2.33 exactly, still recovers T > B at 100% multiplicative noise, and still
 recovers it with an entire cell type deleted from the reference; the signature's condition number
 is 5.3. The cause lies in the gap between the reference's expression space and real bulk tissue,
-and **is not identified**. Its being unanimous across NNLS, SVR, Bayesian and probabilistic-model families
-makes it a property of the problem as posed rather than a quirk of one solver — and it
-**replicates the GBM observation in a second tissue**, which is what turns an anomaly into a
-finding.
+and **is not identified**. It is unanimous across NNLS, SVR, Bayesian and probabilistic-model
+families, so it is not a quirk of one solver's regularisation — but "not one solver's quirk" is
+as far as the evidence goes, and no stronger characterisation is offered. It **replicates across
+both cohorts**, which is what turns an anomaly into a finding.
 
 **A mechanism was proposed and rejected.** The frozen signature gives T_cell only **5.17%** of
 profile mass against B_cell's **13.26%**, and B_cell is the immune profile most correlated with

@@ -119,9 +119,13 @@ Unprompted by any hypothesis, and visible only once per-type estimates were pers
 glioblastoma, where T cells are the dominant lymphocyte and B cells are rare, this is backwards
 against both the biology and the reference the methods were given.
 
-This is an **identifiability failure**, not a proportion error: the solvers are placing lymphocyte
-signal in the wrong column. It was not pre-specified and no direction was fixed for it, so it was
-reported here as an observation requiring its own test.
+This is a **misassignment**, not a proportion error: the solvers are placing lymphocyte signal in
+the wrong column. It was not pre-specified and no direction was fixed for it, so it was reported
+here as an observation requiring its own test.
+
+*(This paragraph originally called it "an identifiability failure". That wording implied a cause —
+that the signature cannot separate T from B — which was later tested and refuted; see §6. The
+observation stands, the implied explanation does not.)*
 
 **That test was then pre-registered and run. See section 6 — the anomaly is confirmed against
 DNA methylation and replicates into a second tissue.**
@@ -168,8 +172,13 @@ belongs in the sentence, and it is read from EpiDISH's own stdout rather than as
 | **methylation (truth)** | **0.4769** | **0.2040** | **T** |
 
 **12 of 12 methods put B above T. The orthogonal measurement puts T above B in
-93.2% of samples.** The anomaly is not withdrawn; it is confirmed, and it
-replicates from GBM into a second tissue.
+93.2% of samples.** The anomaly is not withdrawn; it is confirmed, and it replicates across both
+cohorts.
+
+> **Read this count with the correction below.** "12 of 12" is computed on per-method *means*,
+> and for four of those methods the mean is taken over a minority of samples because they return
+> no lymphoid signal at all. See **"CORRECTED 2026-09-18"** further down, which separates the two
+> failure modes. The direction is unchanged; the tidiness is not real.
 
 ### Why this comparison is like-for-like
 
@@ -463,8 +472,11 @@ quantities and neither is evidence for the other.)*
   brain-resident and appear in no blood reference, and substituting `Mono` would invent a
   correspondence the reference does not have.
 - This is **LGG**. The anomaly was first seen in GBM. The pre-specification required checking
-  whether it exists in LGG at all before testing it — it does, in 12 of 12 methods, which is what
-  makes this a replication rather than a single observation.
+  whether it exists in LGG at all before testing it — it does, on the mean in 12 of 12 methods
+  (and per-sample in 8 of the 8 that return lymphoid signal at all), which is what makes this a
+  replication rather than a single observation. **Since this was written, GBM methylation was
+  obtained too, so both cohorts now have per-type truth and the LGG-only limitation no longer
+  applies.**
 
 Artefacts: `results/methylation_celltypes_lgg.json`, `results/methylation_celltypes_lgg.csv`.
 
