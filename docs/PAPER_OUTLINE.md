@@ -238,6 +238,15 @@ Macrophage_Microglia (**r = +0.552**). That suggested macrophage spillover into 
 — B tracking Macrophage more than T does — was tested and **failed: 5 of 10, p = 0.623**. The
 explanation is **not adopted**, and is reported as rejected rather than dropped.
 
+**What survives instead: the model's premise is violated.** If the signature separates T from B
+under the model but no method does on tissue, then tissue is not described by the model. Measured:
+the best non-negative fit leaves a median **63.8%** (GBM) and **76.4%** (LGG) of marker-space
+variance unexplained. Controls bracket it — shuffling gene-to-type assignment gives R² ≈ **0**, so
+the reference is carrying real structure, while the top-8 SVD ceiling is **0.98**, so the
+reference reaches only **39%** / **25%** of the achievable. This does **not** identify which
+assumption fails, nor why the residual lands in `B_cell` specifically. It bounds the problem:
+any account assuming the mixing model holds begins from a premise false for most of the signal.
+
 ## 7d · Result 4d — equal footing changes the winner, not the shortfall
 
 *Source: `results/equal_footing_ranking.json`, `docs/EQUAL_FOOTING.md`*

@@ -307,6 +307,15 @@ These do not depend on the ranking question and are directly reportable.
   explanation, that the signature cannot separate T from B, was tested and refuted (NNLS recovers
   the planted ratio exactly on mixtures built from the reference, survives 100% noise and the
   deletion of a whole cell type; condition number 5.3). `docs/IMMUNE_ARM.md` §6.
+- **The mixing model itself explains a minority of the signal, and that is measurable without
+  ground truth.** Fitting the best non-negative combination of reference profiles to each sample
+  leaves a median **63.8%** (GBM) and **76.4%** (LGG) of marker-space variance
+  unexplained, with **83%** and **89%** of samples below R² = 0.5. Bracketed by controls:
+  shuffling which gene belongs to which cell type drops R² to **-0.0077**, so the reference
+  does carry real structure — but eight dimensions *could* explain **98%**, and the reference
+  reaches only **39%** (GBM) and **25%** (LGG) of that. It does not identify which
+  assumption fails, but it bounds every explanation that assumes the model holds.
+  `results/model_fit_residual.json`.
 - **ACS is structurally blind to it.** `T_cell` carries no constraint, by pre-registered design,
   because no anatomic fact about T-cell distribution was defensible enough to register.
 - **1 of 15 methods reports uncertainty at all**, and its intervals cover **9.25%** against a
