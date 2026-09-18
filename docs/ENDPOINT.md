@@ -243,7 +243,8 @@ These do not depend on the ranking question and are directly reportable.
   pre-specified mRNA correction). `docs/IMMUNE_ARM.md`.
 - **Methods put B cells above T cells — all of them, in both tissues, and this is wrong.**
   Pre-registered before measurement with an explicit falsifier, then tested against DNA
-  methylation (EpiDISH RPC, 333 HM450 CpGs) on 530 TCGA-LGG samples. Methylation puts T above B
+  methylation (EpiDISH RPC, 255 of its 333 reference HM450 CpGs — the rest are all-NA in this
+  matrix) on 530 TCGA-LGG samples. Methylation puts T above B
   in **93.2%** of samples; **12 of 12 methods put B above T.** Both sides are renormalised within
   {T, B, NK}, so the denominator difference is removed by construction. This is an
   **identifiability failure** — lymphocyte signal assigned to the wrong column — and its being

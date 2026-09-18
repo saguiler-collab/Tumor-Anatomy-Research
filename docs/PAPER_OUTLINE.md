@@ -184,7 +184,8 @@ The B-over-T observation in §7b had no per-type truth to check it against. One 
 and **the prediction was registered before it was computed**, with an explicit falsifier:
 *"methylation showing B ≥ T [...] That outcome would be reported and the anomaly withdrawn."*
 
-**Per-type truth:** EpiDISH RPC on `centDHSbloodDMC.m` (333 HM450 CpGs), **530 TCGA-LGG
+**Per-type truth:** EpiDISH RPC on `centDHSbloodDMC.m` (**255 of its 333 reference HM450 CpGs**;
+64 are all-NA in this matrix and drop out of `complete.cases`), **530 TCGA-LGG
 samples**. Both sides renormalised within {T, B, NK}, so the leukocyte-subcomposition vs
 all-cell-fraction denominator difference cancels by construction — verified in
 `tests/test_lymphoid_ordering.py`, not merely asserted.

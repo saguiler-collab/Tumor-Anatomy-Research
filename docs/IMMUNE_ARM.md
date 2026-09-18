@@ -142,7 +142,10 @@ advance and an explicit falsifier:
 
 ### The result: the prediction held
 
-DNA methylation (EpiDISH RPC, `centDHSbloodDMC.m`, 333 HM450 CpGs) on **530 TCGA-LGG samples**:
+DNA methylation (EpiDISH RPC, `centDHSbloodDMC.m`) on **530 TCGA-LGG samples**. EpiDISH ships
+333 reference CpGs; **64 are all-NA across every sample in this matrix**, so `epidish()` — which
+is given `b[complete.cases(b), ]` — actually ran on **255 of 333**. That is the number that
+belongs in the sentence, and it is read from EpiDISH's own stdout rather than asserted:
 
 **T > B in 93.2% of samples** — mean T 0.4769 vs B 0.2040.
 

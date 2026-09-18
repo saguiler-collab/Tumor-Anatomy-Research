@@ -55,6 +55,82 @@ cohorts**.
 
 It is worth doing before the method ranking is published. It is **not** required for anything else.
 
+---
+
+## MEASURED 2026-09-18 — equal footing changes the ranking almost completely
+
+The rebuild was run (`--reference h5ad`, `matrix="raw/X"`). It delivered what this document
+predicted: **sigma all-zero: False; cross-donor variance: True**, 15,311 cells across 110 donors.
+MuSiC, EPIC and CIBERSORTx S-mode became runnable in their intended modes, and
+`bayesian_hierarchical` — which had been failing outright on a missing `patient_id` — joined the
+panel. The GBM run scored **14 real methods against 12** on the frozen signature.
+
+### Recovery of true tumour-content variation, GBM, on the 154 samples scored by BOTH runs
+
+| method | frozen | h5ad (sigma) | comparable frozen | comparable h5ad |
+|---|---|---|---|---|
+| music | 17.5% | 60.2% | excluded | ✓ |
+| cibersortx | 63.7% | 58.4% | ✓ | ✓ |
+| svr | 59.1% | 55.0% | ✓ | ✓ |
+| scdc | 20.5% | 53.3% | ✓ | ✓ |
+| scdc_ensemble | 20.5% | 53.3% | excluded | excluded |
+| bisque | -1.5% | 35.9% | excluded | excluded |
+| bayesprism | 9.8% | 30.0% | ✓ | ✓ |
+| nnls | 17.5% | 23.7% | ✓ | ✓ |
+| bayesian_hierarchical | — | 22.7% | excluded | ✓ |
+| bayesian | 43.1% | 21.3% | ✓ | ✓ |
+| cibersortx_smode | — | 18.5% | excluded | ✓ |
+| epic | 29.1% | 16.5% | excluded | ✓ |
+| elastic_net | 20.1% | 15.2% | ✓ | ✓ |
+| dwls | 43.5% | 14.7% | ✓ | ✓ |
+
+### The ranking does not survive
+
+> **Kendall tau between the two rankings = +0.214** on the 8 methods rankable under both.
+
+That is near-random agreement. The frozen-reference ranking was **substantially an artefact of the
+inputs those methods were denied**, not a measurement of the methods.
+
+**The single largest movement is the one this document predicted.** MuSiC — whose entire published
+contribution is cross-donor variance weighting — was excluded on the frozen signature as
+arithmetically NNLS (17.5%). Given the variance it is designed to use, it recovers **60.2% and
+ranks first.** DWLS falls furthest in the other direction, **43.5% → 14.7%, rank 3 → 12.**
+
+**What survives:** CIBERSORTx and SVR stay near the top (63.7% → 58.4%, 59.1% → 55.0%, ranks 1→2
+and 2→3). The immune arm's "CIBERSORTx and SVR are best calibrated" claim is **not overturned** —
+but it is no longer the whole story, because the method that now beats them could not previously
+be measured at all.
+
+### The confound was checked, not assumed away
+
+Registering the cells does two things at once: it supplies sigma, **and** it makes several R
+packages runnable where the frozen path fell back to a Python reimplementation. A rank change
+caused by swapping a reimplementation for a package would say nothing about equal footing.
+
+Of the 8 methods ranked under both, **1 changed implementation** (`scdc`,
+python-reimplementation → R:SCDC). Excluding it, **tau = +0.143** — lower than the
++0.214 overall. The rank change is therefore **not** an artefact of the implementation
+swap; every large mover (dwls −9, elastic_net −5, bayesian −4, bayesprism +3) ran the *same*
+implementation in both runs.
+
+### Three honest caveats
+
+1. **`bisque` and `scdc_ensemble` remain excluded under both references.** Their missing inputs
+   are properties of the cohort and the pipeline, not of the reference build: TCGA has no
+   subjects assayed as both bulk and single cells, and `DeconvolutionInput` is constructed with
+   exactly one reference. ENSEMBLE returned numbers identical to SCDC to four decimals on the
+   h5ad run, which is what a correctly-reported degeneracy looks like.
+2. **`bayesprism` is the Python reimplementation in BOTH runs**, labelled as such and never
+   reported as the published package. In the h5ad run its R attempt was terminated by me after I
+   misread an R `parallel` socket-cluster master — which sits at 0% CPU by design while its
+   workers compute — as a stalled process. The frozen run had already fallen back to the same
+   reimplementation, so the two sides are consistent; but the h5ad R attempt was cut short rather
+   than allowed to fail on its own, and that is recorded rather than smoothed over.
+3. **This is GBM.** The LGG leg is the replication, and a ranking that reshuffles under a
+   reference change is exactly the kind of result that needs one.
+
+---
+
 ## The one genuine external need
 
 > **Paired bulk RNA-seq and single-cell RNA-seq from the same subjects.**

@@ -158,3 +158,25 @@ rather than against tissue. **That outcome would be reported and the anomaly wit
   an absolute per-type fraction of the sample.
 - This is LGG, not GBM. The anomaly was measured in GBM. **Whether it exists in LGG at all is
   checked first**; if it does not, this tests nothing about the GBM observation and will say so.
+
+---
+
+## CORRECTION, added 2026-09-18 (after measurement — the text above is left as registered)
+
+The sentence above — *"All 333 are present in the TCGA-LGG methylation matrix with no missing
+values"* — is **wrong**, and was wrong when it was written.
+
+Measured: all 333 reference CpGs are present as **rows**, but **64 of them are all-NA across
+every one of the 530 samples**, and a further 14 have scattered missingness. `epidish()` is
+called on `b[complete.cases(b), ]`, so it ran on **255 of 333**, which its own stdout reports as
+`beta: 255 probes x 530 samples`.
+
+**What it changes:** the count quoted in the results sentence, nothing else. The estimates,
+the 93.2% T > B figure and the 12-of-12 method disagreement are unchanged — they were always
+computed on the 255, and re-running after the correction reproduces them exactly.
+
+**What it says about the process:** "present in the matrix" was checked; "with no missing values"
+was assumed from it. Presence of a row is not presence of data. `scripts/methylation_celltypes.py`
+now parses the used count out of EpiDISH's stdout instead of quoting the package's advertised
+333, and `scripts/extract_epidish_probes.py` reports the complete-case count and warns when it
+falls below 80% of the reference.

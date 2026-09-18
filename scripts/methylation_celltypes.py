@@ -9,7 +9,10 @@ WHY IT EXISTS
 -------------
 Leukocyte fraction is a single aggregate number, so the immune arm could corroborate the
 DIRECTION of an error and never a per-type magnitude. EpiDISH's reference resolves individual
-immune types from 333 HM450 CpGs, which is the first per-type truth this project has had.
+immune types from EpiDISH's 333 reference HM450 CpGs -- of which only the COMPLETE-CASE
+subset is actually used, because `epidish()` is given `b[complete.cases(b), ]`. On TCGA-LGG
+that is 255 of 333 (64 CpGs are all-NA across every sample). The count that belongs in a
+results sentence is the one EpiDISH consumed, not the one the package ships.
 
 It exists specifically to test one unpredicted observation: methods place MORE B cells than
 T cells, while the reference atlas holds 5x more T than B.
@@ -28,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -70,6 +74,14 @@ def main() -> int:
         cat("estF:", paste(dim(res$estF), collapse=" x "), "\\n")
     '''], capture_output=True, text=True)
     print(r.stdout.strip())
+    # NEVER VALIDATE AGAINST A HARD-CODED LITERAL: read what EpiDISH actually consumed out of
+    # its own stdout, rather than asserting 333 and being wrong in the results sentence.
+    m_used = re.search(r"beta:\s*(\d+)\s*probes", r.stdout or "")
+    n_used = int(m_used.group(1)) if m_used else -1
+    n_supplied = int(pd.read_csv(beta_p, index_col=0).shape[0])
+    if n_used > 0 and n_used < n_supplied:
+        print(f"  NOTE: {n_supplied - n_used} of {n_supplied} reference CpGs dropped by "
+              f"complete-case filtering; EpiDISH ran on {n_used}.")
     if r.returncode != 0:
         print("EpiDISH FAILED:\n" + r.stderr[-1200:]); return 2
 
@@ -123,7 +135,10 @@ def main() -> int:
     json.dump({"cohort": args.cohort,
                "prespecification": "prespecified/immune_failure_factors.md (per-cell-type "
                                    "addendum)",
-               "reference": "EpiDISH centDHSbloodDMC.m, 333 HM450 CpGs, RPC",
+               "reference": (f"EpiDISH centDHSbloodDMC.m, RPC; {n_used} of {n_supplied} "
+                             f"reference CpGs used after complete-case filtering"),
+               "n_reference_cpgs_supplied": int(n_supplied),
+               "n_reference_cpgs_used": int(n_used),
                "not_mapped": {"Macrophage_Microglia": "microglia are brain-resident and appear "
                                                       "in no blood reference; Mono is a "
                                                       "different population"},

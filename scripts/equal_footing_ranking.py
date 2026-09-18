@@ -32,6 +32,17 @@ def _load(tag: str) -> dict:
     return json.loads(p.read_text())
 
 
+def _shared_samples(base: str) -> set | None:
+    """Samples scored by BOTH runs, or None if the h5ad run has not happened yet."""
+    fp = config.RESULTS_DIR / f"absolute_purity_per_sample{base}.csv"
+    hp = config.RESULTS_DIR / f"absolute_purity_per_sample{base}_h5ad.csv"
+    if not (fp.exists() and hp.exists()):
+        return None
+    a = set(pd.read_csv(fp, index_col=0).index)
+    b = set(pd.read_csv(hp, index_col=0).index)
+    return a & b
+
+
 def _observed(tag: str) -> tuple[set[str], set[str]]:
     """(degenerate, failed) as the run itself recorded them, from the yardstick JSON."""
     rep = _load(tag)
@@ -53,8 +64,22 @@ def _recovery(report: dict) -> dict[str, float]:
     return out
 
 
-def _from_per_sample(tag: str) -> dict[str, float]:
-    """Recompute recovery from the per-sample CSV -- the JSON may not carry it."""
+def _from_per_sample(tag: str, keep: set | None = None) -> dict[str, float]:
+    """Recompute recovery from the per-sample CSV -- the JSON may not carry it.
+
+    `keep` restricts to a fixed sample set. THE COMPARISON REQUIRES IT: if the frozen run and
+    the h5ad run are scored on different samples, a rank change cannot be attributed to the
+    reference rather than to the sample set. The two runs do differ -- the h5ad reference
+    shares a different gene space with the bulk, so a method can return finite values on one
+    and not the other.
+
+    NOTE ON THE DENOMINATOR. This is not the same sample set as
+    `results/failure_factors_*.json`, which restricts to complete cases across all seven
+    biological factors (147 of 154 in GBM, 496 of 510 in LGG) because it fits a seven-factor
+    model. Recovery figures here are therefore close to, but not identical with, the ones
+    quoted there (e.g. CIBERSORTx GBM 63.7% here vs 65.6% on complete cases). Neither is wrong;
+    they answer different questions, and mixing them in one table would be.
+    """
     import numpy as np
     p = config.RESULTS_DIR / f"absolute_purity_per_sample{tag}.csv"
     if not p.exists():
@@ -65,6 +90,8 @@ def _from_per_sample(tag: str) -> dict[str, float]:
     truth_col = next((c for c in ("absolute_purity", "purity") if c in df.columns), None)
     if truth_col is None:
         raise KeyError(f"{p.name} has no purity column. Columns: {list(df.columns)[:8]}")
+    if keep is not None:
+        df = df.loc[[i for i in df.index if i in keep]]
     truth = df[truth_col].to_numpy(dtype="float64")
     out = {}
     for m in df.columns:
@@ -84,8 +111,9 @@ def _from_per_sample(tag: str) -> dict[str, float]:
 def main() -> int:
     cohort = sys.argv[1] if len(sys.argv) > 1 else "gbm"
     base = "" if cohort == "gbm" else f"_{cohort}"
-    frozen = _from_per_sample(base)
-    h5ad = _from_per_sample(base + "_h5ad")
+    shared = _shared_samples(base)
+    frozen = _from_per_sample(base, shared)
+    h5ad = _from_per_sample(base + "_h5ad", shared)
     if not frozen:
         print(f"BLOCKED: no frozen run for {cohort}"); return 2
     if not h5ad:
@@ -99,6 +127,8 @@ def main() -> int:
     nc_frozen = non_comparable("frozen", *_observed(base))
     nc_h5ad = non_comparable("h5ad", *_observed(base + "_h5ad"))
     print(f"=== {cohort.upper()}: does equal footing change the ranking? ===\n")
+    print(f"scored on the {len(shared):,} samples present in BOTH runs, so a rank change "
+          f"cannot be a sample-set change\n")
     print("NOT COMPARABLE on the frozen reference (degraded stand-ins, not the method):")
     print("  [requirement = from the static input table; observed = what this run reported]")
     for m, why in sorted(nc_frozen.items()):
@@ -145,12 +175,44 @@ def main() -> int:
         print("  tau = 1 means equal footing changed nothing; lower means the frozen "
               "ranking was\n  partly an artefact of the missing inputs.")
 
+    # CONFOUND CHECK. Registering the cells does two things at once: it supplies sigma (the
+    # variable of interest) AND it makes several R packages runnable where the frozen path
+    # fell back to a Python reimplementation. A rank change caused by swapping
+    # reimplementation-for-package is NOT evidence about equal footing, so the methods whose
+    # implementation changed are identified and tau is recomputed without them.
+    impl_f = {m: (v or {}).get("implementation") for m, v in
+              (_load(base).get("methods", {}) or {}).items()}
+    impl_h = {m: (v or {}).get("implementation") for m, v in
+              (_load(base + "_h5ad").get("methods", {}) or {}).items()}
+    switched = sorted(m for m in both["method"]
+                      if impl_f.get(m) != impl_h.get(m))
+    tau_clean = None
+    if len(both) >= 3:
+        print(f"\nIMPLEMENTATION CHECK — did the package change under the method's name?")
+        for m in both["method"]:
+            mark = "  CHANGED" if m in switched else ""
+            print(f"  {m:20s} {str(impl_f.get(m)):24s} -> {str(impl_h.get(m)):24s}{mark}")
+        keep = both[~both["method"].isin(switched)]
+        if len(keep) >= 3 and switched:
+            tau_clean = float(keep["rank_frozen"].corr(keep["rank_h5ad"], method="kendall"))
+            print(f"\n  {len(switched)} of {len(both)} changed implementation. Excluding them, "
+                  f"tau on the remaining {len(keep)} is {tau_clean:+.3f} "
+                  f"(vs {tau:+.3f} overall) — so the rank change is NOT an artefact of "
+                  f"swapping a reimplementation for a package.")
+        elif not switched:
+            print("\n  none changed: the rank comparison is clean.")
+
     out = config.RESULTS_DIR / f"equal_footing_ranking{base}.json"
     out.write_text(json.dumps({
         "cohort": cohort,
         "recovery_frozen": frozen, "recovery_h5ad": h5ad,
         "non_comparable_frozen": nc_frozen, "non_comparable_h5ad": nc_h5ad,
         "kendall_tau": None if len(both) < 3 else round(float(tau), 4),
+        "implementation_frozen": impl_f, "implementation_h5ad": impl_h,
+        "implementation_switched": switched,
+        "kendall_tau_excluding_switched": (None if tau_clean is None
+                                           else round(tau_clean, 4)),
+        "n_ranked_under_both": int(len(both)),
     }, indent=2))
     print(f"\nwrote results/equal_footing_ranking{base}.json")
     return 0
