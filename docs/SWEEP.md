@@ -1,8 +1,27 @@
 # Full-project sweep, 2026-09-19
 
 Ran the project top to bottom looking for failures and defects, rather than re-running only what
-had changed. **Three real defects found, all three fixed. One serious performance defect found and
-still open.** Everything else verified clean.
+had changed.
+
+**Four defects found. All four resolved.** Everything else verified clean, including the end-to-end
+validation gate and its negative controls.
+
+| | defect | status |
+|---|---|---|
+| 1 | an unorderable sample credited to `T_cell` by column order | **fixed** — and it was biased *toward* this project's own prediction |
+| 2 | two superseded scripts did not compile | **fixed** |
+| 3 | `RESULTS.md` stale against its generator | **fixed**, caught by its own test |
+| 4 | the synthetic validation gate "hung" | **resolved — it was two problems, neither a deadlock.** Contention I created (2.2% vs 77.5% CPU on identical hardware), plus BayesPrism dying on *memory*, not time |
+
+**The conclusion of the sweep:** the science is sound and the tooling had three small holes and one
+misread. Defect 1 is the only one that touched a number, and it moved GBM T-ranked-first from
+0.6387 to 0.6364 — no claim changes. The gate now runs end to end, Stage 5 blocks correctly on
+missing vital-status data rather than imputing it, and the negative controls sit at ACS 0.362–0.383
+against a working-method floor of 0.906.
+
+**I was wrong twice about defect 4** and both wrong answers are kept on the record below, because
+the pattern — a plausible mechanism, never checked against the step that would falsify it — is the
+transferable part.
 
 The sweep harness and per-stage logs live in the session scratchpad; the checks are reproducible
 from the commands recorded below.
