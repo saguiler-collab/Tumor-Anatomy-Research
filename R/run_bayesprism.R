@@ -66,7 +66,27 @@ prism <- new.prism(
   outlier.fraction = 0.1
 )
 
-n_cores <- max(1, min(4, parallel::detectCores() - 1))
+# CORES — a DECLARED deviation, not a silent default (OPEN_DEFECTS D18).
+#
+# The default below asks for min(4, detectCores() - 1) workers. BayesPrism parallelises with
+# a `parallel` SOCKET cluster, so each worker is a separate R process holding its own copy of
+# the data. On an 8.6 GB machine with ~3.2 GB free those workers are killed, the master fails
+# with `Error in unserialize(node$con) : error reading from connection`, this script exits 1,
+# and the bridge falls back to the Python reimplementation -- so the row labelled
+# `bayesprism` was never BayesPrism. Measured 2026-09-19; it is a MEMORY limit, not a
+# timeout (155.3 s against a 2,400 s budget).
+#
+# `n_cores` in the config JSON overrides the default. Setting it to 1 removes the cluster
+# entirely: no workers to be killed, no orphaned R processes, and the genuine package runs.
+# The cost is wall-clock only. NOTHING about the model changes -- no prior, no outlier cut,
+# no cell-type mapping -- so this alters how long the method takes, not what it computes.
+#
+# It is written here rather than hard-coded so the value used is recorded in the run's config
+# and cannot differ silently between runs.
+n_cores <- if (!is.null(args$n_cores)) as.integer(args$n_cores) else
+             max(1, min(4, parallel::detectCores() - 1))
+cat(sprintf("BayesPrism: n.cores = %d%s\n", n_cores,
+            if (!is.null(args$n_cores)) " (set explicitly; see D18)" else " (default)"))
 res <- run.prism(prism = prism, n.cores = n_cores)
 
 theta <- get.fraction(bp = res, which.theta = "final", state.or.type = "type")

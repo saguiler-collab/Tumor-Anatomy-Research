@@ -539,6 +539,35 @@ omitted the one detail that makes it actionable. R writes `Error in <call> : <me
 so that line is now lifted out. The difference is between "music fell back" and "music
 fell back because `music_prop()` wanted `bulk.mtx`".
 
+## BayesPrism: single-threaded, and why that is a declared deviation
+
+`R/run_bayesprism.R` defaults to `n.cores = max(1, min(4, detectCores() - 1))`, which is the
+package's own idiom. BayesPrism parallelises with a `parallel` **socket** cluster, so each worker
+is a separate R process holding its own copy of the data.
+
+On the machine these runs were performed on — **8.6 GB RAM, ~3.2 GB free** — those workers are
+killed. The master then fails with `Error in unserialize(node$con) : error reading from
+connection`, the script exits 1, and `r_bridge` takes its documented fallback to the Python
+reimplementation. **Every `bayesprism` row in every real run of this study is therefore the
+reimplementation, not the package** — labelled as such in the artefacts, but not for the reason
+anyone would guess. Measured 2026-09-19; it is a memory limit, not a timeout (155.3 s against a
+2,400 s budget). `docs/OPEN_DEFECTS.md` D18.
+
+**The deviation:** `config.R_SOCKET_CLUSTER_CORES = 1`, passed to the R script as `n_cores` in
+the run's config JSON, removes the cluster.
+
+**What it changes:** wall-clock only. No prior, no `outlier.cut`, no `outlier.fraction`, no
+cell-type mapping, no seed. `run.prism` is called with the same arguments otherwise.
+
+**What it does not change:** whether the result is comparable. A single-threaded and a
+three-worker BayesPrism run the same model; the cluster is an execution strategy. If the two
+produce materially different fractions that is itself worth reporting, and the re-measurement is
+reported alongside the original rather than substituted into it.
+
+**Why it is recorded in config rather than the R file:** so the value used is written into every
+run's config JSON and cannot differ silently between runs. An unset run writes no `n_cores` key
+at all, so "used the package default" is distinguishable from "chose the default".
+
 ## CIBERSORTx, and what of it is reproducible here
 
 `Anatomy_Test.md` names CIBERSORTx among the methods to score. Two things about it are

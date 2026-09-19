@@ -561,6 +561,10 @@ def run_r_method(method_name: str, data: DeconvolutionInput,
             "seed": config.RANDOM_SEED,
             "ensemble": method_name.endswith("_ensemble"),
         }
+        # Only written when set, so the R side can tell "use your default" from an explicit
+        # choice, and so an unset run's config JSON does not imply one was made.
+        if config.R_SOCKET_CLUSTER_CORES is not None:
+            payload["n_cores"] = int(config.R_SOCKET_CLUSTER_CORES)
         cfg_path = tmp / "args.json"
         cfg_path.write_text(json.dumps(payload, indent=2))
 

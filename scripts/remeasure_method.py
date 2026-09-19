@@ -72,8 +72,21 @@ def main() -> int:
                     help="method to re-measure, e.g. dwls or bayesprism")
     ap.add_argument("--budget", type=int, default=14400, help="seconds for the R call")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--cores", type=int, default=None,
+                    help="workers for a method that parallelises with an R SOCKET cluster "
+                         "(BayesPrism). 1 disables the cluster. Omit for the package default. "
+                         "See OPEN_DEFECTS D18: on a memory-constrained machine the default "
+                         "spawns workers that are killed, the master fails with "
+                         "'unserialize(node$con)', and the bridge silently falls back to the "
+                         "Python reimplementation.")
     args = ap.parse_args()
     M = args.method
+    if args.cores is not None:
+        # Set on config so it reaches the R side through the run's config JSON and is
+        # recorded there, rather than being applied invisibly.
+        config.R_SOCKET_CLUSTER_CORES = int(args.cores)
+        print(f"R socket-cluster workers forced to {args.cores} "
+              f"(declared deviation, OPEN_DEFECTS D18)")
     if args.out is None:
         args.out = f"results/{M}_remeasured.json"
 

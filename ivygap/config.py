@@ -256,6 +256,20 @@ NORMALIZATION = "cpm"
 FPKM_INPUT = True          # Ivy GAP distributes FPKM, not integer counts
 RESCALE_COLUMNS_TO = 1e6
 
+#: Workers for R methods that parallelise with a `parallel` SOCKET cluster -- currently
+#: BayesPrism only. `None` means the package's own default.
+#:
+#: Set to 1 to disable the cluster. Each socket worker is a separate R process holding its
+#: own copy of the data; on an 8.6 GB machine with ~3.2 GB free they are killed, the master
+#: fails with `Error in unserialize(node$con)`, and the bridge falls back to the Python
+#: reimplementation -- so the row labelled `bayesprism` was not BayesPrism (OPEN_DEFECTS
+#: D18, root cause found 2026-09-19). Single-threaded is slower and changes nothing the
+#: method computes.
+#:
+#: This lives here rather than in the R script so the value used is written into every run's
+#: config JSON and cannot differ silently between runs.
+R_SOCKET_CLUSTER_CORES: int | None = None
+
 RANDOM_SEED = 0
 
 # Gene-space construction
