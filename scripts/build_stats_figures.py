@@ -24,13 +24,17 @@ import pandas as pd                                                # noqa: E402
 from scipy import stats                                            # noqa: E402
 
 from ivygap import config                                          # noqa: E402
+from ivygap.paper_style import apply as apply_style                # noqa: E402
+from ivygap import paper_style as PS                               # noqa: E402
+
+apply_style()
 
 # TRACKED, unlike results/ which is gitignored. Figures are deliverables: they are
 # reviewed, marked up and compared between versions, so they have to be openable by
 # someone who did not run the pipeline.
 FIG = config.PROJECT_ROOT / "docs" / "figures"
-C_PT, C_FIT, C_ID = "#1b3a6b", "#d94f3d", "#999999"
-C_T, C_B = "#1b3a6b", "#d94f3d"
+C_PT, C_FIT, C_ID = PS.BLUE, PS.RED, PS.GREY
+C_T, C_B = PS.BLUE, PS.RED
 
 
 def save(fig, name):
@@ -38,7 +42,10 @@ def save(fig, name):
     for ext in ("png", "pdf"):
         fig.savefig(FIG / f"{name}.{ext}", dpi=300, bbox_inches="tight")
     plt.close(fig)
-    print(f"  wrote results/figures/{name}.png and .pdf")
+    # derive the path from FIG rather than hardcoding it: this line said
+    # "results/figures/" for a while after the output moved to docs/figures/,
+    # which is how someone ends up editing a stale copy.
+    print(f"  wrote {FIG.relative_to(config.PROJECT_ROOT)}/{name}.png and .pdf")
 
 
 def p_text(p: float) -> str:
@@ -91,8 +98,6 @@ def fig_purity_scatter(tag: str, label: str, n_panels: int = 6):
                 bbox=dict(fc="white", ec="#ddd", alpha=.85, boxstyle="round,pad=0.3"))
         ax.set_xlim(0, 1.02); ax.set_ylim(0, 1.02)
         ax.set_xticks([0, .5, 1]); ax.set_yticks([0, .5, 1])
-        for s in ("top", "right"):
-            ax.spines[s].set_visible(False)
     for ax in axes[len(show):]:
         ax.axis("off")
     fig.supxlabel("DNA-measured tumour purity (ABSOLUTE)", fontsize=11)
@@ -194,8 +199,6 @@ def fig_paired_lymphoid():
                      f"(truth n = {len(ros)}; per-method n = {n_matched})",
                      fontsize=11.5, fontweight="bold", loc="left")
         ax.axvline(len(names) - 1.5, color="#999", ls="--", lw=.9)
-        for s in ("top", "right"):
-            ax.spines[s].set_visible(False)
     axes[0].legend(frameon=False, fontsize=10, loc="upper left")
     fig.suptitle("Methods place B cells above T cells; DNA methylation places T above B",
                  fontsize=13.5, fontweight="bold", y=1.0)

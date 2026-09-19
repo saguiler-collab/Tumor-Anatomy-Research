@@ -18,6 +18,10 @@ import numpy as np                                                 # noqa: E402
 import pandas as pd                                                # noqa: E402
 
 from ivygap import config                                          # noqa: E402
+from ivygap.paper_style import apply as apply_style                # noqa: E402
+from ivygap import paper_style as PS                               # noqa: E402
+
+apply_style()
 
 # TRACKED, unlike results/ which is gitignored. Figures are deliverables: they are
 # reviewed, marked up and compared between versions, so they have to be openable by
@@ -25,8 +29,8 @@ from ivygap import config                                          # noqa: E402
 FIG = config.PROJECT_ROOT / "docs" / "figures"
 # Journal figures are read in greyscale as often as not, so the palette is distinguishable
 # by lightness as well as hue.
-C_T, C_NK, C_B = "#1b3a6b", "#8cA9c8", "#d94f3d"
-C_TRUTH, C_GBM, C_LGG = "#111111", "#1b3a6b", "#c2703d"
+C_T, C_NK, C_B = PS.BLUE, PS.LIGHT, PS.RED
+C_TRUTH, C_GBM, C_LGG = PS.INK, PS.BLUE, PS.ORANGE
 
 
 def J(n):
@@ -39,7 +43,10 @@ def save(fig, name):
     for ext in ("png", "pdf"):
         fig.savefig(FIG / f"{name}.{ext}", dpi=300, bbox_inches="tight")
     plt.close(fig)
-    print(f"  wrote results/figures/{name}.png and .pdf")
+    # derive the path from FIG rather than hardcoding it: this line said
+    # "results/figures/" for a while after the output moved to docs/figures/,
+    # which is how someone ends up editing a stale copy.
+    print(f"  wrote {FIG.relative_to(config.PROJECT_ROOT)}/{name}.png and .pdf")
 
 
 def fig_lymphoid():
@@ -79,8 +86,6 @@ def fig_lymphoid():
         ax.set_xlabel("relative composition within {T, NK, B}", fontsize=9.5)
         ax.set_title(title, loc="left", fontsize=11.5, fontweight="bold", pad=10)
         ax.invert_yaxis()
-        for s in ("top", "right"):
-            ax.spines[s].set_visible(False)
     # one legend for both panels, below the figure so it covers no data
     h, lg = axes[0].get_legend_handles_labels()
     fig.legend(h, lg, loc="lower center", ncol=3, frameon=False, fontsize=10,
@@ -133,8 +138,6 @@ def fig_model_fit():
     h, lg = ax.get_legend_handles_labels()
     fig.legend(h, lg, loc="lower center", ncol=2, frameon=False, fontsize=9,
                bbox_to_anchor=(0.54, 0.0))
-    for s in ("top", "right"):
-        ax.spines[s].set_visible(False)
     save(fig, "Figure_model_fit_bound")
 
 
@@ -163,8 +166,6 @@ def fig_recovery():
     ax.text(0.99, 0.02, "†  not evaluable: ran without an input its published algorithm "
                         "requires", transform=ax.transAxes, ha="right", fontsize=7.6,
             color="#666")
-    for s in ("top", "right"):
-        ax.spines[s].set_visible(False)
     save(fig, "Figure_tumour_recovery")
 
 
@@ -212,8 +213,6 @@ def fig_detects_not_ranks():
     ax.set_title("Anatomic concordance predicts accuracy only against the\n"
                  "yardstick that shares its own reference atlas",
                  fontsize=12.5, fontweight="bold", loc="left", pad=10)
-    for s in ("top", "right"):
-        ax.spines[s].set_visible(False)
     save(fig, "Figure_detects_not_ranks")
 
 
