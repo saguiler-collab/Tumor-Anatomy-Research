@@ -81,6 +81,29 @@ def main() -> int:
                          "Python reimplementation.")
     args = ap.parse_args()
     M = args.method
+    # DO NOT OVERWRITE A SUCCESS WITH A FAILURE. On 2026-09-19 this script wrote a
+    # watchdog-killed failure record over a valid measurement (bayesprism acs 0.8154) and
+    # exited 0, so nothing looked wrong; it was recoverable only because a backup happened to
+    # exist. `results/{method}_remeasured.json` is a fixed path, so a failed re-run is
+    # indistinguishable from an absent one AND destroys the prior result. docs/SWEEP.md 5.
+    def _guard_existing(out_path: str) -> int | None:
+        q = Path(out_path)
+        if not q.exists():
+            return None
+        try:
+            prior = json.loads(q.read_text())
+        except Exception:                                          # noqa: BLE001
+            return None
+        if prior.get("failed") is None and prior.get("acs") is not None:
+            print(f"REFUSING to overwrite {q}: it holds a SUCCESSFUL measurement "
+                  f"(acs {prior['acs']}, failed: null).\n\n"
+                  f"A re-run that fails would replace a good result with a failure record at "
+                  f"the same path, and this script exits 0 either way. Pass an explicit "
+                  f"--out to write elsewhere, e.g.\n\n"
+                  f"    --out results/{M}_remeasured_$(date +%Y%m%dT%H%M).json\n")
+            return 2
+        return None
+
     if args.cores is not None:
         # Set on config so it reaches the R side through the run's config JSON and is
         # recorded there, rather than being applied invisibly.
@@ -89,6 +112,9 @@ def main() -> int:
               f"(declared deviation, OPEN_DEFECTS D18)")
     if args.out is None:
         args.out = f"results/{M}_remeasured.json"
+    rc = _guard_existing(args.out)
+    if rc is not None:
+        return rc
 
     # Fail fast, before the multi-GB atlas load. A re-measurement that cannot be compared
     # is not worth an hour of CPU, and finding that out after the hour is worse.
