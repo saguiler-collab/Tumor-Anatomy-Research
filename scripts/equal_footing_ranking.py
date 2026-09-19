@@ -195,10 +195,31 @@ def main() -> int:
         keep = both[~both["method"].isin(switched)]
         if len(keep) >= 3 and switched:
             tau_clean = float(keep["rank_frozen"].corr(keep["rank_h5ad"], method="kendall"))
-            print(f"\n  {len(switched)} of {len(both)} changed implementation. Excluding them, "
-                  f"tau on the remaining {len(keep)} is {tau_clean:+.3f} "
-                  f"(vs {tau:+.3f} overall) — so the rank change is NOT an artefact of "
-                  f"swapping a reimplementation for a package.")
+            # READ THE DIRECTION, do not assert a conclusion. This message previously stated
+            # "NOT an artefact" unconditionally, which the LGG cohort contradicts: excluding
+            # the switched method RAISES tau there (+0.333 -> +0.733), meaning the switch was
+            # carrying part of the apparent reshuffle. A hardcoded conclusion that survives
+            # either outcome is not a check.
+            print(f"\n  {len(switched)} of {len(both)} changed implementation "
+                  f"({', '.join(switched)}). Excluding them, tau on the remaining "
+                  f"{len(keep)} is {tau_clean:+.3f} (vs {tau:+.3f} overall).")
+            delta = tau_clean - tau
+            if delta <= 0.05:
+                print("  => the reshuffle is NOT an artefact of swapping a reimplementation "
+                      "for a package:\n     removing the switched method leaves the "
+                      "disagreement as strong or stronger.")
+            elif delta < 0.30:
+                print("  => the switch accounts for PART of the reshuffle. The remaining "
+                      "disagreement is\n     real but smaller than the overall tau implies.")
+            else:
+                print("  => CAUTION: the switched method carried much of the apparent "
+                      "reshuffle. On the\n     methods whose implementation was constant the "
+                      "two rankings agree substantially,\n     so this cohort does NOT "
+                      "support a strong claim that equal footing reorders them.")
+            if len(keep) < 8:
+                print(f"  NOTE: tau on {len(keep)} points is noisy; treat the difference "
+                      f"between {tau:+.3f} and\n     {tau_clean:+.3f} as indicative, not as "
+                      f"an effect size.")
         elif not switched:
             print("\n  none changed: the rank comparison is clean.")
 

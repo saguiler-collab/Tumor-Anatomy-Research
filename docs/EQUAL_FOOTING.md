@@ -151,6 +151,48 @@ tumour or immune content* — is **strengthened**, not weakened, by this. Under 
 gives every method what it was designed to consume, **all twelve under-call tumour, by a median
 of 0.47 against a mean true purity of 0.75.**
 
+### REPLICATION IN LGG — and it does NOT clearly hold
+
+The GBM reshuffle above was reported before the LGG leg finished. It has now finished, and it
+qualifies the claim rather than confirming it.
+
+| | GBM | LGG |
+|---|---|---|
+| methods rankable under both references | 8 | 7 |
+| Kendall tau, all rankable methods | **+0.214** | **+0.333** |
+| methods whose *implementation* also changed | 1 (`scdc`) | 1 (`scdc`) |
+| **tau excluding the switched method** | **+0.143** | **+0.733** |
+
+**The confound check points opposite ways in the two cohorts.** In GBM, removing the one method
+whose implementation changed *lowers* tau (+0.214 → +0.143) — the reshuffle is real and if anything
+understated. In LGG, removing it *raises* tau sharply (+0.333 → **+0.733**) — meaning on the six
+methods whose implementation was constant, **the two rankings largely agree.**
+
+> **So LGG does not support the strong claim.** "Equal footing reshuffles the ranking" is
+> demonstrated in GBM and **not replicated** in LGG once the implementation confound is removed.
+
+**A defect in this project's own tooling is what surfaced it.** `equal_footing_ranking.py`
+originally printed *"so the rank change is NOT an artefact of swapping a reimplementation for a
+package"* **unconditionally** — a conclusion that survived either outcome, which is not a check at
+all. It would have stamped that sentence onto the LGG result, which contradicts it. The script now
+reads the direction and prints a caution when the switched method carried the effect.
+
+**Both taus rest on six or seven methods**, where Kendall tau moves in steps of ~0.1–0.13 per
+discordant pair. The honest reading is that the cohorts **disagree about whether the ranking is
+stable**, not that one of them has measured a precise effect size. The script prints this warning
+whenever fewer than eight methods are rankable.
+
+**What survives the qualification, in both cohorts:**
+
+- **MuSiC moves from excluded-as-degenerate to rank 1** given the variance it is designed to use
+  (GBM 17.5% → 60.2%; LGG 20.0% → 52.6%). That is not a tau artefact — it is a method that could
+  not previously be measured at all, and it is the single clearest consequence of equal footing.
+- **The absolute under-call gets worse, not better** — GBM median bias −0.028 → −0.472; 7 of 12
+  methods under-calling → 12 of 12.
+- **`dwls` fell out of the LGG h5ad panel entirely** (1 finite estimate) and `epic` collapsed from
+  36.5% to 3.4%, so the LGG comparison rests on fewer methods than GBM's and is the weaker arm on
+  that ground too.
+
 ### Three honest caveats
 
 1. **`bisque` and `scdc_ensemble` remain excluded under both references.** Their missing inputs

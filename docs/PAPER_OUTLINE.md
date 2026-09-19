@@ -256,10 +256,16 @@ signature carries an all-zero sigma, so MuSiC is arithmetically NNLS, EPIC is un
 SCDC ENSEMBLE has nothing to ensemble, and CIBERSORTx S-mode cannot run. Rebuilding the reference
 from the atlas's own counts (`matrix="raw/X"`, D16) supplies all of it.
 
-**The ranking does not survive it.** Kendall tau between the two rankings is **+0.214** on the 8
-methods rankable under both (**+0.143** excluding the single method that also changed
-implementation). **MuSiC goes from excluded-as-NNLS (17.5%) to first at 60.2%**; DWLS falls rank
-3 → 12. CIBERSORTx and SVR hold ranks 1→2 and 2→3, so the calibration claim in §7b stands.
+**The ranking reshuffles in GBM and the replication is equivocal.** Kendall tau between the two
+rankings is **+0.214** in GBM (8 methods) and **+0.333** in LGG (7). But the
+confound check points opposite ways: excluding the one method whose *implementation* also changed
+takes GBM to **+0.143** (reshuffle real, if understated) and LGG to **+0.733** (the
+constant-implementation methods largely agree). **LGG does not support the strong claim**, and with
+six to seven methods per tau the cohorts should be read as disagreeing about stability rather than
+as measuring an effect size. Reported as a partial replication failure.
+
+**What is not a tau artefact: MuSiC moves from excluded-as-degenerate to rank 1** in both cohorts
+(GBM 17.5% → 60.2%, LGG 20.0% → 52.6%) — a method that could not previously be measured at all.
 
 **The shortfall does survive it.** Median bias moves from −0.028 to −0.472 and the methods
 under-calling tumour go from 7 of 12 to **12 of 12**, against a mean true purity of 0.752.
@@ -270,6 +276,19 @@ finding seen twice.
 which method wins and makes the under-call worse.* Why the calibration moves is **not
 established** — the log-vs-counts difference is a plausible cause, not a measured one, and
 neither reference is endorsed as correctly calibrated.
+
+**Equal footing trades one lymphoid failure for the other, and THAT replicates.** Against the same
+methylation truth, changing only the reference:
+
+| | GBM frozen | GBM h5ad | LGG frozen | LGG h5ad |
+|---|---|---|---|---|
+| agree with methylation on T > B | 0/12 | **3/14** | 0/12 | **2/13** |
+| return ZERO lymphoid in most samples | 4/12 | **6/14** | 4/12 | **7/13** |
+
+Misassignment partly repairs (0 → 2–3 agree) and absence worsens (4 → 6–7), **in both cohorts**.
+`bisque` is the clearest case: given donor structure it places B above T on **1.0%** of LGG samples,
+i.e. correct 99% of the time. Meanwhile `scdc` returns zero lymphoid content in **505 of 510**
+samples. Unlike the tau result, this direction replicates.
 
 ## 8 · Result 5 — where the failure lives
 
