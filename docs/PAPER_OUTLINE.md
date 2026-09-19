@@ -284,26 +284,63 @@ is the maximum", which is weak at five categories. Post hoc and labelled: PAN �
 
 ## 9 · Limitations — none of these belong in a footnote
 
-1. ~~Only the Tumor column has DNA ground truth.~~ **RESOLVED** — the immune compartment now has
-   its own independent ground truth, methylation-derived leukocyte fraction (§7b). It produced a
-   **retraction**: the pseudobulk 4.6–7.9× T-cell over-call does not exist on tissue, where the
-   immune compartment is *under*-called. What remains unresolved is **per-type** immune truth;
-   leukocyte fraction is one aggregate number.
-2. **One reference for every method.** "The biology breaks deconvolution" cannot be separated
-   from "the biology is under-represented in GBmap".
+1. ~~Only the Tumor column has DNA ground truth.~~ ~~What remains unresolved is **per-type**
+   immune truth.~~ **BOTH RESOLVED.** The immune compartment has aggregate truth from
+   methylation-derived leukocyte fraction (§7b), which produced a **retraction** — the pseudobulk
+   4.6–7.9× T-cell over-call does not exist on tissue, where the compartment is *under*-called.
+   And per-type truth now exists for **both** cohorts from EpiDISH (§7c). That resolution is what
+   exposed the lymphoid failure; a limitation removed made the result worse, not better.
+2. **One reference for every method.** "The biology breaks deconvolution" cannot be separated from
+   "the biology is under-represented in GBmap". Partly addressed in §7d by rebuilding the same
+   atlas from its own counts, which changes the ranking; **not** addressed by a second atlas.
 3. **Purity confounds with almost everything**; the joint model adjusts only linearly.
 4. **ABSOLUTE purity is itself an estimate** from copy number, not a gold standard.
 5. **The spatial layer is nine tumours** and its pre-specified test is null.
-6. **The reference is log-transformed** in the archived runs (D16); its direction is measured
-   but the full linear re-run is not done.
+6. ~~The reference is log-transformed and the linear re-run is not done.~~ **DONE** (§7d). The
+   equal-footing arm reads `raw/X`, and the log default came within one unpassed argument of
+   reaching the headline — recorded in OPEN_DEFECTS D16.
+7. **The GBM per-type arm is underpowered.** Only **56 samples** overlap the expression cohort,
+   because most TCGA-GBM methylation was run on the older HM27 platform. LGG at n = 510 is the
+   primary per-type evidence; GBM is the replication and is reported as the weaker arm.
+8. **`cibersortx` is not the hosted CIBERSORTx.** It implements the published algorithm (B-mode
+   and S-mode); the licence-gated service produced no number here. Declared in METHODS.md.
+   `dwls` and `bayesprism` ran as Python reimplementations, labelled as such — and OPEN_DEFECTS
+   **D19** records that the artefacts do not say *why* they fell back, so "bad method" cannot be
+   told from "timed out".
+9. **The lymphoid failures are unexplained.** Five candidate mechanisms were proposed and rejected
+   by measurement: macrophage spillover, high tumour purity, signature non-separability, per-sample
+   model fit as a diagnostic, and residual propagation through correlated columns. The model-fit
+   result **bounds** the problem — the mixing model is violated for 64–76% of marker-space variance
+   — but bounding is not diagnosing, and no per-sample trust signal survived testing.
+10. **An external watchdog, not the code, enforces the R budgets** (D18). `_run_bounded`'s timeout
+    cannot fire while orphaned cluster workers hold the stdout pipe, so a clean checkout reproduces
+    the hang. The fix is specified and not applied.
 
 ## 10 · What makes this credible, and it should be said
 
-Five claims were published during this work and then **withdrawn after measurement**; the
-retractions are kept in place. Three predictions were pre-registered, and **one failed in the
-direction named in advance as most damaging**. The constraint file was frozen and hashed before
-any output was seen and was never edited — including when one of its own constraints failed an
-external check.
+**Fourteen corrections are on the record** (`docs/CORRECTIONS_REGISTRATION.md`, C1–C14), several
+of them retractions of claims this project had already published — including one retracted the
+same day it was made, and one where the correction *understated* the effect and had to be
+corrected upward.
+
+**Claims withdrawn after measurement rather than defended** include: the cell-size correction
+cannot change ACS (it can); the 4.6–7.9× T-cell over-call on tissue (a simulator artefact); Ivy
+GAP counts are not public (they are); expression space costs almost nothing (it costs more than
+stated); the lymphoid inversion is a property of the problem as posed (the signature separates T
+from B fine); and "12 of 12 methods put B above T" as a clean unanimous result (it is a mean over
+subsets, concealing a worse failure).
+
+**Five mechanisms were proposed and rejected by their own tests**, each with a working control —
+including one where the control's passing is what makes the negative result meaningful rather than
+merely uninformative.
+
+**Three predictions were pre-registered**, and **one failed in the direction named in advance as
+most damaging**. One pre-registered prediction **held** (methylation T > B) and the pre-registration
+is kept as written, corrected only by a dated addendum, because rewriting a registration to match
+what was measured is the one edit it must never receive.
+
+The constraint file was frozen and hashed before any output was seen and was **never edited** —
+including when one of its own constraints failed an external check.
 
 **A result produced under those conditions is worth more than a positive one produced without
 them.**
