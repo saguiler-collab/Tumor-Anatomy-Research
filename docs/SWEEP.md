@@ -198,6 +198,49 @@ been exercised in this sweep.
 
 ---
 
+### 5. SELF-INFLICTED — my own mitigation killed a deliberate run and clobbered a valid artefact
+
+Worth recording in full, because it is a compounding error and the compounding is the lesson.
+
+**The chain:**
+
+1. I misdiagnosed D18 as a pipe deadlock (wrong — tested and withdrawn).
+2. As a *mitigation* for that misdiagnosis I wrote an external watchdog enforcing the pipeline's
+   per-method budgets, including `bayesprism` at 2,700 s. It lived in the session scratchpad,
+   outside the repository, which I noted at the time as "a mitigation, not a fix".
+3. Hours later I launched `remeasure_method.py --method bayesprism --cores 1 --budget 14400` —
+   a budget raised **deliberately and on the record** so the genuine package could finish.
+4. The watchdog killed it at 2,702 s with SIGKILL:
+   `10:08:23 run_bayesprism.R pid 99589 at 45:02 (2702s) exceeded 2700s; killing master + workers`
+5. `remeasure_method.py` then wrote its failure record **over
+   `results/bayesprism_remeasured.json`**, destroying a valid 2026-09-14 measurement
+   (`acs 0.8154`, `failed: None`) — and exited **0**, so nothing looked wrong.
+
+**Recovered:** the Sep 14 artefact was restored from a backup I had made minutes earlier only
+because I checked for prior artefacts before launching. Had I not, a genuine measurement would
+have been silently replaced by a record of my own watchdog killing it.
+
+**Three distinct failures, none of them in the science:**
+
+- **An external control overrode a deliberate scientific decision.** The whole point of the
+  raised budget was to let the method run; a process-level guard with no knowledge of intent
+  reimposed the very limit being lifted. A mitigation that can veto a measurement is not a
+  mitigation.
+- **A mitigation outlived the diagnosis it was built for.** D18's stated cause was withdrawn
+  hours before the kill. The watchdog was not.
+- **A failure was written over a success at the same path, and the exit code was 0.**
+  `results/{method}_remeasured.json` is a fixed filename, so a failed re-run is
+  indistinguishable from an absent one and destroys the prior result either way.
+
+**What follows for the project:**
+
+1. The watchdog is killed and should not be restarted. It was compensating for a cause that
+   turned out to be wrong.
+2. `remeasure_method.py` should refuse to overwrite an existing artefact that has
+   `failed: null`, or write to a timestamped path. Recorded here rather than changed mid-run.
+3. The killed run is preserved as `results/bayesprism_watchdog_killed_20260919.json` with a
+   `WHAT_HAPPENED` field, because deleting it would hide the incident.
+
 ## Verified clean
 
 | check | result |
