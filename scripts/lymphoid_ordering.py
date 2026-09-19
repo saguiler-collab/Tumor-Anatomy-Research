@@ -49,8 +49,22 @@ def renormalise(frame: pd.DataFrame, types=COMPARE) -> pd.DataFrame:
     return sub.div(sub.sum(axis=1).replace(0, np.nan), axis=0)
 
 
-def ordering_of(mean_row) -> str:
-    """Short ordering string, e.g. "T>NK>B", highest first."""
+def ordering_of(mean_row) -> str | None:
+    """Short ordering string, e.g. "T>NK>B", highest first. None if not orderable.
+
+    RETURNS None FOR ANY NaN, and that is the whole point. `sort_values(ascending=False)` puts
+    NaN LAST, so a row where every lymphoid value is NaN -- which is what `renormalise` produces
+    for a sample with zero T, zero B and zero NK -- sorted to the frame's own COLUMN ORDER and
+    came back "T>B>NK". The sample was then counted as "T ranked first" purely because T_cell is
+    the first column.
+
+    Found 2026-09-18 by a full-project sweep: TCGA-14-0862-01 has EpiDISH returning exactly 0
+    for all three lymphoid types, and it was inflating the GBM T-ranked-first figure from
+    0.6323 to 0.6387. One sample in 155, and in the one direction that flatters the paper's
+    own prediction, which is the kind of error that has to be impossible rather than small.
+    """
+    if mean_row.isna().any():
+        return None
     return ">".join(SHORT[c] for c in mean_row.sort_values(ascending=False).index)
 
 
@@ -81,6 +95,12 @@ def main() -> int:
     mu_t = ros.mean()
     truth_ord = ordering_of(mu_t)
     per_sample = ros.apply(ordering_of, axis=1)
+    n_unorderable = int(per_sample.isna().sum())
+    if n_unorderable:
+        print(f"  NOTE: {n_unorderable} sample(s) have zero signal in all of {COMPARE} and are "
+              f"EXCLUDED from\n        the per-sample ordering counts rather than credited to "
+              f"whichever column sorts first.")
+    per_sample = per_sample.dropna()
     print(f"=== {a.cohort.upper()} / {a.reference} reference ===")
     print(f"\nMETHYLATION truth within {COMPARE}, n={len(ros)}:")
     print(f"  mean  T {mu_t.T_cell:.4f}  NK {mu_t.NK_cell:.4f}  B {mu_t.B_cell:.4f}"
@@ -90,6 +110,7 @@ def main() -> int:
         print(f"    {o:10s} {c:4d}  {c / len(ros):6.1%}")
     t_first = float(per_sample.str.startswith("T>").mean())
     b_first = float(per_sample.str.startswith("B>").mean())
+    # denominator is the ORDERABLE samples; n_unorderable is reported separately above
     print(f"  T ranked first in {t_first:.1%} of samples; B ranked first in {b_first:.1%}")
 
     full = pd.read_csv(est_csv)
@@ -202,6 +223,8 @@ def main() -> int:
         "truth_T_first_fraction": round(t_first, 4),
         "truth_B_first_fraction": round(b_first, 4),
         "n_methylation_samples": int(len(ros)),
+        "n_orderable_samples": int(len(per_sample)),
+        "n_unorderable_zero_lymphoid": n_unorderable,
         "methods": res, "n_agree_T_over_B": int(n_tb),
         "n_reproduce_full_ordering": int(n_full), "n_methods": len(res),
         "registered": "Only T > B was pre-specified "

@@ -109,3 +109,23 @@ def test_recovery_is_bias_invariant():
         assert np.isclose(recovery(est + shift), base, atol=1e-9), shift
     # and it is NOT invariant to a change of slope, or it would measure nothing
     assert not np.isclose(recovery(est * 2.0), base, atol=1e-6)
+
+
+def test_ordering_of_refuses_an_unorderable_row():
+    """The gap that let a real defect through.
+
+    `test_all_zero_lymphoid_row_becomes_nan_not_zero` checked that `renormalise` produces NaN,
+    but nothing checked what `ordering_of` did with it. `sort_values(ascending=False)` puts NaN
+    last, so an all-NaN row returned the frame's COLUMN ORDER ("T>B>NK") and was counted as
+    "T ranked first" — inflating the GBM figure from 0.6323 to 0.6387 off one sample, in the
+    direction that flattered the project's own registered prediction.
+    """
+    import pandas as pd
+    allnan = pd.Series({"T_cell": np.nan, "B_cell": np.nan, "NK_cell": np.nan})
+    assert ordering_of(allnan) is None, "an unorderable row must not be given an ordering"
+    # a single NaN is also not orderable: the missing type could belong anywhere
+    partial = pd.Series({"T_cell": 0.5, "B_cell": np.nan, "NK_cell": 0.2})
+    assert ordering_of(partial) is None
+    # and a real row still works
+    good = pd.Series({"T_cell": 0.5, "B_cell": 0.2, "NK_cell": 0.3})
+    assert ordering_of(good) == "T>NK>B"

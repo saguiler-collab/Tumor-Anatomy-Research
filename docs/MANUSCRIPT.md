@@ -61,7 +61,7 @@ Claims are tagged **[STRONG]** (replicated across cohorts or molecules), **[QUAL
 | | GBM | LGG |
 |---|---|---|
 | methylation truth T : NK : B | 0.5224 : 0.3678 : 0.1098 | 0.4758 : 0.3208 : 0.2034 |
-| T ranked first, per sample | 63.9% | 79.2% |
+| T ranked first, per sample | 63.6% | 79.2% |
 | B ranked first, per sample | 1.9% | 4.0% |
 | samples compared | 56 | 510 |
 | **methods agreeing T > B** | **0 of 12** | **0 of 12** |
