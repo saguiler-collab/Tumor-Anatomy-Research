@@ -93,6 +93,38 @@ One cause accounts for every observation that made the earlier guesses look plau
 orphaned ppid-1 R workers, the master at 0% CPU (socket masters wait on workers by design), and
 `bayesprism` recorded as `python-reimplementation` in every real run.
 
+#### The gate then completed, and its negative controls fire
+
+All six stages, on a quiet machine:
+
+| stage | outcome |
+|---|---|
+| 1 load data | 212 samples / 24 tumours |
+| 3 benchmark | 15 methods + 2 controls, `selected: epic` |
+| 4 Anatomy Test | ACS leaderboard, 10,000 permutations per method |
+| 5 survival | **BLOCKED, correctly** — `tumor_details.csv` publishes `survival_days` and no vital-status column, so who was censored is unknowable. Nothing imputed, no prognostic claim. This is the *"never impute a missing input"* invariant firing. |
+| 6 release bundle | 21 files written, with the 8 not produced this run listed explicitly |
+
+And the check that matters most:
+
+| | ACS | null p |
+|---|---|---|
+| 13 real methods that produced estimates | **0.9060 – 0.9530** | **0.0001** — all beat their null |
+| 2 negative controls | **0.3624 – 0.3826** | **0.703 – 0.752** — both fail their null |
+| 2 methods that produced nothing (`bisque`, `quantiseq`) | 0.0000 | 1.0 |
+
+**The controls sit below every working method, and fail their null while every working method
+beats it.** A scorer that reported high agreement on shuffled signal as well as real signal would
+be measuring nothing; this one does not. `control_shuffled_signature` at 0.362 against a working
+floor of 0.906 is the single most reassuring number in this sweep.
+
+One presentational note worth keeping: `bisque` and `quantiseq` land at ACS **0.0000 with
+null_p 1.0**, which is a method that produced *nothing* on the fixture, not a method that scored
+badly. Reading a naive `min(real) < max(control)` comparison off that table would suggest the
+controls had beaten a real method. They had not — and a check that conflates "failed" with
+"scored low" is exactly the sort of thing that turns into a false alarm or, worse, a false
+reassurance.
+
 #### What it cost, and the transferable lesson
 
 **I proposed two causes and both were wrong** — pipe-EOF starvation (tested, false) and
