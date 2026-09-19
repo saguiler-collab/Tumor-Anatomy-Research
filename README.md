@@ -479,9 +479,18 @@ Terms this README uses that are not common outside the field.
 | `results_archive/` | Read-only, hash-verified snapshots of completed runs. |
 | `scripts/run_all.py` | The whole pipeline, six stages. |
 | `scripts/fetch_allen.py` | Allen Human Brain Atlas fetcher, for the second tissue. |
+| `docs/EQUAL_FOOTING.md` | **Which methods were handicapped by the reference, and what it cost the ranking.** |
+| `docs/IMMUNE_ARM.md` | The second and third ground truths: leukocyte fraction and per-cell-type methylation. |
+| `scripts/absolute_purity_yardstick.py` | Scores every method against DNA-measured tumour purity. `--cohort {gbm,lgg} --reference {frozen,h5ad}`. |
+| `scripts/equal_footing_ranking.py` | Does giving every method its intended inputs change the ranking? Reports Kendall tau and checks the implementation-switch confound. |
+| `scripts/extract_epidish_probes.py` | Pulls EpiDISH's reference CpGs out of a Xena HM450 matrix. Reports the complete-case count rather than trusting the package's advertised 333. |
+| `scripts/methylation_celltypes.py` | Per-cell-type truth via EpiDISH RPC, for the lymphoid comparison. |
+| `scripts/lymphoid_ordering.py` | Methods vs methylation on T/B/NK, per-sample. Separates the two failure modes. |
+| `scripts/identifiability_probe.py` | Can the signature separate T from B *under the model*? (It can — which is why the tissue failure needs another explanation.) |
+| `scripts/model_fit_residual.py` | How much of real bulk the additive model explains, with floor and ceiling controls, plus the trust-signal test. |
 
 ```bash
-pytest tests/ -q                     # ~10 minutes, 198 tests
+pytest tests/ -q                     # ~20 minutes, 198+ tests (see the suite itself for the live count)
 python3 scripts/run_all.py --synthetic   # end-to-end on fixtures, proves nothing scientific
 python3 scripts/run_all.py --full-database --control-draws 200
 python3 scripts/archive_run.py --verify <stamp>
