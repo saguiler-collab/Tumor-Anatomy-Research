@@ -25,7 +25,10 @@ from scipy import stats                                            # noqa: E402
 
 from ivygap import config                                          # noqa: E402
 
-FIG = config.RESULTS_DIR / "figures"
+# TRACKED, unlike results/ which is gitignored. Figures are deliverables: they are
+# reviewed, marked up and compared between versions, so they have to be openable by
+# someone who did not run the pipeline.
+FIG = config.PROJECT_ROOT / "docs" / "figures"
 C_PT, C_FIT, C_ID = "#1b3a6b", "#d94f3d", "#999999"
 C_T, C_B = "#1b3a6b", "#d94f3d"
 

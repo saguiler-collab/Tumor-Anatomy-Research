@@ -19,7 +19,10 @@ import pandas as pd                                                # noqa: E402
 
 from ivygap import config                                          # noqa: E402
 
-FIG = config.RESULTS_DIR / "figures"
+# TRACKED, unlike results/ which is gitignored. Figures are deliverables: they are
+# reviewed, marked up and compared between versions, so they have to be openable by
+# someone who did not run the pipeline.
+FIG = config.PROJECT_ROOT / "docs" / "figures"
 # Journal figures are read in greyscale as often as not, so the palette is distinguishable
 # by lightness as well as hue.
 C_T, C_NK, C_B = "#1b3a6b", "#8cA9c8", "#d94f3d"
