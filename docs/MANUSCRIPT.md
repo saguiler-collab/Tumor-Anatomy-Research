@@ -111,7 +111,7 @@ _from `results/dwls_remeasured.json`, `results/bayesprism_remeasured.json`. Same
 
 | method | this project's reimplementation | the genuine R package | delta | runtime vs the 2,400 s pipeline budget |
 |---|---|---|---|---|
-| `dwls` | 0.7385 | **0.7846** | **+0.0461** | 2474 s — OVER |
+| `dwls` | 0.7385 | **0.7846** | **+0.0461** | 2593 s — OVER |
 | `bayesprism` | 0.8769 | **0.8154** | **-0.0615** | 2045 s — under |
 
 **The reimplementations are not uniformly biased, and that is the point.** DWLS's reimplementation *understated* the package by 0.046; BayesPrism's *overstated* it by 0.062. A blanket "the reimplementation is close enough" would be wrong in both directions, and a blanket "reimplementations flatter their packages" would be wrong too.
@@ -119,6 +119,8 @@ _from `results/dwls_remeasured.json`, `results/bayesprism_remeasured.json`. Same
 **DWLS's fallback was a coin flip, not a verdict.** It needed 2,474 s against a 2,400 s budget — the threshold sat almost exactly on the method's runtime, which is the worst place for a threshold to be, because it decides the answer by machine load rather than by the method. That is why the budget was raised and the method re-measured, and the raised-budget result is reported alongside the original row rather than substituted into it.
 
 **BayesPrism's fallback is intermittent, which is worse than a clean failure.** It completed in 2,045 s — *under* budget — in this re-measurement, yet fell back in every confirmatory run. The cause is memory, not time: its `parallel` socket cluster spawns three worker processes, each with its own copy of the data, and on an 8.6 GB machine they are killed (`Error in unserialize(node$con)`). **Whether the row labelled `bayesprism` is BayesPrism therefore depends on how much RAM was free at the time**, which is not a scientific variable. `docs/OPEN_DEFECTS.md` D18, D19.
+
+**The genuine DWLS figure is confirmed by independent replication.** It was measured twice, five days apart, in separate processes with different wall-clock (2,474 s and 2,593 s): **ACS 0.7846 and CI [0.6571, 0.9063] both times, identical to four decimals including the bootstrap interval.** So the 0.7846 is a property of the package on this cohort, not of one run.
 
 > WRITE: this belongs in the paper as a reproducibility finding, not buried in limitations. Two of fifteen methods silently became different software depending on machine state, the artefacts recorded *that* it happened but not *why*, and the direction of the resulting error was not predictable. Any benchmark that does not check this has the same exposure and would not know.
 

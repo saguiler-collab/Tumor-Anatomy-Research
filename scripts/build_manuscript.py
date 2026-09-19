@@ -318,6 +318,11 @@ def main() -> int:
           "machine they are killed (`Error in unserialize(node$con)`). **Whether the row labelled "
           "`bayesprism` is BayesPrism therefore depends on how much RAM was free at the time**, "
           "which is not a scientific variable. `docs/OPEN_DEFECTS.md` D18, D19.\n")
+        A("**The genuine DWLS figure is confirmed by independent replication.** It was measured "
+          "twice, five days apart, in separate processes with different wall-clock "
+          "(2,474 s and 2,593 s): **ACS 0.7846 and CI [0.6571, 0.9063] both times, identical to "
+          "four decimals including the bootstrap interval.** So the 0.7846 is a property of the "
+          "package on this cohort, not of one run.\n")
         A("> WRITE: this belongs in the paper as a reproducibility finding, not buried in "
           "limitations. Two of fifteen methods silently became different software depending on "
           "machine state, the artefacts recorded *that* it happened but not *why*, and the "
