@@ -413,7 +413,7 @@ _from `results/lymphoid_ordering*.json`, `results/methylation_celltypes*.json`. 
 
 | cohort | n | methylation T | NK | B | true T:B | T ranked first | methods agreeing T>B |
 |---|---|---|---|---|---|---|---|
-| GBM | 56 | 0.5224 | 0.3678 | 0.1098 | **4.76x** | 63.9% | **0 of 12** |
+| GBM | 56 | 0.5224 | 0.3678 | 0.1098 | **4.76x** | 63.6% | **0 of 12** |
 | LGG | 510 | 0.4758 | 0.3208 | 0.2034 | **2.34x** | 79.2% | **0 of 12** |
 
 **Two distinct failure modes.** A count of methods 'putting B above T' is computed on per-method means, and a method that returns no lymphoid signal at all contributes nothing to that mean. The two are separated here because conflating them overstates how clean the result is.

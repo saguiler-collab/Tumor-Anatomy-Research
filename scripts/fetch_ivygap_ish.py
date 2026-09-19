@@ -9,9 +9,11 @@ specimens, conflating tumour-to-tumour variation with structure differences; and
 pooled markers that contradict each other. The correct input was already on disk —
 gene_expression_details.csv has one row per (gene x sub-block) with all five
 structures as columns, so the comparison is paired inside one block by construction.
-"""
 
-"""
+----------------------------------------------------------------------
+The original module docstring follows, kept verbatim for the record.
+----------------------------------------------------------------------
+
 fetch_ivygap_ish.py — check the pre-registered constraints against in-situ hybridization.
 
 WHAT THIS IS FOR
