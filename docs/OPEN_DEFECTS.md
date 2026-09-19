@@ -1959,6 +1959,44 @@ provenance records were written by different code.
 
 ## D18 · `_run_bounded`'s timeout does not fire for methods that start an R socket cluster
 
+> ### ROOT CAUSE FOUND 2026-09-19, after two wrong guesses
+>
+> The quiet relaunch of `run_all.py --synthetic` completed Stage 3 and **printed the error the
+> pipe-based capture had been swallowing**:
+>
+> ```
+> bayesprism  155.3s  [fell back to Python: run_bayesprism.R exited 1
+>                      | Error in unserialize(node$con) : error reading from connection]
+> ```
+>
+> `unserialize(node$con)` is an R `parallel` **socket cluster** master failing to read a result
+> from a worker that is no longer there. `R/run_bayesprism.R:69` sets
+> `n_cores <- max(1, min(4, parallel::detectCores() - 1))` — **three workers** on this machine,
+> each receiving its own copy of the data. The machine has **8.6 GB of RAM with ~3.2 GB free**.
+> The workers are killed, the master cannot unserialize their results, R exits 1, and the bridge
+> takes its documented fallback to the Python reimplementation.
+>
+> **This single cause accounts for every observation**, including the ones that made the two
+> earlier guesses look plausible:
+> - the `unserialize` errors (worker death, seen directly);
+> - the R workers found **orphaned to ppid 1** — a broken cluster leaves them parentless;
+> - the BayesPrism R master sitting at 0% CPU — a socket master waits on workers by design;
+> - `bayesprism` recorded as `python-reimplementation` in every real run;
+> - and it is **not** a timeout: 155.3 s against a 2,400 s budget.
+>
+> It is a **memory** limit, not a CPU limit and not a deadlock.
+>
+> **The available fix needs no new hardware:** run BayesPrism with `n.cores = 1`. No cluster
+> means no workers to die, no orphans, and the genuine published package instead of the
+> reimplementation — at the cost of single-threaded speed. That is a declared deviation from the
+> package default and belongs in `docs/METHODS.md` if adopted, not a silent change.
+>
+> **Why both earlier guesses were wrong, kept as the record:** the first blamed pipe-EOF
+> starvation of `communicate()`; tested, false. The second blamed machine-wide CPU starvation;
+> true of the 8 h 54 min *wall clock*, but not the reason BayesPrism itself failed. Neither
+> guess was checked against the thing that would have settled it in one step — reading the R
+> subprocess's own stderr, which the pipe-based capture was discarding on the error path.
+
 > ### CORRECTION 2026-09-19 — the stated CAUSE is wrong and is withdrawn
 >
 > The heading and the explanation below claim `communicate(timeout=...)` cannot fire while an
