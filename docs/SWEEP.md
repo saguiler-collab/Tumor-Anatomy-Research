@@ -68,10 +68,25 @@ benchmark**, and stalls there. Per-method timings on 500 synthetic mixtures show
 and badly distributed — `nnls` **0.1 s**, `svr` **175.7 s**. With fifteen methods this stage alone
 is tens of minutes before anything writes.
 
-**Most likely cause, not yet confirmed:** OPEN_DEFECTS **D18**. An R `parallel` socket cluster's
-workers survive the master, orphaned to ppid 1, holding the inherited stdout pipe, so
-`communicate()` never returns. That is precisely the 9-hour-zero-output signature, and the same
-methods (`bayesprism`, `quantiseq`) are in the synthetic panel.
+**The cause I first proposed was wrong, and is withdrawn.** I attributed it to OPEN_DEFECTS
+**D18** — orphaned R cluster workers holding the inherited stdout pipe so `communicate()` never
+returns. Tested: a child whose detached grandchild keeps the pipe open past the budget raises
+`TimeoutExpired` at **3.0 s against a 3 s budget** on the *pre-fix* code. The pipe-EOF story does
+not explain it. See D18's 2026-09-19 correction.
+
+**A second candidate, now being tested rather than assumed: resource starvation of my own making.**
+The 8 h 54 min run overlapped the rest of this sweep — a full `pytest` pass, two h5ad cohort legs,
+several probe scripts — on a 4-core machine whose load average reached **50.8**. At the 48-minute
+mark that process had 9 m 21 s of CPU; nearly six hours later it had 10 m 51 s. It was not spinning,
+it was **starved**. A relaunch with streaming output and a quiet machine is progressing normally
+through the method panel (`nnls` 0.1 s, `svr` 175.7 s, `cibersortx` 278.0 s, `cibersortx_smode`
+239.1 s, `elastic_net` 37.4 s, `bayesian` 203.9 s), which is slow but finite.
+
+**If that relaunch completes, the "hang" was my scheduling, not the pipeline**, and the honest
+finding shrinks to: Stage 3 is expensive enough (minutes per method, ~15 methods) that the
+validation gate takes hours and writes nothing until it finishes, which makes it look hung and
+makes it easy to starve. That is still worth fixing — a gate that cannot be run casually is a
+gate that is not run — but it is a performance and observability problem, not a deadlock.
 
 **Why it matters beyond inconvenience:** a validation gate nobody can run is a gate that is not
 being used, and every result in this project is supposed to sit behind it. It also means the
@@ -127,6 +142,16 @@ The two classes of problem found are worth distinguishing:
   the next change, which is worse in the long run and should be fixed before new datasets are
   added.
 
-**Recommendation before adding more data:** fix D18 properly (drop the parent's pipe copies after
-killing the process group, and reap with `os.waitpid`, so an orphaned grandchild cannot block), then
-re-run the synthetic gate to completion and confirm the negative controls still fire.
+**Recommendation before adding more data**, revised now that the D18 cause is withdrawn:
+
+1. **Let the quiet relaunch finish** and record whether the gate completes. That single fact
+   decides whether this is a deadlock or a scheduling problem, and it is being measured rather
+   than argued.
+2. **Do not run the gate concurrently with anything else.** Load average 50.8 on four cores is
+   what turned a slow stage into an apparent hang, and it was self-inflicted.
+3. **Give Stage 3 progress output and a per-method budget**, so a slow method is visibly slow
+   rather than indistinguishable from a hang. The run already prints per-method timings; the
+   problem is that nothing reaches disk until the stage ends.
+4. `_run_bounded` now captures to temporary files rather than pipes. That is defensive — no
+   descendant can apply backpressure, and 2 MB of output is covered by test — but it is **not**
+   presented as the cure, because the cause it was written for turned out not to be the cause.

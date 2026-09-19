@@ -431,21 +431,45 @@ def _run_bounded(cmd: list[str], budget: int):
     So: put the child in its own process group, and on timeout kill the GROUP, which
     reaches the grandchildren holding the pipe. Then reap with a short bounded wait.
     """
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                            text=True, start_new_session=True)
-    try:
-        out, err = proc.communicate(timeout=budget)
-    except subprocess.TimeoutExpired:
+    # 2026-09-19 (OPEN_DEFECTS D18): NO PIPES. The process-group kill above is correct and
+    # was still not enough. BayesPrism starts an R `parallel` SOCKET cluster whose workers are
+    # separate R processes; they survived `killpg` re-parented to ppid 1, kept the inherited
+    # stdout pipe open, and so the pipe never reached EOF. Measured consequence: a 2,400 s
+    # budget that ran 93 minutes, and `run_all.py --synthetic` -- the project's own validation
+    # gate -- sitting for 8 h 54 min having written nothing but an empty directory tree.
+    #
+    # The fix is to remove the thing that can block, rather than to kill harder. A child (or
+    # grandchild, or a worker nobody knows about) writing into a TEMPORARY FILE cannot apply
+    # backpressure: there is no 64 KB buffer to fill and no reader that has to keep draining
+    # it. `proc.wait(timeout=...)` then depends only on the direct child's exit status, which
+    # is the one thing this function actually controls.
+    #
+    # A leaked worker is still possible and is now merely a leak, not a hang. That is the
+    # trade this makes deliberately: correctness of the timeout over tidiness of the tree.
+    with (tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace") as fout,
+          tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace") as ferr):
+        proc = subprocess.Popen(cmd, stdout=fout, stderr=ferr, text=True,
+                                start_new_session=True)
         try:
-            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
-        except (ProcessLookupError, PermissionError):       # pragma: no cover
-            proc.kill()
-        try:
-            proc.communicate(timeout=30)
-        except subprocess.TimeoutExpired:                   # pragma: no cover
-            pass
-        raise
-    return subprocess.CompletedProcess(cmd, proc.returncode, out, err)
+            proc.wait(timeout=budget)
+        except subprocess.TimeoutExpired:
+            try:
+                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+            except (ProcessLookupError, PermissionError):   # pragma: no cover
+                proc.kill()
+            try:
+                proc.wait(timeout=30)
+            except subprocess.TimeoutExpired:               # pragma: no cover
+                pass
+            fout.seek(0)
+            ferr.seek(0)
+            # Re-raise with whatever the child managed to write, so a timeout is diagnosable
+            # instead of silent -- the gap OPEN_DEFECTS D19 records.
+            raise subprocess.TimeoutExpired(cmd, budget, output=fout.read(),
+                                            stderr=ferr.read()) from None
+        fout.seek(0)
+        ferr.seek(0)
+        return subprocess.CompletedProcess(cmd, proc.returncode, fout.read(), ferr.read())
 
 
 class RBridgeError(RuntimeError):

@@ -24,7 +24,7 @@ keeping, marked RESOLVED at the top.
 | **D12** the cell-size correction has never been applied — it is the identity | **OPEN, high** — supersedes most of D1; no number changes, but the registration says otherwise |
 | **D13** EPIC runs with `refProfiles.var` unset, so its gene weighting is off; its output is mislabelled as a cell fraction | **MEASURED and CLOSED** 2026-09-17 — restoring variance weighting changes the estimates materially (mean 0.0829 on Tumor, max 0.3539) and changes ACS by **exactly 0.0000**. `otherCells` max 2.79e-03. Convergence 4 of 25 probed samples fail (PARTIAL). The variance-weighted run is the one that is EPIC, decided on the invariant before the scores were seen. `ROAD_TO_PAPER.md` 0.4 |
 | **D19** a fallback to a Python reimplementation is recorded without its REASON | **OPEN, medium-low** — nothing is mislabelled, but `dwls` falling rank 3 → 12 cannot be read as "bad method" vs "timed out" from the artefact. All R packages are installed, so these are runtime failures, not absent software. |
-| **D18** `_run_bounded`'s timeout never fires for methods that start an R socket cluster | **OPEN, medium** — orphaned cluster workers hold the inherited stdout pipe, so `communicate()` blocks past the budget (BayesPrism ran 93 min against a 2400 s budget). Decides WHICH IMPLEMENTATION produces a number as a function of machine load. Mitigated by an external watchdog, which lives outside the repo; the real fix is not yet applied. |
+| **D18** a 9-hour hang with zero output; the stated CAUSE is withdrawn (2026-09-19) | **OPEN, cause UNKNOWN** — the pipe-EOF explanation was tested and is false: the pre-fix code raises at 3.0 s against a 3 s budget with a detached grandchild holding the pipe. What is verified: orphaned ppid-1 R workers blocked the parent until killed, and `run_all.py --synthetic` ran 8 h 54 min writing nothing. Decides WHICH IMPLEMENTATION produces a number as a function of machine load. Mitigated by an external watchdog, which lives outside the repo; the real fix is not yet applied. |
 | **D17** variant reference builds overwrote the primary reference's sampling record | **FIXED** 2026-09-15 — a figure script reads that path, so a sensitivity build's numbers could be published as the leaderboard's. Variant builds now get their own file. |
 | **D16** the GBmap reference is built from LOG-transformed data treated as linear | **OPEN, highest** — model violation in the signature every number was solved against, and it may be the real cause of D14 rather than "the atlas" |
 | **D15** the accuracy arm scores mRNA-share estimates against CELL-fraction truth | **OPEN, high** — follows from D12; affects every MAE/RMSE/bias. Both truths are now emitted; which to score against is answered by the two-problem framing |
@@ -1958,6 +1958,36 @@ provenance records were written by different code.
 ---
 
 ## D18 · `_run_bounded`'s timeout does not fire for methods that start an R socket cluster
+
+> ### CORRECTION 2026-09-19 — the stated CAUSE is wrong and is withdrawn
+>
+> The heading and the explanation below claim `communicate(timeout=...)` cannot fire while an
+> orphaned grandchild holds the inherited stdout pipe. **That was tested and it is false.** A
+> reproduction with `sh -c "setsid sleep 120 & sleep 120"` — a child whose detached grandchild
+> keeps the pipe open well past the budget — raises `TimeoutExpired` at **3.0 s against a 3 s
+> budget** on the *pre-fix* implementation. The pipe-EOF story does not explain the observed hang.
+>
+> **What remains verified**, because it was observed directly:
+> - Killing the BayesPrism R master alone left the Python parent blocked; killing the three
+>   R workers orphaned to ppid 1 released it.
+> - R `parallel` socket-cluster workers do survive the master and are re-parented to ppid 1.
+> - `run_all.py --synthetic` ran **8 h 54 min** and wrote nothing but an empty directory tree
+>   and a lock file.
+> - `bayesprism` does route through `_run_bounded` with `timeout_for("bayesprism") == 2400`.
+>
+> **What is NOT explained:** how an R master reached 93 minutes under a 2,400 s budget on that
+> path. The cause of the synthetic hang is **unknown** and is being diagnosed with streaming
+> output rather than guessed at again.
+>
+> **What changed anyway, and why it is not called a fix:** `_run_bounded` now captures into
+> temporary files instead of pipes, so the wait depends only on the direct child's exit status
+> and no descendant can apply backpressure. That is a real robustness improvement — a pipe with
+> no reader genuinely does block a writer at ~64 KB, and `tests/test_run_bounded_timeout.py`
+> covers 2 MB through the path — but it is **defensive, not demonstrated to cure the hang.**
+> Calling it a fix would repeat the error this correction exists to record: proposing a
+> mechanism, finding it plausible, and never testing it.
+>
+> This is the sixth explanation this project has proposed and withdrawn after measuring it.
 
 **Severity: medium. It does not corrupt a number, but it decides WHICH IMPLEMENTATION produces
 one, silently and as a function of how busy the machine is. Found 2026-09-18.**
