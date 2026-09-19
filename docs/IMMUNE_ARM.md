@@ -134,6 +134,36 @@ DNA methylation and replicates into a second tissue.**
 
 ## 6 · The B-over-T anomaly is CONFIRMED against an orthogonal per-type measurement
 
+> **This section is long because it accreted over one day of measurement. Read in this order:**
+>
+> **The finding**
+> 1. *The result: the prediction held* — methylation truth, both cohorts
+> 2. *And every method disagrees with it* — the headline table
+> 3. *CORRECTED — "12 of 12" was a statement about MEANS* — **read this before quoting any count**;
+>    it splits the result into the two failure modes (ABSENCE and MISASSIGNMENT)
+> 4. *Why this comparison is like-for-like* — why the denominator objection does not apply
+>
+> **Five explanations, all rejected by their own tests**
+> 5. *The "not separable" explanation was tested and REFUTED* — the signature separates T from B fine
+> 6. *A mechanism was proposed, tested, and REJECTED* — macrophage spillover
+> 7. *A second mechanism ... also rejected* — high tumour purity
+> 8. *Where in gene space the model fails — and the fifth rejected mechanism* — residual propagation
+>    (the fourth, model fit as a per-sample trust signal, is in `docs/ENDPOINT.md` §2g)
+>
+> **What survives**
+> 9. *What DOES survive: the model's premise is substantially violated* — the mixing model explains
+>    a minority of real bulk, with floor and ceiling controls
+>
+> **Scope and caveats**
+> 10. *Does equal footing FIX the inversion?* — partly, and it makes the absence mode worse
+> 11. *Secondary, NOT registered: the full lymphoid ordering* — exploratory, includes NK
+> 12. *What "the reference holds 5× more T than B" does and does not mean* — three different
+>     quantities, only one of which the claim refers to
+> 13. *Limits, as declared in advance*
+>
+> **The one-line summary:** the failures are measured, replicated across two cohorts and two
+> references, bounded by the model-fit result, and **not explained.**
+
 Section 5 recorded the B-over-T inversion as "an observation requiring its own test, not an
 established mechanism". That test was then **pre-registered before it was run**
 (`prespecified/immune_failure_factors.md`, per-cell-type addendum), with the prediction fixed in
