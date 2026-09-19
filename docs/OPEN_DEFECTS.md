@@ -24,7 +24,7 @@ keeping, marked RESOLVED at the top.
 | **D12** the cell-size correction has never been applied — it is the identity | **OPEN, high** — supersedes most of D1; no number changes, but the registration says otherwise |
 | **D13** EPIC runs with `refProfiles.var` unset, so its gene weighting is off; its output is mislabelled as a cell fraction | **MEASURED and CLOSED** 2026-09-17 — restoring variance weighting changes the estimates materially (mean 0.0829 on Tumor, max 0.3539) and changes ACS by **exactly 0.0000**. `otherCells` max 2.79e-03. Convergence 4 of 25 probed samples fail (PARTIAL). The variance-weighted run is the one that is EPIC, decided on the invariant before the scores were seen. `ROAD_TO_PAPER.md` 0.4 |
 | **D19** a fallback to a Python reimplementation is recorded without its REASON | **OPEN, medium-low** — nothing is mislabelled, but `dwls` falling rank 3 → 12 cannot be read as "bad method" vs "timed out" from the artefact. All R packages are installed, so these are runtime failures, not absent software. |
-| **D18** BayesPrism's socket-cluster workers are killed for MEMORY, so the row labelled `bayesprism` was the Python reimplementation | **ROOT CAUSE FOUND 2026-09-19; fix available, not yet default** — `Error in unserialize(node$con)`: three socket workers, each with a full data copy, on 8.6 GB RAM with ~3.2 GB free. Not a timeout (155 s against a 2,400 s budget). **Intermittent**, so which software a row names depends on free RAM. `n.cores = 1` removes the cluster (declared in METHODS.md); genuine ACS measured at **0.8154**. Two earlier causes were proposed and withdrawn — both kept on the record. |
+| **D18** BayesPrism's socket-cluster workers are killed for MEMORY, so the row labelled `bayesprism` was the Python reimplementation | **RESOLVED 2026-09-19** — cause found (`unserialize(node$con)`: three workers each holding a full data copy on 8.6 GB RAM; not a timeout, 155 s against 2,400 s). `n.cores = 1` removes the cluster and is **result-neutral**: ACS 0.8154 and CI [0.7096, 0.9153] identical to the three-worker run, 2.0× slower. Two earlier causes were proposed and withdrawn; both kept on the record. |
 | **D17** variant reference builds overwrote the primary reference's sampling record | **FIXED** 2026-09-15 — a figure script reads that path, so a sensitivity build's numbers could be published as the leaderboard's. Variant builds now get their own file. |
 | **D16** the GBmap reference is built from LOG-transformed data treated as linear | **OPEN, highest** — model violation in the signature every number was solved against, and it may be the real cause of D14 rather than "the atlas" |
 | **D15** the accuracy arm scores mRNA-share estimates against CELL-fraction truth | **OPEN, high** — follows from D12; affects every MAE/RMSE/bias. Both truths are now emitted; which to score against is answered by the two-problem framing |
@@ -1958,6 +1958,30 @@ provenance records were written by different code.
 ---
 
 ## D18 · `_run_bounded`'s timeout does not fire for methods that start an R socket cluster
+
+> ### RESOLVED 2026-09-19 — the fix is confirmed and is result-neutral
+>
+> `n.cores = 1` was run on the anatomic cohort with a 14,400 s budget, against the
+> three-worker measurement of 2026-09-14:
+>
+> | | ACS | 95% CI | elapsed | failed |
+> |---|---|---|---|---|
+> | 3 workers (2026-09-14) | **0.8154** | [0.7096, 0.9153] | 2,045 s | none |
+> | `n.cores = 1` (2026-09-19) | **0.8154** | [0.7096, 0.9153] | 4,076 s | none |
+>
+> **Identical to four decimals, bootstrap interval included.** So the socket cluster is an
+> execution strategy and nothing more: it does not change what BayesPrism computes, only how
+> long it takes (2.0× slower serially). Two consequences:
+>
+> - **`n.cores = 1` is the correct default on a memory-constrained machine.** It removes the
+>   cluster, therefore the killed workers, therefore the orphaned ppid-1 processes, therefore
+>   the silent fallback to the Python reimplementation. Nothing is traded away for it.
+> - **The earlier intermittency was never a property of the method.** Whether the row labelled
+>   `bayesprism` was BayesPrism depended on free RAM at the moment it ran. It now does not.
+>
+> The deviation stays declared in `docs/METHODS.md` rather than applied silently, and the
+> result-neutrality above is the evidence that declaring it is sufficient — had the two runs
+> differed, the deviation would have needed reporting as a finding rather than a footnote.
 
 > ### ROOT CAUSE FOUND 2026-09-19, after two wrong guesses
 >

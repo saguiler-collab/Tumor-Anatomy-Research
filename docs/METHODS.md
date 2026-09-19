@@ -556,6 +556,12 @@ anyone would guess. Measured 2026-09-19; it is a memory limit, not a timeout (15
 **The deviation:** `config.R_SOCKET_CLUSTER_CORES = 1`, passed to the R script as `n_cores` in
 the run's config JSON, removes the cluster.
 
+**Confirmed result-neutral, 2026-09-19.** Run both ways on the anatomic cohort: three workers
+gave ACS **0.8154**, CI [0.7096, 0.9153]; `n.cores = 1` gave **0.8154**, CI [0.7096, 0.9153] —
+identical to four decimals including the bootstrap interval, at 2.0× the wall-clock. The cluster
+is an execution strategy, not a modelling choice. Had the two differed, this would have been
+reported as a finding about the method's determinism rather than as a declared deviation.
+
 **What it changes:** wall-clock only. No prior, no `outlier.cut`, no `outlier.fraction`, no
 cell-type mapping, no seed. `run.prism` is called with the same arguments otherwise.
 
