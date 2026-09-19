@@ -165,8 +165,58 @@ def fig_recovery():
     save(fig, "Figure_tumour_recovery")
 
 
+def fig_detects_not_ranks():
+    """Result 1: ACS's ranking predicts accuracy ONLY against the yardstick that shares its atlas."""
+    fz, h5 = J("yardstick_agreement.json"), J("yardstick_agreement_h5ad.json")
+    if not fz:
+        return
+    bar = fz.get("registered_bar", 0.60)
+    a1 = fz["arm_1_pseudobulk"]
+    rows = [("Synthetic pseudobulk\n(built from GBmap — the SAME atlas ACS uses)",
+             a1["rho"], None, None, True)]
+    for d, lab in ((fz, "frozen signature"), (h5, "sigma-carrying reference")):
+        if not d:
+            continue
+        a2 = d["arm_2_absolute_purity"]
+        for key, tag in (("all_methods", "all methods"),
+                         ("excluding_degenerate", "comparable methods only")):
+            v = a2.get(key)
+            if not v:
+                continue
+            rows.append((f"DNA tumour purity\n({lab}, {tag}, n={v['n_methods']})",
+                         v["spearman"], v["ci"][0], v["ci"][1], False))
+    fig, ax = plt.subplots(figsize=(10.2, 4.6))
+    fig.subplots_adjust(left=0.40, right=0.97, top=0.76, bottom=0.20)
+    y = np.arange(len(rows))[::-1]
+    for i, (lab, rho, lo, hi, shares) in zip(y, rows):
+        col = C_B if shares else C_GBM
+        if lo is not None:
+            ax.plot([lo, hi], [i, i], color=col, lw=2.4, alpha=.40, solid_capstyle="round")
+        ax.plot(rho, i, "o", color=col, ms=11, zorder=5)
+        ax.text(rho, i + .22, f"{rho:+.3f}", ha="center", fontsize=9.5, fontweight="bold",
+                color=col)
+    ax.axvline(bar, color="#111", ls="--", lw=1.4)
+    # annotation sits at the BOTTOM of the axes, clear of both the title and the data
+    ax.text(bar - .03, -0.62, f"registered bar  ρ ≥ {bar}", fontsize=9, fontweight="bold",
+            ha="right", va="center")
+    ax.axvline(0, color="#ccc", lw=.9)
+    ax.set_yticks(y)
+    ax.set_yticklabels([r[0] for r in rows], fontsize=9)
+    ax.set_ylim(-1.0, len(rows) - 0.4)
+    ax.set_xlim(-1.02, 1.02)
+    ax.set_xlabel("Spearman correlation between the ACS ranking and the yardstick's ranking\n"
+                  "bars are 95% bootstrap CI over methods", fontsize=9.5)
+    ax.set_title("Anatomic concordance predicts accuracy only against the\n"
+                 "yardstick that shares its own reference atlas",
+                 fontsize=12.5, fontweight="bold", loc="left", pad=10)
+    for s in ("top", "right"):
+        ax.spines[s].set_visible(False)
+    save(fig, "Figure_detects_not_ranks")
+
+
 def main() -> int:
     print("rendering figures from artefacts...")
+    fig_detects_not_ranks()
     fig_lymphoid()
     fig_model_fit()
     fig_recovery()
