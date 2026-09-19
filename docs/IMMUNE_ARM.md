@@ -432,6 +432,56 @@ is starting from a premise that is false for 64–76% of the signal.**
 
 Artefact: `results/model_fit_residual.json`.
 
+### Where in gene space the model fails — and the fifth rejected mechanism
+
+The residual is not spread evenly across the marker space. Per-gene unexplained fraction, grouped
+by which cell type the reference makes brightest for that gene (120 samples per cohort):
+
+| marker owner | GBM unexplained | LGG unexplained |
+|---|---|---|
+| `T_cell` | **0.012** | **0.007** |
+| `B_cell` | 0.052 | 0.032 |
+| `NK_cell` | 0.079 | 0.085 |
+| `Endothelial` | 0.085 | 0.085 |
+| `Macrophage_Microglia` | 0.208 | 0.044 |
+| `Oligodendrocyte` | 0.137 | 0.273 |
+| `Astrocyte` | **0.655** | **0.726** |
+| `Tumor` | **0.951** | **1.013** |
+
+**This is the opposite of what the lymphoid failure would predict.** Lymphoid markers are the
+*best*-fit genes in the whole space — T-cell markers are explained almost perfectly. The misfit is
+concentrated in **Tumor** and **Astrocyte** markers, where the fit explains essentially none of the
+variance (an unexplained fraction above 1.0 in LGG means the fit is worse than the gene's own
+mean).
+
+So the lymphoid coefficients are wrong **while the lymphoid marker expression is being reproduced
+well.** That is only possible if several different coefficient vectors explain the same marker
+values — and it suggested a specific mechanism: the solver distorts the Tumor and Astrocyte
+coefficients to chase their badly-fit markers, and that distortion propagates into the lymphoid
+coefficients through the correlation between columns (T–B r = +0.376).
+
+**Tested and rejected.** The prediction is that refitting on lymphoid-owned markers *only* —
+deleting the badly-fit Tumor and Astrocyte genes entirely — should recover T > B. It does not. On
+596 lymphoid-owned markers in LGG, T > B in **0.0%** of samples, and the mass moves to `NK_cell`
+(1.0000) with **both** T and B at exactly 0.0000. Removing the misfit genes does not repair the
+ordering; it relocates the failure.
+
+That test is also underpowered in a way worth naming: only **55 of 510** samples retain any
+non-zero lymphoid signal to score, which is the absence mode reasserting itself inside the
+diagnostic.
+
+**Five mechanisms have now been proposed and rejected** — macrophage spillover, high purity,
+signature non-separability, per-sample model fit as a diagnostic, and residual propagation through
+correlated columns. **Mechanism-hunting stops here**, and the honest report is the one already
+given: the failures are measured, replicated across two cohorts and two references, bounded by the
+model-fit result, and **not explained.** A sixth speculative account added without a test would
+make this document worse, not better.
+
+One observation stands out and is recorded without interpretation: **plain NNLS returns exactly
+0.0000 for `T_cell` in essentially every LGG sample under both gene spaces**, while the
+identifiability probe shows the same solver recovering T correctly on mixtures built from the same
+reference. Whatever suppresses that column on real tissue is not the signature's geometry.
+
 ### Secondary, NOT registered: the full lymphoid ordering
 
 The same measurement yields NK at no extra cost, so the three-way ordering is reported here.
