@@ -54,7 +54,59 @@ Defect 1 changed the artefacts, so the shipped `RESULTS.md` no longer matched th
 exists because `RESULTS.md` claims in its own header that nothing in it is transcribed by hand,
 and it is the only thing enforcing the claim. Regenerated.
 
-### 4. OPEN, serious — `run_all.py --synthetic` does not complete
+### 4. RESOLVED — two separate problems wearing one costume
+
+This entry originally read *"OPEN, serious — `run_all.py --synthetic` does not complete"* and
+attributed it to a pipe deadlock. **Both the severity and the cause were wrong.** What looked
+like one defect was two, and neither is a deadlock.
+
+#### 4a. The 9-hour wall clock was contention, self-inflicted
+
+The run overlapped a full `pytest` pass, two h5ad cohort legs and several probe scripts on a
+4-core machine whose load average reached **50.8**. Measured: **2.2%** CPU utilisation
+(11 m 56 s of CPU in 8 h 54 min). The quiet relaunch reached **77.5%** (15 m 20 s in 19 m 32 s) —
+**a 35× difference on identical hardware** — and walked through all 15 methods and into Stage 4.
+It was starved, not stuck.
+
+What survives as a genuine, if smaller, finding: **Stage 3 costs minutes per method across ~15
+methods and writes nothing to disk until the stage ends**, so it is indistinguishable from a hang
+and trivially starved. Per-method: `nnls` 0.1 s, `elastic_net` 37.4 s, `music` 49.5 s,
+`svr` 175.7 s, `bayesian` 203.9 s, `bayesian_hierarchical` 215.8 s, `cibersortx_smode` 239.1 s,
+`cibersortx` 278.0 s, `dwls` 939.6 s.
+
+#### 4b. BayesPrism's failure is a MEMORY limit, and it had been invisible
+
+The same relaunch printed the error the pipe-based capture had been discarding on the error path:
+
+```
+bayesprism  155.3s  [fell back to Python: run_bayesprism.R exited 1
+                     | Error in unserialize(node$con) : error reading from connection]
+```
+
+`unserialize(node$con)` is an R `parallel` **socket cluster** master failing to read from a worker
+that is gone. `R/run_bayesprism.R` asked for **three workers**, each a separate R process with its
+own copy of the data, on a machine with **8.6 GB RAM and ~3.2 GB free**. They are killed, the
+master fails, R exits 1, the bridge takes its documented fallback. **Not a timeout — 155 s against
+a 2,400 s budget.**
+
+One cause accounts for every observation that made the earlier guesses look plausible: the
+orphaned ppid-1 R workers, the master at 0% CPU (socket masters wait on workers by design), and
+`bayesprism` recorded as `python-reimplementation` in every real run.
+
+#### What it cost, and the transferable lesson
+
+**I proposed two causes and both were wrong** — pipe-EOF starvation (tested, false) and
+machine-wide CPU starvation (true of the wall clock, not of why BayesPrism failed). Neither guess
+was checked against the one thing that settles it in a single step: **reading the subprocess's own
+stderr**, which the pipe-based capture was throwing away precisely on the path where it mattered.
+
+The fix that actually follows is `n.cores = 1`, declared in `docs/METHODS.md`, and it needs no new
+hardware. A re-measurement of both methods is running with the interpretation pre-specified in
+`prespecified/remeasurement_verdict.md`.
+
+---
+
+### 4-original (superseded, kept for the record) — what this entry said before
 
 **This is the CLAUDE.md validation gate** (*"validate end-to-end with `python scripts/run_all.py
 --synthetic` before touching the real-data path"*), and it is currently unusable.
