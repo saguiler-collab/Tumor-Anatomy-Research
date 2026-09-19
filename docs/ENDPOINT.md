@@ -191,6 +191,45 @@ are uncorrelated.**
 shares its atlas with ACS, which is correction C4's point. Every yardstick that shares nothing with
 ACS fails, and that is the pattern, not one bad run.)*
 
+### 2g. The most promising replacement for ACS was tested, and it also fails
+
+The residual measurement above invites an obvious hope. Per-sample model fit needs **no ground
+truth** — which is the whole appeal of ACS — and a sample the model cannot fit is a sample whose
+estimate should be distrusted. If per-sample R² predicted per-sample error, this project would
+have found the ground-truth-free trust signal it set out to look for, just not the one it
+registered.
+
+**It does not.** Spearman(R², |estimate − purity|) per method; the usable direction is *negative*
+(better fit, smaller error):
+
+| | GBM | LGG |
+|---|---|---|
+| samples | 154 | 510 |
+| control: Spearman(R², purity) | -0.1276 (p = 0.115) | -0.0182 (p = 0.681) |
+| methods where better fit → smaller error (p<0.05) | **1 of 12** | **6 of 12** |
+| methods significant in the **wrong** direction | 0 | **2** |
+| verdict | **NOT a usable trust signal** | **NOT a usable trust signal** |
+
+The control matters and it passes: R² is **not** a proxy for purity (p = 0.115 and 0.681), so the
+test is not circular — a positive result would have been real.
+
+But the result is not positive. It is **1 of 12 in GBM and 6 of 12 in LGG** — not a replication, a
+coin flip that landed differently — and in LGG **2 methods run significantly backwards**, where a
+*better* model fit predicts a *larger* error. Even where the correlation is significant its
+magnitude is |rho| ≈ 0.1–0.2, which accounts for 1–4% of the variance in error. Nothing in that
+table would justify telling a clinician which of their samples to distrust.
+
+**So the model-fit residual bounds the problem without diagnosing any individual case.** It says
+the mixing model is violated for most of the signal; it does not say which samples are the bad
+ones. That distinction is worth stating precisely, because the first claim is the useful finding
+and the second is the one a reader will assume follows from it.
+
+**This is the fourth candidate explanation or diagnostic rejected by measurement**, after
+macrophage spillover, high purity, and signature non-separability. The project's central negative
+claim therefore stands in its strongest form: *on this panel, on two cohorts, against three
+independent molecules, no ground-truth-free quantity tested here tells you when a deconvolution
+estimate can be believed.*
+
 ### 2c. It cannot resolve the top of its own leaderboard, and it is blind to magnitude
 
 | rank | method | ACS |

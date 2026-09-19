@@ -74,6 +74,73 @@ def controls(A, sub, seed: int) -> dict:
             "fraction_of_achievable": round(real / ceil, 4) if ceil else None}
 
 
+
+def trust_signal(ref, genes, cohort_tag: str, bulk_file: str) -> dict | None:
+    """Is the per-sample model fit a usable ground-truth-free TRUST SIGNAL?
+
+    This is the question worth asking of the residual. `docs/ENDPOINT.md` reports that anatomic
+    concordance detects but cannot rank, and that there is no routine way to know when a
+    deconvolution estimate can be believed. The per-sample R^2 is a candidate: it needs no ground
+    truth, and a sample the model cannot fit is a sample whose estimate should be distrusted.
+
+    Tested as a correlation between per-sample R^2 and per-sample |estimate - purity|. A
+    NEGATIVE correlation would mean "better fit, smaller error" -- the usable direction.
+
+    A control runs first. If R^2 were merely a proxy for purity it would inherit purity's known
+    relationship with error and the result would be circular.
+    """
+    from scipy import stats                                        # noqa: PLC0415
+    path = config.PROCESSED_DIR / bulk_file
+    per_sample = config.RESULTS_DIR / f"absolute_purity_per_sample{cohort_tag}.csv"
+    if not (path.exists() and per_sample.exists()):
+        return None
+    B = pd.read_csv(path, index_col=0)
+    g = [x for x in genes if x in B.index]
+    S = ref.profile.loc[g]
+    S = S / S.sum(axis=0)
+    A = S.to_numpy(dtype="float64")
+    sub = B.loc[g]
+    sub = sub / sub.sum(axis=0) * 1e6
+    r2 = {}
+    for c in sub.columns:
+        y = sub[c].to_numpy(dtype="float64")
+        if not np.isfinite(y).all():
+            continue
+        x, _ = nnls(A, y)
+        total = float(((y - y.mean()) ** 2).sum())
+        if total > 0:
+            r2[c] = 1.0 - float(((y - A @ x) ** 2).sum()) / total
+    R = pd.Series(r2)
+    P = pd.read_csv(per_sample, index_col=0)
+    tcol = next(c for c in ("absolute_purity", "purity") if c in P.columns)
+    shared = [i for i in P.index if i in R.index]
+    if len(shared) < 50:
+        return None
+    pur, rr = P.loc[shared, tcol], R.loc[shared]
+    cp = stats.spearmanr(rr, pur)
+    rows, hits, wrong, n = {}, 0, 0, 0
+    for m in [c for c in P.columns if c != tcol]:
+        e = (P.loc[shared, m] - pur).abs()
+        ok = np.isfinite(e) & np.isfinite(rr)
+        if ok.sum() < 50 or float(e[ok].std()) == 0:
+            continue
+        r = stats.spearmanr(rr[ok], e[ok])
+        n += 1
+        useful = bool(r.statistic < 0 and r.pvalue < 0.05)
+        backwards = bool(r.statistic > 0 and r.pvalue < 0.05)
+        hits += useful
+        wrong += backwards
+        rows[m] = {"spearman_r2_vs_abs_error": round(float(r.statistic), 4),
+                   "p": round(float(r.pvalue), 6), "useful_direction": useful,
+                   "significant_WRONG_direction": backwards}
+    return {"n_samples": len(shared), "n_methods": n,
+            "control_spearman_r2_vs_purity": round(float(cp.statistic), 4),
+            "control_p": round(float(cp.pvalue), 4),
+            "n_useful": hits, "n_significant_wrong_direction": wrong,
+            "methods": rows,
+            "verdict": ("NOT a usable trust signal" if hits <= n / 2 or wrong
+                        else "candidate trust signal")}
+
 def main() -> int:
     ref = load_frozen_reference()
     genes = select_signature_genes(ref, n_per_type=config.SIGNATURE_GENES_PER_TYPE)
@@ -137,14 +204,38 @@ def main() -> int:
                     "r2_max": round(float(r2.max()), 4),
                     "unexplained_median_pct": round(100 * (1 - med), 2),
                     "frac_samples_r2_below_half": round(float((r2 < 0.5).mean()), 4)}
+    # THE QUESTION THE RESIDUAL INVITES, asked and answered rather than left hanging.
+    trust = {}
+    for lab, fname in COHORTS.items():
+        tg = "" if lab == "GBM" else f"_{lab.lower()}"
+        r = trust_signal(ref, genes, tg, fname)
+        if not r:
+            continue
+        trust[lab] = r
+        print(f"IS THE PER-SAMPLE FIT A TRUST SIGNAL? — {lab} "
+              f"({r['n_samples']} samples)")
+        print(f"  control: Spearman(R^2, purity) = {r['control_spearman_r2_vs_purity']:+.4f} "
+              f"(p={r['control_p']:.3g}) — not a purity proxy, so not circular")
+        print(f"  methods where a better fit predicts SMALLER error (p<0.05): "
+              f"{r['n_useful']} of {r['n_methods']}")
+        print(f"  methods significant in the WRONG direction: "
+              f"{r['n_significant_wrong_direction']}")
+        print(f"  VERDICT: {r['verdict']}\n")
     if out:
+        out_payload_trust = trust
         (config.RESULTS_DIR / "model_fit_residual.json").write_text(json.dumps({
             "EXPLORATORY": "not pre-registered; bounds how much of real bulk the additive "
                            "mixing model can account for in the marker space.",
             "what_it_does_NOT_say": "which assumption fails. A high residual is consistent "
                                     "with platform/normalisation mismatch, unmodelled cell "
                                     "states, or non-additivity, and does not distinguish them.",
-            "cohorts": out}, indent=2))
+            "cohorts": out,
+            "trust_signal_test": {
+                "question": "does per-sample model fit predict per-sample deconvolution error, "
+                            "i.e. is it a ground-truth-free signal for when to distrust an "
+                            "estimate?",
+                "EXPLORATORY": "not pre-registered",
+                "cohorts": out_payload_trust}}, indent=2))
         print("wrote results/model_fit_residual.json")
     return 0
 
