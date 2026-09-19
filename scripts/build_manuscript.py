@@ -280,6 +280,50 @@ def main() -> int:
       f"methods per tau. **Report as a partial replication failure.**")
     A("")
 
+    # The genuine-package re-measurements. These exist on disk and were NOT reaching the
+    # writing surface, which claimed both methods were reimplementations full stop.
+    import pandas as pd                                            # noqa: PLC0415
+    lbp = config.RESULTS_DIR / "anatomic" / "acs_leaderboard.csv"
+    rm = {m: J(f"{m}_remeasured.json") for m in ("dwls", "bayesprism")}
+    if lbp.exists() and all(rm.values()):
+        lb = pd.read_csv(lbp).set_index("method")
+        A("## Result 5b — the two reimplementations were measured as genuine packages "
+          "**[STRONG]**\n")
+        A("_from `results/dwls_remeasured.json`, `results/bayesprism_remeasured.json`. Same "
+          "anatomic cohort, same 657-gene space (sha256 verified against the leaderboard's "
+          "own), same donor split by name; all 7 declared equivalence conditions pass._\n")
+        A("| method | this project's reimplementation | the genuine R package | delta | runtime "
+          "vs the 2,400 s pipeline budget |")
+        A("|---|---|---|---|---|")
+        for m, g in rm.items():
+            a = float(lb.loc[m, "acs"]); b = float(g["acs"])
+            A(f"| `{m}` | {a:.4f} | **{b:.4f}** | **{b - a:+.4f}** | "
+              f"{g['elapsed_seconds']:.0f} s — {'OVER' if g['elapsed_seconds'] > 2400 else 'under'} |")
+        A("")
+        A("**The reimplementations are not uniformly biased, and that is the point.** DWLS's "
+          "reimplementation *understated* the package by 0.046; BayesPrism's *overstated* it by "
+          "0.062. A blanket \"the reimplementation is close enough\" would be wrong in both "
+          "directions, and a blanket \"reimplementations flatter their packages\" would be wrong "
+          "too.\n")
+        A("**DWLS's fallback was a coin flip, not a verdict.** It needed 2,474 s against a "
+          "2,400 s budget — the threshold sat almost exactly on the method's runtime, which is "
+          "the worst place for a threshold to be, because it decides the answer by machine "
+          "load rather than by the method. That is why the budget was raised and the method "
+          "re-measured, and the raised-budget result is reported alongside the original row "
+          "rather than substituted into it.\n")
+        A("**BayesPrism's fallback is intermittent, which is worse than a clean failure.** It "
+          "completed in 2,045 s — *under* budget — in this re-measurement, yet fell back in "
+          "every confirmatory run. The cause is memory, not time: its `parallel` socket cluster "
+          "spawns three worker processes, each with its own copy of the data, and on an 8.6 GB "
+          "machine they are killed (`Error in unserialize(node$con)`). **Whether the row labelled "
+          "`bayesprism` is BayesPrism therefore depends on how much RAM was free at the time**, "
+          "which is not a scientific variable. `docs/OPEN_DEFECTS.md` D18, D19.\n")
+        A("> WRITE: this belongs in the paper as a reproducibility finding, not buried in "
+          "limitations. Two of fifteen methods silently became different software depending on "
+          "machine state, the artefacts recorded *that* it happened but not *why*, and the "
+          "direction of the resulting error was not predictable. Any benchmark that does not "
+          "check this has the same exposure and would not know.\n")
+
     A("## Result 6 — biology that predicts error **[QUALIFIED]**\n")
     A("- **Mesenchymal character** predicts a larger under-call in GBM. **Does not replicate in "
       "LGG** — the Verhaak class does not exist there and the expression-score surrogate is null. "

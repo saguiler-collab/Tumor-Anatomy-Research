@@ -323,9 +323,13 @@ is the maximum", which is weak at five categories. Post hoc and labelled: PAN �
    primary per-type evidence; GBM is the replication and is reported as the weaker arm.
 8. **`cibersortx` is not the hosted CIBERSORTx.** It implements the published algorithm (B-mode
    and S-mode); the licence-gated service produced no number here. Declared in METHODS.md.
-   `dwls` and `bayesprism` ran as Python reimplementations, labelled as such — and OPEN_DEFECTS
-   **D19** records that the artefacts do not say *why* they fell back, so "bad method" cannot be
-   told from "timed out".
+   **`dwls` and `bayesprism` were separately re-measured as the genuine R packages** on the same
+   cohort and gene space — see §5b — so this is no longer an open gap but a *reported* one: the
+   reimplementation rows stand in the archived runs and the genuine values are reported beside
+   them (dwls 0.7385 → **0.7846**, bayesprism 0.8769 → **0.8154**). What remains is that the
+   artefacts do not record *why* a fallback happened (OPEN_DEFECTS **D19**), and that for
+   BayesPrism the fallback is **intermittent and memory-dependent** (**D18**) — so which software
+   a row represents can change with machine state.
 9. **The lymphoid failures are unexplained.** Five candidate mechanisms were proposed and rejected
    by measurement: macrophage spillover, high tumour purity, signature non-separability, per-sample
    model fit as a diagnostic, and residual propagation through correlated columns. The model-fit

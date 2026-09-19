@@ -105,6 +105,23 @@ Claims are tagged **[STRONG]** (replicated across cohorts or molecules), **[QUAL
 - **Replicates:** equal footing makes the absolute under-call **worse** — GBM median bias −0.028 → −0.472, methods under-calling 7/12 → 12/12.
 - **DOES NOT REPLICATE:** the ranking reshuffle. Kendall tau **+0.214** (GBM) and **+0.333** (LGG); but excluding the one method whose implementation also changed gives **+0.143** (GBM, effect intact) and **+0.733** (LGG, rankings largely agree). Six to seven methods per tau. **Report as a partial replication failure.**
 
+## Result 5b — the two reimplementations were measured as genuine packages **[STRONG]**
+
+_from `results/dwls_remeasured.json`, `results/bayesprism_remeasured.json`. Same anatomic cohort, same 657-gene space (sha256 verified against the leaderboard's own), same donor split by name; all 7 declared equivalence conditions pass._
+
+| method | this project's reimplementation | the genuine R package | delta | runtime vs the 2,400 s pipeline budget |
+|---|---|---|---|---|
+| `dwls` | 0.7385 | **0.7846** | **+0.0461** | 2474 s — OVER |
+| `bayesprism` | 0.8769 | **0.8154** | **-0.0615** | 2045 s — under |
+
+**The reimplementations are not uniformly biased, and that is the point.** DWLS's reimplementation *understated* the package by 0.046; BayesPrism's *overstated* it by 0.062. A blanket "the reimplementation is close enough" would be wrong in both directions, and a blanket "reimplementations flatter their packages" would be wrong too.
+
+**DWLS's fallback was a coin flip, not a verdict.** It needed 2,474 s against a 2,400 s budget — the threshold sat almost exactly on the method's runtime, which is the worst place for a threshold to be, because it decides the answer by machine load rather than by the method. That is why the budget was raised and the method re-measured, and the raised-budget result is reported alongside the original row rather than substituted into it.
+
+**BayesPrism's fallback is intermittent, which is worse than a clean failure.** It completed in 2,045 s — *under* budget — in this re-measurement, yet fell back in every confirmatory run. The cause is memory, not time: its `parallel` socket cluster spawns three worker processes, each with its own copy of the data, and on an 8.6 GB machine they are killed (`Error in unserialize(node$con)`). **Whether the row labelled `bayesprism` is BayesPrism therefore depends on how much RAM was free at the time**, which is not a scientific variable. `docs/OPEN_DEFECTS.md` D18, D19.
+
+> WRITE: this belongs in the paper as a reproducibility finding, not buried in limitations. Two of fifteen methods silently became different software depending on machine state, the artefacts recorded *that* it happened but not *why*, and the direction of the resulting error was not predictable. Any benchmark that does not check this has the same exposure and would not know.
+
 ## Result 6 — biology that predicts error **[QUALIFIED]**
 
 - **Mesenchymal character** predicts a larger under-call in GBM. **Does not replicate in LGG** — the Verhaak class does not exist there and the expression-score surrogate is null. Report as cohort-specific; do **not** headline it.
