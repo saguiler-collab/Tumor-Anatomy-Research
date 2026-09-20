@@ -23,6 +23,7 @@ keeping, marked RESOLVED at the top.
 | **D11** EPIC returns the within-subset mRNA share, not the full-space one | **OPEN, and now bounded** — see D12: the conversion is the identity, so the effect on the published numbers is nil, and `otherCells` is measured at max 2.79e-03, so the within-subset/full-space gap is small rather than assumed small. It is the same estimand question as C3 for every method, answered by saying plainly what is reported |
 | **D12** the cell-size correction has never been applied — it is the identity | **OPEN, high** — supersedes most of D1; no number changes, but the registration says otherwise |
 | **D13** EPIC runs with `refProfiles.var` unset, so its gene weighting is off; its output is mislabelled as a cell fraction | **MEASURED and CLOSED** 2026-09-17 — restoring variance weighting changes the estimates materially (mean 0.0829 on Tumor, max 0.3539) and changes ACS by **exactly 0.0000**. `otherCells` max 2.79e-03. Convergence 4 of 25 probed samples fail (PARTIAL). The variance-weighted run is the one that is EPIC, decided on the invariant before the scores were seen. `ROAD_TO_PAPER.md` 0.4 |
+| **D20** the frozen arms predate the `patient_id` fix, so they carry 12 methods against the h5ad arms' 13–14 | **OPEN, low — a provenance fact, not an error.** `bayesian_hierarchical` raised `KeyError: 'patient_id'` before the manifest was supplied; it runs cleanly now (GBM h5ad rho 0.7000, LGG h5ad 0.5483). Deliberately not re-run at the freeze, because that would shift the published medians for one extra method the h5ad arms already have. Kendall tau is unaffected — it uses only methods rankable under both. |
 | **D19** a fallback to a Python reimplementation is recorded without its REASON | **OPEN, medium-low** — nothing is mislabelled, but `dwls` falling rank 3 → 12 cannot be read as "bad method" vs "timed out" from the artefact. All R packages are installed, so these are runtime failures, not absent software. |
 | **D18** BayesPrism's socket-cluster workers are killed for MEMORY, so the row labelled `bayesprism` was the Python reimplementation | **RESOLVED 2026-09-19** — cause found (`unserialize(node$con)`: three workers each holding a full data copy on 8.6 GB RAM; not a timeout, 155 s against 2,400 s). `n.cores = 1` removes the cluster and is **result-neutral**: ACS 0.8154 and CI [0.7096, 0.9153] identical to the three-worker run, 2.0× slower. Two earlier causes were proposed and withdrawn; both kept on the record. |
 | **D17** variant reference builds overwrote the primary reference's sampling record | **FIXED** 2026-09-15 — a figure script reads that path, so a sensitivity build's numbers could be published as the leaderboard's. Variant builds now get their own file. |
@@ -1920,6 +1921,39 @@ the anatomic arm pending Ivy GAP read counts; it *could* run on the pseudobulk a
 mixtures can be rebuilt from `raw/X`.
 
 ---
+
+---
+
+## D20 · The frozen-reference arms predate the `patient_id` fix, so they carry 12 methods where the h5ad arms carry 13–14
+
+**Severity: low, and it is a PROVENANCE fact rather than an error. Recorded 2026-09-20 at the
+freeze, because a reader comparing the two arms will notice the method counts differ.**
+
+`bayesian_hierarchical` pools across patients and reads `manifest["patient_id"]`. The yardstick
+did not supply it, so the method raised `KeyError: 'patient_id'` and dropped out. The manifest
+was added (`scripts/absolute_purity_yardstick.py`, "PATIENT IDENTITY"), and the method has run
+cleanly ever since:
+
+| arm | `bayesian_hierarchical` |
+|---|---|
+| GBM frozen | `KeyError: 'patient_id'` |
+| **GBM h5ad** | **rho 0.7000** |
+| LGG frozen | `KeyError: 'patient_id'` |
+| **LGG h5ad** | **rho 0.5483** |
+
+**The frozen arms were not re-run, deliberately.** Doing so at the freeze would add a
+thirteenth method to those panels and shift the published medians (21.5% / 17.2%) and every
+figure and table derived from them — a change to the headline numbers made at the last step,
+for one additional method that the h5ad arms already carry.
+
+**What this means when reading the results.** The frozen-vs-h5ad comparison
+(`results/equal_footing_ranking*.json`) already excludes the method on the frozen side with the
+reason `"bayesian_hierarchical failed in this run"`, and the Kendall tau is computed only over
+methods rankable under **both** references, so the differing counts do not contaminate it. The
+frozen panels should be read as 12 methods, the h5ad panels as 13–14, and the difference is this.
+
+**To close it** would take a re-run of both frozen cohorts with the current script, reported as
+a superseded-and-replaced measurement rather than substituted into the archived numbers.
 
 ---
 
