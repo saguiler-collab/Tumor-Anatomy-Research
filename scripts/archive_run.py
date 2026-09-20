@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import pathlib
 import shutil
 import sys
 from datetime import datetime, timezone
@@ -44,6 +45,10 @@ REQUIRED = (
     "anatomic/constraint_file.json",
 )
 
+
+#: Per-file cap for archiving. Above this a file is an input matrix rather than a
+#: result; it is skipped and named in the manifest. See the note in the copy step.
+MAX_ARCHIVED_FILE_BYTES = 5_000_000
 
 def _hash_tree(root: Path) -> dict[str, str]:
     out = {}
@@ -70,7 +75,37 @@ def archive(label: str = "", results: Path | None = None) -> Path:
         dest = ARCHIVE_ROOT / f"{stamp}-{datetime.now().strftime('%S')}"
     dest.mkdir(parents=True)
 
-    shutil.copytree(src, dest / "results", dirs_exist_ok=True)
+    # AN ARCHIVE FREEZES RESULTS, NOT INPUTS.
+    #
+    # Prior archives are 1.6-2.5 MB. The 2026-09-20 run would have been 52 MB, of which
+    # 43.4 MB was a single file: `imc_anchored/bulk_anatomic.csv`, a 25,874-row gene x sample
+    # expression matrix written as an intermediate. That is an INPUT -- regenerable from the
+    # pipeline, identical across runs, and not a number anyone would verify. Carrying it makes
+    # the archive 20x larger than every other one and makes the whole set awkward to keep in
+    # version control, which is the one thing an archive has to be.
+    #
+    # Files above the cap are skipped and NAMED in the manifest, so the archive states what it
+    # chose not to carry rather than silently appearing complete.
+    skipped: list[dict] = []
+
+    def _skip_large(directory, names):
+        drop = []
+        for n in names:
+            f = pathlib.Path(directory) / n
+            if f.is_file() and f.stat().st_size > MAX_ARCHIVED_FILE_BYTES:
+                drop.append(n)
+                skipped.append({"path": str(f.relative_to(src)),
+                                "bytes": f.stat().st_size,
+                                "reason": "larger than the per-file archive cap; an input "
+                                          "matrix, regenerable from the pipeline"})
+        return set(drop)
+
+    shutil.copytree(src, dest / "results", dirs_exist_ok=True, ignore=_skip_large)
+    if skipped:
+        print(f"  skipped {len(skipped)} file(s) over "
+              f"{MAX_ARCHIVED_FILE_BYTES / 1e6:.0f} MB (named in the manifest):")
+        for s in skipped:
+            print(f"    {s['path']}  ({s['bytes'] / 1e6:.1f} MB)")
     for extra in ("RESULTS.md", "REGISTRATION.json"):
         p = config.PROJECT_ROOT / extra
         if p.exists():
@@ -100,6 +135,10 @@ def archive(label: str = "", results: Path | None = None) -> Path:
         "n_methods_on_leaderboard": max(len(lb) - 1, 0),
         "git_commit": _git_commit(),
         "files": _hash_tree(dest),
+        # WHAT THIS ARCHIVE DOES NOT CARRY, stated rather than left to be discovered by
+        # someone comparing file counts. An empty list means nothing was skipped.
+        "skipped_files": skipped,
+        "max_archived_file_bytes": MAX_ARCHIVED_FILE_BYTES,
     }
     (dest / "MANIFEST.json").write_text(json.dumps(manifest, indent=2, default=str))
 

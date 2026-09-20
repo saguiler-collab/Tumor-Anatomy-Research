@@ -1,0 +1,785 @@
+HUGO symbols	Cell population
+SLC1A2	Astrocyte
+SPARCL1	Astrocyte
+CPE	Astrocyte
+ALDOC	Astrocyte
+CLU	Astrocyte
+SLC1A3	Astrocyte
+AQP4	Astrocyte
+ATP1A2	Astrocyte
+GLUL	Astrocyte
+ETNPPL	Astrocyte
+NTRK2	Astrocyte
+SERPINA3	Astrocyte
+AGT	Astrocyte
+SERPINE2	Astrocyte
+ADGRV1	Astrocyte
+PLPP3	Astrocyte
+MGST1	Astrocyte
+GPM6A	Astrocyte
+DKK3	Astrocyte
+FAM107A	Astrocyte
+TSPAN7	Astrocyte
+GPRC5B	Astrocyte
+ITM2C	Astrocyte
+WIF1	Astrocyte
+GJA1	Astrocyte
+NDRG2	Astrocyte
+CXCL8	Astrocyte
+IGFBP7	Astrocyte
+F3	Astrocyte
+CLDN10	Astrocyte
+ATP1B2	Astrocyte
+CST3	Astrocyte
+AHCYL1	Astrocyte
+CSRP1	Astrocyte
+TTYH1	Astrocyte
+TPD52L1	Astrocyte
+DTNA	Astrocyte
+GJB6	Astrocyte
+PTGDS	Astrocyte
+GRAMD2B	Astrocyte
+GPR37L1	Astrocyte
+HTRA1	Astrocyte
+SCG3	Astrocyte
+CNN3	Astrocyte
+S100B	Astrocyte
+SLC25A18	Astrocyte
+MGLL	Astrocyte
+TSC22D1	Astrocyte
+TUBB2B	Astrocyte
+GPM6B	Astrocyte
+PLP1	Oligodendrocyte
+PTGDS	Oligodendrocyte
+PPP1R14A	Oligodendrocyte
+MBP	Oligodendrocyte
+TF	Oligodendrocyte
+CNP	Oligodendrocyte
+QDPR	Oligodendrocyte
+CLDND1	Oligodendrocyte
+MAG	Oligodendrocyte
+APLP1	Oligodendrocyte
+SELENOP	Oligodendrocyte
+CLDN11	Oligodendrocyte
+CRYAB	Oligodendrocyte
+APOD	Oligodendrocyte
+ERMN	Oligodendrocyte
+CNDP1	Oligodendrocyte
+TMEM144	Oligodendrocyte
+S100B	Oligodendrocyte
+S100A1	Oligodendrocyte
+GSN	Oligodendrocyte
+SCD	Oligodendrocyte
+TUBB4A	Oligodendrocyte
+GPM6B	Oligodendrocyte
+KLK6	Oligodendrocyte
+SLC44A1	Oligodendrocyte
+RNASE1	Oligodendrocyte
+FEZ1	Oligodendrocyte
+SEPTIN4	Oligodendrocyte
+MOG	Oligodendrocyte
+ENPP2	Oligodendrocyte
+MOBP	Oligodendrocyte
+EDIL3	Oligodendrocyte
+CAMK2N1	Oligodendrocyte
+ATP1B1	Oligodendrocyte
+SLAIN1	Oligodendrocyte
+PLAAT3	Oligodendrocyte
+LARP6	Oligodendrocyte
+CA2	Oligodendrocyte
+ABCA2	Oligodendrocyte
+LHPP	Oligodendrocyte
+NKX6-2	Oligodendrocyte
+ANLN	Oligodendrocyte
+PIP4K2A	Oligodendrocyte
+PLEKHB1	Oligodendrocyte
+PLLP	Oligodendrocyte
+AMER2	Oligodendrocyte
+EFHD1	Oligodendrocyte
+MAL	Oligodendrocyte
+TTLL7	Oligodendrocyte
+CNTN2	Oligodendrocyte
+APOD	OPC
+VCAN	OPC
+ALDOC	OPC
+HTRA1	OPC
+BCAN	OPC
+TSPAN7	OPC
+PLLP	OPC
+SCD5	OPC
+MEG3	OPC
+CDR1	OPC
+PTPRZ1	OPC
+SPOCK1	OPC
+TNR	OPC
+DNER	OPC
+PDZD2	OPC
+MEGF11	OPC
+NRCAM	OPC
+TSC22D1	OPC
+GPR17	OPC
+SLC22A17	OPC
+SULF2	OPC
+EPN2	OPC
+OLIG1	OPC
+PDGFRA	OPC
+GPRC5B	OPC
+SLC1A2	OPC
+SEMA5A	OPC
+ATCAY	OPC
+ZNF462	OPC
+SERPINE2	OPC
+CSPG4	OPC
+NCAM1	OPC
+CD82	OPC
+SNX22	OPC
+OMG	OPC
+FXYD6	OPC
+HIP1R	OPC
+SDC3	OPC
+GPR37L1	OPC
+GPM6A	OPC
+CHL1	OPC
+LHFPL3	OPC
+SMOC1	OPC
+GRIA2	OPC
+SLC6A1	OPC
+MTSS1	OPC
+CA10	OPC
+MSMO1	OPC
+SLC35F1	OPC
+THY1	OPC
+CXCL14	Neuron
+MEG3	Neuron
+CCK	Neuron
+SNAP25	Neuron
+RTN1	Neuron
+CDR1	Neuron
+TMEM130	Neuron
+GAD1	Neuron
+SCG2	Neuron
+ALDOC	Neuron
+TSPAN7	Neuron
+CALB2	Neuron
+SLC6A1	Neuron
+SYNPR	Neuron
+CNTNAP2	Neuron
+NDRG4	Neuron
+SYT1	Neuron
+ENO2	Neuron
+FXYD6	Neuron
+DKK3	Neuron
+NAP1L3	Neuron
+FAIM2	Neuron
+TUBB2A	Neuron
+SPOCK1	Neuron
+SLC22A17	Neuron
+TUBB4A	Neuron
+DNER	Neuron
+UCHL1	Neuron
+SCG5	Neuron
+SYNGR3	Neuron
+RCAN2	Neuron
+RELN	Neuron
+CAMK2B	Neuron
+TAGLN3	Neuron
+THY1	Neuron
+MAP1B	Neuron
+TSC22D1	Neuron
+OLFM1	Neuron
+STMN1	Neuron
+TSPYL2	Neuron
+ATP1B1	Neuron
+CYFIP2	Neuron
+RPH3A	Neuron
+GAD2	Neuron
+MAP1A	Neuron
+PHYHIPL	Neuron
+KIF1A	Neuron
+DPP6	Neuron
+SCN2A	Neuron
+PCLO	Neuron
+SOX4	Radial glial
+HES1	Radial glial
+H2AZ1	Radial glial
+EMX2	Radial glial
+MIR9-1HG	Radial glial
+H4C3	Radial glial
+HMGB2	Radial glial
+STMN1	Radial glial
+CENPW	Radial glial
+TUBB	Radial glial
+TUBA1A	Radial glial
+LINC01551	Radial glial
+PTTG1	Radial glial
+PCLAF	Radial glial
+CENPF	Radial glial
+HMGB3	Radial glial
+TMSB15A	Radial glial
+KPNA2	Radial glial
+TMEM161B-AS1	Radial glial
+FABP7	Radial glial
+SOX11	Radial glial
+TOP2A	Radial glial
+TUBA1B	Radial glial
+CKS1B	Radial glial
+NUSAP1	Radial glial
+UBE2T	Radial glial
+TAGLN3	Radial glial
+KNOP1	Radial glial
+RBM4	Radial glial
+HSP90AA1	Radial glial
+LIX1	Radial glial
+STMN4	Radial glial
+PEG10	Radial glial
+CSRP2	Radial glial
+CCNB2	Radial glial
+NNAT	Radial glial
+PHGDH	Radial glial
+HMGN2	Radial glial
+CDK1	Radial glial
+BIRC5	Radial glial
+CKS2	Radial glial
+GINS2	Radial glial
+MAP1B	Radial glial
+MSMO1	Radial glial
+TLE4	Radial glial
+ACAT2	Radial glial
+MCM7	Radial glial
+MLLT11	Radial glial
+PCNA	Radial glial
+C3orf14	Radial glial
+S100A9	Monocytes
+S100A8	Monocytes
+LYZ	Monocytes
+VCAN	Monocytes
+CXCL2	Monocytes
+TIMP1	Monocytes
+CXCL3	Monocytes
+CXCL8	Monocytes
+S100A4	Monocytes
+FCN1	Monocytes
+CTSS	Monocytes
+S100A12	Monocytes
+C15orf48	Monocytes
+FTL	Monocytes
+S100A10	Monocytes
+EREG	Monocytes
+SERPINA1	Monocytes
+S100A11	Monocytes
+AIF1	Monocytes
+TYMP	Monocytes
+PLIN2	Monocytes
+TGFBI	Monocytes
+MNDA	Monocytes
+TYROBP	Monocytes
+THBS1	Monocytes
+CD163	Monocytes
+BCL2A1	Monocytes
+NAMPT	Monocytes
+CTSD	Monocytes
+G0S2	Monocytes
+FTH1	Monocytes
+FCER1G	Monocytes
+LST1	Monocytes
+CTSB	Monocytes
+PLAUR	Monocytes
+SRGN	Monocytes
+SH3BGRL3	Monocytes
+CEBPB	Monocytes
+MS4A6A	Monocytes
+HLA-DRA	Monocytes
+CYBA	Monocytes
+CD14	Monocytes
+CTSZ	Monocytes
+HLA-DRB1	Monocytes
+CFD	Monocytes
+C1orf162	Monocytes
+FN1	Monocytes
+RNASE1	Monocytes
+GPNMB	Monocytes
+TXNIP	Monocytes
+CD74	TAM
+C1QA	TAM
+HLA-DRA	TAM
+C1QC	TAM
+C1QB	TAM
+FTL	TAM
+APOC1	TAM
+HLA-DPA1	TAM
+TYROBP	TAM
+HLA-DPB1	TAM
+HLA-DRB1	TAM
+HLA-DRB5	TAM
+FCGBP	TAM
+SAT1	TAM
+APOE	TAM
+NPC2	TAM
+CD14	TAM
+FCER1G	TAM
+SPP1	TAM
+CTSB	TAM
+HMOX1	TAM
+HLA-DQB1	TAM
+GPX1	TAM
+CXCL8	TAM
+RGS1	TAM
+HLA-DQA1	TAM
+PLIN2	TAM
+AIF1	TAM
+FCGR3A	TAM
+MS4A6A	TAM
+IER3	TAM
+SRGN	TAM
+CTSD	TAM
+CD163	TAM
+PSAP	TAM
+ALOX5AP	TAM
+CD68	TAM
+MS4A7	TAM
+S100A11	TAM
+RNASET2	TAM
+LAPTM5	TAM
+C3	TAM
+HLA-DMA	TAM
+PLAUR	TAM
+GPNMB	TAM
+CCL3	TAM
+VSIG4	TAM
+SGK1	TAM
+FTH1	TAM
+RNASE1	TAM
+CCL3	Microglia
+CCL3L3	Microglia
+SPP1	Microglia
+CCL4L2	Microglia
+CCL4	Microglia
+C1QB	Microglia
+APOC1	Microglia
+APOE	Microglia
+C1QC	Microglia
+TREM2	Microglia
+C1QA	Microglia
+RNASET2	Microglia
+CH25H	Microglia
+IL1B	Microglia
+C3	Microglia
+HAMP	Microglia
+CD83	Microglia
+AIF1	Microglia
+CD74	Microglia
+GPR34	Microglia
+DUSP1	Microglia
+RGS1	Microglia
+FCGR1A	Microglia
+TYROBP	Microglia
+CD14	Microglia
+GPX1	Microglia
+FCER1G	Microglia
+TMIGD3	Microglia
+VSIG4	Microglia
+FTL	Microglia
+CX3CR1	Microglia
+OLR1	Microglia
+CSF1R	Microglia
+HLA-DRA	Microglia
+NPC2	Microglia
+MEF2C	Microglia
+KLF6	Microglia
+MS4A7	Microglia
+HLA-DRB1	Microglia
+LILRB4	Microglia
+IER3	Microglia
+IFI27	Microglia
+HLA-DPA1	Microglia
+SAT1	Microglia
+A2M	Microglia
+FCGR3A	Microglia
+SGK1	Microglia
+CCL2	Microglia
+RGS10	Microglia
+KLF2	Microglia
+HLA-DPB1	DC
+HLA-DQA1	DC
+GZMB	DC
+HLA-DRA	DC
+HLA-DQB1	DC
+HLA-DRB1	DC
+HLA-DPA1	DC
+FCER1A	DC
+AREG	DC
+JCHAIN	DC
+PLAC8	DC
+LYZ	DC
+CD74	DC
+GPR183	DC
+C15orf48	DC
+IRF7	DC
+LSP1	DC
+IRF8	DC
+RGS2	DC
+MS4A6A	DC
+HERPUD1	DC
+HLA-DMA	DC
+JAML	DC
+HLA-DRB5	DC
+C1orf162	DC
+RNASE6	DC
+CPVL	DC
+CYBA	DC
+CST3	DC
+HLA-DQA2	DC
+PLD4	DC
+SERPINF1	DC
+COTL1	DC
+CLEC10A	DC
+LST1	DC
+SPINT2	DC
+VAMP8	DC
+MNDA	DC
+CTSH	DC
+CLIC3	DC
+S100A4	DC
+MYL12A	DC
+FGL2	DC
+C12orf75	DC
+ALOX5AP	DC
+CXCR4	DC
+SAMHD1	DC
+FCGR2B	DC
+CD1C	DC
+UCP2	DC
+HBA2	Mast cells
+HBB	Mast cells
+TPSAB1	Mast cells
+TPSB2	Mast cells
+HPGD	Mast cells
+CPA3	Mast cells
+HPGDS	Mast cells
+MS4A2	Mast cells
+VWA5A	Mast cells
+ANXA1	Mast cells
+AREG	Mast cells
+SLC18A2	Mast cells
+CD69	Mast cells
+RHEX	Mast cells
+GATA2	Mast cells
+SAMSN1	Mast cells
+S100A4	Mast cells
+HDC	Mast cells
+LTC4S	Mast cells
+CAPG	Mast cells
+KIT	Mast cells
+RGS13	Mast cells
+CD52	Mast cells
+RAC2	Mast cells
+IL1RL1	Mast cells
+IFITM2	Mast cells
+ALOX5AP	Mast cells
+S100A6	Mast cells
+MAOB	Mast cells
+SRGN	Mast cells
+GRAP2	Mast cells
+ALDH1A1	Mast cells
+FCER1G	Mast cells
+ARHGDIB	Mast cells
+FXYD5	Mast cells
+LAT	Mast cells
+BTK	Mast cells
+RGS2	Mast cells
+ACSL4	Mast cells
+SLC45A3	Mast cells
+SH3BGRL3	Mast cells
+CD9	Mast cells
+CAVIN2	Mast cells
+FOXP1	Mast cells
+VIM	Mast cells
+GMPR	Mast cells
+ALOX5	Mast cells
+BACE2	Mast cells
+FCER1A	Mast cells
+BHLHE40	Mast cells
+CCL5	T cells
+IL32	T cells
+CD52	T cells
+GZMA	T cells
+NKG7	T cells
+GZMK	T cells
+CD3D	T cells
+CD3E	T cells
+CD2	T cells
+IFITM1	T cells
+TRAC	T cells
+LTB	T cells
+CST7	T cells
+PTPRCAP	T cells
+TRBC2	T cells
+S100A4	T cells
+CD8A	T cells
+IL7R	T cells
+CXCR4	T cells
+RAC2	T cells
+TRBC1	T cells
+CRIP1	T cells
+GZMH	T cells
+MT-ATP8	T cells
+BTG1	T cells
+ZFP36L2	T cells
+CD69	T cells
+MYL12A	T cells
+CORO1A	T cells
+PTPRC	T cells
+DUSP2	T cells
+ARHGDIB	T cells
+SH3BGRL3	T cells
+HCST	T cells
+CTSW	T cells
+CD7	T cells
+ISG20	T cells
+TXNIP	T cells
+CD3G	T cells
+PLAAT4	T cells
+TSC22D3	T cells
+HLA-C	T cells
+HLA-B	T cells
+IFITM2	T cells
+CD48	T cells
+LCK	T cells
+B2M	T cells
+TUBA4A	T cells
+CD8B	T cells
+CYTIP	T cells
+GNLY	NK cells
+NKG7	NK cells
+CD7	NK cells
+KLRB1	NK cells
+CCL5	NK cells
+CTSW	NK cells
+XCL2	NK cells
+XCL1	NK cells
+TRDC	NK cells
+KLRD1	NK cells
+KLRC1	NK cells
+GZMA	NK cells
+IL2RB	NK cells
+APOBEC3G	NK cells
+IFITM2	NK cells
+TNFRSF18	NK cells
+KRT81	NK cells
+HCST	NK cells
+GZMB	NK cells
+CD69	NK cells
+AREG	NK cells
+KRT86	NK cells
+IL32	NK cells
+CST7	NK cells
+CD247	NK cells
+CMC1	NK cells
+PRF1	NK cells
+CORO1A	NK cells
+MYL12A	NK cells
+MATK	NK cells
+LY6E	NK cells
+LSP1	NK cells
+CLIC3	NK cells
+DUSP2	NK cells
+ZNF683	NK cells
+IL2RG	NK cells
+TMIGD2	NK cells
+RAC2	NK cells
+CD48	NK cells
+CCL4	NK cells
+HLA-C	NK cells
+PLAAT4	NK cells
+GZMM	NK cells
+CD52	NK cells
+CLEC2B	NK cells
+LIMD2	NK cells
+LTB	NK cells
+ACAP1	NK cells
+HOPX	NK cells
+ISG15	NK cells
+IGKC	B cells
+CD79A	B cells
+MS4A1	B cells
+IGLC2	B cells
+LTB	B cells
+CD79B	B cells
+IGHM	B cells
+CD37	B cells
+CD52	B cells
+BANK1	B cells
+CD69	B cells
+CXCR4	B cells
+HLA-DQA1	B cells
+HLA-DQB1	B cells
+CD48	B cells
+LIMD2	B cells
+HLA-DRA	B cells
+SELL	B cells
+CD74	B cells
+BIRC3	B cells
+SPIB	B cells
+CORO1A	B cells
+TNFRSF13C	B cells
+POU2F2	B cells
+PLAC8	B cells
+BLK	B cells
+CD24	B cells
+BTG1	B cells
+NCF1	B cells
+TSC22D3	B cells
+HLA-DPB1	B cells
+RAC2	B cells
+ISG20	B cells
+TNFRSF13B	B cells
+FCMR	B cells
+HVCN1	B cells
+FCRLA	B cells
+PTPN6	B cells
+RIPOR2	B cells
+EVI2B	B cells
+TXNIP	B cells
+PDLIM1	B cells
+GPSM3	B cells
+LSP1	B cells
+HLA-DRB5	B cells
+JCHAIN	B cells
+ARHGAP24	B cells
+TNFAIP8	B cells
+ICAM3	B cells
+HLA-DPA1	B cells
+IGKC	Plasma B
+IGLC2	Plasma B
+JCHAIN	Plasma B
+IGHM	Plasma B
+MZB1	Plasma B
+XBP1	Plasma B
+PTGDS	Plasma B
+MBP	Plasma B
+DERL3	Plasma B
+PLP1	Plasma B
+CRYAB	Plasma B
+CD79A	Plasma B
+RNASE1	Plasma B
+PIM2	Plasma B
+PLAAT3	Plasma B
+CNP	Plasma B
+LHPP	Plasma B
+CLDND1	Plasma B
+GPM6B	Plasma B
+HERPUD1	Plasma B
+CD38	Plasma B
+CFL2	Plasma B
+TENT5C	Plasma B
+ISG20	Plasma B
+EVI2A	Plasma B
+FCRL5	Plasma B
+CD27	Plasma B
+PMP22	Plasma B
+POU2AF1	Plasma B
+SVIP	Plasma B
+QDPR	Plasma B
+SLAMF7	Plasma B
+SELENOM	Plasma B
+COMMD3	Plasma B
+IGFBP7	Mural cell
+FN1	Mural cell
+SPARC	Mural cell
+RGS5	Mural cell
+COL4A1	Mural cell
+COL1A2	Mural cell
+MMP9	Mural cell
+NDUFA4L2	Mural cell
+TAGLN	Mural cell
+CALD1	Mural cell
+COL3A1	Mural cell
+COL1A1	Mural cell
+BGN	Mural cell
+COL4A2	Mural cell
+ACTA2	Mural cell
+DCN	Mural cell
+THY1	Mural cell
+MIR4435-2HG	Mural cell
+ITGB1	Mural cell
+CYTOR	Mural cell
+TIMP1	Mural cell
+MGP	Mural cell
+TPM2	Mural cell
+MYL9	Mural cell
+HIGD1B	Mural cell
+UACA	Mural cell
+IFITM3	Mural cell
+SERPINH1	Mural cell
+COL6A1	Mural cell
+FSTL1	Mural cell
+COL6A2	Mural cell
+PDGFRB	Mural cell
+LUM	Mural cell
+FRZB	Mural cell
+NOTCH3	Mural cell
+PLXDC1	Mural cell
+COL5A2	Mural cell
+TPM4	Mural cell
+COL18A1	Mural cell
+PCOLCE	Mural cell
+MCAM	Mural cell
+TPM1	Mural cell
+NID1	Mural cell
+CCN2	Mural cell
+IGFBP4	Mural cell
+SPARCL1	Mural cell
+ITGA1	Mural cell
+EPAS1	Mural cell
+C11orf96	Mural cell
+LAMA4	Mural cell
+IGFBP7	Endothelial
+CLDN5	Endothelial
+SPARC	Endothelial
+ITM2A	Endothelial
+CCN2	Endothelial
+A2M	Endothelial
+COL4A1	Endothelial
+ANGPT2	Endothelial
+CA2	Endothelial
+IFI27	Endothelial
+GNG11	Endothelial
+VWF	Endothelial
+COL4A2	Endothelial
+RGCC	Endothelial
+ESAM	Endothelial
+APOLD1	Endothelial
+HSPG2	Endothelial
+SLC38A5	Endothelial
+INSR	Endothelial
+SPARCL1	Endothelial
+ABCG2	Endothelial
+ADGRL4	Endothelial
+MFSD2A	Endothelial
+TM4SF1	Endothelial
+FLT1	Endothelial
+EPAS1	Endothelial
+EDN1	Endothelial
+IFITM3	Endothelial
+PECAM1	Endothelial
+IGFBP3	Endothelial
+TSC22D1	Endothelial
+EGFL7	Endothelial
+PODXL	Endothelial
+CAVIN2	Endothelial
+SLC9A3R2	Endothelial
+FN1	Endothelial
+SPINK8	Endothelial
+SLC7A5	Endothelial
+RAMP2	Endothelial
+SLC2A1	Endothelial
+MCAM	Endothelial
+ENG	Endothelial
+ITGB1	Endothelial
+ADGRF5	Endothelial
+PCAT19	Endothelial
+APLN	Endothelial
+C1orf54	Endothelial
+STC1	Endothelial
+TIMP3	Endothelial
+CD93	Endothelial

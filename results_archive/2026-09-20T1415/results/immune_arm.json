@@ -1,0 +1,195 @@
+{
+  "cohort": "gbm",
+  "prespecification": "prespecified/immune_failure_factors.md",
+  "ground_truth": "methylation-derived leukocyte fraction, Thorsson et al. 2018 Immunity 48(4); 2,000 differentially methylated loci, mixture model",
+  "outcome": "sum(Macrophage_Microglia, T_cell, NK_cell, B_cell) - leukocyte_fraction",
+  "denominator_caveat": "an mRNA proportion of an eight-type roster against a DNA-derived cell fraction of the whole sample. The roster drops 7.0% of the atlas including some leukocytes, and immune cells carry ~2.245x less mRNA than tumour cells; both bias the estimate DOWNWARD, so an over-call finding is conservative.",
+  "n_samples": 129,
+  "reference": "frozen",
+  "comparable_methods": [
+    "bayesian",
+    "bayesprism",
+    "cibersortx",
+    "dwls",
+    "elastic_net",
+    "nnls",
+    "scdc",
+    "svr"
+  ],
+  "excluded_from_comparison": {
+    "bisque": "requires subjects assayed as BOTH bulk and single cells; Bisque's method IS the assay transform learned from paired subjects. Without overlap it estimates that transform from marginal distributions, which is its documented degraded mode. TCGA has no single-cell data, so this is not fixable from any file on disk -- it needs a genuinely paired cohort.",
+    "quantiseq": "requires its own TIL10 signature and a matching gene space; quanTIseq ignores the supplied reference. It is reported separately wherever it runs, and it returned no finite estimates on either TCGA cohort.",
+    "music": "requires cross-donor variance (sigma) in the reference; MuSiC's entire contribution is weighting genes by cross-donor consistency. With a zero sigma it is residual-weighted NNLS, and returns numbers identical to NNLS.",
+    "epic": "requires refProfiles.var (per-gene variance) in the reference; EPIC's published contribution is variance weighting. Without it the package warns and runs constrained least squares with uniform weights.",
+    "scdc_ensemble": "requires two or more references to weight across; With one reference there is nothing to ensemble; it reduces exactly to SCDC.",
+    "cibersortx_smode": "requires the single cells the signature was built from; S-mode's batch correction is defined against the source cells; without them the method cannot run at all.",
+    "bayesian_hierarchical": "failed in this run"
+  },
+  "why_exclusion_matters": "a method whose intended input was unavailable was not evaluated; ranking it would report this experiment's limitation as a property of the method. Excluded from every statistic, reported with its numbers under availability.",
+  "P1_over_call": {
+    "n_methods": 8,
+    "n_positive": 2,
+    "sign_test_p": 0.28906,
+    "median_mean_error": -0.0839
+  },
+  "P2_asymmetry": {
+    "n_methods": 8,
+    "n_opposite_signs": 2,
+    "per_method": {
+      "nnls": {
+        "tumour_bias": 0.1542,
+        "immune_bias": -0.1355
+      },
+      "svr": {
+        "tumour_bias": -0.0496,
+        "immune_bias": -0.0238
+      },
+      "cibersortx": {
+        "tumour_bias": -0.091,
+        "immune_bias": 0.0062
+      },
+      "elastic_net": {
+        "tumour_bias": 0.082,
+        "immune_bias": -0.1026
+      },
+      "bayesian": {
+        "tumour_bias": -0.5701,
+        "immune_bias": 0.1289
+      },
+      "dwls": {
+        "tumour_bias": 0.0164,
+        "immune_bias": -0.066
+      },
+      "scdc": {
+        "tumour_bias": -0.247,
+        "immune_bias": -0.1017
+      },
+      "bayesprism": {
+        "tumour_bias": 0.1986,
+        "immune_bias": -0.1578
+      }
+    }
+  },
+  "methods": {
+    "bayesian": {
+      "n": 129,
+      "mean_immune_estimate": 0.3176,
+      "mean_leukocyte_fraction": 0.1886,
+      "mean_error": 0.1289,
+      "median_error": 0.1301,
+      "fold_over_call": 1.683,
+      "spearman_vs_truth": 0.5067,
+      "recovered_fraction": 0.4176
+    },
+    "bayesprism": {
+      "n": 129,
+      "mean_immune_estimate": 0.0309,
+      "mean_leukocyte_fraction": 0.1886,
+      "mean_error": -0.1578,
+      "median_error": -0.1278,
+      "fold_over_call": 0.164,
+      "spearman_vs_truth": 0.4796,
+      "recovered_fraction": 0.1092
+    },
+    "bisque": {
+      "n": 129,
+      "mean_immune_estimate": 0.428,
+      "mean_leukocyte_fraction": 0.1886,
+      "mean_error": 0.2394,
+      "median_error": 0.2681,
+      "fold_over_call": 2.269,
+      "spearman_vs_truth": 0.0037,
+      "recovered_fraction": 0.1449
+    },
+    "cibersortx": {
+      "n": 129,
+      "mean_immune_estimate": 0.1949,
+      "mean_leukocyte_fraction": 0.1886,
+      "mean_error": 0.0062,
+      "median_error": 0.003,
+      "fold_over_call": 1.033,
+      "spearman_vs_truth": 0.6223,
+      "recovered_fraction": 0.5908
+    },
+    "dwls": {
+      "n": 129,
+      "mean_immune_estimate": 0.1226,
+      "mean_leukocyte_fraction": 0.1886,
+      "mean_error": -0.066,
+      "median_error": -0.0451,
+      "fold_over_call": 0.65,
+      "spearman_vs_truth": 0.6684,
+      "recovered_fraction": 0.4004
+    },
+    "elastic_net": {
+      "n": 129,
+      "mean_immune_estimate": 0.086,
+      "mean_leukocyte_fraction": 0.1886,
+      "mean_error": -0.1026,
+      "median_error": -0.088,
+      "fold_over_call": 0.456,
+      "spearman_vs_truth": 0.3854,
+      "recovered_fraction": 0.1291
+    },
+    "epic": {
+      "n": 129,
+      "mean_immune_estimate": 0.0525,
+      "mean_leukocyte_fraction": 0.1886,
+      "mean_error": -0.1362,
+      "median_error": -0.1212,
+      "fold_over_call": 0.278,
+      "spearman_vs_truth": 0.0245,
+      "recovered_fraction": 0.0775
+    },
+    "music": {
+      "n": 129,
+      "mean_immune_estimate": 0.0531,
+      "mean_leukocyte_fraction": 0.1886,
+      "mean_error": -0.1355,
+      "median_error": -0.1153,
+      "fold_over_call": 0.282,
+      "spearman_vs_truth": 0.4534,
+      "recovered_fraction": 0.1631
+    },
+    "nnls": {
+      "n": 129,
+      "mean_immune_estimate": 0.0531,
+      "mean_leukocyte_fraction": 0.1886,
+      "mean_error": -0.1355,
+      "median_error": -0.1153,
+      "fold_over_call": 0.282,
+      "spearman_vs_truth": 0.4534,
+      "recovered_fraction": 0.1631
+    },
+    "scdc": {
+      "n": 129,
+      "mean_immune_estimate": 0.087,
+      "mean_leukocyte_fraction": 0.1886,
+      "mean_error": -0.1017,
+      "median_error": -0.0741,
+      "fold_over_call": 0.461,
+      "spearman_vs_truth": 0.5547,
+      "recovered_fraction": 0.1685
+    },
+    "scdc_ensemble": {
+      "n": 129,
+      "mean_immune_estimate": 0.087,
+      "mean_leukocyte_fraction": 0.1886,
+      "mean_error": -0.1017,
+      "median_error": -0.0741,
+      "fold_over_call": 0.461,
+      "spearman_vs_truth": 0.5547,
+      "recovered_fraction": 0.1685
+    },
+    "svr": {
+      "n": 129,
+      "mean_immune_estimate": 0.1649,
+      "mean_leukocyte_fraction": 0.1886,
+      "mean_error": -0.0238,
+      "median_error": -0.0137,
+      "fold_over_call": 0.874,
+      "spearman_vs_truth": 0.6881,
+      "recovered_fraction": 0.5215
+    }
+  }
+}

@@ -1,0 +1,191 @@
+{
+  "what_this_is": "Yardstick 2: each method's Tumor fraction correlated against ABSOLUTE tumour purity, measured from DNA.",
+  "independent": "the YARDSTICK only. ABSOLUTE purity comes from DNA copy number and shares no failure mode with any RNA method under test.",
+  "not_independent": "the REFERENCE. Every method solves against the vendored frozen signature, which is GBmap-derived (reference_frozen/PROVENANCE.json). This removes the shared dependence on the ground truth, not on the reference.",
+  "purity_column": "Cancer DNA fraction",
+  "n_samples": 154,
+  "n_genes": 1601,
+  "n_genes_shared_before_marker_selection": 22618,
+  "gene_selection": "select_signature_genes on the frozen reference, 200 per type. Reads the reference only and never the purity calls, so it cannot select for the outcome. Chosen because nu-SVR is superlinear in genes and the full 17,611-gene space did not finish.",
+  "bulk_provenance": "data/processed/tcga_gbm_bulk_provenance.json \u2014 the input was log2(x+1) despite being named counts, and was inverted first",
+  "reference": "h5ad",
+  "equal_footing": "h5ad: sigma and donor profiles present, so MuSiC and EPIC run with their defining features and S-mode can run. Bisque remains degraded -- it needs subjects assayed as both bulk and single cells, which TCGA does not have.",
+  "frozen_signature_caveats": [
+    "no cross-donor variance, so MuSiC degenerates to residual-weighted NNLS",
+    "cell_size factors have real spread here (unlike D12's uniform vector), so the mRNA-to-cell conversion is NOT the identity on this cohort"
+  ],
+  "methods": {
+    "nnls": {
+      "spearman_vs_purity": 0.245,
+      "pearson_vs_purity": 0.269,
+      "n": 154,
+      "mean_tumor": 0.2836,
+      "mean_purity": 0.7522,
+      "bias_tumor_minus_purity": -0.4686,
+      "implementation": "python",
+      "degenerate": false,
+      "degeneracy_reason": "",
+      "is_control": false
+    },
+    "svr": {
+      "spearman_vs_purity": 0.677,
+      "pearson_vs_purity": 0.6525,
+      "n": 154,
+      "mean_tumor": 0.3044,
+      "mean_purity": 0.7522,
+      "bias_tumor_minus_purity": -0.4478,
+      "implementation": "python",
+      "degenerate": false,
+      "degeneracy_reason": "",
+      "is_control": false
+    },
+    "cibersortx": {
+      "spearman_vs_purity": 0.6381,
+      "pearson_vs_purity": 0.615,
+      "n": 154,
+      "mean_tumor": 0.2513,
+      "mean_purity": 0.7522,
+      "bias_tumor_minus_purity": -0.5009,
+      "implementation": "python",
+      "degenerate": false,
+      "degeneracy_reason": "",
+      "is_control": false
+    },
+    "cibersortx_smode": {
+      "spearman_vs_purity": 0.2705,
+      "pearson_vs_purity": 0.2653,
+      "n": 154,
+      "mean_tumor": 0.1836,
+      "mean_purity": 0.7522,
+      "bias_tumor_minus_purity": -0.5687,
+      "implementation": "python",
+      "degenerate": false,
+      "degeneracy_reason": "",
+      "is_control": false
+    },
+    "elastic_net": {
+      "spearman_vs_purity": 0.247,
+      "pearson_vs_purity": 0.2303,
+      "n": 154,
+      "mean_tumor": 0.1695,
+      "mean_purity": 0.7522,
+      "bias_tumor_minus_purity": -0.5827,
+      "implementation": "python",
+      "degenerate": false,
+      "degeneracy_reason": "",
+      "is_control": false
+    },
+    "bayesian": {
+      "spearman_vs_purity": 0.7042,
+      "pearson_vs_purity": 0.5965,
+      "n": 154,
+      "mean_tumor": 0.0874,
+      "mean_purity": 0.7522,
+      "bias_tumor_minus_purity": -0.6648,
+      "implementation": "python",
+      "degenerate": false,
+      "degeneracy_reason": "",
+      "is_control": false
+    },
+    "bayesian_hierarchical": {
+      "spearman_vs_purity": 0.7,
+      "pearson_vs_purity": 0.5972,
+      "n": 154,
+      "mean_tumor": 0.0916,
+      "mean_purity": 0.7522,
+      "bias_tumor_minus_purity": -0.6606,
+      "implementation": "python",
+      "degenerate": false,
+      "degeneracy_reason": "",
+      "is_control": false
+    },
+    "music": {
+      "spearman_vs_purity": 0.673,
+      "pearson_vs_purity": 0.6765,
+      "n": 154,
+      "mean_tumor": 0.4221,
+      "mean_purity": 0.7522,
+      "bias_tumor_minus_purity": -0.3301,
+      "implementation": "R:MuSiC",
+      "degenerate": false,
+      "degeneracy_reason": "",
+      "is_control": false
+    },
+    "dwls": {
+      "spearman_vs_purity": 0.1562,
+      "pearson_vs_purity": 0.1634,
+      "n": 154,
+      "mean_tumor": 0.2769,
+      "mean_purity": 0.7522,
+      "bias_tumor_minus_purity": -0.4753,
+      "implementation": "python-reimplementation",
+      "degenerate": false,
+      "degeneracy_reason": "",
+      "is_control": false
+    },
+    "bisque": {
+      "spearman_vs_purity": 0.5217,
+      "pearson_vs_purity": 0.4756,
+      "n": 154,
+      "mean_tumor": 0.2742,
+      "mean_purity": 0.7522,
+      "bias_tumor_minus_purity": -0.478,
+      "implementation": "R:BisqueRNA",
+      "degenerate": true,
+      "degeneracy_reason": "no subjects are assayed both as bulk and as single cells, so this runs Bisque's documented no-overlap mode (use.overlap = FALSE); the assay transform is estimated from marginal distributions rather than from paired subjects. Reported as degraded rather than as a Bisque result.",
+      "is_control": false
+    },
+    "scdc": {
+      "spearman_vs_purity": 0.6568,
+      "pearson_vs_purity": 0.6509,
+      "n": 154,
+      "mean_tumor": 0.3931,
+      "mean_purity": 0.7522,
+      "bias_tumor_minus_purity": -0.3591,
+      "implementation": "R:SCDC",
+      "degenerate": false,
+      "degeneracy_reason": "",
+      "is_control": false
+    },
+    "scdc_ensemble": {
+      "spearman_vs_purity": 0.6568,
+      "pearson_vs_purity": 0.6509,
+      "n": 154,
+      "mean_tumor": 0.3931,
+      "mean_purity": 0.7522,
+      "bias_tumor_minus_purity": -0.3591,
+      "implementation": "R:SCDC",
+      "degenerate": true,
+      "degeneracy_reason": "one reference supplied ('gbmap'), so there is nothing to weight across: SCDC ENSEMBLE reduces exactly to SCDC. Reported as degenerate rather than as an ENSEMBLE result.",
+      "is_control": false
+    },
+    "epic": {
+      "spearman_vs_purity": 0.2401,
+      "pearson_vs_purity": 0.2549,
+      "n": 154,
+      "mean_tumor": 0.175,
+      "mean_purity": 0.7522,
+      "bias_tumor_minus_purity": -0.5772,
+      "implementation": "R:EPIC",
+      "degenerate": false,
+      "degeneracy_reason": "",
+      "is_control": false
+    },
+    "quantiseq": {
+      "skipped": "only 0 finite estimates"
+    },
+    "bayesprism": {
+      "spearman_vs_purity": 0.1641,
+      "pearson_vs_purity": 0.1924,
+      "n": 154,
+      "mean_tumor": 0.4943,
+      "mean_purity": 0.7522,
+      "bias_tumor_minus_purity": -0.2579,
+      "implementation": "python-reimplementation",
+      "degenerate": false,
+      "degeneracy_reason": "",
+      "is_control": false
+    }
+  },
+  "cohort": "gbm"
+}

@@ -1,0 +1,83 @@
+{
+  "what_this_is": "Measures, per package, whether it already converts mRNA share to CELL share. Replaces five numbers that previously existed only as prose in OPEN_DEFECTS.md and ROAD_TO_PAPER.md.",
+  "probe": {
+    "size_ratio": 3.0,
+    "big_type": "Tumor",
+    "small_type": "T_cell",
+    "true_cell_fraction_big": 0.5,
+    "true_mrna_fraction_big": 0.3,
+    "measured_cell_size_ratio": 3.0,
+    "n_samples": 12,
+    "n_genes": 240,
+    "tolerance": 0.08,
+    "central_correction_applied": false,
+    "mixture": "all_types",
+    "export_scale": "normalized",
+    "subset_mode": "full",
+    "bulk_gene_fraction": 1.0,
+    "n_reference_genes": 240,
+    "export_scale_meaning": "normalized = what production hands the R packages (1e6 CPM per cell, as build_from_h5ad returns); raw = per-cell library sizes preserved, which is what each package's published usage assumes. The reference PROFILE is built the production way in both, so only a package's own internal cell-size estimate can differ between them."
+  },
+  "methods": [
+    {
+      "method": "music",
+      "returned_big_fraction": 0.7502,
+      "sd_across_samples": 0.0007,
+      "mass_outside_the_pair": 0.5997,
+      "mass_outside_note": "mass on the six other PRESENT types; expected 0.60 (mRNA) to 0.75 (cell)",
+      "convention": "mRNA share",
+      "meaning": "the package reports mRNA share; this project's central conversion is the FIRST and is correct",
+      "implementation": "R",
+      "elapsed_s": 37.9,
+      "failed": null
+    },
+    {
+      "method": "bisque",
+      "returned_big_fraction": 0.5,
+      "sd_across_samples": 0.0,
+      "mass_outside_the_pair": 0.75,
+      "mass_outside_note": "mass on the six other PRESENT types; expected 0.60 (mRNA) to 0.75 (cell)",
+      "convention": "CELL share",
+      "meaning": "the package already divided out cell size; this project's central conversion would be the SECOND one \u2014 a defect",
+      "implementation": "R",
+      "elapsed_s": 3.2,
+      "failed": null
+    },
+    {
+      "method": "scdc",
+      "returned_big_fraction": 0.7503,
+      "sd_across_samples": 0.0011,
+      "mass_outside_the_pair": 0.5995,
+      "mass_outside_note": "mass on the six other PRESENT types; expected 0.60 (mRNA) to 0.75 (cell)",
+      "convention": "mRNA share",
+      "meaning": "the package reports mRNA share; this project's central conversion is the FIRST and is correct",
+      "implementation": "R",
+      "elapsed_s": 15.6,
+      "failed": null
+    },
+    {
+      "method": "epic",
+      "returned_big_fraction": 0.7502,
+      "sd_across_samples": 0.0004,
+      "mass_outside_the_pair": 0.5998,
+      "mass_outside_note": "mass on the six other PRESENT types; expected 0.60 (mRNA) to 0.75 (cell)",
+      "convention": "mRNA share",
+      "meaning": "the package reports mRNA share; this project's central conversion is the FIRST and is correct",
+      "implementation": "R",
+      "elapsed_s": 2.1,
+      "failed": null
+    },
+    {
+      "method": "bayesprism",
+      "returned_big_fraction": 0.7502,
+      "sd_across_samples": 0.0004,
+      "mass_outside_the_pair": 0.5999,
+      "mass_outside_note": "mass on the six other PRESENT types; expected 0.60 (mRNA) to 0.75 (cell)",
+      "convention": "mRNA share",
+      "meaning": "the package reports mRNA share; this project's central conversion is the FIRST and is correct",
+      "implementation": "R",
+      "elapsed_s": 264.0,
+      "failed": null
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "post_hoc_not_prespecified": {
+    "paired_PAN_minus_LE": {
+      "n_tumors": 6,
+      "mean_difference": 0.18403,
+      "n_tumors_positive": 6,
+      "sign_flip_permutation_p": 0.0142
+    },
+    "monotone_trend_pearson_on_ranks": 0.9574,
+    "caveat": "The statistic was NOT pre-specified. These are reported so a reader sees the full picture, and no significance claim rests on them."
+  },
+  "what_this_is": "Is the mesenchymal program spatially concentrated in GBM? Interpretation only -- Ivy GAP has no per-sample ground truth, so error itself cannot be measured here.",
+  "prespecification": "prespecified/biological_failure_factors.md addendum 3",
+  "predicted_maximum": "PAN",
+  "observed_maximum": "PAN",
+  "prediction_held": true,
+  "n_samples": 122,
+  "n_cells": 43,
+  "n_tumors": 10,
+  "score": "MES - mean(AC, NPC, OPC), within-sample percentiles; identical to the GBM and LGG score",
+  "by_structure": {
+    "LE": {
+      "mean": -0.03942,
+      "median": -0.05028,
+      "n_tumors": 8
+    },
+    "IT": {
+      "mean": -0.01034,
+      "median": -0.01974,
+      "n_tumors": 8
+    },
+    "CT": {
+      "mean": -0.00344,
+      "median": 0.01333,
+      "n_tumors": 10
+    },
+    "MVP": {
+      "mean": 0.08146,
+      "median": 0.07674,
+      "n_tumors": 9
+    },
+    "PAN": {
+      "mean": 0.13342,
+      "median": 0.13932,
+      "n_tumors": 8
+    }
+  },
+  "null": {
+    "draws": 10000,
+    "design": "within-tumour permutation of structure labels",
+    "p_observed_max_by_chance": 0.3312,
+    "chance_rate_per_structure": {
+      "LE": 0.1695,
+      "IT": 0.1748,
+      "CT": 0.1875,
+      "MVP": 0.137,
+      "PAN": 0.3312
+    }
+  },
+  "cannot_show": "that deconvolution error is higher in this niche; the link from niche to error is inferential, through the score."
+}

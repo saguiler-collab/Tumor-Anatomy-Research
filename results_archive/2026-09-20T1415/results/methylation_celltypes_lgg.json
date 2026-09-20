@@ -1,0 +1,123 @@
+{
+  "cohort": "lgg",
+  "prespecification": "prespecified/immune_failure_factors.md (per-cell-type addendum)",
+  "reference": "EpiDISH centDHSbloodDMC.m, RPC; 255 of 333 reference CpGs used after complete-case filtering",
+  "n_reference_cpgs_supplied": 333,
+  "n_reference_cpgs_used": 255,
+  "not_mapped": {
+    "Macrophage_Microglia": "microglia are brain-resident and appear in no blood reference; Mono is a different population"
+  },
+  "is_relative_within_compartment": true,
+  "n_samples": 530,
+  "mean_subcomposition": {
+    "B": 0.0805,
+    "NK": 0.138,
+    "CD4T": 0.2029,
+    "CD8T": 0.0016,
+    "Mono": 0.4119,
+    "Neutro": 0.0001,
+    "Eosino": 0.1649
+  },
+  "prediction_T_exceeds_B": {
+    "held": true,
+    "fraction_of_samples": 0.9321
+  },
+  "methods": {
+    "bayesian": {
+      "n": 510,
+      "est_T": 0.0237,
+      "est_B": 0.833,
+      "est_T_exceeds_B": false,
+      "meth_T": 0.4769,
+      "meth_B": 0.204
+    },
+    "bayesprism": {
+      "n": 510,
+      "est_T": 0.3038,
+      "est_B": 0.4265,
+      "est_T_exceeds_B": false,
+      "meth_T": 0.4769,
+      "meth_B": 0.204
+    },
+    "bisque": {
+      "n": 510,
+      "est_T": 0.1511,
+      "est_B": 0.3412,
+      "est_T_exceeds_B": false,
+      "meth_T": 0.4769,
+      "meth_B": 0.204
+    },
+    "cibersortx": {
+      "n": 510,
+      "est_T": 0.0316,
+      "est_B": 0.8787,
+      "est_T_exceeds_B": false,
+      "meth_T": 0.4769,
+      "meth_B": 0.204
+    },
+    "dwls": {
+      "n": 510,
+      "est_T": 0.4656,
+      "est_B": 0.4842,
+      "est_T_exceeds_B": false,
+      "meth_T": 0.4769,
+      "meth_B": 0.204
+    },
+    "elastic_net": {
+      "n": 510,
+      "est_T": 0.0108,
+      "est_B": 0.9768,
+      "est_T_exceeds_B": false,
+      "meth_T": 0.4769,
+      "meth_B": 0.204
+    },
+    "epic": {
+      "n": 510,
+      "est_T": 0.2854,
+      "est_B": 0.4208,
+      "est_T_exceeds_B": false,
+      "meth_T": 0.4769,
+      "meth_B": 0.204
+    },
+    "music": {
+      "n": 510,
+      "est_T": 0.0,
+      "est_B": 0.9575,
+      "est_T_exceeds_B": false,
+      "meth_T": 0.4769,
+      "meth_B": 0.204
+    },
+    "nnls": {
+      "n": 510,
+      "est_T": 0.0,
+      "est_B": 0.9575,
+      "est_T_exceeds_B": false,
+      "meth_T": 0.4769,
+      "meth_B": 0.204
+    },
+    "scdc": {
+      "n": 510,
+      "est_T": 0.2793,
+      "est_B": 0.6521,
+      "est_T_exceeds_B": false,
+      "meth_T": 0.4769,
+      "meth_B": 0.204
+    },
+    "scdc_ensemble": {
+      "n": 510,
+      "est_T": 0.2793,
+      "est_B": 0.6521,
+      "est_T_exceeds_B": false,
+      "meth_T": 0.4769,
+      "meth_B": 0.204
+    },
+    "svr": {
+      "n": 510,
+      "est_T": 0.0008,
+      "est_B": 0.9356,
+      "est_T_exceeds_B": false,
+      "meth_T": 0.4769,
+      "meth_B": 0.204
+    }
+  }
+}

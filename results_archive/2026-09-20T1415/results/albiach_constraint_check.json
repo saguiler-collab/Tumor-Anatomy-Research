@@ -1,0 +1,201 @@
+{
+  "what_this_is": "The pre-registered anatomic constraints checked against MEASURED single-cell composition per anatomic region (Mossa Albiach et al. 2023). No deconvolution method is involved. EXPLORATORY: the constraint file is frozen and registered and does not move on this.",
+  "limitations": [
+    "ONE donor (['SL040']). 27 samples give within-tumour replication and no cross-patient inference. n = 1 patient.",
+    "The zone-to-structure mapping is an interpretation; see zone_mapping, which carries a confidence and an argument per row.",
+    "Albiach's 'Necrotic core' is NOT Ivy GAP's PAN \u2014 PAN is the hypercellular pseudopalisading rim AROUND necrosis, and macrophages accumulate precisely there. Any PAN result here is tested on the wrong side of that boundary.",
+    "Single-cell dissociation under-represents tumour cells, so absolute fractions are immune-inflated (macrophages 0.33-0.65). Only ordinal comparisons of the same cell type across regions are scored, which a per-type constant bias cannot reverse."
+  ],
+  "provenance": {
+    "file": "pipeline packages / repos/SCDC/albiach data/d45b4ce6-9725-4d79-b97a-70a44158bdbf.h5ad",
+    "n_cells_in_file": 135482,
+    "n_donors": 1,
+    "donors": [
+      "SL040"
+    ],
+    "n_samples": 27,
+    "n_locations": 12,
+    "labels_excluded_no_roster_home": [
+      "Fibroblasts",
+      "OPCs",
+      "Pericytes",
+      "VSMC"
+    ],
+    "n_cells_mapped": 131714
+  },
+  "roster_mapping": {
+    "Tumor": "Tumor",
+    "Microglia": "Macrophage_Microglia",
+    "MgTAM": "Macrophage_Microglia",
+    "MoTAM": "Macrophage_Microglia",
+    "Macrophages": "Macrophage_Microglia",
+    "Monocytes": "Macrophage_Microglia",
+    "Oligodendrocytes": "Oligodendrocyte",
+    "Endothelial": "Endothelial",
+    "Astrocytes": "Astrocyte",
+    "B-cells": "B_cell",
+    "NK, T-cells": "T_cell"
+  },
+  "zone_mapping": {
+    "Periphery": {
+      "structure": "LE",
+      "confidence": "STRONG",
+      "argument": "Ivy GAP's leading edge is the outermost region, mostly brain infiltrated by few tumour cells. Albiach's periphery measures Tumor at 0.034 and Oligodendrocyte at 0.166 \u2014 the highest oligodendrocyte and lowest tumour of any zone, which is what LE is defined by."
+    },
+    "High": {
+      "structure": "CT",
+      "confidence": "STRONG",
+      "argument": "Fluorescence-high tissue is the dense tumour bulk; Albiach measures Tumor at 0.536 there, the highest of the non-necrotic zones."
+    },
+    "Low": {
+      "structure": "IT",
+      "confidence": "MODERATE",
+      "argument": "Fluorescence-low sits between the bulk and the periphery, which is what infiltrating tumour is, and its Tumor fraction (0.419) sits between them. But low fluorescence is an optical property, not a histological one."
+    },
+    "Necrotic core": {
+      "structure": "PAN",
+      "confidence": "WEAK \u2014 do not score without this caveat",
+      "argument": "Ivy GAP's PAN is the HYPERCELLULAR pseudopalisading rim AROUND necrosis. Albiach's necrotic core is the dying centre. These are adjacent and different, and the pseudopalisading rim is precisely where macrophages accumulate. A PAN constraint tested here is tested on the wrong side of the boundary."
+    }
+  },
+  "constraint_freeze_hash": "2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a",
+  "n_testable": 4,
+  "n_satisfied": 3,
+  "n_permutations": 20000,
+  "composition_by_zone": {
+    "High": {
+      "Tumor": 0.5342,
+      "Macrophage_Microglia": 0.3997,
+      "Oligodendrocyte": 0.0499,
+      "Endothelial": 0.0033,
+      "Astrocyte": 0.0006,
+      "B_cell": 0.0056,
+      "T_cell": 0.0066
+    },
+    "Low": {
+      "Tumor": 0.471,
+      "Macrophage_Microglia": 0.3081,
+      "Oligodendrocyte": 0.0759,
+      "Endothelial": 0.0394,
+      "Astrocyte": 0.0829,
+      "B_cell": 0.0129,
+      "T_cell": 0.0098
+    },
+    "Necrotic core": {
+      "Tumor": 0.599,
+      "Macrophage_Microglia": 0.3654,
+      "Oligodendrocyte": 0.0173,
+      "Endothelial": 0.0006,
+      "Astrocyte": 0.0002,
+      "B_cell": 0.01,
+      "T_cell": 0.0075
+    },
+    "Periphery": {
+      "Tumor": 0.0401,
+      "Macrophage_Microglia": 0.6472,
+      "Oligodendrocyte": 0.1761,
+      "Endothelial": 0.0777,
+      "Astrocyte": 0.0425,
+      "B_cell": 0.0097,
+      "T_cell": 0.0069
+    }
+  },
+  "per_constraint": [
+    {
+      "constraint": "C1",
+      "cell_type": "Tumor",
+      "claim": "Tumor: CT > LE",
+      "kind": "pairwise",
+      "hi": "CT",
+      "lo": "LE",
+      "mean_hi": 0.5342,
+      "mean_lo": 0.0401,
+      "n_samples_hi": 9,
+      "n_samples_lo": 12,
+      "satisfied": true,
+      "fold": 13.34,
+      "null_p_one_sided": 5e-05,
+      "mapping_confidence": [
+        "STRONG",
+        "STRONG"
+      ],
+      "verdict": "SATISFIED"
+    },
+    {
+      "constraint": "C2",
+      "cell_type": "Oligodendrocyte",
+      "claim": "Oligodendrocyte: LE > CT",
+      "kind": "pairwise",
+      "hi": "LE",
+      "lo": "CT",
+      "mean_hi": 0.1761,
+      "mean_lo": 0.0499,
+      "n_samples_hi": 12,
+      "n_samples_lo": 9,
+      "satisfied": true,
+      "fold": 3.53,
+      "null_p_one_sided": 0.00075,
+      "mapping_confidence": [
+        "STRONG",
+        "STRONG"
+      ],
+      "verdict": "SATISFIED"
+    },
+    {
+      "constraint": "C3",
+      "cell_type": "Endothelial",
+      "verdict": "NOT TESTABLE",
+      "why": "no Albiach zone maps to MVP"
+    },
+    {
+      "constraint": "C4",
+      "cell_type": "Endothelial",
+      "verdict": "NOT TESTABLE",
+      "why": "no Albiach zone maps to MVP"
+    },
+    {
+      "constraint": "C5",
+      "cell_type": "Macrophage_Microglia",
+      "claim": "Macrophage_Microglia: PAN > LE",
+      "kind": "pairwise",
+      "hi": "PAN",
+      "lo": "LE",
+      "mean_hi": 0.3654,
+      "mean_lo": 0.6472,
+      "n_samples_hi": 2,
+      "n_samples_lo": 12,
+      "satisfied": false,
+      "fold": 0.56,
+      "null_p_one_sided": 0.99975,
+      "mapping_confidence": [
+        "STRONG",
+        "WEAK \u2014 do not score without this caveat"
+      ],
+      "verdict": "VIOLATED"
+    },
+    {
+      "constraint": "C6",
+      "cell_type": "Macrophage_Microglia",
+      "verdict": "NOT TESTABLE",
+      "why": "no Albiach zone maps to MVP"
+    },
+    {
+      "constraint": "C7",
+      "cell_type": "Tumor",
+      "claim": "Tumor: LE < IT < CT",
+      "kind": "monotone",
+      "sequence": [
+        "LE",
+        "IT",
+        "CT"
+      ],
+      "means": [
+        0.0401,
+        0.471,
+        0.5342
+      ],
+      "satisfied": true,
+      "verdict": "SATISFIED"
+    }
+  ]
+}

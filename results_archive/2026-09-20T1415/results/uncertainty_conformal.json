@@ -1,0 +1,980 @@
+{
+  "what_this_is": "Split-conformal prediction intervals for every method, calibrated on the donor-held-out pseudobulk benchmark's known truth. Closes the 'no per-sample uncertainty' gap that failed all 15 methods in method_completeness.json.",
+  "how_to_read": "`tumour +/- q` is the half-width needed to cover the truth at the target rate on the tumour compartment. It IS the method's measured reliability: a method needing +/-0.25 cannot support a decision turning on 10 points of purity, whatever its rank.",
+  "limitations": [
+    "Calibrated on pseudobulk mixtures; the target is laser-captured tissue. Transfer is an assumption, not a result.",
+    "Split is random (mixtures may share donors). A random split is not donor-disjoint, so coverage may be optimistic; run_benchmark now persists per-mixture donors so the next run enables the donor-grouped version.",
+    "Intervals are marginal per cell type, not joint across the roster."
+  ],
+  "target_coverage": 0.95,
+  "split": "random (mixtures may share donors)",
+  "n_mixtures": 500,
+  "n_methods_achieving_target": 17,
+  "methods": [
+    {
+      "method": "bisque",
+      "mean_half_width": 0.2312,
+      "tumour_half_width": 0.4265,
+      "mean_coverage": 0.948,
+      "n_types_certified": 8,
+      "per_type": {
+        "Tumor": {
+          "q": 0.4265,
+          "q_full_data": 0.4888,
+          "coverage_on_heldout": 0.932,
+          "n_calibration": 250
+        },
+        "Macrophage_Microglia": {
+          "q": 0.2265,
+          "q_full_data": 0.2349,
+          "coverage_on_heldout": 0.928,
+          "n_calibration": 250
+        },
+        "T_cell": {
+          "q": 0.3072,
+          "q_full_data": 0.3262,
+          "coverage_on_heldout": 0.94,
+          "n_calibration": 250
+        },
+        "NK_cell": {
+          "q": 0.2222,
+          "q_full_data": 0.2327,
+          "coverage_on_heldout": 0.936,
+          "n_calibration": 250
+        },
+        "B_cell": {
+          "q": 0.1553,
+          "q_full_data": 0.1123,
+          "coverage_on_heldout": 0.968,
+          "n_calibration": 250
+        },
+        "Endothelial": {
+          "q": 0.1223,
+          "q_full_data": 0.1223,
+          "coverage_on_heldout": 0.948,
+          "n_calibration": 250
+        },
+        "Oligodendrocyte": {
+          "q": 0.2942,
+          "q_full_data": 0.2587,
+          "coverage_on_heldout": 0.984,
+          "n_calibration": 250
+        },
+        "Astrocyte": {
+          "q": 0.095,
+          "q_full_data": 0.095,
+          "coverage_on_heldout": 0.948,
+          "n_calibration": 250
+        }
+      }
+    },
+    {
+      "method": "music",
+      "mean_half_width": 0.2099,
+      "tumour_half_width": 0.5055,
+      "mean_coverage": 0.9445,
+      "n_types_certified": 8,
+      "per_type": {
+        "Tumor": {
+          "q": 0.5055,
+          "q_full_data": 0.5571,
+          "coverage_on_heldout": 0.904,
+          "n_calibration": 250
+        },
+        "Macrophage_Microglia": {
+          "q": 0.1818,
+          "q_full_data": 0.2633,
+          "coverage_on_heldout": 0.912,
+          "n_calibration": 250
+        },
+        "T_cell": {
+          "q": 0.3444,
+          "q_full_data": 0.3505,
+          "coverage_on_heldout": 0.944,
+          "n_calibration": 250
+        },
+        "NK_cell": {
+          "q": 0.2142,
+          "q_full_data": 0.1938,
+          "coverage_on_heldout": 0.952,
+          "n_calibration": 250
+        },
+        "B_cell": {
+          "q": 0.0989,
+          "q_full_data": 0.0948,
+          "coverage_on_heldout": 0.96,
+          "n_calibration": 250
+        },
+        "Endothelial": {
+          "q": 0.0772,
+          "q_full_data": 0.0711,
+          "coverage_on_heldout": 0.976,
+          "n_calibration": 250
+        },
+        "Oligodendrocyte": {
+          "q": 0.1707,
+          "q_full_data": 0.1661,
+          "coverage_on_heldout": 0.956,
+          "n_calibration": 250
+        },
+        "Astrocyte": {
+          "q": 0.0867,
+          "q_full_data": 0.0833,
+          "coverage_on_heldout": 0.952,
+          "n_calibration": 250
+        }
+      }
+    },
+    {
+      "method": "bayesprism",
+      "mean_half_width": 0.2219,
+      "tumour_half_width": 0.5493,
+      "mean_coverage": 0.9355,
+      "n_types_certified": 8,
+      "per_type": {
+        "Tumor": {
+          "q": 0.5493,
+          "q_full_data": 0.583,
+          "coverage_on_heldout": 0.928,
+          "n_calibration": 250
+        },
+        "Macrophage_Microglia": {
+          "q": 0.2273,
+          "q_full_data": 0.2171,
+          "coverage_on_heldout": 0.956,
+          "n_calibration": 250
+        },
+        "T_cell": {
+          "q": 0.4014,
+          "q_full_data": 0.413,
+          "coverage_on_heldout": 0.94,
+          "n_calibration": 250
+        },
+        "NK_cell": {
+          "q": 0.1871,
+          "q_full_data": 0.1535,
+          "coverage_on_heldout": 0.956,
+          "n_calibration": 250
+        },
+        "B_cell": {
+          "q": 0.0685,
+          "q_full_data": 0.0973,
+          "coverage_on_heldout": 0.876,
+          "n_calibration": 250
+        },
+        "Endothelial": {
+          "q": 0.0567,
+          "q_full_data": 0.0608,
+          "coverage_on_heldout": 0.924,
+          "n_calibration": 250
+        },
+        "Oligodendrocyte": {
+          "q": 0.212,
+          "q_full_data": 0.1865,
+          "coverage_on_heldout": 0.96,
+          "n_calibration": 250
+        },
+        "Astrocyte": {
+          "q": 0.0731,
+          "q_full_data": 0.0731,
+          "coverage_on_heldout": 0.944,
+          "n_calibration": 250
+        }
+      }
+    },
+    {
+      "method": "elastic_net",
+      "mean_half_width": 0.2348,
+      "tumour_half_width": 0.591,
+      "mean_coverage": 0.945,
+      "n_types_certified": 8,
+      "per_type": {
+        "Tumor": {
+          "q": 0.591,
+          "q_full_data": 0.6336,
+          "coverage_on_heldout": 0.932,
+          "n_calibration": 250
+        },
+        "Macrophage_Microglia": {
+          "q": 0.2365,
+          "q_full_data": 0.2414,
+          "coverage_on_heldout": 0.94,
+          "n_calibration": 250
+        },
+        "T_cell": {
+          "q": 0.405,
+          "q_full_data": 0.4293,
+          "coverage_on_heldout": 0.936,
+          "n_calibration": 250
+        },
+        "NK_cell": {
+          "q": 0.1915,
+          "q_full_data": 0.1766,
+          "coverage_on_heldout": 0.96,
+          "n_calibration": 250
+        },
+        "B_cell": {
+          "q": 0.0819,
+          "q_full_data": 0.0936,
+          "coverage_on_heldout": 0.924,
+          "n_calibration": 250
+        },
+        "Endothelial": {
+          "q": 0.0744,
+          "q_full_data": 0.0683,
+          "coverage_on_heldout": 0.96,
+          "n_calibration": 250
+        },
+        "Oligodendrocyte": {
+          "q": 0.2035,
+          "q_full_data": 0.1956,
+          "coverage_on_heldout": 0.956,
+          "n_calibration": 250
+        },
+        "Astrocyte": {
+          "q": 0.0944,
+          "q_full_data": 0.0944,
+          "coverage_on_heldout": 0.952,
+          "n_calibration": 250
+        }
+      }
+    },
+    {
+      "method": "nnls",
+      "mean_half_width": 0.2379,
+      "tumour_half_width": 0.5915,
+      "mean_coverage": 0.95,
+      "n_types_certified": 8,
+      "per_type": {
+        "Tumor": {
+          "q": 0.5915,
+          "q_full_data": 0.6298,
+          "coverage_on_heldout": 0.928,
+          "n_calibration": 250
+        },
+        "Macrophage_Microglia": {
+          "q": 0.2299,
+          "q_full_data": 0.2262,
+          "coverage_on_heldout": 0.96,
+          "n_calibration": 250
+        },
+        "T_cell": {
+          "q": 0.4077,
+          "q_full_data": 0.4721,
+          "coverage_on_heldout": 0.936,
+          "n_calibration": 250
+        },
+        "NK_cell": {
+          "q": 0.1789,
+          "q_full_data": 0.151,
+          "coverage_on_heldout": 0.96,
+          "n_calibration": 250
+        },
+        "B_cell": {
+          "q": 0.0988,
+          "q_full_data": 0.1062,
+          "coverage_on_heldout": 0.94,
+          "n_calibration": 250
+        },
+        "Endothelial": {
+          "q": 0.0711,
+          "q_full_data": 0.0681,
+          "coverage_on_heldout": 0.956,
+          "n_calibration": 250
+        },
+        "Oligodendrocyte": {
+          "q": 0.2409,
+          "q_full_data": 0.1932,
+          "coverage_on_heldout": 0.96,
+          "n_calibration": 250
+        },
+        "Astrocyte": {
+          "q": 0.0847,
+          "q_full_data": 0.071,
+          "coverage_on_heldout": 0.96,
+          "n_calibration": 250
+        }
+      }
+    },
+    {
+      "method": "cibersortx",
+      "mean_half_width": 0.2672,
+      "tumour_half_width": 0.6118,
+      "mean_coverage": 0.9555,
+      "n_types_certified": 8,
+      "per_type": {
+        "Tumor": {
+          "q": 0.6118,
+          "q_full_data": 0.6343,
+          "coverage_on_heldout": 0.944,
+          "n_calibration": 250
+        },
+        "Macrophage_Microglia": {
+          "q": 0.3616,
+          "q_full_data": 0.2998,
+          "coverage_on_heldout": 0.98,
+          "n_calibration": 250
+        },
+        "T_cell": {
+          "q": 0.4386,
+          "q_full_data": 0.477,
+          "coverage_on_heldout": 0.944,
+          "n_calibration": 250
+        },
+        "NK_cell": {
+          "q": 0.2449,
+          "q_full_data": 0.2255,
+          "coverage_on_heldout": 0.96,
+          "n_calibration": 250
+        },
+        "B_cell": {
+          "q": 0.0756,
+          "q_full_data": 0.0756,
+          "coverage_on_heldout": 0.948,
+          "n_calibration": 250
+        },
+        "Endothelial": {
+          "q": 0.0486,
+          "q_full_data": 0.0614,
+          "coverage_on_heldout": 0.928,
+          "n_calibration": 250
+        },
+        "Oligodendrocyte": {
+          "q": 0.2507,
+          "q_full_data": 0.2249,
+          "coverage_on_heldout": 0.976,
+          "n_calibration": 250
+        },
+        "Astrocyte": {
+          "q": 0.106,
+          "q_full_data": 0.092,
+          "coverage_on_heldout": 0.964,
+          "n_calibration": 250
+        }
+      }
+    },
+    {
+      "method": "cibersortx_smode",
+      "mean_half_width": 0.3015,
+      "tumour_half_width": 0.6149,
+      "mean_coverage": 0.959,
+      "n_types_certified": 8,
+      "per_type": {
+        "Tumor": {
+          "q": 0.6149,
+          "q_full_data": 0.625,
+          "coverage_on_heldout": 0.944,
+          "n_calibration": 250
+        },
+        "Macrophage_Microglia": {
+          "q": 0.3155,
+          "q_full_data": 0.3088,
+          "coverage_on_heldout": 0.956,
+          "n_calibration": 250
+        },
+        "T_cell": {
+          "q": 0.4694,
+          "q_full_data": 0.5189,
+          "coverage_on_heldout": 0.944,
+          "n_calibration": 250
+        },
+        "NK_cell": {
+          "q": 0.1975,
+          "q_full_data": 0.1908,
+          "coverage_on_heldout": 0.956,
+          "n_calibration": 250
+        },
+        "B_cell": {
+          "q": 0.2509,
+          "q_full_data": 0.1808,
+          "coverage_on_heldout": 0.988,
+          "n_calibration": 250
+        },
+        "Endothelial": {
+          "q": 0.1556,
+          "q_full_data": 0.1556,
+          "coverage_on_heldout": 0.948,
+          "n_calibration": 250
+        },
+        "Oligodendrocyte": {
+          "q": 0.2937,
+          "q_full_data": 0.2152,
+          "coverage_on_heldout": 0.964,
+          "n_calibration": 250
+        },
+        "Astrocyte": {
+          "q": 0.1142,
+          "q_full_data": 0.0962,
+          "coverage_on_heldout": 0.972,
+          "n_calibration": 250
+        }
+      }
+    },
+    {
+      "method": "bayesian",
+      "mean_half_width": 0.3221,
+      "tumour_half_width": 0.6331,
+      "mean_coverage": 0.951,
+      "n_types_certified": 8,
+      "per_type": {
+        "Tumor": {
+          "q": 0.6331,
+          "q_full_data": 0.6689,
+          "coverage_on_heldout": 0.928,
+          "n_calibration": 250
+        },
+        "Macrophage_Microglia": {
+          "q": 0.3914,
+          "q_full_data": 0.396,
+          "coverage_on_heldout": 0.94,
+          "n_calibration": 250
+        },
+        "T_cell": {
+          "q": 0.3959,
+          "q_full_data": 0.3777,
+          "coverage_on_heldout": 0.952,
+          "n_calibration": 250
+        },
+        "NK_cell": {
+          "q": 0.3238,
+          "q_full_data": 0.3293,
+          "coverage_on_heldout": 0.932,
+          "n_calibration": 250
+        },
+        "B_cell": {
+          "q": 0.1265,
+          "q_full_data": 0.0882,
+          "coverage_on_heldout": 0.972,
+          "n_calibration": 250
+        },
+        "Endothelial": {
+          "q": 0.1514,
+          "q_full_data": 0.1436,
+          "coverage_on_heldout": 0.96,
+          "n_calibration": 250
+        },
+        "Oligodendrocyte": {
+          "q": 0.3411,
+          "q_full_data": 0.3335,
+          "coverage_on_heldout": 0.964,
+          "n_calibration": 250
+        },
+        "Astrocyte": {
+          "q": 0.2135,
+          "q_full_data": 0.2062,
+          "coverage_on_heldout": 0.96,
+          "n_calibration": 250
+        }
+      }
+    },
+    {
+      "method": "bayesian_hierarchical",
+      "mean_half_width": 0.3267,
+      "tumour_half_width": 0.6343,
+      "mean_coverage": 0.9515,
+      "n_types_certified": 8,
+      "per_type": {
+        "Tumor": {
+          "q": 0.6343,
+          "q_full_data": 0.6696,
+          "coverage_on_heldout": 0.928,
+          "n_calibration": 250
+        },
+        "Macrophage_Microglia": {
+          "q": 0.4017,
+          "q_full_data": 0.4058,
+          "coverage_on_heldout": 0.94,
+          "n_calibration": 250
+        },
+        "T_cell": {
+          "q": 0.4011,
+          "q_full_data": 0.3864,
+          "coverage_on_heldout": 0.952,
+          "n_calibration": 250
+        },
+        "NK_cell": {
+          "q": 0.3342,
+          "q_full_data": 0.336,
+          "coverage_on_heldout": 0.936,
+          "n_calibration": 250
+        },
+        "B_cell": {
+          "q": 0.1273,
+          "q_full_data": 0.0889,
+          "coverage_on_heldout": 0.972,
+          "n_calibration": 250
+        },
+        "Endothelial": {
+          "q": 0.1522,
+          "q_full_data": 0.1465,
+          "coverage_on_heldout": 0.96,
+          "n_calibration": 250
+        },
+        "Oligodendrocyte": {
+          "q": 0.345,
+          "q_full_data": 0.3405,
+          "coverage_on_heldout": 0.964,
+          "n_calibration": 250
+        },
+        "Astrocyte": {
+          "q": 0.218,
+          "q_full_data": 0.2091,
+          "coverage_on_heldout": 0.96,
+          "n_calibration": 250
+        }
+      }
+    },
+    {
+      "method": "epic",
+      "mean_half_width": 0.2479,
+      "tumour_half_width": 0.6343,
+      "mean_coverage": 0.939,
+      "n_types_certified": 8,
+      "per_type": {
+        "Tumor": {
+          "q": 0.6343,
+          "q_full_data": 0.6418,
+          "coverage_on_heldout": 0.944,
+          "n_calibration": 250
+        },
+        "Macrophage_Microglia": {
+          "q": 0.2805,
+          "q_full_data": 0.3284,
+          "coverage_on_heldout": 0.884,
+          "n_calibration": 250
+        },
+        "T_cell": {
+          "q": 0.3078,
+          "q_full_data": 0.3843,
+          "coverage_on_heldout": 0.92,
+          "n_calibration": 250
+        },
+        "NK_cell": {
+          "q": 0.2057,
+          "q_full_data": 0.2098,
+          "coverage_on_heldout": 0.944,
+          "n_calibration": 250
+        },
+        "B_cell": {
+          "q": 0.0892,
+          "q_full_data": 0.0778,
+          "coverage_on_heldout": 0.96,
+          "n_calibration": 250
+        },
+        "Endothelial": {
+          "q": 0.0972,
+          "q_full_data": 0.0871,
+          "coverage_on_heldout": 0.956,
+          "n_calibration": 250
+        },
+        "Oligodendrocyte": {
+          "q": 0.2319,
+          "q_full_data": 0.2401,
+          "coverage_on_heldout": 0.944,
+          "n_calibration": 250
+        },
+        "Astrocyte": {
+          "q": 0.1364,
+          "q_full_data": 0.1298,
+          "coverage_on_heldout": 0.96,
+          "n_calibration": 250
+        }
+      }
+    },
+    {
+      "method": "scdc",
+      "mean_half_width": 0.3755,
+      "tumour_half_width": 0.6343,
+      "mean_coverage": 0.9605,
+      "n_types_certified": 8,
+      "per_type": {
+        "Tumor": {
+          "q": 0.6343,
+          "q_full_data": 0.6581,
+          "coverage_on_heldout": 0.94,
+          "n_calibration": 250
+        },
+        "Macrophage_Microglia": {
+          "q": 0.5654,
+          "q_full_data": 0.4923,
+          "coverage_on_heldout": 0.98,
+          "n_calibration": 250
+        },
+        "T_cell": {
+          "q": 0.4659,
+          "q_full_data": 0.4857,
+          "coverage_on_heldout": 0.944,
+          "n_calibration": 250
+        },
+        "NK_cell": {
+          "q": 0.2857,
+          "q_full_data": 0.2604,
+          "coverage_on_heldout": 0.964,
+          "n_calibration": 250
+        },
+        "B_cell": {
+          "q": 0.1778,
+          "q_full_data": 0.1598,
+          "coverage_on_heldout": 0.964,
+          "n_calibration": 250
+        },
+        "Endothelial": {
+          "q": 0.2266,
+          "q_full_data": 0.2194,
+          "coverage_on_heldout": 0.956,
+          "n_calibration": 250
+        },
+        "Oligodendrocyte": {
+          "q": 0.384,
+          "q_full_data": 0.3279,
+          "coverage_on_heldout": 0.972,
+          "n_calibration": 250
+        },
+        "Astrocyte": {
+          "q": 0.2642,
+          "q_full_data": 0.2523,
+          "coverage_on_heldout": 0.964,
+          "n_calibration": 250
+        }
+      }
+    },
+    {
+      "method": "scdc_ensemble",
+      "mean_half_width": 0.3755,
+      "tumour_half_width": 0.6343,
+      "mean_coverage": 0.9605,
+      "n_types_certified": 8,
+      "per_type": {
+        "Tumor": {
+          "q": 0.6343,
+          "q_full_data": 0.6581,
+          "coverage_on_heldout": 0.94,
+          "n_calibration": 250
+        },
+        "Macrophage_Microglia": {
+          "q": 0.5654,
+          "q_full_data": 0.4923,
+          "coverage_on_heldout": 0.98,
+          "n_calibration": 250
+        },
+        "T_cell": {
+          "q": 0.4659,
+          "q_full_data": 0.4857,
+          "coverage_on_heldout": 0.944,
+          "n_calibration": 250
+        },
+        "NK_cell": {
+          "q": 0.2857,
+          "q_full_data": 0.2604,
+          "coverage_on_heldout": 0.964,
+          "n_calibration": 250
+        },
+        "B_cell": {
+          "q": 0.1778,
+          "q_full_data": 0.1598,
+          "coverage_on_heldout": 0.964,
+          "n_calibration": 250
+        },
+        "Endothelial": {
+          "q": 0.2266,
+          "q_full_data": 0.2194,
+          "coverage_on_heldout": 0.956,
+          "n_calibration": 250
+        },
+        "Oligodendrocyte": {
+          "q": 0.384,
+          "q_full_data": 0.3279,
+          "coverage_on_heldout": 0.972,
+          "n_calibration": 250
+        },
+        "Astrocyte": {
+          "q": 0.2642,
+          "q_full_data": 0.2523,
+          "coverage_on_heldout": 0.964,
+          "n_calibration": 250
+        }
+      }
+    },
+    {
+      "method": "svr",
+      "mean_half_width": 0.2852,
+      "tumour_half_width": 0.6343,
+      "mean_coverage": 0.955,
+      "n_types_certified": 8,
+      "per_type": {
+        "Tumor": {
+          "q": 0.6343,
+          "q_full_data": 0.6418,
+          "coverage_on_heldout": 0.944,
+          "n_calibration": 250
+        },
+        "Macrophage_Microglia": {
+          "q": 0.4035,
+          "q_full_data": 0.3703,
+          "coverage_on_heldout": 0.984,
+          "n_calibration": 250
+        },
+        "T_cell": {
+          "q": 0.525,
+          "q_full_data": 0.525,
+          "coverage_on_heldout": 0.948,
+          "n_calibration": 250
+        },
+        "NK_cell": {
+          "q": 0.2604,
+          "q_full_data": 0.2244,
+          "coverage_on_heldout": 0.968,
+          "n_calibration": 250
+        },
+        "B_cell": {
+          "q": 0.0579,
+          "q_full_data": 0.0579,
+          "coverage_on_heldout": 0.948,
+          "n_calibration": 250
+        },
+        "Endothelial": {
+          "q": 0.0645,
+          "q_full_data": 0.0737,
+          "coverage_on_heldout": 0.928,
+          "n_calibration": 250
+        },
+        "Oligodendrocyte": {
+          "q": 0.2488,
+          "q_full_data": 0.2234,
+          "coverage_on_heldout": 0.968,
+          "n_calibration": 250
+        },
+        "Astrocyte": {
+          "q": 0.0867,
+          "q_full_data": 0.0834,
+          "coverage_on_heldout": 0.952,
+          "n_calibration": 250
+        }
+      }
+    },
+    {
+      "method": "dwls",
+      "mean_half_width": 0.336,
+      "tumour_half_width": 0.6633,
+      "mean_coverage": 0.952,
+      "n_types_certified": 8,
+      "per_type": {
+        "Tumor": {
+          "q": 0.6633,
+          "q_full_data": 0.6747,
+          "coverage_on_heldout": 0.936,
+          "n_calibration": 250
+        },
+        "Macrophage_Microglia": {
+          "q": 0.5744,
+          "q_full_data": 0.5691,
+          "coverage_on_heldout": 0.952,
+          "n_calibration": 250
+        },
+        "T_cell": {
+          "q": 0.4421,
+          "q_full_data": 0.4093,
+          "coverage_on_heldout": 0.968,
+          "n_calibration": 250
+        },
+        "NK_cell": {
+          "q": 0.3296,
+          "q_full_data": 0.3195,
+          "coverage_on_heldout": 0.968,
+          "n_calibration": 250
+        },
+        "B_cell": {
+          "q": 0.1021,
+          "q_full_data": 0.1518,
+          "coverage_on_heldout": 0.896,
+          "n_calibration": 250
+        },
+        "Endothelial": {
+          "q": 0.1861,
+          "q_full_data": 0.182,
+          "coverage_on_heldout": 0.952,
+          "n_calibration": 250
+        },
+        "Oligodendrocyte": {
+          "q": 0.3134,
+          "q_full_data": 0.2739,
+          "coverage_on_heldout": 0.98,
+          "n_calibration": 250
+        },
+        "Astrocyte": {
+          "q": 0.0769,
+          "q_full_data": 0.0715,
+          "coverage_on_heldout": 0.964,
+          "n_calibration": 250
+        }
+      }
+    },
+    {
+      "method": "control_random",
+      "mean_half_width": 0.4913,
+      "tumour_half_width": 0.7033,
+      "mean_coverage": 0.947,
+      "n_types_certified": 8,
+      "per_type": {
+        "Tumor": {
+          "q": 0.7033,
+          "q_full_data": 0.6701,
+          "coverage_on_heldout": 0.964,
+          "n_calibration": 250
+        },
+        "Macrophage_Microglia": {
+          "q": 0.6401,
+          "q_full_data": 0.5905,
+          "coverage_on_heldout": 0.964,
+          "n_calibration": 250
+        },
+        "T_cell": {
+          "q": 0.3923,
+          "q_full_data": 0.4354,
+          "coverage_on_heldout": 0.92,
+          "n_calibration": 250
+        },
+        "NK_cell": {
+          "q": 0.4002,
+          "q_full_data": 0.4215,
+          "coverage_on_heldout": 0.936,
+          "n_calibration": 250
+        },
+        "B_cell": {
+          "q": 0.4501,
+          "q_full_data": 0.4402,
+          "coverage_on_heldout": 0.956,
+          "n_calibration": 250
+        },
+        "Endothelial": {
+          "q": 0.3474,
+          "q_full_data": 0.3803,
+          "coverage_on_heldout": 0.904,
+          "n_calibration": 250
+        },
+        "Oligodendrocyte": {
+          "q": 0.6261,
+          "q_full_data": 0.5844,
+          "coverage_on_heldout": 0.988,
+          "n_calibration": 250
+        },
+        "Astrocyte": {
+          "q": 0.3707,
+          "q_full_data": 0.374,
+          "coverage_on_heldout": 0.944,
+          "n_calibration": 250
+        }
+      }
+    },
+    {
+      "method": "control_shuffled_signature",
+      "mean_half_width": 0.4483,
+      "tumour_half_width": 0.7377,
+      "mean_coverage": 0.9435,
+      "n_types_certified": 8,
+      "per_type": {
+        "Tumor": {
+          "q": 0.7377,
+          "q_full_data": 0.7067,
+          "coverage_on_heldout": 0.964,
+          "n_calibration": 250
+        },
+        "Macrophage_Microglia": {
+          "q": 0.6981,
+          "q_full_data": 0.6487,
+          "coverage_on_heldout": 0.964,
+          "n_calibration": 250
+        },
+        "T_cell": {
+          "q": 0.3289,
+          "q_full_data": 0.3856,
+          "coverage_on_heldout": 0.912,
+          "n_calibration": 250
+        },
+        "NK_cell": {
+          "q": 0.376,
+          "q_full_data": 0.394,
+          "coverage_on_heldout": 0.932,
+          "n_calibration": 250
+        },
+        "B_cell": {
+          "q": 0.3412,
+          "q_full_data": 0.3505,
+          "coverage_on_heldout": 0.928,
+          "n_calibration": 250
+        },
+        "Endothelial": {
+          "q": 0.3311,
+          "q_full_data": 0.3303,
+          "coverage_on_heldout": 0.956,
+          "n_calibration": 250
+        },
+        "Oligodendrocyte": {
+          "q": 0.5283,
+          "q_full_data": 0.4586,
+          "coverage_on_heldout": 0.988,
+          "n_calibration": 250
+        },
+        "Astrocyte": {
+          "q": 0.2452,
+          "q_full_data": 0.2705,
+          "coverage_on_heldout": 0.904,
+          "n_calibration": 250
+        }
+      }
+    },
+    {
+      "method": "quantiseq",
+      "mean_half_width": 0.3522,
+      "tumour_half_width": null,
+      "mean_coverage": 0.933,
+      "n_types_certified": 4,
+      "per_type": {
+        "Tumor": {
+          "q": null,
+          "coverage": null,
+          "note": "method does not model this type"
+        },
+        "Macrophage_Microglia": {
+          "q": 0.4314,
+          "q_full_data": 0.4464,
+          "coverage_on_heldout": 0.924,
+          "n_calibration": 250
+        },
+        "T_cell": {
+          "q": 0.5223,
+          "q_full_data": 0.5947,
+          "coverage_on_heldout": 0.928,
+          "n_calibration": 250
+        },
+        "NK_cell": {
+          "q": 0.2848,
+          "q_full_data": 0.2831,
+          "coverage_on_heldout": 0.952,
+          "n_calibration": 250
+        },
+        "B_cell": {
+          "q": 0.1705,
+          "q_full_data": 0.1783,
+          "coverage_on_heldout": 0.928,
+          "n_calibration": 250
+        },
+        "Endothelial": {
+          "q": null,
+          "coverage": null,
+          "note": "method does not model this type"
+        },
+        "Oligodendrocyte": {
+          "q": null,
+          "coverage": null,
+          "note": "method does not model this type"
+        },
+        "Astrocyte": {
+          "q": null,
+          "coverage": null,
+          "note": "method does not model this type"
+        }
+      }
+    }
+  ]
+}

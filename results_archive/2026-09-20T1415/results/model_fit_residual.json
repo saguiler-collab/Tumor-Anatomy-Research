@@ -1,0 +1,220 @@
+{
+  "EXPLORATORY": "not pre-registered; bounds how much of real bulk the additive mixing model can account for in the marker space.",
+  "what_it_does_NOT_say": "which assumption fails. A high residual is consistent with platform/normalisation mismatch, unmodelled cell states, or non-additivity, and does not distinguish them.",
+  "cohorts": {
+    "GBM": {
+      "n_samples": 175,
+      "n_genes": 1597,
+      "controls": {
+        "n_control_samples": 60,
+        "real_reference": 0.3815,
+        "shuffled_profiles": -0.0077,
+        "random_basis": 0.0016,
+        "ceiling_top_k_svd": 0.9803,
+        "fraction_of_achievable": 0.3892
+      },
+      "r2_median": 0.3621,
+      "r2_iqr": [
+        0.2478,
+        0.4649
+      ],
+      "r2_min": 0.0137,
+      "r2_max": 0.7066,
+      "unexplained_median_pct": 63.79,
+      "frac_samples_r2_below_half": 0.8286
+    },
+    "LGG": {
+      "n_samples": 534,
+      "n_genes": 1597,
+      "controls": {
+        "n_control_samples": 60,
+        "real_reference": 0.2475,
+        "shuffled_profiles": -0.0071,
+        "random_basis": 0.0016,
+        "ceiling_top_k_svd": 0.9904,
+        "fraction_of_achievable": 0.2499
+      },
+      "r2_median": 0.236,
+      "r2_iqr": [
+        0.1513,
+        0.3654
+      ],
+      "r2_min": 0.0029,
+      "r2_max": 0.7057,
+      "unexplained_median_pct": 76.4,
+      "frac_samples_r2_below_half": 0.8914
+    }
+  },
+  "trust_signal_test": {
+    "question": "does per-sample model fit predict per-sample deconvolution error, i.e. is it a ground-truth-free signal for when to distrust an estimate?",
+    "EXPLORATORY": "not pre-registered",
+    "cohorts": {
+      "GBM": {
+        "n_samples": 154,
+        "n_methods": 12,
+        "control_spearman_r2_vs_purity": -0.1276,
+        "control_p": 0.1148,
+        "n_useful": 1,
+        "n_significant_wrong_direction": 0,
+        "methods": {
+          "nnls": {
+            "spearman_r2_vs_abs_error": 0.021,
+            "p": 0.796099,
+            "useful_direction": false,
+            "significant_WRONG_direction": false
+          },
+          "svr": {
+            "spearman_r2_vs_abs_error": -0.0794,
+            "p": 0.327501,
+            "useful_direction": false,
+            "significant_WRONG_direction": false
+          },
+          "cibersortx": {
+            "spearman_r2_vs_abs_error": -0.0741,
+            "p": 0.360887,
+            "useful_direction": false,
+            "significant_WRONG_direction": false
+          },
+          "elastic_net": {
+            "spearman_r2_vs_abs_error": -0.0461,
+            "p": 0.570212,
+            "useful_direction": false,
+            "significant_WRONG_direction": false
+          },
+          "bayesian": {
+            "spearman_r2_vs_abs_error": -0.1546,
+            "p": 0.055606,
+            "useful_direction": false,
+            "significant_WRONG_direction": false
+          },
+          "music": {
+            "spearman_r2_vs_abs_error": 0.021,
+            "p": 0.796099,
+            "useful_direction": false,
+            "significant_WRONG_direction": false
+          },
+          "dwls": {
+            "spearman_r2_vs_abs_error": 0.133,
+            "p": 0.100188,
+            "useful_direction": false,
+            "significant_WRONG_direction": false
+          },
+          "bisque": {
+            "spearman_r2_vs_abs_error": -0.2372,
+            "p": 0.003061,
+            "useful_direction": true,
+            "significant_WRONG_direction": false
+          },
+          "scdc": {
+            "spearman_r2_vs_abs_error": 0.086,
+            "p": 0.288989,
+            "useful_direction": false,
+            "significant_WRONG_direction": false
+          },
+          "scdc_ensemble": {
+            "spearman_r2_vs_abs_error": 0.086,
+            "p": 0.288989,
+            "useful_direction": false,
+            "significant_WRONG_direction": false
+          },
+          "epic": {
+            "spearman_r2_vs_abs_error": 0.0648,
+            "p": 0.424639,
+            "useful_direction": false,
+            "significant_WRONG_direction": false
+          },
+          "bayesprism": {
+            "spearman_r2_vs_abs_error": -0.0421,
+            "p": 0.6044,
+            "useful_direction": false,
+            "significant_WRONG_direction": false
+          }
+        },
+        "verdict": "NOT a usable trust signal"
+      },
+      "LGG": {
+        "n_samples": 510,
+        "n_methods": 12,
+        "control_spearman_r2_vs_purity": -0.0182,
+        "control_p": 0.6811,
+        "n_useful": 6,
+        "n_significant_wrong_direction": 2,
+        "methods": {
+          "nnls": {
+            "spearman_r2_vs_abs_error": -0.1442,
+            "p": 0.00109,
+            "useful_direction": true,
+            "significant_WRONG_direction": false
+          },
+          "svr": {
+            "spearman_r2_vs_abs_error": -0.1166,
+            "p": 0.008396,
+            "useful_direction": true,
+            "significant_WRONG_direction": false
+          },
+          "cibersortx": {
+            "spearman_r2_vs_abs_error": -0.094,
+            "p": 0.033826,
+            "useful_direction": true,
+            "significant_WRONG_direction": false
+          },
+          "elastic_net": {
+            "spearman_r2_vs_abs_error": 0.0017,
+            "p": 0.969112,
+            "useful_direction": false,
+            "significant_WRONG_direction": false
+          },
+          "bayesian": {
+            "spearman_r2_vs_abs_error": -0.199,
+            "p": 6e-06,
+            "useful_direction": true,
+            "significant_WRONG_direction": false
+          },
+          "music": {
+            "spearman_r2_vs_abs_error": -0.1442,
+            "p": 0.00109,
+            "useful_direction": true,
+            "significant_WRONG_direction": false
+          },
+          "dwls": {
+            "spearman_r2_vs_abs_error": 0.0908,
+            "p": 0.040441,
+            "useful_direction": false,
+            "significant_WRONG_direction": true
+          },
+          "bisque": {
+            "spearman_r2_vs_abs_error": -0.0367,
+            "p": 0.407751,
+            "useful_direction": false,
+            "significant_WRONG_direction": false
+          },
+          "scdc": {
+            "spearman_r2_vs_abs_error": 0.0329,
+            "p": 0.458912,
+            "useful_direction": false,
+            "significant_WRONG_direction": false
+          },
+          "scdc_ensemble": {
+            "spearman_r2_vs_abs_error": 0.0329,
+            "p": 0.458912,
+            "useful_direction": false,
+            "significant_WRONG_direction": false
+          },
+          "epic": {
+            "spearman_r2_vs_abs_error": 0.1481,
+            "p": 0.000795,
+            "useful_direction": false,
+            "significant_WRONG_direction": true
+          },
+          "bayesprism": {
+            "spearman_r2_vs_abs_error": -0.1595,
+            "p": 0.000298,
+            "useful_direction": true,
+            "significant_WRONG_direction": false
+          }
+        },
+        "verdict": "NOT a usable trust signal"
+      }
+    }
+  }
+}

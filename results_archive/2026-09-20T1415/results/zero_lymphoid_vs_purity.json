@@ -1,0 +1,178 @@
+{
+  "EXPLORATORY": "not pre-registered; generated after the absence failure mode was found",
+  "hypothesis": "methods return zero lymphoid signal preferentially in high-purity samples",
+  "cohorts": {
+    "GBM": {
+      "methods": {
+        "bayesian": {
+          "n_zero": 0,
+          "testable": false
+        },
+        "bayesprism": {
+          "n_zero": 139,
+          "purity_zero": 0.7581,
+          "purity_nonzero": 0.6973,
+          "diff": 0.0608,
+          "mwu_p_greater": 0.077297,
+          "testable": true
+        },
+        "bisque": {
+          "n_zero": 15,
+          "purity_zero": 0.6907,
+          "purity_nonzero": 0.7588,
+          "diff": -0.0682,
+          "mwu_p_greater": 0.966063,
+          "testable": true
+        },
+        "cibersortx": {
+          "n_zero": 20,
+          "purity_zero": 0.727,
+          "purity_nonzero": 0.756,
+          "diff": -0.029,
+          "mwu_p_greater": 0.867162,
+          "testable": true
+        },
+        "dwls": {
+          "n_zero": 13,
+          "purity_zero": 0.9046,
+          "purity_nonzero": 0.7382,
+          "diff": 0.1665,
+          "mwu_p_greater": 1.2e-05,
+          "testable": true
+        },
+        "elastic_net": {
+          "n_zero": 131,
+          "purity_zero": 0.7484,
+          "purity_nonzero": 0.7739,
+          "diff": -0.0255,
+          "mwu_p_greater": 0.693969,
+          "testable": true
+        },
+        "epic": {
+          "n_zero": 0,
+          "testable": false
+        },
+        "music": {
+          "n_zero": 146,
+          "purity_zero": 0.7506,
+          "purity_nonzero": 0.7812,
+          "diff": -0.0306,
+          "mwu_p_greater": 0.532459,
+          "testable": true
+        },
+        "nnls": {
+          "n_zero": 146,
+          "purity_zero": 0.7506,
+          "purity_nonzero": 0.7812,
+          "diff": -0.0306,
+          "mwu_p_greater": 0.532459,
+          "testable": true
+        },
+        "scdc": {
+          "n_zero": 0,
+          "testable": false
+        },
+        "scdc_ensemble": {
+          "n_zero": 0,
+          "testable": false
+        },
+        "svr": {
+          "n_zero": 19,
+          "purity_zero": 0.8195,
+          "purity_nonzero": 0.7427,
+          "diff": 0.0767,
+          "mwu_p_greater": 0.030258,
+          "testable": true
+        }
+      },
+      "n_significant": 2,
+      "n_testable": 8
+    },
+    "LGG": {
+      "methods": {
+        "bayesian": {
+          "n_zero": 0,
+          "testable": false
+        },
+        "bayesprism": {
+          "n_zero": 409,
+          "purity_zero": 0.7533,
+          "purity_nonzero": 0.728,
+          "diff": 0.0253,
+          "mwu_p_greater": 0.267881,
+          "testable": true
+        },
+        "bisque": {
+          "n_zero": 42,
+          "purity_zero": 0.6555,
+          "purity_nonzero": 0.7566,
+          "diff": -0.1011,
+          "mwu_p_greater": 0.999903,
+          "testable": true
+        },
+        "cibersortx": {
+          "n_zero": 48,
+          "purity_zero": 0.6823,
+          "purity_nonzero": 0.7551,
+          "diff": -0.0728,
+          "mwu_p_greater": 0.99246,
+          "testable": true
+        },
+        "dwls": {
+          "n_zero": 187,
+          "purity_zero": 0.7909,
+          "purity_nonzero": 0.7236,
+          "diff": 0.0672,
+          "mwu_p_greater": 0.0,
+          "testable": true
+        },
+        "elastic_net": {
+          "n_zero": 286,
+          "purity_zero": 0.7303,
+          "purity_nonzero": 0.7712,
+          "diff": -0.0409,
+          "mwu_p_greater": 0.998938,
+          "testable": true
+        },
+        "epic": {
+          "n_zero": 0,
+          "testable": false
+        },
+        "music": {
+          "n_zero": 443,
+          "purity_zero": 0.746,
+          "purity_nonzero": 0.763,
+          "diff": -0.0169,
+          "mwu_p_greater": 0.952995,
+          "testable": true
+        },
+        "nnls": {
+          "n_zero": 443,
+          "purity_zero": 0.746,
+          "purity_nonzero": 0.763,
+          "diff": -0.0169,
+          "mwu_p_greater": 0.952995,
+          "testable": true
+        },
+        "scdc": {
+          "n_zero": 0,
+          "testable": false
+        },
+        "scdc_ensemble": {
+          "n_zero": 0,
+          "testable": false
+        },
+        "svr": {
+          "n_zero": 28,
+          "purity_zero": 0.7446,
+          "purity_nonzero": 0.7485,
+          "diff": -0.0038,
+          "mwu_p_greater": 0.565247,
+          "testable": true
+        }
+      },
+      "n_significant": 1,
+      "n_testable": 8
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "n_samples": 122,
+  "n_genes": 1500,
+  "n_types": 8,
+  "mcmc_iterations": 700,
+  "dilution_factor": 100.0,
+  "gene_selection": "top variance of log-CPM in the Ivy GAP bulk; reference-free by design, because the leaderboard's 657 markers were selected on GBmap",
+  "reference_gep_passed_to_cdseq": false,
+  "labellings": {
+    "gbmap_profile_correlation": {
+      "assignments": {
+        "CDSeq_estimated_cell_type_1": "Tumor",
+        "CDSeq_estimated_cell_type_2": "Macrophage_Microglia",
+        "CDSeq_estimated_cell_type_3": "Tumor",
+        "CDSeq_estimated_cell_type_4": "Oligodendrocyte",
+        "CDSeq_estimated_cell_type_5": "Astrocyte",
+        "CDSeq_estimated_cell_type_6": "Tumor",
+        "CDSeq_estimated_cell_type_7": "Endothelial",
+        "CDSeq_estimated_cell_type_8": "Tumor"
+      },
+      "roster_types_covered": [
+        "Astrocyte",
+        "Endothelial",
+        "Macrophage_Microglia",
+        "Oligodendrocyte",
+        "Tumor"
+      ],
+      "acs": 0.8462,
+      "ci": [
+        0.8059,
+        0.8714
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "beats_null": true
+    },
+    "gbm_marker_enrichment": {
+      "assignments": {
+        "CDSeq_estimated_cell_type_1": "B_cell",
+        "CDSeq_estimated_cell_type_2": "Macrophage_Microglia",
+        "CDSeq_estimated_cell_type_3": "Astrocyte",
+        "CDSeq_estimated_cell_type_4": "Oligodendrocyte",
+        "CDSeq_estimated_cell_type_5": "Astrocyte",
+        "CDSeq_estimated_cell_type_6": "Oligodendrocyte",
+        "CDSeq_estimated_cell_type_7": "Endothelial",
+        "CDSeq_estimated_cell_type_8": "Astrocyte"
+      },
+      "roster_types_covered": [
+        "Astrocyte",
+        "B_cell",
+        "Endothelial",
+        "Macrophage_Microglia",
+        "Oligodendrocyte"
+      ],
+      "acs": 0.6829,
+      "ci": [
+        0.575,
+        0.7674
+      ],
+      "null_p": 0.0008999100089991,
+      "n_pairs": 41,
+      "beats_null": true
+    }
+  }
+}

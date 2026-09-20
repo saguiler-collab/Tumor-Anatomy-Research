@@ -1,0 +1,6 @@
+Proposed explanation,Test,Result,Verdict
+The signature cannot separate T from B,"NNLS on mixtures built from the reference itself, planted T:B = 2.333",recovered exactly; survives 100% noise and deletion of a whole cell type; condition number 5.29,REFUTED
+B absorbs macrophage/microglia spillover,"corr(B, Macrophage) > corr(T, Macrophage) across samples","5 of 10 methods, sign-test p = 0.623047",REJECTED
+High tumour purity explains the absence mode,"one-sided Mann–Whitney, purity in zero-lymphoid vs other samples",GBM 2/8; LGG 1/8; several run the other way,REJECTED
+Per-sample model fit is a ground-truth-free trust signal,"corr(R², |estimate − purity|) per method; control confirms R² is not a purity proxy",GBM 1/12; LGG 6/12; 2 LGG methods significant in the WRONG direction,REJECTED
+Misfit in Tumor/Astrocyte markers propagates to lymphoid coefficients,refit on lymphoid-owned markers only (596 genes),T > B in 0.0% of samples; mass moves to NK,REJECTED

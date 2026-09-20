@@ -1,0 +1,304 @@
+{
+  "what_this_is": "Does the ACS ordering depend on which single-cell atlas built the reference? Both arms use the SAME declared 5-type sub-roster and the SAME gene space, so the only difference is the reference. NOT a selection procedure: neither arm may reorder the published leaderboard.",
+  "why_both_arms": "Swapping GBmap for Darmanis changes the reference AND the roster, since Darmanis cannot resolve T_cell, NK_cell or B_cell. Running GBmap on the same 5 types isolates the reference.",
+  "baseline_reference": "gbmap_linear",
+  "alternative_reference": "darmanis",
+  "sub_roster": [
+    "Tumor",
+    "Macrophage_Microglia",
+    "Endothelial",
+    "Oligodendrocyte",
+    "Astrocyte"
+  ],
+  "n_types": 5,
+  "constraints_use_only": [
+    "Endothelial",
+    "Macrophage_Microglia",
+    "Oligodendrocyte",
+    "Tumor"
+  ],
+  "n_shared_genes": 651,
+  "gene_space": "the leaderboard's own 657-gene marker space, intersected with both references. Those genes were selected ON GBmap, so the space favours arm A -- conservative for a finding that Darmanis does as well or better, and the wrong space for a finding that it does worse.",
+  "n_samples": 122,
+  "implementation": "python path only; the R packages need a cell-level export keyed to a registered cell source, which Darmanis does not yet have",
+  "spearman_between_orderings": 0.3655,
+  "n_methods": 13,
+  "n_ranks_moved": 10,
+  "largest_rank_move": 7.5,
+  "arm_a_gbmap": {
+    "nnls": {
+      "acs": 0.7846,
+      "ci": [
+        0.6769,
+        0.8841
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "svr": {
+      "acs": 0.8615,
+      "ci": [
+        0.7727,
+        0.9265
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "cibersortx": {
+      "acs": 0.8308,
+      "ci": [
+        0.7324,
+        0.913
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "cibersortx_smode": {
+      "failed": "RuntimeError: S-mode needs the single cells the signature was built from, and no cell source is registered for reference 'gbmap_linear'. B-mode reconstructs its mixtures from"
+    },
+    "elastic_net": {
+      "acs": 0.8615,
+      "ci": [
+        0.8167,
+        0.9032
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "bayesian": {
+      "acs": 0.7077,
+      "ci": [
+        0.597,
+        0.8125
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "bayesian_hierarchical": {
+      "acs": 0.7077,
+      "ci": [
+        0.597,
+        0.8125
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "music": {
+      "acs": 0.7846,
+      "ci": [
+        0.6769,
+        0.8841
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "dwls": {
+      "acs": 0.6,
+      "ci": [
+        0.4925,
+        0.7273
+      ],
+      "null_p": 0.0030996900309969004,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "bisque": {
+      "acs": 0.7385,
+      "ci": [
+        0.6615,
+        0.8182
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "scdc": {
+      "acs": 0.6154,
+      "ci": [
+        0.5072,
+        0.7455
+      ],
+      "null_p": 0.0013998600139986002,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "scdc_ensemble": {
+      "acs": 0.6154,
+      "ci": [
+        0.5072,
+        0.7455
+      ],
+      "null_p": 0.0013998600139986002,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "epic": {
+      "acs": 0.7846,
+      "ci": [
+        0.6769,
+        0.8841
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "quantiseq": {
+      "failed": "ValueError: quantiseq.models_cell_types names ['B_cell', 'NK_cell', 'T_cell'], which are not in the roster ['Tumor', 'Macrophage_Microglia', 'Endothelial', 'Oligodendrocyte"
+    },
+    "bayesprism": {
+      "acs": 0.6923,
+      "ci": [
+        0.5758,
+        0.8226
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    }
+  },
+  "arm_b_alternative": {
+    "nnls": {
+      "acs": 0.6769,
+      "ci": [
+        0.5968,
+        0.7576
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "svr": {
+      "acs": 0.6923,
+      "ci": [
+        0.6232,
+        0.7628
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "cibersortx": {
+      "acs": 0.7538,
+      "ci": [
+        0.6667,
+        0.8406
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "cibersortx_smode": {
+      "failed": "RuntimeError: S-mode needs the single cells the signature was built from, and no cell source is registered for reference 'darmanis'. B-mode reconstructs its mixtures from the"
+    },
+    "elastic_net": {
+      "acs": 0.7077,
+      "ci": [
+        0.6462,
+        0.7727
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "bayesian": {
+      "acs": 0.9231,
+      "ci": [
+        0.8727,
+        0.9706
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "bayesian_hierarchical": {
+      "acs": 0.8923,
+      "ci": [
+        0.7999,
+        0.9683
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "music": {
+      "acs": 0.6769,
+      "ci": [
+        0.5968,
+        0.7576
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "dwls": {
+      "acs": 0.5846,
+      "ci": [
+        0.4531,
+        0.7222
+      ],
+      "null_p": 0.0021997800219978004,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "bisque": {
+      "acs": 0.6923,
+      "ci": [
+        0.6232,
+        0.7628
+      ],
+      "null_p": 0.00019998000199980003,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "scdc": {
+      "acs": 0.6615,
+      "ci": [
+        0.4627,
+        0.8525
+      ],
+      "null_p": 0.00029997000299970003,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "scdc_ensemble": {
+      "acs": 0.6615,
+      "ci": [
+        0.4627,
+        0.8525
+      ],
+      "null_p": 0.00029997000299970003,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "epic": {
+      "acs": 0.6769,
+      "ci": [
+        0.5968,
+        0.7576
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "quantiseq": {
+      "failed": "ValueError: quantiseq.models_cell_types names ['B_cell', 'NK_cell', 'T_cell'], which are not in the roster ['Tumor', 'Macrophage_Microglia', 'Endothelial', 'Oligodendrocyte"
+    },
+    "bayesprism": {
+      "acs": 0.7538,
+      "ci": [
+        0.6229,
+        0.8841
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    }
+  }
+}

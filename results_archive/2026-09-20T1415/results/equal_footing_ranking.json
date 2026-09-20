@@ -1,0 +1,87 @@
+{
+  "cohort": "gbm",
+  "recovery_frozen": {
+    "nnls": 0.17519705754029358,
+    "svr": 0.591266339384311,
+    "cibersortx": 0.6368061544834709,
+    "elastic_net": 0.20133447835947926,
+    "bayesian": 0.4311199193900994,
+    "music": 0.17519705754029358,
+    "dwls": 0.4346888909856641,
+    "bisque": -0.01539035419692003,
+    "scdc": 0.20549433908959636,
+    "scdc_ensemble": 0.20549433908959636,
+    "epic": 0.29130222151245666,
+    "bayesprism": 0.09825612213094881
+  },
+  "recovery_h5ad": {
+    "nnls": 0.23724129711510733,
+    "svr": 0.5495969058721435,
+    "cibersortx": 0.5836715206695233,
+    "cibersortx_smode": 0.18484655511902037,
+    "elastic_net": 0.15175410355635366,
+    "bayesian": 0.2133811058807754,
+    "bayesian_hierarchical": 0.22714173329025023,
+    "music": 0.6020327130268487,
+    "dwls": 0.14701512712656029,
+    "bisque": 0.35889329604403253,
+    "scdc": 0.5328638803203329,
+    "scdc_ensemble": 0.5328638803203329,
+    "epic": 0.16509631566153216,
+    "bayesprism": 0.29985860476912085
+  },
+  "non_comparable_frozen": {
+    "bisque": "requires subjects assayed as BOTH bulk and single cells; Bisque's method IS the assay transform learned from paired subjects. Without overlap it estimates that transform from marginal distributions, which is its documented degraded mode. TCGA has no single-cell data, so this is not fixable from any file on disk -- it needs a genuinely paired cohort.",
+    "quantiseq": "requires its own TIL10 signature and a matching gene space; quanTIseq ignores the supplied reference. It is reported separately wherever it runs, and it returned no finite estimates on either TCGA cohort.",
+    "scdc_ensemble": "requires two or more references to weight across; With one reference there is nothing to ensemble; it reduces exactly to SCDC.",
+    "music": "requires cross-donor variance (sigma) in the reference; MuSiC's entire contribution is weighting genes by cross-donor consistency. With a zero sigma it is residual-weighted NNLS, and returns numbers identical to NNLS.",
+    "epic": "requires refProfiles.var (per-gene variance) in the reference; EPIC's published contribution is variance weighting. Without it the package warns and runs constrained least squares with uniform weights.",
+    "cibersortx_smode": "requires the single cells the signature was built from; S-mode's batch correction is defined against the source cells; without them the method cannot run at all.",
+    "bayesian_hierarchical": "failed in this run"
+  },
+  "non_comparable_h5ad": {
+    "bisque": "requires subjects assayed as BOTH bulk and single cells; Bisque's method IS the assay transform learned from paired subjects. Without overlap it estimates that transform from marginal distributions, which is its documented degraded mode. TCGA has no single-cell data, so this is not fixable from any file on disk -- it needs a genuinely paired cohort.",
+    "quantiseq": "requires its own TIL10 signature and a matching gene space; quanTIseq ignores the supplied reference. It is reported separately wherever it runs, and it returned no finite estimates on either TCGA cohort.",
+    "scdc_ensemble": "requires two or more references to weight across; With one reference there is nothing to ensemble; it reduces exactly to SCDC."
+  },
+  "kendall_tau": 0.2143,
+  "implementation_frozen": {
+    "nnls": "python",
+    "svr": "python",
+    "cibersortx": "python",
+    "cibersortx_smode": null,
+    "elastic_net": "python",
+    "bayesian": "python",
+    "bayesian_hierarchical": null,
+    "music": "python-reimplementation",
+    "dwls": "python-reimplementation",
+    "bisque": "python-reimplementation",
+    "scdc": "python-reimplementation",
+    "scdc_ensemble": "python-reimplementation",
+    "epic": "R:EPIC",
+    "quantiseq": null,
+    "bayesprism": "python-reimplementation"
+  },
+  "implementation_h5ad": {
+    "nnls": "python",
+    "svr": "python",
+    "cibersortx": "python",
+    "cibersortx_smode": "python",
+    "elastic_net": "python",
+    "bayesian": "python",
+    "bayesian_hierarchical": "python",
+    "music": "R:MuSiC",
+    "dwls": "python-reimplementation",
+    "bisque": "R:BisqueRNA",
+    "scdc": "R:SCDC",
+    "scdc_ensemble": "R:SCDC",
+    "epic": "R:EPIC",
+    "quantiseq": null,
+    "bayesprism": "python-reimplementation"
+  },
+  "implementation_switched": [
+    "scdc"
+  ],
+  "kendall_tau_excluding_switched": 0.1429,
+  "n_ranked_under_both": 8
+}
