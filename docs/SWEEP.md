@@ -248,7 +248,7 @@ have been silently replaced by a record of my own watchdog killing it.
 | `pytest tests/` | **283 passed, 1 skipped** after the fixes (1 failure before, defect 3) |
 | every `results/*.json` parses | **58 of 58** |
 | every script compiles | **51 of 51** (2 failures before, defect 2) |
-| `results_archive/` hash integrity | **4 of 4 runs INTACT** — 96, 97, 102 files matching recorded hashes |
+| `results_archive/` hash integrity | **3 of 3 manifested runs INTACT** — 96, 97 and 102 files matching their recorded hashes. *(Corrected 2026-09-20: this said "4 of 4", counting three numbers. The fourth directory, `_safety_20260905T1647`, is a safety copy with no hash manifest, so `--verify` does not apply to it. The freeze-hash check below does cover all four, which is where the 4 came from.)* |
 | **constraint freeze hash** | **identical across all four archived runs and live** — `2d1fb47c98832adf…`. The file has never changed. Only one commit has ever touched it. |
 | pre-registration | `register.py`: registered at OSF `dm2t8`, 2026-09-10T03:32:03Z, **and every result file postdates it** |
 | `RESULTS.md` vs generator | `CHECK OK` (565 lines) |
