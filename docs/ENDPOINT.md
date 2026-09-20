@@ -167,9 +167,33 @@ in the ACS arm and, with an all-zero sigma, **arithmetically NNLS** in the purit
 was constant; the algorithm was not. A rank correlation between two rankings whose rows mean
 different things is not evidence about anything.
 
-With the h5ad purity run in hand, that can be removed rather than argued about. Scoring **both
-arms on the same reference build**, so each method name refers to the same algorithm on both
-sides:
+With the h5ad purity run in hand, the *algorithm-identity* half of that objection can be removed
+rather than argued about — both arms score a reference that carries sigma, so `music` is R:MuSiC
+on both sides:
+
+> **CORRECTED 2026-09-20.** This passage originally claimed the two arms were scored on "the same
+> reference build". They are not, and the mismatch was introduced by this project. `run_all.py`
+> builds the ACS arm's reference with `--matrix` defaulting to **`X`** — GBmap's
+> `log1p(counts × size factor)`, the matrix OPEN_DEFECTS **D16** identifies as indefensible
+> against linear bulk. The purity h5ad arm was later patched to `raw/X`. So before that patch
+> both arms shared the *same* (wrong) matrix; afterwards they differ, with the ACS side left on
+> the log matrix.
+>
+> **What is genuinely closed:** the objection that `music` named a different algorithm in each
+> arm. Both arms now carry cross-donor variance, and the correlation is ≈ 0 either way.
+>
+> **What is not:** full parity. Closing it requires re-running `run_all.py --matrix raw/X`, which
+> would rebuild the ACS leaderboard and the primary outcome on the defensible matrix. That has
+> not been done, and until it is, the tau and rho figures below compare a log-space ACS ranking
+> against a counts-space purity ranking.
+>
+> **Why this does not rescue the ranker claim:** the correlation is ≈ 0 under *every* combination
+> tested — both arms on the frozen signature (+0.070), both excluding degenerate methods
+> (−0.104), and the mismatched pair below (−0.016, +0.007). A mismatch that flipped a null result
+> to a positive one would have to be extraordinarily well-aimed. It is recorded as a real
+> imperfection in the comparison, not as a reason to doubt the direction.
+
+
 
 | purity arm scored on | n methods | Spearman(ACS, purity recovery) | 95% CI | meets bar (≥0.60) |
 |---|---|---|---|---|
