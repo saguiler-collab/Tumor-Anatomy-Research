@@ -732,3 +732,175 @@ is the lever: 300 genes x 12 samples at `dilution_factor=1` is 53M reads x 150 i
 draws and did not finish in four minutes, while the same run at `dilution_factor=100` took
 **11.7 s**.
 
+
+---
+
+# Reference list
+
+Compiled 2026-09-20. **Every DOI below was extracted from a document in this repository** — from
+PDF metadata or from the first page of the paper itself — or from this project's own provenance
+records. None is written from recollection.
+
+Entries still marked **[VERIFY]** are sources genuinely used whose citation is *not* recoverable
+from anything on disk. They are left incomplete on purpose: a plausible-looking DOI that resolves
+to the wrong paper is worse than a visible gap.
+
+---
+
+## A · Data sources
+
+### A1 · Primary cohort
+
+**Ivy Glioblastoma Atlas Project (Ivy GAP)** — Allen Institute for Brain Science, 2014-11-25
+release. Laser-capture-microdissected bulk RNA-seq with anatomic structure annotations (LE, IT,
+CT, MVP, PAN), plus in-situ hybridisation used for a validation that involves no deconvolution.
+Supplies every ACS measurement.
+
+> Puchalski RB, Shah N, Miller J, *et al.* An anatomic transcriptional atlas of human
+> glioblastoma. *Science* **360**:660–663 (2018). doi:10.1126/science.aaf2666
+
+### A2 · Validation cohorts — TCGA
+
+| dataset | provenance | supplies |
+|---|---|---|
+| TCGA-GBM bulk expression | vendored from the predecessor project; delivered as log2(x+1), linearised here | tumour-purity yardstick, 154 samples |
+| TCGA-LGG `star_counts` | UCSC Xena / GDC | cross-cohort replication, 510 samples |
+| TCGA-GBM HumanMethylation450 | UCSC Xena, **TCGA Hub** | per-cell-type lymphoid truth, 155 samples |
+| TCGA-LGG HumanMethylation450 | UCSC Xena, **TCGA Hub** | per-cell-type lymphoid truth, 530 samples |
+| MC3 gene-level mutation calls (LGG) | TCGA Unified Ensemble "MC3" | IDH1 status as a candidate failure factor |
+| ABSOLUTE tumour purity | PanCanAtlas | the DNA ground truth for tumour content — never touches RNA, which is what makes it independent |
+| Leukocyte fraction from methylation | `TCGA_all_leuk_estimate.masked.20170107.tsv` | aggregate immune truth |
+| CIBERSORT relative fractions | `TCGA.Kallisto.fullIDs.cibersort.relative.tsv` | comparison against a published deconvolution of the same cohort |
+
+> **Both methylation matrices come from the same Xena hub, deliberately.** The GDC Hub serves
+> these cohorts under a different pipeline and genome build; mixing hubs across cohorts would
+> make a GBM-vs-LGG difference indistinguishable from a pipeline difference.
+
+- Carter SL, Cibulskis K, Helman E, McKenna A, *et al.* Absolute quantification of somatic DNA
+  alterations in human cancer. *Nature Biotechnology* **30**:413–421 (2012). doi:10.1038/nbt.2203
+- Thorsson V, *et al.* The Immune Landscape of Cancer. *Immunity* (2018).
+  doi:10.1016/j.immuni.2018.03.023
+- MC3 mutation calls — Ellrott K, *et al.* **[VERIFY]**
+- UCSC Xena — Goldman M, *et al.* **[VERIFY]**
+
+### A3 · Single-cell reference atlases
+
+| atlas | identifier | role |
+|---|---|---|
+| **GBmap** (primary) | CELLxGENE collection `283d65eb-dd53-496d-adb7-7570c7caa443`, `annotation_level_3`, 100 donors | the signature matrix every method solves against, in both its vendored-frozen and `raw/X`-rebuilt forms |
+| Neftel | GSE131928 | reference-sensitivity arm |
+| Darmanis | GSE84465 | reference-sensitivity arm |
+| Albiach | — | reference-sensitivity arm, mesenchymal phenotype |
+| Further accessions referenced in this file | GSE107559, GSE135437, GSE138794, GSE141383, GSE163120 | candidate references and cross-checks |
+
+- *Bidirectional tumor-host interdependence in glioblastoma* — the GBmap source publication.
+  *Cancer Cell* **40**:639 (2022). doi:10.1016/j.ccell.2022.05.009
+- Megill C, *et al.* CELLxGENE: a performant, scalable exploration platform for high dimensional
+  sparse matrices. *bioRxiv* (2021). doi:10.1101/2021.04.05.438318
+- Neftel C, *et al.* An Integrative Model of Cellular States, Plasticity, and Genetics for
+  Glioblastoma. *Cell* (2019). doi:10.1016/j.cell.2019.06.024
+- Mossi Albiach A, Janusauskas J, Kjaer J, *et al.* Futile wound healing drives mesenchymal-like
+  cell phenotypes in human glioblastoma. *bioRxiv* (2023). doi:10.1101/2023.09.01.555882
+- Siletti K, *et al.* Transcriptomic diversity of cell types across the adult human brain.
+  *Science* (2023). **[VERIFY]**
+- Darmanis S, *et al.* Single-cell RNA-seq analysis of infiltrating neoplastic cells at the
+  migrating front of human glioblastoma (2017). **[VERIFY]**
+
+### A4 · Methylation deconvolution reference
+
+**EpiDISH**, `centDHSbloodDMC.m` — 333 HM450 CpGs across 7 blood cell types, RPC mode. Supplies
+the per-cell-type lymphoid truth (T / NK / B) in both cohorts.
+
+Two limits, both measured rather than assumed: it is a **blood** reference applied to **brain
+tumour** tissue, so it is used only for lymphoid *sub-composition* and never absolute scale, and
+`Macrophage_Microglia` is explicitly not measurable by this route. Only **255 of 333** CpGs
+survive complete-case filtering in these matrices — 64 are all-NA.
+
+- Teschendorff AE, Breeze CE, Zheng SC, Beck S. EpiDISH. **[VERIFY]**
+
+---
+
+## B · Literature
+
+### B1 · Benchmarks and reviews this study is positioned against
+
+- Avila Cobos F, Alquicira-Hernandez J, Powell JE, Mestdagh P, De Preter K. Benchmarking of cell
+  type deconvolution pipelines for transcriptomics data. *Nature Communications* **11**:5650
+  (2020). doi:10.1038/s41467-020-19015-1
+- Sturm G, Finotello F, Petitprez F, *et al.* Comprehensive evaluation of transcriptome-based
+  cell-type quantification methods for immuno-oncology. *Bioinformatics* **35**:436–445 (2019).
+  doi:10.1093/bioinformatics/btz363
+- Nguyen H, Nguyen H, Tran D, Draghici S, Nguyen T. Fourteen years of cellular deconvolution:
+  methodology, applications, technical evaluation and outstanding challenges. *Nucleic Acids
+  Research* **52**:4761 (2024). doi:10.1093/nar/gkae267
+- Gaspard-Boulinc LC, *et al.* Cell-type deconvolution methods for spatial transcriptomics.
+  *Nature Reviews Genetics* **26**:828 (2025). doi:10.1038/s41576-025-00845-y
+- Liu F, *et al.* DNA Methylation-Based Cell Type Deconvolution Reveals the Distinct Cell
+  Composition in Brain Tumor Microenvironment. *bioRxiv* (2025). doi:10.1101/2025.01.19.633794
+
+### B2 · Methods in or adjacent to the 15-method panel
+
+**Cited with a verified record:**
+
+- **CIBERSORTx** — Newman AM, *et al.* Determining cell type abundance and expression from bulk
+  tissues with digital cytometry. *Nature Biotechnology* **37**:773 (2019).
+  doi:10.1038/s41587-019-0114-2 *(B-mode and S-mode; Supplementary Table 1d records the mode
+  chosen per dataset)*
+- **Bisque** — Jew B, *et al.* Accurate estimation of cell composition in bulk expression through
+  robust integration of single-cell information. *Nature Communications* (2020).
+  doi:10.1038/s41467-020-15816-6
+- **DWLS** — Tsoucas D, Sistig A. DWLS: Gene Expression Deconvolution Using Dampened Weighted
+  Least Squares. *(package documentation on disk; the primary paper's DOI is not recorded here)*
+  **[VERIFY]**
+
+**Assessed or considered, not in the final panel:**
+
+- **CDSeq** — Kang K, Meng Q, Shats I, Umbach DM, Li M, Li Y, Li X, Li L. CDSeq: A novel complete
+  deconvolution method for dissecting heterogeneous samples using gene expression data.
+  *PLoS Computational Biology* (2019). doi:10.1371/journal.pcbi.1007510
+  *(reference-free; blocked on a macOS Fortran toolchain, see `docs/ROAD_TO_PAPER.md`)*
+- **Scaden** — Menden K, *et al.* Deep learning–based cell composition analysis from tissue
+  expression profiles. *Science Advances* **6**:eaba2619 (2020). doi:10.1126/sciadv.aba2619
+  *(assessed and dropped: a deep model needing training data this cohort cannot supply)*
+- **GBMdeconvoluteR** — *Neuro-Oncology* **25**(7):1236–1248 (2023). doi:10.1093/neuonc/noad021
+  *(GBM-specific deconvolution)*
+- **EcoTyper** — Profiling Cellular Ecosystems at Single-Cell Resolution and at Scale with
+  EcoTyper. *Methods in Molecular Biology* chapter (2023). **[VERIFY]**
+
+**In the panel, with no citation recoverable from anything on disk. These must be added before
+submission:**
+
+- **MuSiC** — Wang X, *et al.* **[VERIFY]** *(package vendored; its DESCRIPTION carries no DOI)*
+- **SCDC** — Dong M, *et al.* **[VERIFY]** *(package vendored; DESCRIPTION carries no DOI)*
+- **EPIC** — Racle J, *et al.* **[VERIFY]** *(installed as an R package, not vendored)*
+- **quanTIseq** — Finotello F, *et al.* **[VERIFY]** *(installed as an R package)*
+- **BayesPrism** — Chu T, *et al.* **[VERIFY]** *(installed as an R package)*
+
+> `docs/METHODS.md` documents what each of these does and every deviation from its published
+> algorithm. What it does not carry is a bibliographic record, which is why five entries above
+> are incomplete rather than filled in.
+
+### B3 · Technical background
+
+- Li X, Gibson G, Qiu P. Gene representation in scRNA-seq is correlated with common motifs at the
+  3′ end of transcripts. *Frontiers in Bioinformatics* **3**:1120290 (2023).
+  doi:10.3389/fbinf.2023.1120290
+
+---
+
+## C · How to read this list
+
+**Section A is load-bearing.** Remove any entry and a result disappears.
+
+**Section B1 is positioning** — benchmarks this study's findings agree or disagree with, set out
+in `docs/RELATED_WORK.md`. Listing a benchmark is not a claim to have reproduced it.
+
+**Section B2 is mixed**: three methods in the panel are cited properly, five are not, and four
+further tools were assessed and excluded with the reason stated.
+
+**Outstanding before submission**
+
+1. Complete the **13 [VERIFY] entries** against the publisher's record.
+2. In particular, the **five panel methods in B2** — MuSiC, SCDC, EPIC, quanTIseq, BayesPrism —
+   are used in every result and currently uncited.
+3. Choose a citation style. The exemplar manuscript this is modelled on uses IEEE numeric.
