@@ -37,19 +37,19 @@ def apply() -> None:
         # ---- type -------------------------------------------------------------------
         "font.family": "sans-serif",
         "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
-        "font.size": 11,
-        "axes.titlesize": 12,
-        "axes.labelsize": 11.5,
-        "xtick.labelsize": 10.5,
-        "ytick.labelsize": 10.5,
-        "legend.fontsize": 10.5,
-        "figure.titlesize": 13,
+        "font.size": 12.5,
+        "axes.titlesize": 13,
+        "axes.labelsize": 12.5,
+        "xtick.labelsize": 12,
+        "ytick.labelsize": 12,
+        "legend.fontsize": 11.5,
+        "figure.titlesize": 14.5,
         # Journals set panel letters and titles in bold; everything else stays regular.
         "axes.titleweight": "bold",
         "axes.labelweight": "regular",
         # ---- axes -------------------------------------------------------------------
         # Heavy black spines, and only the two that carry information.
-        "axes.linewidth": 1.4,
+        "axes.linewidth": 1.8,
         "axes.edgecolor": INK,
         "axes.labelcolor": INK,
         "axes.spines.top": False,
@@ -62,10 +62,10 @@ def apply() -> None:
         # Outward and substantial. Inward ticks sit on top of the data.
         "xtick.direction": "out",
         "ytick.direction": "out",
-        "xtick.major.size": 5.5,
-        "ytick.major.size": 5.5,
-        "xtick.major.width": 1.4,
-        "ytick.major.width": 1.4,
+        "xtick.major.size": 6.5,
+        "ytick.major.size": 6.5,
+        "xtick.major.width": 1.8,
+        "ytick.major.width": 1.8,
         "xtick.color": INK,
         "ytick.color": INK,
         # ---- marks ------------------------------------------------------------------
@@ -93,7 +93,14 @@ def apply() -> None:
 
 
 def italicise(ax, axis: str = "y") -> None:
-    """Gene and cell-type symbols are set in italic by convention."""
+    """Italicise tick labels. **For GENE SYMBOLS ONLY.**
+
+    Convention: gene symbols are italic (*PITX1*, *CXCR4*); cell-type names, protein names and
+    software names are NOT. None of this project's figures label genes -- they label cell types
+    (T cell, B cell) and methods (`dwls`, `music`) -- so nothing here calls this, and applying
+    it to match the look of a figure that happens to plot genes would be a convention error
+    rather than a style choice.
+    """
     labels = ax.get_yticklabels() if axis == "y" else ax.get_xticklabels()
     for t in labels:
         t.set_fontstyle("italic")

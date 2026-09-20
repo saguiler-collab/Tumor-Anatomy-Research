@@ -87,7 +87,10 @@ def fig_purity_scatter(tag: str, label: str, n_panels: int = 6):
         x, y = truth[ok], e[ok]
         r = stats.spearmanr(x, y)
         ax.plot([0, 1], [0, 1], "--", color=C_ID, lw=1.1, zorder=1)
-        ax.scatter(x, y, s=13, alpha=.45, color=C_PT, edgecolors="none", zorder=2)
+        # black-edged markers, as in a printed figure. Thin edges and partial alpha so
+        # 154 overlapping points stay readable rather than turning into a solid block.
+        ax.scatter(x, y, s=26, alpha=.62, color=C_PT, edgecolors=PS.INK,
+                   linewidths=.45, zorder=2)
         if np.std(x) > 0:
             b, a = np.polyfit(x, y, 1)
             xs = np.linspace(x.min(), x.max(), 50)
