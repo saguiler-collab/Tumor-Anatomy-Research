@@ -737,13 +737,14 @@ draws and did not finish in four minutes, while the same run at `dilution_factor
 
 # Reference list
 
-Compiled 2026-09-20. **Every DOI below was extracted from a document in this repository** — from
-PDF metadata or from the first page of the paper itself — or from this project's own provenance
-records. None is written from recollection.
+Compiled 2026-09-20. **Every DOI below was extracted from a document in this repository** — PDF
+metadata, the first page of the paper, or a package README — or from this project's own
+provenance records. None is written from recollection.
 
-Entries still marked **[VERIFY]** are sources genuinely used whose citation is *not* recoverable
-from anything on disk. They are left incomplete on purpose: a plausible-looking DOI that resolves
-to the wrong paper is worse than a visible gap.
+*A first pass marked five panel methods as uncited, on the basis of a PDF scan that truncated at
+80 of 187 files and excluded whole directories. That was wrong: papers for MuSiC, SCDC, EPIC,
+quanTIseq and BayesPrism were all on disk. Re-scanned completely; every method in the panel now
+has a verified citation.*
 
 ---
 
@@ -753,7 +754,7 @@ to the wrong paper is worse than a visible gap.
 
 **Ivy Glioblastoma Atlas Project (Ivy GAP)** — Allen Institute for Brain Science, 2014-11-25
 release. Laser-capture-microdissected bulk RNA-seq with anatomic structure annotations (LE, IT,
-CT, MVP, PAN), plus in-situ hybridisation used for a validation that involves no deconvolution.
+CT, MVP, PAN), plus in-situ hybridisation used for a validation involving no deconvolution.
 Supplies every ACS measurement.
 
 > Puchalski RB, Shah N, Miller J, *et al.* An anatomic transcriptional atlas of human
@@ -773,8 +774,8 @@ Supplies every ACS measurement.
 | CIBERSORT relative fractions | `TCGA.Kallisto.fullIDs.cibersort.relative.tsv` | comparison against a published deconvolution of the same cohort |
 
 > **Both methylation matrices come from the same Xena hub, deliberately.** The GDC Hub serves
-> these cohorts under a different pipeline and genome build; mixing hubs across cohorts would
-> make a GBM-vs-LGG difference indistinguishable from a pipeline difference.
+> these cohorts under a different pipeline and genome build; mixing hubs across cohorts would make
+> a GBM-vs-LGG difference indistinguishable from a pipeline difference.
 
 - Carter SL, Cibulskis K, Helman E, McKenna A, *et al.* Absolute quantification of somatic DNA
   alterations in human cancer. *Nature Biotechnology* **30**:413–421 (2012). doi:10.1038/nbt.2203
@@ -803,8 +804,8 @@ Supplies every ACS measurement.
   cell phenotypes in human glioblastoma. *bioRxiv* (2023). doi:10.1101/2023.09.01.555882
 - Siletti K, *et al.* Transcriptomic diversity of cell types across the adult human brain.
   *Science* (2023). **[VERIFY]**
-- Darmanis S, *et al.* Single-cell RNA-seq analysis of infiltrating neoplastic cells at the
-  migrating front of human glioblastoma (2017). **[VERIFY]**
+- Darmanis S, *et al.* Single-cell RNA-seq of infiltrating neoplastic cells at the migrating front
+  of human glioblastoma (2017). **[VERIFY]**
 
 ### A4 · Methylation deconvolution reference
 
@@ -822,69 +823,58 @@ survive complete-case filtering in these matrices — 64 are all-NA.
 
 ## B · Literature
 
-### B1 · Benchmarks and reviews this study is positioned against
+### B1 · The 15-method panel — every method, with the paper it comes from
 
-- Avila Cobos F, Alquicira-Hernandez J, Powell JE, Mestdagh P, De Preter K. Benchmarking of cell
-  type deconvolution pipelines for transcriptomics data. *Nature Communications* **11**:5650
-  (2020). doi:10.1038/s41467-020-19015-1
-- Sturm G, Finotello F, Petitprez F, *et al.* Comprehensive evaluation of transcriptome-based
-  cell-type quantification methods for immuno-oncology. *Bioinformatics* **35**:436–445 (2019).
-  doi:10.1093/bioinformatics/btz363
-- Nguyen H, Nguyen H, Tran D, Draghici S, Nguyen T. Fourteen years of cellular deconvolution:
-  methodology, applications, technical evaluation and outstanding challenges. *Nucleic Acids
-  Research* **52**:4761 (2024). doi:10.1093/nar/gkae267
-- Gaspard-Boulinc LC, *et al.* Cell-type deconvolution methods for spatial transcriptomics.
-  *Nature Reviews Genetics* **26**:828 (2025). doi:10.1038/s41576-025-00845-y
-- Liu F, *et al.* DNA Methylation-Based Cell Type Deconvolution Reveals the Distinct Cell
-  Composition in Brain Tumor Microenvironment. *bioRxiv* (2025). doi:10.1101/2025.01.19.633794
+| method | citation | DOI |
+|---|---|---|
+| **MuSiC** | Wang X, Park J, Susztak K, Zhang NR, Li M. Bulk tissue cell type deconvolution with multi-subject single-cell expression reference. *Nat Commun* (2019) | doi:10.1038/s41467-018-08023-x |
+| **SCDC** / **SCDC ENSEMBLE** | Dong M, Thennavan A, *et al.* SCDC: bulk gene expression deconvolution by multiple single-cell RNA sequencing references. *Brief Bioinform* (2021) | doi:10.1093/bib/bbz166 |
+| **BisqueRNA** | Jew B, *et al.* Accurate estimation of cell composition in bulk expression through robust integration of single-cell information. *Nat Commun* (2020) | doi:10.1038/s41467-020-15816-6 |
+| **EPIC** | Racle J, Gfeller D. EPIC: A Tool to Estimate the Proportions of Different Cell Types from Bulk Gene Expression Data. In: Boegel S (ed), *Bioinformatics for Cancer Immunotherapy*, Methods Mol Biol **2120**, ch. 17 (2020) | doi:10.1007/978-1-0716-0327-7_17 |
+| **quanTIseq** | Plattner C, Finotello F, Rieder D. Deconvoluting tumor-infiltrating immune cells from RNA-seq data using quanTIseq. *Methods in Enzymology* ch. 10 (2019) | doi:10.1016/bs.mie.2019.05.056 |
+| **DWLS** | Tsoucas D, Dong R, Chen H, Zhu Q, Guo G, Yuan GC. Accurate estimation of cell-type composition from gene expression data. *Nat Commun* **10**:2975 (2019) | doi:10.1038/s41467-019-10802-z |
+| **BayesPrism** | Chu T, *et al.* Cell type and gene expression deconvolution with BayesPrism enables Bayesian integrative analysis across bulk and single-cell RNA sequencing in oncology. *Nat Cancer* (2022) | doi:10.1038/s43018-022-00356-3 |
+| **CIBERSORTx** (B-mode, S-mode) | Newman AM, Steen CB, *et al.* Determining cell type abundance and expression from bulk tissues with digital cytometry. *Nat Biotechnol* **37**:773 (2019) | doi:10.1038/s41587-019-0114-2 |
+| **NNLS, SVR, elastic net, Bayesian, hierarchical Bayesian** | implemented in this project; no external source. `docs/METHODS.md` documents each | — |
 
-### B2 · Methods in or adjacent to the 15-method panel
-
-**Cited with a verified record:**
-
-- **CIBERSORTx** — Newman AM, *et al.* Determining cell type abundance and expression from bulk
-  tissues with digital cytometry. *Nature Biotechnology* **37**:773 (2019).
-  doi:10.1038/s41587-019-0114-2 *(B-mode and S-mode; Supplementary Table 1d records the mode
-  chosen per dataset)*
-- **Bisque** — Jew B, *et al.* Accurate estimation of cell composition in bulk expression through
-  robust integration of single-cell information. *Nature Communications* (2020).
-  doi:10.1038/s41467-020-15816-6
-- **DWLS** — Tsoucas D, Sistig A. DWLS: Gene Expression Deconvolution Using Dampened Weighted
-  Least Squares. *(package documentation on disk; the primary paper's DOI is not recorded here)*
-  **[VERIFY]**
-
-**Assessed or considered, not in the final panel:**
+### B2 · Assessed or considered, not in the final panel
 
 - **CDSeq** — Kang K, Meng Q, Shats I, Umbach DM, Li M, Li Y, Li X, Li L. CDSeq: A novel complete
   deconvolution method for dissecting heterogeneous samples using gene expression data.
-  *PLoS Computational Biology* (2019). doi:10.1371/journal.pcbi.1007510
-  *(reference-free; blocked on a macOS Fortran toolchain, see `docs/ROAD_TO_PAPER.md`)*
+  *PLoS Comput Biol* (2019). doi:10.1371/journal.pcbi.1007510
+  *(reference-free; blocked on a macOS Fortran toolchain)*
 - **Scaden** — Menden K, *et al.* Deep learning–based cell composition analysis from tissue
-  expression profiles. *Science Advances* **6**:eaba2619 (2020). doi:10.1126/sciadv.aba2619
-  *(assessed and dropped: a deep model needing training data this cohort cannot supply)*
+  expression profiles. *Sci Adv* **6**:eaba2619 (2020). doi:10.1126/sciadv.aba2619
+  *(assessed and dropped: needs training data this cohort cannot supply)*
+- **MuSiC2** — Fan J, *et al.* MuSiC2: cell-type deconvolution for multi-condition bulk RNA-seq
+  data. *Brief Bioinform* (2022). doi:10.1093/bib/bbac430
+  *(built for cross-condition bias this cohort does not have)*
 - **GBMdeconvoluteR** — *Neuro-Oncology* **25**(7):1236–1248 (2023). doi:10.1093/neuonc/noad021
-  *(GBM-specific deconvolution)*
 - **EcoTyper** — Profiling Cellular Ecosystems at Single-Cell Resolution and at Scale with
-  EcoTyper. *Methods in Molecular Biology* chapter (2023). **[VERIFY]**
+  EcoTyper. *Methods Mol Biol* (2023). **[VERIFY]**
+- **immunedeconv** — Sturm G, Finotello F, List M. Immunedeconv: An R Package for Unified Access
+  to Computational Methods for Estimating Immune Cell Fractions from Bulk RNA-Sequencing Data.
+  *Methods Mol Biol* **2120**, ch. 16 (2020). doi:10.1007/978-1-0716-0327-7_16
 
-**In the panel, with no citation recoverable from anything on disk. These must be added before
-submission:**
+### B3 · Benchmarks and reviews this study is positioned against
 
-- **MuSiC** — Wang X, *et al.* **[VERIFY]** *(package vendored; its DESCRIPTION carries no DOI)*
-- **SCDC** — Dong M, *et al.* **[VERIFY]** *(package vendored; DESCRIPTION carries no DOI)*
-- **EPIC** — Racle J, *et al.* **[VERIFY]** *(installed as an R package, not vendored)*
-- **quanTIseq** — Finotello F, *et al.* **[VERIFY]** *(installed as an R package)*
-- **BayesPrism** — Chu T, *et al.* **[VERIFY]** *(installed as an R package)*
+- Avila Cobos F, Alquicira-Hernandez J, Powell JE, Mestdagh P, De Preter K. Benchmarking of cell
+  type deconvolution pipelines for transcriptomics data. *Nat Commun* **11**:5650 (2020).
+  doi:10.1038/s41467-020-19015-1
+- Sturm G, Finotello F, Petitprez F, *et al.* Comprehensive evaluation of transcriptome-based
+  cell-type quantification methods for immuno-oncology. *Bioinformatics* **35**:436–445 (2019).
+  doi:10.1093/bioinformatics/btz363
+- Nguyen H, Nguyen H, Tran D, Draghici S, Nguyen T. Fourteen years of cellular deconvolution.
+  *Nucleic Acids Res* **52**:4761 (2024). doi:10.1093/nar/gkae267
+- Gaspard-Boulinc LC, *et al.* Cell-type deconvolution methods for spatial transcriptomics.
+  *Nat Rev Genet* **26**:828 (2025). doi:10.1038/s41576-025-00845-y
+- Liu F, *et al.* DNA Methylation-Based Cell Type Deconvolution Reveals the Distinct Cell
+  Composition in Brain Tumor Microenvironment. *bioRxiv* (2025). doi:10.1101/2025.01.19.633794
 
-> `docs/METHODS.md` documents what each of these does and every deviation from its published
-> algorithm. What it does not carry is a bibliographic record, which is why five entries above
-> are incomplete rather than filled in.
-
-### B3 · Technical background
+### B4 · Technical background
 
 - Li X, Gibson G, Qiu P. Gene representation in scRNA-seq is correlated with common motifs at the
-  3′ end of transcripts. *Frontiers in Bioinformatics* **3**:1120290 (2023).
-  doi:10.3389/fbinf.2023.1120290
+  3′ end of transcripts. *Front Bioinform* **3**:1120290 (2023). doi:10.3389/fbinf.2023.1120290
 
 ---
 
@@ -892,15 +882,10 @@ submission:**
 
 **Section A is load-bearing.** Remove any entry and a result disappears.
 
-**Section B1 is positioning** — benchmarks this study's findings agree or disagree with, set out
-in `docs/RELATED_WORK.md`. Listing a benchmark is not a claim to have reproduced it.
+**Section B1 is every method in the panel**, each with the paper that defines it. Section B2 is
+tools assessed and excluded, with the reason. Section B3 is positioning — benchmarks this study
+agrees or disagrees with, set out in `docs/RELATED_WORK.md`. Listing a benchmark is not a claim
+to have reproduced it.
 
-**Section B2 is mixed**: three methods in the panel are cited properly, five are not, and four
-further tools were assessed and excluded with the reason stated.
-
-**Outstanding before submission**
-
-1. Complete the **13 [VERIFY] entries** against the publisher's record.
-2. In particular, the **five panel methods in B2** — MuSiC, SCDC, EPIC, quanTIseq, BayesPrism —
-   are used in every result and currently uncited.
-3. Choose a citation style. The exemplar manuscript this is modelled on uses IEEE numeric.
+**Outstanding: 6 [VERIFY] entries**, none of them a panel method — MC3, Xena, Siletti, Darmanis,
+EpiDISH and the EcoTyper chapter.

@@ -900,3 +900,32 @@ Per method, per cell type, on donor-held-out mixtures with known composition:
 
 The headline selection criterion is `mae_primary`, which **excludes the Astrocyte
 sidecar** so an acknowledged-unresolvable column cannot move the ranking.
+
+---
+
+## Validation of the exclusion rules against the source papers
+
+`ivygap/deconv/comparability.py` excludes methods from quantitative comparison on the grounds
+that they ran without an input their published algorithm requires. Those grounds were written
+from this project's reading of each method. On 2026-09-20 every one was checked against the
+paper it claims to be reading — because an exclusion rule derived from our own reasoning, rather
+than from the method's own account of itself, is an opinion dressed as a criterion.
+
+**All five validate. Evidence quoted from the papers on disk:**
+
+| claim in `comparability.py` | source | what the paper says |
+|---|---|---|
+| **MuSiC** requires cross-donor variance; without it the gene weighting is constant and the result is arithmetically NNLS | Wang *et al.* 2019, doi:10.1038/s41467-018-08023-x | The method schematic is literally "Cross-subject mean → **Cross-subject variance** → **Weight**". The name is MUlti-Subject SIngle Cell deconvolution; multi-subject variance is the contribution, not an option. |
+| **SCDC ENSEMBLE** requires two or more references; with one there is nothing to weight across | Dong *et al.* 2021, doi:10.1093/bib/bbz166 | The paper's own title: "bulk gene expression deconvolution by **multiple** single-cell RNA sequencing references". |
+| **Bisque** requires subjects assayed as both bulk and single cells; the assay transform IS the method | Jew *et al.* 2020, doi:10.1038/s41467-020-15816-6 | Both validation cohorts carry a paired subset by design — **6 of 106** adipose samples and **8 of 636** DLPFC samples have both bulk RNA-seq and snRNA-seq. The mechanism is "gene-specific linear transformations" fitted to model discordance between reference and bulk. |
+| **EPIC** uses per-gene variability of the reference profiles (`refProfiles.var`) | Racle & Gfeller 2020, doi:10.1007/978-1-0716-0327-7_17 | "a constrained **weighted** least square optimization on the set of signature genes". The weights are the published contribution; running unweighted is not EPIC. |
+| **quanTIseq** ignores a supplied reference and uses its own signature | Plattner *et al.* 2019, doi:10.1016/bs.mie.2019.05.056 | "quanTIseq signature matrix was built from RNA-seq datasets from **10 different immune cell types**" — the TIL10 signature is internal to the method. |
+
+**Why this check was worth running.** Four of the five were confirmed on the first search. The
+Bisque claim was *not* found by the obvious search terms and had to be traced through the paper's
+experimental design before it validated — which is precisely the case where a plausible but
+unchecked rule would have survived unexamined. It is the exclusion that removes a method from
+**every** comparison in this study, so it is the one that most needed the paper behind it.
+
+**What this does not establish.** That the exclusions are *complete*. A method could require
+something none of us noticed. The rules are grounded, not proven exhaustive.
