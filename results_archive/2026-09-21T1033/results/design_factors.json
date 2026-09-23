@@ -1,0 +1,354 @@
+{
+  "what_this_is": "Which design properties change accuracy, measured by near-controlled contrasts between methods differing in one property. NOT a selection procedure: ACS is the object under test and may not choose a method, and nothing here reorders the leaderboard.",
+  "why_not_why_did_music_win": "MuSiC leads ACS by one constraint-tumour pair out of 57 (1.000 vs 0.9846); six methods' CIs contain its score; ACS takes only 66 distinct values. A margin that thin cannot be attributed to a design feature, so the question is posed as 'which property, isolated, changes accuracy' instead.",
+  "power": "14 comparable methods, containing four exact ACS ties and several near-duplicate pairs, so the effective number of independent designs is closer to nine. Attribute associations are descriptive.",
+  "contrasts": [
+    {
+      "property": "cross-donor variance weighting",
+      "with": "music",
+      "without": "nnls",
+      "note": "MuSiC weights genes by consistency across the 88 reference donors; without that weighting it reduces to NNLS, which is the comparison row.",
+      "deltas": {
+        "acs": 0.01538,
+        "mae_primary": -0.00526,
+        "tumour_mae": -0.02263,
+        "tumour_abs_bias": 0.03474,
+        "tumour_r": 0.08427,
+        "worst_niche_mae": -0.00427
+      },
+      "n_outcomes_improved": 5
+    },
+    {
+      "property": "L1/L2 regularisation",
+      "with": "elastic_net",
+      "without": "nnls",
+      "note": "Same least-squares objective, penalised.",
+      "deltas": {
+        "acs": 0.0,
+        "mae_primary": -0.00101,
+        "tumour_mae": -0.00544,
+        "tumour_abs_bias": 0.01896,
+        "tumour_r": 0.00655,
+        "worst_niche_mae": 0.00092
+      },
+      "n_outcomes_improved": 3
+    },
+    {
+      "property": "batch correction (B-mode)",
+      "with": "cibersortx",
+      "without": "svr",
+      "note": "CIBERSORTx's base solver is this project's nu-SVR, so the difference is the batch-correction layer alone.",
+      "deltas": {
+        "acs": -0.01538,
+        "mae_primary": -0.00015,
+        "tumour_mae": 0.00183,
+        "tumour_abs_bias": -0.01318,
+        "tumour_r": -0.02444,
+        "worst_niche_mae": 0.00114
+      },
+      "n_outcomes_improved": 2
+    },
+    {
+      "property": "S-mode vs B-mode",
+      "with": "cibersortx_smode",
+      "without": "cibersortx",
+      "note": "Per-cell-type expression adjustment against whole-matrix batch correction.",
+      "deltas": {
+        "acs": 0.0,
+        "mae_primary": 0.00844,
+        "tumour_mae": 0.00286,
+        "tumour_abs_bias": 0.04266,
+        "tumour_r": -0.02953,
+        "worst_niche_mae": 0.00879
+      },
+      "n_outcomes_improved": 0
+    },
+    {
+      "property": "donor-level hierarchy",
+      "with": "bayesian_hierarchical",
+      "without": "bayesian",
+      "note": "The same likelihood with a donor-level prior added.",
+      "deltas": {
+        "acs": 0.0,
+        "mae_primary": 0.00094,
+        "tumour_mae": 0.00012,
+        "tumour_abs_bias": 0.00026,
+        "tumour_r": -0.00674,
+        "worst_niche_mae": 0.00028
+      },
+      "n_outcomes_improved": 0
+    },
+    {
+      "property": "ensembling across references",
+      "with": "scdc_ensemble",
+      "without": "scdc",
+      "note": "NULL CONTROL. With one reference, SCDC ENSEMBLE reduces exactly to SCDC, so this contrast must be 0.0000 on every outcome. A non-zero value means the machinery below is reading noise rather than a design property.",
+      "deltas": {
+        "acs": 0.0,
+        "mae_primary": 0.0,
+        "tumour_mae": 0.0,
+        "tumour_abs_bias": 0.0,
+        "tumour_r": 0.0,
+        "worst_niche_mae": 0.0
+      },
+      "n_outcomes_improved": 0
+    }
+  ],
+  "attribute_association_descriptive_only": [
+    {
+      "attribute": "uses_individual_cells",
+      "n_with": 6,
+      "methods_with": [
+        "music",
+        "scdc",
+        "scdc_ensemble",
+        "bisque",
+        "bayesprism",
+        "dwls"
+      ],
+      "mean_mae_with": 0.0711,
+      "mean_mae_without": 0.0709,
+      "delta_mae": 0.0002,
+      "mean_acs_with": 0.9077,
+      "mean_acs_without": 0.9269
+    },
+    {
+      "attribute": "uses_cross_donor_variance",
+      "n_with": 3,
+      "methods_with": [
+        "music",
+        "scdc",
+        "scdc_ensemble"
+      ],
+      "mean_mae_with": 0.0726,
+      "mean_mae_without": 0.0706,
+      "delta_mae": 0.002,
+      "mean_acs_with": 0.9692,
+      "mean_acs_without": 0.9049
+    },
+    {
+      "attribute": "regularised",
+      "n_with": 5,
+      "methods_with": [
+        "svr",
+        "elastic_net",
+        "cibersortx",
+        "cibersortx_smode",
+        "dwls"
+      ],
+      "mean_mae_with": 0.0645,
+      "mean_mae_without": 0.0746,
+      "delta_mae": -0.0101,
+      "mean_acs_with": 0.9292,
+      "mean_acs_without": 0.9128
+    },
+    {
+      "attribute": "models_other_compartment",
+      "n_with": 1,
+      "methods_with": [
+        "epic"
+      ],
+      "mean_mae_with": 0.0659,
+      "mean_mae_without": 0.0714,
+      "delta_mae": -0.0055,
+      "mean_acs_with": 0.9846,
+      "mean_acs_without": 0.9136
+    },
+    {
+      "attribute": "probabilistic",
+      "n_with": 3,
+      "methods_with": [
+        "bayesprism",
+        "bayesian",
+        "bayesian_hierarchical"
+      ],
+      "mean_mae_with": 0.0859,
+      "mean_mae_without": 0.0669,
+      "delta_mae": 0.019,
+      "mean_acs_with": 0.8051,
+      "mean_acs_without": 0.9497
+    },
+    {
+      "attribute": "platform_correction",
+      "n_with": 3,
+      "methods_with": [
+        "cibersortx",
+        "cibersortx_smode",
+        "bisque"
+      ],
+      "mean_mae_with": 0.0681,
+      "mean_mae_without": 0.0718,
+      "delta_mae": -0.0037,
+      "mean_acs_with": 0.9538,
+      "mean_acs_without": 0.9091
+    },
+    {
+      "attribute": "weights_genes_by_informativeness",
+      "n_with": 5,
+      "methods_with": [
+        "music",
+        "epic",
+        "scdc",
+        "scdc_ensemble",
+        "dwls"
+      ],
+      "mean_mae_with": 0.072,
+      "mean_mae_without": 0.0704,
+      "delta_mae": 0.0015,
+      "mean_acs_with": 0.9262,
+      "mean_acs_without": 0.9145
+    }
+  ],
+  "per_method": [
+    {
+      "method": "music",
+      "acs": 1.0,
+      "comparable": true,
+      "mae_primary": 0.05081,
+      "tumour_mae": 0.12003,
+      "tumour_abs_bias": 0.07575,
+      "tumour_r": 0.64125,
+      "worst_niche_mae": 0.05377
+    },
+    {
+      "method": "nnls",
+      "acs": 0.98462,
+      "comparable": true,
+      "mae_primary": 0.05606,
+      "tumour_mae": 0.14266,
+      "tumour_abs_bias": 0.04101,
+      "tumour_r": 0.55697,
+      "worst_niche_mae": 0.05804
+    },
+    {
+      "method": "svr",
+      "acs": 0.98462,
+      "comparable": true,
+      "mae_primary": 0.06096,
+      "tumour_mae": 0.13879,
+      "tumour_abs_bias": 0.06039,
+      "tumour_r": 0.47497,
+      "worst_niche_mae": 0.06335
+    },
+    {
+      "method": "elastic_net",
+      "acs": 0.98462,
+      "comparable": true,
+      "mae_primary": 0.05505,
+      "tumour_mae": 0.13722,
+      "tumour_abs_bias": 0.05997,
+      "tumour_r": 0.56353,
+      "worst_niche_mae": 0.05896
+    },
+    {
+      "method": "epic",
+      "acs": 0.98462,
+      "comparable": true,
+      "mae_primary": 0.0659,
+      "tumour_mae": 0.15723,
+      "tumour_abs_bias": 0.13536,
+      "tumour_r": 0.54965,
+      "worst_niche_mae": 0.07708
+    },
+    {
+      "method": "cibersortx",
+      "acs": 0.96923,
+      "comparable": true,
+      "mae_primary": 0.06081,
+      "tumour_mae": 0.14062,
+      "tumour_abs_bias": 0.04721,
+      "tumour_r": 0.45053,
+      "worst_niche_mae": 0.0645
+    },
+    {
+      "method": "cibersortx_smode",
+      "acs": 0.96923,
+      "comparable": true,
+      "mae_primary": 0.06926,
+      "tumour_mae": 0.14348,
+      "tumour_abs_bias": 0.08987,
+      "tumour_r": 0.421,
+      "worst_niche_mae": 0.07328
+    },
+    {
+      "method": "scdc",
+      "acs": 0.95385,
+      "comparable": true,
+      "mae_primary": 0.08345,
+      "tumour_mae": 0.17917,
+      "tumour_abs_bias": 0.17103,
+      "tumour_r": 0.53855,
+      "worst_niche_mae": 0.09556
+    },
+    {
+      "method": "scdc_ensemble",
+      "acs": 0.95385,
+      "comparable": true,
+      "mae_primary": 0.08345,
+      "tumour_mae": 0.17917,
+      "tumour_abs_bias": 0.17103,
+      "tumour_r": 0.53855,
+      "worst_niche_mae": 0.09556
+    },
+    {
+      "method": "bisque",
+      "acs": 0.92308,
+      "comparable": true,
+      "mae_primary": 0.07409,
+      "tumour_mae": 0.15498,
+      "tumour_abs_bias": 0.02564,
+      "tumour_r": 0.56753,
+      "worst_niche_mae": 0.08286
+    },
+    {
+      "method": "bayesprism",
+      "acs": 0.87692,
+      "comparable": true,
+      "mae_primary": 0.05849,
+      "tumour_mae": 0.14303,
+      "tumour_abs_bias": 0.0255,
+      "tumour_r": 0.57548,
+      "worst_niche_mae": 0.05988
+    },
+    {
+      "method": "bayesian",
+      "acs": 0.76923,
+      "comparable": true,
+      "mae_primary": 0.09914,
+      "tumour_mae": 0.25707,
+      "tumour_abs_bias": 0.25518,
+      "tumour_r": 0.49033,
+      "worst_niche_mae": 0.1218
+    },
+    {
+      "method": "bayesian_hierarchical",
+      "acs": 0.76923,
+      "comparable": true,
+      "mae_primary": 0.10008,
+      "tumour_mae": 0.25719,
+      "tumour_abs_bias": 0.25543,
+      "tumour_r": 0.48359,
+      "worst_niche_mae": 0.12208
+    },
+    {
+      "method": "dwls",
+      "acs": 0.73846,
+      "comparable": true,
+      "mae_primary": 0.07633,
+      "tumour_mae": 0.14848,
+      "tumour_abs_bias": 0.08739,
+      "tumour_r": 0.42864,
+      "worst_niche_mae": 0.08285
+    },
+    {
+      "method": "quantiseq",
+      "acs": 0.6,
+      "comparable": false,
+      "mae_primary": 0.11936,
+      "tumour_mae": null,
+      "tumour_abs_bias": null,
+      "tumour_r": null,
+      "worst_niche_mae": 0.1305
+    }
+  ]
+}

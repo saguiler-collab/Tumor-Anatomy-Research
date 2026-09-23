@@ -1,0 +1,74 @@
+{
+  "reference_arm": {
+    "tag": "MCP_GBM",
+    "acs": 0.5128,
+    "null_p": 0.06939306069393061
+  },
+  "gbmap_at_matched_density": {
+    "MCP_GBmap_n200": {
+      "markers_per_type": 200,
+      "n_markers": 1600,
+      "acs": 0.6667,
+      "ci": [
+        0.525,
+        0.8333
+      ],
+      "null_p": 0.0024997500249975004,
+      "beats_MCP_GBM": true
+    },
+    "MCP_GBmap_n79": {
+      "markers_per_type": 79,
+      "n_markers": 632,
+      "acs": 0.3846,
+      "ci": [
+        0.2955,
+        0.4872
+      ],
+      "null_p": 0.43565643435656437,
+      "beats_MCP_GBM": false
+    },
+    "MCP_GBmap_n15": {
+      "markers_per_type": 15,
+      "n_markers": 120,
+      "acs": 0.6923,
+      "ci": [
+        0.5,
+        0.8864
+      ],
+      "null_p": 0.0015998400159984002,
+      "beats_MCP_GBM": true
+    }
+  },
+  "paired_vs_MCP_GBM": {
+    "MCP_GBmap_n200": {
+      "mean_delta": 0.1389,
+      "ci": [
+        0.0444,
+        0.25
+      ],
+      "p": 0.009,
+      "n_tumors": 9,
+      "significant": true
+    },
+    "MCP_GBmap_n79": {
+      "mean_delta": -0.1222,
+      "ci": [
+        -0.2667,
+        0.0222
+      ],
+      "p": 0.1056,
+      "n_tumors": 9,
+      "significant": false
+    },
+    "MCP_GBmap_n15": {
+      "mean_delta": 0.1722,
+      "ci": [
+        -0.0,
+        0.3667
+      ],
+      "p": 0.056,
+      "n_tumors": 9,
+      "significant": false
+    }
+  }
+}

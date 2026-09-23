@@ -5,7 +5,7 @@
 
 ## Table S1. The 15-method panel, with implementation provenance. A method is 'degenerate' when it ran without an input its published algorithm requires, and is reported as such rather than under the package's name.
 
-*`results/supplementary/S1_method_roster.csv`*
+*`docs/supplementary/S1_method_roster.csv`*
 
 | Method                | Implementation          | Genuine published package   | Degenerate on this input   | Enters quantitative comparison   |
 |:----------------------|:------------------------|:----------------------------|:---------------------------|:---------------------------------|
@@ -28,7 +28,7 @@
 
 ## Table S2. Recovery of true tumour-content variation against DNA-measured purity, per method and reference. Recovery is 1 + slope of (estimate − truth) regressed on truth: 0 = no information, 1 = perfect. It is invariant to a constant offset.
 
-*`results/supplementary/S2_tumour_recovery.csv`*
+*`docs/supplementary/S2_tumour_recovery.csv`*
 
 | Method                | GBM, frozen signature (%)   |   GBM, sigma-carrying reference (%) | LGG, frozen signature (%)   | LGG, sigma-carrying reference (%)   |
 |:----------------------|:----------------------------|------------------------------------:|:----------------------------|:------------------------------------|
@@ -50,7 +50,7 @@
 
 ## Table S3a. GBM: lymphoid composition per method against DNA methylation, both renormalised within {T, B, NK} so the leukocyte-subcomposition and all-cell-fraction denominators cancel. n = 155 methylation samples.
 
-*`results/supplementary/S3_lymphoid_gbm.csv`*
+*`docs/supplementary/S3_lymphoid_gbm.csv`*
 
 | Method                  |      T |     NK |      B | Ordering   | Agrees T > B   | Samples with zero lymphoid signal   |
 |:------------------------|-------:|-------:|-------:|:-----------|:---------------|:------------------------------------|
@@ -71,7 +71,7 @@
 
 ## Table S3b. LGG: lymphoid composition per method against DNA methylation, both renormalised within {T, B, NK} so the leukocyte-subcomposition and all-cell-fraction denominators cancel. n = 530 methylation samples.
 
-*`results/supplementary/S3_lymphoid_lgg.csv`*
+*`docs/supplementary/S3_lymphoid_lgg.csv`*
 
 | Method                  |      T |     NK |      B | Ordering   | Agrees T > B   | Samples with zero lymphoid signal   |
 |:------------------------|-------:|-------:|-------:|:-----------|:---------------|:------------------------------------|
@@ -92,7 +92,7 @@
 
 ## Table S4. How much of real bulk the additive mixing model explains, with a floor and a ceiling. Shuffling which gene belongs to which cell type destroys the fit, so the reference carries real structure; the top-8 SVD is the best any eight-dimensional basis could do on the same samples.
 
-*`results/supplementary/S4_model_fit.csv`*
+*`docs/supplementary/S4_model_fit.csv`*
 
 | Cohort   |   Samples |   Marker genes |   R² of best additive fit (median) |   Variance unexplained (%) |   Samples below R² = 0.5 (%) |   Floor: gene labels shuffled |   Floor: random basis |   Ceiling: top-8 SVD |   Reference as % of achievable |
 |:---------|----------:|---------------:|-----------------------------------:|---------------------------:|-----------------------------:|------------------------------:|----------------------:|---------------------:|-------------------------------:|
@@ -102,7 +102,7 @@
 
 ## Table S5. Candidate explanations for the lymphoid failure, each tested and each rejected. Listed because five failed explanations with working controls constrain the answer more than one untested story would.
 
-*`results/supplementary/S5_rejected_mechanisms.csv`*
+*`docs/supplementary/S5_rejected_mechanisms.csv`*
 
 | Proposed explanation                                                  | Test                                                                                | Result                                                                                          | Verdict   |
 |:----------------------------------------------------------------------|:------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------------------|:----------|
@@ -115,10 +115,10 @@
 
 ## Table S6. Two methods fell back to this project's reimplementation during the confirmatory runs and were re-measured as the genuine R packages on the same cohort and gene space. The reimplementations are biased in OPPOSITE directions, so neither 'close enough' nor 'reimplementations flatter their packages' holds.
 
-*`results/supplementary/S6_genuine_vs_reimplementation.csv`*
+*`docs/supplementary/S6_genuine_vs_reimplementation.csv`*
 
 | Method     |   Reimplementation (ACS) |   Genuine R package (ACS) |   Difference |   Runtime (s) |   Pipeline budget (s) |
 |:-----------|-------------------------:|--------------------------:|-------------:|--------------:|----------------------:|
-| dwls       |                   0.7385 |                    0.7846 |       0.0461 |          2593 |                  2400 |
-| bayesprism |                   0.8769 |                    0.8154 |      -0.0615 |          2045 |                  2400 |
+| dwls       |                   0.7231 |                    0.7846 |       0.0615 |          2593 |                  2400 |
+| bayesprism |                   0.8    |                    0.8154 |       0.0154 |          2045 |                  2400 |
 

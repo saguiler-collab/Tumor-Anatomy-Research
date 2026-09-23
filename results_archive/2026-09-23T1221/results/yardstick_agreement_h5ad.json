@@ -1,0 +1,121 @@
+{
+  "what_this_is": "The registered primary outcome computed against a yardstick that shares no failure mode with the methods under test.",
+  "registered_bar": 0.6,
+  "arm_1_pseudobulk": {
+    "rho": 0.6371743791,
+    "yardstick": "synthetic pseudobulk",
+    "shares_with_acs_arm": "GBmap \u2014 the mixtures are built from its cells and the ACS arm deconvolves against it (correction C4)",
+    "meets_registered_bar": true
+  },
+  "arm_2_absolute_purity": {
+    "yardstick": "ABSOLUTE tumour purity from DNA copy number",
+    "shares_with_acs_arm": "nothing",
+    "all_methods": {
+      "n_methods": 14,
+      "spearman": 0.3142,
+      "p": 0.274,
+      "ci": [
+        -0.2941,
+        0.9505
+      ],
+      "meets_registered_bar": false
+    },
+    "excluding_degenerate": {
+      "n_methods": 12,
+      "spearman": 0.2817,
+      "p": 0.3751,
+      "ci": [
+        -0.4329,
+        0.9768
+      ],
+      "meets_registered_bar": false
+    }
+  },
+  "what_differs_between_the_arms": "ACS is scored on Ivy GAP against the h5ad-built GBmap reference; the purity correlations are scored on TCGA-GBM against the vendored frozen signature. Cohort and reference build both differ. Constant across them is the set of named methods being ranked, which is the same form the registered outcome takes.",
+  "per_method": {
+    "music": {
+      "acs": 0.9692307692307692,
+      "rho_purity": 0.673,
+      "bias": -0.3301,
+      "degenerate": false
+    },
+    "svr": {
+      "acs": 0.953846153846154,
+      "rho_purity": 0.677,
+      "bias": -0.4478,
+      "degenerate": false
+    },
+    "scdc": {
+      "acs": 0.9384615384615383,
+      "rho_purity": 0.6568,
+      "bias": -0.3591,
+      "degenerate": false
+    },
+    "scdc_ensemble": {
+      "acs": 0.9384615384615383,
+      "rho_purity": 0.6568,
+      "bias": -0.3591,
+      "degenerate": true
+    },
+    "elastic_net": {
+      "acs": 0.8615384615384616,
+      "rho_purity": 0.247,
+      "bias": -0.5827,
+      "degenerate": false
+    },
+    "cibersortx": {
+      "acs": 0.8615384615384616,
+      "rho_purity": 0.6381,
+      "bias": -0.5009,
+      "degenerate": false
+    },
+    "cibersortx_smode": {
+      "acs": 0.8615384615384616,
+      "rho_purity": 0.2705,
+      "bias": -0.5687,
+      "degenerate": false
+    },
+    "nnls": {
+      "acs": 0.8461538461538461,
+      "rho_purity": 0.245,
+      "bias": -0.4686,
+      "degenerate": false
+    },
+    "bayesprism": {
+      "acs": 0.8,
+      "rho_purity": 0.1641,
+      "bias": -0.2579,
+      "degenerate": false
+    },
+    "epic": {
+      "acs": 0.7692307692307693,
+      "rho_purity": 0.2401,
+      "bias": -0.5772,
+      "degenerate": false
+    },
+    "bayesian": {
+      "acs": 0.7538461538461538,
+      "rho_purity": 0.7042,
+      "bias": -0.6648,
+      "degenerate": false
+    },
+    "bayesian_hierarchical": {
+      "acs": 0.7384615384615385,
+      "rho_purity": 0.7,
+      "bias": -0.6606,
+      "degenerate": false
+    },
+    "dwls": {
+      "acs": 0.7230769230769231,
+      "rho_purity": 0.1562,
+      "bias": -0.4753,
+      "degenerate": false
+    },
+    "bisque": {
+      "acs": 0.7076923076923077,
+      "rho_purity": 0.5217,
+      "bias": -0.478,
+      "degenerate": true
+    }
+  }
+}

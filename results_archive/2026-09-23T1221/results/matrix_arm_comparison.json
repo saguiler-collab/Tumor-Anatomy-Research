@@ -1,0 +1,231 @@
+{
+  "what_this_is": "ACS leaderboard built from GBmap X (log1p) vs raw/X (counts). OPEN_DEFECTS D16. Selects nothing.",
+  "kendall_tau": 0.6719,
+  "spearman": 0.8203,
+  "n_methods": 17,
+  "methods": {
+    "music": {
+      "acs_log": 1.0,
+      "acs_counts": 0.9692,
+      "delta": -0.0308,
+      "rank_log": 1,
+      "rank_counts": 1,
+      "is_control": false
+    },
+    "svr": {
+      "acs_log": 0.9846,
+      "acs_counts": 0.9538,
+      "delta": -0.0308,
+      "rank_log": 3,
+      "rank_counts": 2,
+      "is_control": false
+    },
+    "scdc": {
+      "acs_log": 0.9538,
+      "acs_counts": 0.9385,
+      "delta": -0.0154,
+      "rank_log": 8,
+      "rank_counts": 3,
+      "is_control": false
+    },
+    "scdc_ensemble": {
+      "acs_log": 0.9538,
+      "acs_counts": 0.9385,
+      "delta": -0.0154,
+      "rank_log": 8,
+      "rank_counts": 3,
+      "is_control": false
+    },
+    "elastic_net": {
+      "acs_log": 0.9846,
+      "acs_counts": 0.8615,
+      "delta": -0.1231,
+      "rank_log": 3,
+      "rank_counts": 6,
+      "is_control": false
+    },
+    "cibersortx": {
+      "acs_log": 0.9692,
+      "acs_counts": 0.8615,
+      "delta": -0.1077,
+      "rank_log": 6,
+      "rank_counts": 6,
+      "is_control": false
+    },
+    "cibersortx_smode": {
+      "acs_log": 0.9692,
+      "acs_counts": 0.8615,
+      "delta": -0.1077,
+      "rank_log": 6,
+      "rank_counts": 6,
+      "is_control": false
+    },
+    "nnls": {
+      "acs_log": 0.9846,
+      "acs_counts": 0.8462,
+      "delta": -0.1385,
+      "rank_log": 3,
+      "rank_counts": 8,
+      "is_control": false
+    },
+    "bayesprism": {
+      "acs_log": 0.8769,
+      "acs_counts": 0.8,
+      "delta": -0.0769,
+      "rank_log": 11,
+      "rank_counts": 9,
+      "is_control": false
+    },
+    "epic": {
+      "acs_log": 0.9846,
+      "acs_counts": 0.7692,
+      "delta": -0.2154,
+      "rank_log": 3,
+      "rank_counts": 10,
+      "is_control": false
+    },
+    "bayesian": {
+      "acs_log": 0.7692,
+      "acs_counts": 0.7538,
+      "delta": -0.0154,
+      "rank_log": 12,
+      "rank_counts": 11,
+      "is_control": false
+    },
+    "bayesian_hierarchical": {
+      "acs_log": 0.7692,
+      "acs_counts": 0.7385,
+      "delta": -0.0308,
+      "rank_log": 12,
+      "rank_counts": 12,
+      "is_control": false
+    },
+    "dwls": {
+      "acs_log": 0.7385,
+      "acs_counts": 0.7231,
+      "delta": -0.0154,
+      "rank_log": 14,
+      "rank_counts": 13,
+      "is_control": false
+    },
+    "bisque": {
+      "acs_log": 0.9231,
+      "acs_counts": 0.7077,
+      "delta": -0.2154,
+      "rank_log": 10,
+      "rank_counts": 14,
+      "is_control": false
+    },
+    "quantiseq": {
+      "acs_log": 0.6,
+      "acs_counts": 0.6,
+      "delta": 0.0,
+      "rank_log": 15,
+      "rank_counts": 15,
+      "is_control": false
+    },
+    "control_random": {
+      "acs_log": 0.4,
+      "acs_counts": 0.4,
+      "delta": 0.0,
+      "rank_log": 16,
+      "rank_counts": 16,
+      "is_control": true
+    },
+    "control_shuffled_signature": {
+      "acs_log": 0.1385,
+      "acs_counts": 0.3692,
+      "delta": 0.2308,
+      "rank_log": 17,
+      "rank_counts": 17,
+      "is_control": true
+    }
+  },
+  "implementation_check": {
+    "music": {
+      "log": "R:MuSiC",
+      "counts": "R:MuSiC",
+      "same": true
+    },
+    "nnls": {
+      "log": "python",
+      "counts": "python",
+      "same": true
+    },
+    "svr": {
+      "log": "python",
+      "counts": "python",
+      "same": true
+    },
+    "elastic_net": {
+      "log": "python",
+      "counts": "python",
+      "same": true
+    },
+    "epic": {
+      "log": "R:EPIC",
+      "counts": "R:EPIC",
+      "same": true
+    },
+    "cibersortx": {
+      "log": "python",
+      "counts": "python",
+      "same": true
+    },
+    "cibersortx_smode": {
+      "log": "python",
+      "counts": "python",
+      "same": true
+    },
+    "scdc": {
+      "log": "R:SCDC",
+      "counts": "R:SCDC",
+      "same": true
+    },
+    "scdc_ensemble": {
+      "log": "R:SCDC",
+      "counts": "R:SCDC",
+      "same": true
+    },
+    "bisque": {
+      "log": "R:BisqueRNA",
+      "counts": "R:BisqueRNA",
+      "same": true
+    },
+    "bayesprism": {
+      "log": "python-reimplementation",
+      "counts": "python-reimplementation",
+      "same": true
+    },
+    "bayesian": {
+      "log": "python",
+      "counts": "python",
+      "same": true
+    },
+    "bayesian_hierarchical": {
+      "log": "python",
+      "counts": "python",
+      "same": true
+    },
+    "dwls": {
+      "log": "python-reimplementation",
+      "counts": "python-reimplementation",
+      "same": true
+    },
+    "control_random": {
+      "log": "python",
+      "counts": "python",
+      "same": true
+    },
+    "control_shuffled_signature": {
+      "log": "python",
+      "counts": "python",
+      "same": true
+    },
+    "quantiseq": {
+      "log": "R:quantiseqr",
+      "counts": "R:quantiseqr",
+      "same": true
+    }
+  }
+}

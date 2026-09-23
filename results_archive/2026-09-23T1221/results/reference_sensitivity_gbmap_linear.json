@@ -1,0 +1,321 @@
+{
+  "what_this_is": "Does the ACS ordering depend on which single-cell atlas built the reference? Both arms use the SAME declared 5-type sub-roster and the SAME gene space, so the only difference is the reference. NOT a selection procedure: neither arm may reorder the published leaderboard.",
+  "why_both_arms": "Swapping GBmap for Darmanis changes the reference AND the roster, since Darmanis cannot resolve T_cell, NK_cell or B_cell. Running GBmap on the same 5 types isolates the reference.",
+  "baseline_reference": "gbmap_atlas",
+  "alternative_reference": "gbmap_linear",
+  "sub_roster": [
+    "Tumor",
+    "Macrophage_Microglia",
+    "T_cell",
+    "NK_cell",
+    "B_cell",
+    "Endothelial",
+    "Oligodendrocyte",
+    "Astrocyte"
+  ],
+  "n_types": 8,
+  "constraints_use_only": [
+    "Endothelial",
+    "Macrophage_Microglia",
+    "Oligodendrocyte",
+    "Tumor"
+  ],
+  "n_shared_genes": 657,
+  "gene_space": "the leaderboard's own 657-gene marker space, intersected with both references. Those genes were selected ON GBmap, so the space favours arm A -- conservative for a finding that Darmanis does as well or better, and the wrong space for a finding that it does worse.",
+  "n_samples": 122,
+  "implementation": "python path only; the R packages need a cell-level export keyed to a registered cell source, which Darmanis does not yet have",
+  "spearman_between_orderings": 0.9161,
+  "n_methods": 14,
+  "n_ranks_moved": 13,
+  "largest_rank_move": 4.0,
+  "arm_a_gbmap": {
+    "nnls": {
+      "acs": 0.9846,
+      "ci": [
+        0.9531,
+        1.0
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "svr": {
+      "acs": 0.9846,
+      "ci": [
+        0.9531,
+        1.0
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "cibersortx": {
+      "acs": 0.9538,
+      "ci": [
+        0.8906,
+        1.0
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "cibersortx_smode": {
+      "failed": "RuntimeError: S-mode needs the single cells the signature was built from, and no cell source is registered for reference 'gbmap_5type'. B-mode reconstructs its mixtures from "
+    },
+    "elastic_net": {
+      "acs": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "bayesian": {
+      "acs": 0.7692,
+      "ci": [
+        0.6269,
+        0.9207
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "bayesian_hierarchical": {
+      "acs": 0.7692,
+      "ci": [
+        0.6269,
+        0.9207
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "music": {
+      "acs": 0.9846,
+      "ci": [
+        0.9531,
+        1.0
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "dwls": {
+      "acs": 0.7692,
+      "ci": [
+        0.6308,
+        0.8986
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "bisque": {
+      "acs": 0.8923,
+      "ci": [
+        0.8714,
+        0.9245
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "scdc": {
+      "acs": 0.7385,
+      "ci": [
+        0.6389,
+        0.8413
+      ],
+      "null_p": 0.00019998000199980003,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "scdc_ensemble": {
+      "acs": 0.7385,
+      "ci": [
+        0.6389,
+        0.8413
+      ],
+      "null_p": 0.00019998000199980003,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "epic": {
+      "acs": 0.9846,
+      "ci": [
+        0.9531,
+        1.0
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "quantiseq": {
+      "acs": 0.6,
+      "ci": [
+        0.3846,
+        0.8
+      ],
+      "null_p": 0.3231676832316768,
+      "n_pairs": 15,
+      "n_tumors": 9
+    },
+    "bayesprism": {
+      "acs": 0.8769,
+      "ci": [
+        0.7857,
+        0.9677
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    }
+  },
+  "arm_b_alternative": {
+    "nnls": {
+      "acs": 0.9077,
+      "ci": [
+        0.8615,
+        0.9565
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "svr": {
+      "acs": 0.8308,
+      "ci": [
+        0.7273,
+        0.9231
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "cibersortx": {
+      "acs": 0.8308,
+      "ci": [
+        0.7324,
+        0.913
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "cibersortx_smode": {
+      "failed": "RuntimeError: S-mode needs the single cells the signature was built from, and no cell source is registered for reference 'gbmap_linear'. B-mode reconstructs its mixtures from"
+    },
+    "elastic_net": {
+      "acs": 0.9077,
+      "ci": [
+        0.8615,
+        0.9565
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "bayesian": {
+      "acs": 0.7077,
+      "ci": [
+        0.597,
+        0.8125
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "bayesian_hierarchical": {
+      "acs": 0.7077,
+      "ci": [
+        0.597,
+        0.8125
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "music": {
+      "acs": 0.9077,
+      "ci": [
+        0.8615,
+        0.9565
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "dwls": {
+      "acs": 0.6769,
+      "ci": [
+        0.5645,
+        0.7895
+      ],
+      "null_p": 0.00039996000399960006,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "bisque": {
+      "acs": 0.6615,
+      "ci": [
+        0.5469,
+        0.7833
+      ],
+      "null_p": 0.00019998000199980003,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "scdc": {
+      "acs": 0.5846,
+      "ci": [
+        0.5,
+        0.697
+      ],
+      "null_p": 0.004899510048995101,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "scdc_ensemble": {
+      "acs": 0.5846,
+      "ci": [
+        0.5,
+        0.697
+      ],
+      "null_p": 0.004899510048995101,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "epic": {
+      "acs": 0.9077,
+      "ci": [
+        0.8615,
+        0.9565
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    },
+    "quantiseq": {
+      "acs": 0.6,
+      "ci": [
+        0.3846,
+        0.8
+      ],
+      "null_p": 0.32366763323667636,
+      "n_pairs": 15,
+      "n_tumors": 9
+    },
+    "bayesprism": {
+      "acs": 0.7385,
+      "ci": [
+        0.6562,
+        0.8143
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_tumors": 9
+    }
+  }
+}

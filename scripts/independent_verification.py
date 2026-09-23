@@ -180,7 +180,27 @@ def check_control_separation() -> list[str]:
     out.append(f"  separated: {sep}  {OK if sep else BAD}")
     out.append(f"  every control fails its own permutation null: "
                f"{bool((ctl['null_p'] > 0.05).all())}")
-    out.append(f"  every real method beats its null: {bool((real['null_p'] < 0.05).all())}")
+    allbeat = bool((real["null_p"] < 0.05).all())
+    out.append(f"  every real method beats its null: {allbeat}")
+    if not allbeat:
+        # A bare False here is not a finding, it is a prompt to look. Name the methods and
+        # say whether each is AT CHANCE or NOT EVALUABLE -- the second is a coverage fact
+        # about the constraint set, not a verdict on the method, and the protocol calls it
+        # INCONCLUSIVE rather than a failure.
+        med = float(real["n_constraint_tumor_pairs"].median())
+        for m, r in real[real["null_p"] >= 0.05].iterrows():
+            n = int(r["n_constraint_tumor_pairs"])
+            why = ("scored on only %d of %d constraint-tumour pairs -> UNDERPOWERED, "
+                   "not evaluable" % (n, int(med))) if n < 0.6 * med else \
+                  "scored on the full constraint set -> genuinely AT CHANCE"
+            out.append(f"    {m}: acs {r['acs']:.4f}, null_p {r['null_p']:.3f} — {why}")
+        # and re-state the control margin without them, which is the claim that has to hold
+        full = real[real["n_constraint_tumor_pairs"] >= 0.6 * med]
+        if len(full):
+            sep2 = full["acs"].min() > ctl["acs"].max()
+            out.append(f"  separation using only fully-scored methods: "
+                       f"{full['acs'].min():.4f} vs {ctl['acs'].max():.4f} -> {sep2}  "
+                       f"{OK if sep2 else BAD}")
     return out
 
 

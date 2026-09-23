@@ -116,6 +116,30 @@ def _artefact_rescorings() -> dict[str, set[float]]:
             walk(json.loads(f.read_text()))
         except (ValueError, OSError):
             continue
+
+    # CSV artefacts too. Found 2026-09-22: the cohort-sensitivity table prints bisque's
+    # 122-sample ACS of 0.923, which `acs_cohort_sensitivity.csv` holds in
+    # `acs_anatomic_only` -- but the harvester read only JSON, so a real artefact was
+    # invisible and the value looked invented. Scoped deliberately to `acs_*.csv` columns
+    # whose name begins with `acs`: harvesting every float in the results tree would make
+    # every number matchable and the check worthless.
+    for f in sorted((ROOT / "results").rglob("acs_*.csv")):
+        try:
+            df = pd.read_csv(f)
+        except (ValueError, OSError):
+            continue
+        if "method" not in df.columns:
+            continue
+        for col in [c for c in df.columns if str(c).lower().startswith("acs")]:
+            for m, v in zip(df["method"], df[col]):
+                try:
+                    v = float(v)
+                except (TypeError, ValueError):
+                    continue
+                if v != v:                      # NaN
+                    continue
+                found.setdefault(str(m).strip().lower(), set()).update(
+                    {round(v, 4), round(v, 3)})
     return found
 
 
@@ -214,6 +238,7 @@ def _check_against_current() -> list[tuple]:
         # column is a T-cell FRACTION, not an ACS -- and reported a dozen false positives. A
         # check that cries wolf gets ignored, which is worse than not having it.
         header_is_acs = False
+        in_declared_other_run = False
         for ln, line in enumerate(f.read_text(errors="replace").split("\n"), 1):
             if line.lstrip().startswith("|"):
                 cells = [c.strip().lower() for c in line.strip("| \n").split("|")]
@@ -224,8 +249,18 @@ def _check_against_current() -> list[tuple]:
                         any(re.fullmatch(r"\*{0,2}[a-z ]*(fraction|t|nk|b|rho|ci|delta|p)\*{0,2}",
                                          c) for c in cells[1:2]):
                     header_is_acs = False
+            elif "Reference build for this entire section: GBmap `X`" in line:
+                # a section that declares its own, different provenance is not stale -- it is
+                # explicitly from another run and says so. Skip to the end of it.
+                header_is_acs = False
+                in_declared_other_run = True
+            elif line.startswith("## "):
+                in_declared_other_run = False
+                header_is_acs = False
             else:
                 header_is_acs = False          # a blank line or prose ends the table
+            if in_declared_other_run:
+                continue
             if not header_is_acs:
                 continue
             m = re.match(r"\|\s*\*{0,2}([A-Za-z_/ ]+?)\*{0,2}\s*\|\s*\*{0,2}([01]\.\d{3,4})\*{0,2}\s*\|",

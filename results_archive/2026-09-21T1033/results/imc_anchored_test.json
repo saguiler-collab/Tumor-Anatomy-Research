@@ -1,0 +1,163 @@
+{
+  "arms": {
+    "MCP_GBM": [
+      "Macrophage_Microglia",
+      "Tumor"
+    ],
+    "MCP_GBM_moreno": [
+      "Endothelial",
+      "Macrophage_Microglia",
+      "Oligodendrocyte",
+      "Tumor"
+    ],
+    "MCP_default": [
+      "Endothelial",
+      "Macrophage_Microglia"
+    ],
+    "MCP_GBmap": [
+      "Endothelial",
+      "Macrophage_Microglia",
+      "Oligodendrocyte",
+      "Tumor"
+    ]
+  },
+  "comparisons": {
+    "MCP_GBM_vs_MCP_GBmap": {
+      "why": "PRIMARY \u2014 the pre-specified test",
+      "shared_cell_types": [
+        "Macrophage_Microglia",
+        "Tumor"
+      ],
+      "MCP_GBM": {
+        "acs": 0.5128,
+        "ci": [
+          0.3571,
+          0.6857
+        ],
+        "null_p": 0.06939306069393061,
+        "n_pairs": 31,
+        "n_tumors": 9
+      },
+      "MCP_GBmap": {
+        "acs": 0.6667,
+        "ci": [
+          0.525,
+          0.8333
+        ],
+        "null_p": 0.0024997500249975004,
+        "n_pairs": 31,
+        "n_tumors": 9
+      },
+      "winner": "MCP_GBmap"
+    },
+    "MCP_GBM_moreno_vs_MCP_GBmap": {
+      "why": "secondary \u2014 full-coverage GBM markers",
+      "shared_cell_types": [
+        "Endothelial",
+        "Macrophage_Microglia",
+        "Oligodendrocyte",
+        "Tumor"
+      ],
+      "MCP_GBM_moreno": {
+        "acs": 0.7385,
+        "ci": [
+          0.6286,
+          0.8637
+        ],
+        "null_p": 9.999000099990002e-05,
+        "n_pairs": 57,
+        "n_tumors": 9
+      },
+      "MCP_GBmap": {
+        "acs": 0.8,
+        "ci": [
+          0.7121,
+          0.9014
+        ],
+        "null_p": 9.999000099990002e-05,
+        "n_pairs": 57,
+        "n_tumors": 9
+      },
+      "winner": "MCP_GBmap"
+    },
+    "MCP_default_vs_MCP_GBmap": {
+      "why": "secondary \u2014 MCPcounter's own markers",
+      "shared_cell_types": [
+        "Endothelial",
+        "Macrophage_Microglia"
+      ],
+      "MCP_default": {
+        "acs": 0.9091,
+        "ci": [
+          0.7742,
+          1.0
+        ],
+        "null_p": 9.999000099990002e-05,
+        "n_pairs": 33,
+        "n_tumors": 9
+      },
+      "MCP_GBmap": {
+        "acs": 0.8485,
+        "ci": [
+          0.7273,
+          0.9667
+        ],
+        "null_p": 9.999000099990002e-05,
+        "n_pairs": 33,
+        "n_tumors": 9
+      },
+      "winner": "MCP_default"
+    },
+    "MCP_GBM_vs_MCP_default": {
+      "why": "secondary \u2014 GBM-specific vs generic",
+      "shared_cell_types": [
+        "Macrophage_Microglia"
+      ],
+      "MCP_GBM": {
+        "acs": 0.6667,
+        "ci": [
+          0.5294,
+          0.8462
+        ],
+        "null_p": 0.15698430156984303,
+        "n_pairs": 15,
+        "n_tumors": 9
+      },
+      "MCP_default": {
+        "acs": 0.8,
+        "ci": [
+          0.5,
+          1.0
+        ],
+        "null_p": 0.0150984901509849,
+        "n_pairs": 15,
+        "n_tumors": 9
+      },
+      "winner": "MCP_default"
+    }
+  },
+  "external_ground_truth": {
+    "source": "Ajaib et al., Neuro-Oncology 2023;25(7):1236-1248",
+    "modality": "imaging mass cytometry, 33 antibodies, single-cell resolution",
+    "cohort": "10 IDHwt GBM (5 paired primary/recurrent) with matched bulk RNA-seq",
+    "pearson_r_vs_IMC": {
+      "MCP_GBM": {
+        "immune": 0.37,
+        "neoplastic": 0.43
+      },
+      "MCP_default": {
+        "immune": 0.27
+      },
+      "MCP_GBmap": {
+        "immune": 0.06,
+        "neoplastic": 0.22
+      },
+      "CIBERSORTx": {
+        "immune": 0.05,
+        "neoplastic": 0.02
+      }
+    },
+    "prespecified": "prespecified/imc_anchored_prediction.md",
+    "prediction": "ACS(MCP_GBM) > ACS(MCP_GBmap) on the shared constraints"
+  }
+}

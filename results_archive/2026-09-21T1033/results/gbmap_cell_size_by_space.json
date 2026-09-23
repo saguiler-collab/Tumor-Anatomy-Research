@@ -1,0 +1,71 @@
+{
+  "source_sha256": "459444da84efc45565ac9ccb68c4873dac033c07abfe395bc814b3a33f60c56c",
+  "n_cells": 8528,
+  "note": "log_total = sum of f['X'] per cell (what build_from_h5ad passes as cell_totals); count_total = sum of f['raw/X'] per cell (true library size)",
+  "by_platform": {
+    "10x": {
+      "log_mean": {
+        "Tumor": 1963.7177763989569,
+        "Macrophage_Microglia": 1598.337064423437,
+        "T_cell": 1519.5271752918015,
+        "NK_cell": 1678.7354327723135,
+        "B_cell": 1276.429759528041,
+        "Endothelial": 1743.9955501596262,
+        "Oligodendrocyte": 1936.7612154205765,
+        "Astrocyte": 2011.9649298893553
+      },
+      "count_mean": {
+        "Tumor": 8301.15,
+        "Macrophage_Microglia": 7005.201666666667,
+        "T_cell": 3697.258333333333,
+        "NK_cell": 4691.11,
+        "B_cell": 3472.6216666666664,
+        "Endothelial": 4576.558441558442,
+        "Oligodendrocyte": 5235.788333333333,
+        "Astrocyte": 10060.077922077922
+      }
+    },
+    "SS2": {
+      "log_mean": {
+        "Tumor": 2164.085349289205,
+        "Macrophage_Microglia": 1675.7473310416983,
+        "T_cell": 1576.5884090720003,
+        "NK_cell": 1345.994991634041,
+        "Endothelial": 1895.28203664592,
+        "Oligodendrocyte": 1897.6725140012143,
+        "Astrocyte": 1890.3799481826659
+      },
+      "count_mean": {
+        "Tumor": 785065.2816666666,
+        "Macrophage_Microglia": 466152.1533333333,
+        "T_cell": 847792.8217821782,
+        "NK_cell": 623714.0,
+        "Endothelial": 510396.9166666667,
+        "Oligodendrocyte": 819049.9864864865,
+        "Astrocyte": 413940.2375
+      }
+    },
+    "ALL": {
+      "log_mean": {
+        "Tumor": 2031.0349670451606,
+        "Macrophage_Microglia": 1695.0411751475403,
+        "T_cell": 1674.4057162339766,
+        "NK_cell": 1687.2702481922386,
+        "B_cell": 1314.3673419083811,
+        "Endothelial": 1802.276061579853,
+        "Oligodendrocyte": 1972.467938889332,
+        "Astrocyte": 1921.0228782719664
+      },
+      "count_mean": {
+        "Tumor": 274185.39666666667,
+        "Macrophage_Microglia": 163223.29055555555,
+        "T_cell": 77465.48962336664,
+        "NK_cell": 7595.226917057903,
+        "B_cell": 3710.859133126935,
+        "Endothelial": 17515.937592867755,
+        "Oligodendrocyte": 178023.03208556148,
+        "Astrocyte": 197731.57803468208
+      }
+    }
+  }
+}

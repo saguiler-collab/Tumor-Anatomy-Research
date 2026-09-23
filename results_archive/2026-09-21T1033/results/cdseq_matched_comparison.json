@@ -1,0 +1,203 @@
+{
+  "covered_cell_types": [
+    "Astrocyte",
+    "Endothelial",
+    "Macrophage_Microglia",
+    "Oligodendrocyte"
+  ],
+  "why": "CDSeq's estimated types mapped onto part of the roster, so it was scored on fewer pairs; every method is re-scored on the same subset to make the comparison mean anything.",
+  "spread_across_real_methods": 0.4,
+  "verdict": "the subset DOES discriminate, so CDSeq's position on it is informative",
+  "methods": {
+    "bayesian": {
+      "acs": 0.9024,
+      "ci": [
+        0.8372,
+        0.9737
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 41,
+      "beats_null": true
+    },
+    "bayesian_hierarchical": {
+      "acs": 0.9024,
+      "ci": [
+        0.8372,
+        0.9737
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 41,
+      "beats_null": true
+    },
+    "bayesprism": {
+      "acs": 0.9268,
+      "ci": [
+        0.8292,
+        1.0
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 41,
+      "beats_null": true
+    },
+    "bisque": {
+      "acs": 0.878,
+      "ci": [
+        0.7907,
+        0.9737
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 41,
+      "beats_null": true
+    },
+    "cibersortx": {
+      "acs": 0.9512,
+      "ci": [
+        0.8864,
+        1.0
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 41,
+      "beats_null": true
+    },
+    "cibersortx_smode": {
+      "acs": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 41,
+      "beats_null": true
+    },
+    "control_random": {
+      "acs": 0.5122,
+      "ci": [
+        0.3864,
+        0.6767
+      ],
+      "null_p": 0.22327767223277672,
+      "n_pairs": 41,
+      "beats_null": false
+    },
+    "control_shuffled_signature": {
+      "acs": 0.1951,
+      "ci": [
+        0.0909,
+        0.3158
+      ],
+      "null_p": 0.9977002299770023,
+      "n_pairs": 41,
+      "beats_null": false
+    },
+    "dwls": {
+      "acs": 0.7561,
+      "ci": [
+        0.6744,
+        0.8462
+      ],
+      "null_p": 0.00019998000199980003,
+      "n_pairs": 41,
+      "beats_null": true
+    },
+    "elastic_net": {
+      "acs": 0.9756,
+      "ci": [
+        0.925,
+        1.0
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 41,
+      "beats_null": true
+    },
+    "epic": {
+      "acs": 0.9756,
+      "ci": [
+        0.9268,
+        1.0
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 41,
+      "beats_null": true
+    },
+    "music": {
+      "acs": 1.0,
+      "ci": [
+        1.0,
+        1.0
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 41,
+      "beats_null": true
+    },
+    "nnls": {
+      "acs": 0.9756,
+      "ci": [
+        0.925,
+        1.0
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 41,
+      "beats_null": true
+    },
+    "quantiseq": {
+      "acs": 0.6,
+      "ci": [
+        0.3333,
+        0.8824
+      ],
+      "null_p": 0.3087691230876912,
+      "n_pairs": 15,
+      "beats_null": false
+    },
+    "scdc": {
+      "acs": 0.9268,
+      "ci": [
+        0.8605,
+        0.9767
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 41,
+      "beats_null": true
+    },
+    "scdc_ensemble": {
+      "acs": 0.9268,
+      "ci": [
+        0.8605,
+        0.9767
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 41,
+      "beats_null": true
+    },
+    "svr": {
+      "acs": 0.9756,
+      "ci": [
+        0.925,
+        1.0
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 41,
+      "beats_null": true
+    },
+    "cdseq__gbmap_profile_correlation": {
+      "acs": 0.7561,
+      "ci": [
+        0.7,
+        0.7907
+      ],
+      "null_p": 0.00019998000199980003,
+      "n_pairs": 41,
+      "beats_null": true
+    },
+    "cdseq__gbm_marker_enrichment": {
+      "acs": 0.6829,
+      "ci": [
+        0.575,
+        0.7674
+      ],
+      "null_p": 0.0008999100089991,
+      "n_pairs": 41,
+      "beats_null": true
+    }
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "EXPLORATORY": "not pre-registered; written to test an explanation this project had already published, and it refuted it.",
+  "planted_truth": {
+    "Tumor": 0.55,
+    "Macrophage_Microglia": 0.25,
+    "T_cell": 0.07,
+    "NK_cell": 0.047,
+    "B_cell": 0.03,
+    "Endothelial": 0.015,
+    "Oligodendrocyte": 0.03,
+    "Astrocyte": 0.008
+  },
+  "planted_T_over_B": 2.333,
+  "condition_number": 5.29,
+  "noise_sweep": {
+    "0.0": {
+      "T": 0.07,
+      "B": 0.03,
+      "ratio": 2.333,
+      "T_exceeds_B": true
+    },
+    "0.01": {
+      "T": 0.0701,
+      "B": 0.0301,
+      "ratio": 2.328,
+      "T_exceeds_B": true
+    },
+    "0.05": {
+      "T": 0.0702,
+      "B": 0.0302,
+      "ratio": 2.328,
+      "T_exceeds_B": true
+    },
+    "0.1": {
+      "T": 0.0698,
+      "B": 0.0302,
+      "ratio": 2.312,
+      "T_exceeds_B": true
+    },
+    "0.25": {
+      "T": 0.0671,
+      "B": 0.0299,
+      "ratio": 2.243,
+      "T_exceeds_B": true
+    },
+    "0.5": {
+      "T": 0.0627,
+      "B": 0.0386,
+      "ratio": 1.626,
+      "T_exceeds_B": true
+    },
+    "1.0": {
+      "T": 0.0711,
+      "B": 0.0537,
+      "ratio": 1.325,
+      "T_exceeds_B": true
+    }
+  },
+  "withheld_type": {
+    "Tumor": {
+      "T": 0.2272,
+      "B": 0.0878,
+      "ratio": 2.588,
+      "T_exceeds_B": true
+    },
+    "Macrophage_Microglia": {
+      "T": 0.1158,
+      "B": 0.0551,
+      "ratio": 2.101,
+      "T_exceeds_B": true
+    },
+    "NK_cell": {
+      "T": 0.0966,
+      "B": 0.0343,
+      "ratio": 2.815,
+      "T_exceeds_B": true
+    },
+    "Endothelial": {
+      "T": 0.0707,
+      "B": 0.0315,
+      "ratio": 2.244,
+      "T_exceeds_B": true
+    },
+    "Oligodendrocyte": {
+      "T": 0.0779,
+      "B": 0.0279,
+      "ratio": 2.79,
+      "T_exceeds_B": true
+    },
+    "Astrocyte": {
+      "T": 0.069,
+      "B": 0.0288,
+      "ratio": 2.401,
+      "T_exceeds_B": true
+    }
+  },
+  "signature_separates_T_from_B_in_all_conditions": true
+}

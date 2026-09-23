@@ -50,6 +50,25 @@ REQUIRED = (
 #: result; it is skipped and named in the manifest. See the note in the copy step.
 MAX_ARCHIVED_FILE_BYTES = 5_000_000
 
+def _run_provenance(src: Path) -> dict:
+    """The input provenance of the results tree being archived, or an explicit absence."""
+    f = src / "run_provenance.json"
+    if not f.exists():
+        return {"matrix": None,
+                "note": "UNRECORDED. This results tree predates provenance capture "
+                        "(run_all.py began writing results/run_provenance.json on "
+                        "2026-09-23). Whether it was built from GBmap's log-transformed "
+                        "`X` or from `raw/X` cannot be read off this archive; compare its "
+                        "leaderboard against results/matrix_arm_comparison.json, which "
+                        "holds both arms per method."}
+    try:
+        d = json.loads(f.read_text())
+    except (ValueError, OSError) as exc:
+        return {"matrix": None, "note": f"run_provenance.json unreadable: {exc}"}
+    return {k: d.get(k) for k in ("matrix", "matrix_meaning", "synthetic", "argv",
+                                  "established_by", "evidence")}
+
+
 def _hash_tree(root: Path) -> dict[str, str]:
     out = {}
     for p in sorted(root.rglob("*")):
@@ -131,6 +150,11 @@ def archive(label: str = "", results: Path | None = None) -> Path:
                            ("yardstick", "rho", "ci_low", "ci_high", "p_value",
                             "n_methods", "n_distinct", "meets_threshold",
                             "ci_excludes_zero")},
+        # WHICH INPUT MATRIX. Absent for every archive made before 2026-09-23, and
+        # recorded as absent rather than guessed: the five earlier archives genuinely
+        # cannot be told apart on this axis from their manifests alone, which is the
+        # defect (OPEN_DEFECTS D16) and not something a later script may paper over.
+        "reference_matrix": _run_provenance(src),
         "registration_state": (rep.get("registration") or {}).get("state"),
         "n_methods_on_leaderboard": max(len(lb) - 1, 0),
         "git_commit": _git_commit(),

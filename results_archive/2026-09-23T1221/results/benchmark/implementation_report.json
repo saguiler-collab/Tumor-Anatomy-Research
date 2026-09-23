@@ -1,0 +1,42 @@
+[
+  {
+    "method": "music",
+    "r_available": true,
+    "reason": "MuSiC available with cell-level reference"
+  },
+  {
+    "method": "dwls",
+    "r_available": true,
+    "reason": "DWLS available with cell-level reference"
+  },
+  {
+    "method": "bisque",
+    "r_available": true,
+    "reason": "BisqueRNA available with cell-level reference"
+  },
+  {
+    "method": "scdc",
+    "r_available": true,
+    "reason": "SCDC available with cell-level reference"
+  },
+  {
+    "method": "scdc_ensemble",
+    "r_available": true,
+    "reason": "SCDC available with cell-level reference"
+  },
+  {
+    "method": "epic",
+    "r_available": true,
+    "reason": "EPIC available (signature-based)"
+  },
+  {
+    "method": "quantiseq",
+    "r_available": true,
+    "reason": "quantiseqr available (signature-based)"
+  },
+  {
+    "method": "bayesprism",
+    "r_available": true,
+    "reason": "BayesPrism available with cell-level reference"
+  }
+]

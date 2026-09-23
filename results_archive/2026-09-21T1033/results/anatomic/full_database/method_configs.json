@@ -1,0 +1,265 @@
+{
+  "what_this_is": "Every method's configuration as actually run, with anything differing from its own defaults marked. Declared deviations from a tool's PUBLISHED defaults are listed per method with the reason and when the decision was made \u2014 the protocol's fairness rule is defaults with no per-method tuning, so a departure that is invisible is not defensible.",
+  "n_methods": 17,
+  "methods_with_declared_deviations": [
+    "cibersortx",
+    "dwls",
+    "quantiseq"
+  ],
+  "configs": [
+    {
+      "method": "nnls",
+      "class": "NNLSDeconvolution",
+      "family": "least-squares",
+      "implementation": "python",
+      "parameters": {},
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "svr",
+      "class": "SVRDeconvolution",
+      "family": "least-squares",
+      "implementation": "python",
+      "parameters": {},
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "cibersortx",
+      "class": "CIBERSORTxDeconvolution",
+      "family": "least-squares",
+      "implementation": "python",
+      "parameters": {},
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": [
+        {
+          "parameter": "batch-correction mode (B-mode vs S-mode)",
+          "published_default": "no single default; Newman et al. (2019) choose per configuration. Their Supplementary Table 1d records the choice for every deconvolution in the paper.",
+          "used": "B-mode",
+          "why": "Supplementary Table 1d shows a consistent split: every signature derived from 10x Chromium and applied to a bulk RNA-seq mixture is deconvolved in S-MODE, while B-mode is used for SMART-Seq2- and microarray-derived signatures (LM22) against bulk. The split is mechanistic \u2014 droplet 10x data carries a strong 3' bias and UMI counting, so it sits further from bulk RNA-seq than full-length SMART-Seq2 does. This project's reference is GBmap, measured at 87.1% 10x (214,284 cells 3' v2, 49,262 3' v3, 31,316 5' v1 of 338,564) against 2.7% Smart-seq2, and the mixtures are Ivy GAP bulk RNA-seq. By the paper's own practice that is an S-mode configuration, and this implementation runs B-mode. S-mode's per-cell-type expression adjustment is not implemented here, so the row is B-mode and says so rather than claiming to be the mode the authors would have used.",
+          "decided": "from Supplementary Table 1d and the atlas assay counts, both external to any score this project computed"
+        }
+      ]
+    },
+    {
+      "method": "cibersortx_smode",
+      "class": "CIBERSORTxSModeDeconvolution",
+      "family": "least-squares",
+      "implementation": "python",
+      "parameters": {},
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "elastic_net",
+      "class": "ElasticNetDeconvolution",
+      "family": "regularized",
+      "implementation": "python",
+      "parameters": {
+        "alpha": null,
+        "l1_ratio": null,
+        "n_gene_folds": 3
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "bayesian",
+      "class": "BayesianDeconvolution",
+      "family": "bayesian",
+      "implementation": "python",
+      "parameters": {
+        "alpha": 0.5,
+        "n_iter": 400,
+        "n_burnin": 150,
+        "thin": 2,
+        "pseudocount_total": 1000.0,
+        "propagate_reference_uncertainty": true
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "bayesian_hierarchical",
+      "class": "HierarchicalBayesianDeconvolution",
+      "family": "bayesian",
+      "implementation": "python",
+      "parameters": {
+        "alpha": 0.5,
+        "n_iter": 400,
+        "n_burnin": 150,
+        "thin": 2,
+        "pseudocount_total": 1000.0,
+        "propagate_reference_uncertainty": true,
+        "kappa": 5.0,
+        "n_outer": 3,
+        "refine_iter": 200
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "music",
+      "class": "MuSiCDeconvolution",
+      "family": "reference-based",
+      "implementation": "R:MuSiC",
+      "parameters": {
+        "max_iter": 100,
+        "tol": 1e-05,
+        "trim_quantile": 0.99
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "dwls",
+      "class": "DWLSDeconvolution",
+      "family": "reference-based",
+      "implementation": "python-reimplementation",
+      "parameters": {
+        "max_iter": 100,
+        "tol": 1e-05,
+        "dampen_powers": [
+          1,
+          2,
+          4,
+          6,
+          8
+        ],
+        "n_subsets": 5,
+        "subset_frac": 0.5,
+        "select_max_iter": 12
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": [
+        {
+          "parameter": "buildSignatureMatrixMAST(diff.cutoff, pval.cutoff)",
+          "published_default": "diff.cutoff = 0.5, pval.cutoff = 0.01",
+          "used": "diff.cutoff = 0, pval.cutoff = 1 (filter fully open)",
+          "why": "Equal footing requires every method to receive the same pre-filtered gene space, so the informative genes have already been chosen identically for all methods. DWLS's own differential-expression pass is then a second filter, not a second opinion: at the published cutoffs it left 31 genes for 8 cell types and the driver refused to deconvolve on them.",
+          "decided": "from the gene count, before any DWLS score existed"
+        },
+        {
+          "parameter": "cells used for the signature build",
+          "published_default": "all cells in the reference",
+          "used": "<= 250 cells per cell type",
+          "why": "buildSignatureMatrixMAST costs ~30 minutes per gene set on this hardware regardless of the DE method. A signature is a per-cell-type summary, so type proportions are irrelevant to it and capping per type spends the budget where it buys accuracy.",
+          "decided": "from measured runtime, before any DWLS score existed"
+        },
+        {
+          "parameter": "per-sample failure handling",
+          "published_default": "an error aborts the call",
+          "used": "a sample that fails to solve becomes NA and is counted",
+          "why": "solveDampenedWLS fails on particular mixtures with 'NA/NaN argument'. One such sample was sending the whole cohort to the Python fallback. NA is already what this pipeline means by a failed sample and it is reported in n_failed_samples.",
+          "decided": "from the failure mode, before any DWLS score existed"
+        }
+      ]
+    },
+    {
+      "method": "bisque",
+      "class": "BisqueDeconvolution",
+      "family": "reference-based",
+      "implementation": "R:BisqueRNA",
+      "parameters": {
+        "min_donors": 3
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "scdc",
+      "class": "SCDCDeconvolution",
+      "family": "reference-based",
+      "implementation": "R:SCDC",
+      "parameters": {
+        "max_iter": 50,
+        "tol": 1e-05,
+        "outlier_z": 3.0
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "scdc_ensemble",
+      "class": "SCDCEnsembleDeconvolution",
+      "family": "reference-based",
+      "implementation": "R:SCDC",
+      "parameters": {
+        "max_iter": 50,
+        "tol": 1e-05,
+        "outlier_z": 3.0,
+        "grid_step": 0.1
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "epic",
+      "class": "EPICDeconvolution",
+      "family": "reference-based",
+      "implementation": "R:EPIC",
+      "parameters": {
+        "other_weight": 1.0
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "quantiseq",
+      "class": "QuanTIseqDeconvolution",
+      "family": "reference-based",
+      "implementation": "R:quantiseqr",
+      "parameters": {},
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": [
+        {
+          "parameter": "the bulk gene space this HARNESS hands the method",
+          "published_default": "the full expression matrix",
+          "used": "the full shared space, NOT the shared marker subset",
+          "why": "Every other method solves against this project's signature matrix, so the marker subset \u2014 top-N genes per cell type ranked against that signature, plus its markers \u2014 is the shared gene space and equal footing holds. quanTIseq does not solve against it: it ships TIL10 and ignores the signature it is handed. Ranking genes against a reference it never reads kept 34 of TIL10's 138 signature genes (24.6%), and quanTIseq answered with macrophages at 100% of cells in the median sample and T cells identically zero in all 122. On the full space it finds 136 of 138 (98.6%) and returns a GBM-plausible 15.7% median myeloid fraction. The subset was not equal footing for this method; it was mutilation. EPIC is also signature-only but DOES read the supplied signature, so it keeps the subset and is untouched by this.",
+          "decided": "from the signature-gene recovery rate, before any quanTIseq ACS existed \u2014 the 2026-09-05T2154 run scored it NaN"
+        },
+        {
+          "parameter": "cell-size (mRNA) correction",
+          "published_default": "scale_mRNA = TRUE, quanTIseq's own mRNA scaling",
+          "used": "quanTIseq's own scaling only; this project's is not applied on top",
+          "why": "The pipeline's cell-size correction and quanTIseq's scale_mRNA are the same correction. Applying both would double-correct, and this project's version renormalises to sum 1, which on a method covering four immune types would assert the tumour is entirely immune. Keeping the published default and skipping ours leaves quanTIseq on its own documented scale.",
+          "decided": "from the two definitions, before any quanTIseq ACS existed"
+        }
+      ]
+    },
+    {
+      "method": "bayesprism",
+      "class": "BayesPrismDeconvolution",
+      "family": "bayesian",
+      "implementation": "python-reimplementation",
+      "parameters": {
+        "n_iter": 12,
+        "shrink": 0.25
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "control_random",
+      "class": "RandomFractionsControl",
+      "family": "negative-control",
+      "implementation": "python",
+      "parameters": {
+        "concentration": 0.7
+      },
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    },
+    {
+      "method": "control_shuffled_signature",
+      "class": "ShuffledSignatureControl",
+      "family": "negative-control",
+      "implementation": "python",
+      "parameters": {},
+      "differs_from_class_defaults": {},
+      "declared_deviations_from_published_defaults": []
+    }
+  ]
+}

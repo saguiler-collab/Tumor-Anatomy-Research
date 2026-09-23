@@ -1,0 +1,94 @@
+{
+  "hypothesis": "B_cell absorbs Macrophage_Microglia spillover",
+  "status": "EXPLORATORY - not pre-registered, generated after seeing the inversion",
+  "methods": {
+    "bayesian": {
+      "r_B_M": -0.2269,
+      "r_T_M": 0.1297,
+      "r_NK_M": -0.4857,
+      "B_tracks_M_more": false,
+      "comparable": true
+    },
+    "bayesprism": {
+      "r_B_M": 0.0533,
+      "r_T_M": -0.0026,
+      "r_NK_M": 0.0921,
+      "B_tracks_M_more": true,
+      "comparable": true
+    },
+    "bisque": {
+      "r_B_M": -0.2189,
+      "r_T_M": 0.1154,
+      "r_NK_M": 0.0978,
+      "B_tracks_M_more": false,
+      "comparable": false
+    },
+    "cibersortx": {
+      "r_B_M": -0.2217,
+      "r_T_M": 0.1444,
+      "r_NK_M": 0.2912,
+      "B_tracks_M_more": false,
+      "comparable": true
+    },
+    "dwls": {
+      "r_B_M": 0.0964,
+      "r_T_M": 0.3484,
+      "r_NK_M": 0.1062,
+      "B_tracks_M_more": false,
+      "comparable": true
+    },
+    "elastic_net": {
+      "r_B_M": 0.2841,
+      "r_T_M": 0.1478,
+      "r_NK_M": 0.0056,
+      "B_tracks_M_more": true,
+      "comparable": true
+    },
+    "epic": {
+      "r_B_M": 0.2551,
+      "r_T_M": -0.0266,
+      "r_NK_M": -0.1496,
+      "B_tracks_M_more": true,
+      "comparable": false
+    },
+    "music": {
+      "r_B_M": 0.1002,
+      "r_T_M": null,
+      "r_NK_M": 0.0079,
+      "B_tracks_M_more": false,
+      "comparable": false
+    },
+    "nnls": {
+      "r_B_M": 0.1002,
+      "r_T_M": null,
+      "r_NK_M": 0.0079,
+      "B_tracks_M_more": false,
+      "comparable": true
+    },
+    "scdc": {
+      "r_B_M": 0.0911,
+      "r_T_M": 0.0726,
+      "r_NK_M": 0.157,
+      "B_tracks_M_more": true,
+      "comparable": true
+    },
+    "scdc_ensemble": {
+      "r_B_M": 0.0911,
+      "r_T_M": 0.0726,
+      "r_NK_M": 0.157,
+      "B_tracks_M_more": true,
+      "comparable": false
+    },
+    "svr": {
+      "r_B_M": -0.1409,
+      "r_T_M": 0.107,
+      "r_NK_M": 0.3409,
+      "B_tracks_M_more": false,
+      "comparable": true
+    }
+  },
+  "n_supporting": 5,
+  "n_tested": 10,
+  "sign_test_p": 0.623047,
+  "verdict": "NOT SUPPORTED"
+}

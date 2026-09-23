@@ -74,13 +74,23 @@ def main() -> int:
 
         ("Figure_lymphoid_paired",
          "Methods place B cells above T cells; DNA methylation places T above B.",
-         "Mean ± SD of the T-cell and B-cell fraction within {T, NK, B}, per method and for the "
-         "methylation truth bar. p-values are two-sided Wilcoxon signed-rank tests paired "
-         "within sample, not comparisons of two cohort averages. Two sample counts are given "
-         "per panel and they differ: 'truth n' is the number of samples with methylation data, "
-         "'per-method n' the number that also have a deconvolution estimate. In GBM these are "
-         "154 and 56, because most TCGA-GBM methylation was assayed on the older HM27 platform "
-         "rather than HM450."),
+         # DERIVED, not typed. This caption said "154 ... samples with methylation data",
+         # but 154 is `n_orderable_samples` -- the methylation samples MINUS the one whose
+         # T, NK and B are all exactly zero, which has no defined ordering. The count with
+         # methylation data is 155, which is what Figure 2's generated caption says. The
+         # number was right for what the figure plots and the DESCRIPTION was wrong, so the
+         # two captions contradicted each other on the same quantity.
+         f"Mean ± SD of the T-cell and B-cell fraction within {{T, NK, B}}, per method and "
+         f"for the methylation truth bar. p-values are two-sided Wilcoxon signed-rank tests "
+         f"paired within sample, not comparisons of two cohort averages. Sample counts "
+         f"differ within a panel and the difference is not incidental: "
+         f"{lo.get('n_methylation_samples')} GBM samples have methylation data, "
+         f"{lo.get('n_orderable_samples')} of those admit an ordering at all (the "
+         f"remaining {lo.get('n_unorderable_zero_lymphoid')} returned exactly zero T, NK "
+         f"and B, so no ordering is defined), and only "
+         f"{max((v.get('n') or 0) for v in (lo.get('methods') or {{}}).values()) if lo.get('methods') else 0} "
+         f"also have a deconvolution estimate — most TCGA-GBM methylation was assayed on "
+         f"the older HM27 platform rather than HM450."),
 
         ("Figure_purity_scatter_gbm",
          "Glioblastoma: every fitted slope is shallower than identity, so estimates compress "

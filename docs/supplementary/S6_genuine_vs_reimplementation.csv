@@ -1,0 +1,3 @@
+Method,Reimplementation (ACS),Genuine R package (ACS),Difference,Runtime (s),Pipeline budget (s)
+dwls,0.7231,0.7846,+0.0615,2593,2400
+bayesprism,0.8000,0.8154,+0.0154,2045,2400

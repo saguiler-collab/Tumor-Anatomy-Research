@@ -1,5 +1,44 @@
 # The endpoint: what this project found, and what the paper says
 
+> # ⚠ NUMBERS UPDATED 2026-09-22 — the reference was rebuilt from genuine counts
+>
+> Every figure in this document was originally computed against a reference built from GBmap's
+> **`X`**, which is `log1p(counts × size factor)` and which OPEN_DEFECTS **D16** identifies as
+> indefensible when solved against linear bulk. `run_all.py --matrix raw/X` has now rebuilt the
+> ACS leaderboard, the benchmark and the agreement test from the **genuine counts**.
+>
+> | | log `X` (superseded) | **`raw/X` (current)** |
+> |---|---|---|
+> | primary outcome, pseudobulk yardstick | +0.7501 | **+0.6372** — still clears the 0.60 bar |
+> | ACS vs DNA purity, frozen signature | +0.0698 | **+0.0810** (n=12) |
+> | ACS vs DNA purity, excl. degenerate | −0.1044 | **-0.1255** (n=9) |
+> | **ACS vs purity, TRUE parity (both arms `raw/X`)** | −0.0156 | **+0.3142** (n=14), p = 0.274 |
+> | best ACS (`music`) | 1.0000 | **0.9692** |
+> | `control_shuffled_signature` | 0.1385 | **0.3692** |
+>
+> **The conclusion is unchanged and the numbers are now defensible.** Every external yardstick
+> still fails the pre-registered 0.60 bar. The ordering is largely preserved (Kendall tau
+> **+0.6719** between the two leaderboards, Spearman **+0.8203**, median |Δ| **0.0308**), no
+> method changed implementation between the runs, and the control separation survives — worst
+> real method **0.600** against best control **0.400**. That margin is the weakest form of the
+> claim, because the method at the bottom of the range is `quantiseq`, which is scored on only
+> **15 of 57** constraint-tumour pairs and does not clear its own permutation null (p = 0.31) —
+> *not evaluable* rather than *bad*. Excluding it, the worst **fully-scored** method is
+> `bisque` at **0.708**, so the true margin over the best control is **+0.308**, not +0.200.
+>
+> **One statement genuinely weakens, and it is the parity row.** Under true parity the
+> correlation is **+0.3142**, not ≈ 0. It still fails the bar and is
+> not significant (p = 0.274, CI [-0.294,
+> +0.951] spans zero), so "anatomy does not rank" holds — but the
+> honest phrasing is now *"a weak positive that does not reach significance and does not clear
+> the registered bar"*, not *"indistinguishable from zero"*. Passages below that still say
+> ≈ 0 are superseded by this table.
+>
+> Superseded numbers are left in place below rather than overwritten, so the change is visible.
+> `results_archive/` holds both runs; `results/matrix_arm_comparison.json` holds the per-method
+> comparison.
+
+
 **Status 2026-09-15. Everything below is measured and has an artefact behind it.** This is the
 synthesis document — the claim, the evidence for it, the evidence against the original
 hypothesis, and what is deliberately left undone.
@@ -34,11 +73,11 @@ reference and missed against one that does not.
 
 | method | ACS | rho vs DNA purity |
 |---|---|---|
-| MuSiC | **1.0000** | 0.4271 |
-| SVR | 0.9846 | 0.7184 |
-| EPIC | 0.9846 | 0.3732 |
-| Bisque | 0.9231 | **0.0284** |
-| Bayesian | **0.7692** | **0.7421** |
+| MuSiC | **0.9692** | 0.4271 |
+| SVR | 0.9538 | 0.7184 |
+| EPIC | 0.7692 | 0.3732 |
+| Bisque | 0.7077 | **0.0284** |
+| Bayesian | **0.7538** | **0.7421** |
 | DWLS | **0.7385** *(last)* | **0.6865** |
 
 **What differs between the arms, because this is not a like-for-like re-run.** ACS is scored on
@@ -309,8 +348,8 @@ remove. Every method is scored on the **same 41 constraint–tumour pairs**.
 | MuSiC, CIBERSORTx S-mode | 1.0000 | 0.0001 |
 | elastic net, EPIC, NNLS, SVR | 0.9756 | 0.0001 |
 | BayesPrism, SCDC | 0.9268 | 0.0001 |
-| Bisque | 0.8780 | 0.0001 |
-| **DWLS** | **0.7561** | 0.0002 |
+| Bisque | 0.7077 | 0.0001 |
+| **DWLS** | **0.7231** | 0.0002 |
 | **CDSeq — atlas for labelling only** | **0.7561** | 0.0002 |
 | **CDSeq — no atlas at all** | **0.6829** | 0.0009 |
 | `control_random` | 0.5122 | **0.2233 — fails its null** |

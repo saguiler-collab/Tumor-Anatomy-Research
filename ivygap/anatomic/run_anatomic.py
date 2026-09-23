@@ -489,10 +489,21 @@ def run(bulk: pd.DataFrame, manifest: pd.DataFrame, references: tuple,
     acs_scores = {n: r.acs for n, r in results.items() if n in comparable_methods}
     excluded_from_agreement = sorted(set(results) - comparable_methods)
     yardsticks, yardstick_prov = _load_yardsticks()
+    # The direction of each yardstick's score is declared beside the loader that produces
+    # it, not restated here. This call previously passed `{k: False for k in yardsticks}`
+    # under the comment "every yardstick here is an error metric", which was false of
+    # `absolute_purity` -- a Spearman correlation, where higher is better -- and inverted
+    # the sign of the orthogonal yardstick's rho.
+    from ivygap.bench.real_yardsticks import HIGHER_IS_BETTER
+    unknown = sorted(set(yardsticks) - set(HIGHER_IS_BETTER))
+    if unknown:
+        raise ValueError(
+            f"yardstick(s) {unknown} have no declared score direction. Add them to "
+            f"ivygap.bench.real_yardsticks.HIGHER_IS_BETTER: a yardstick whose direction "
+            f"is guessed can invert the study's headline correlation.")
     agreement_table = agreement.run_all_yardsticks(
         acs_scores, yardsticks,
-        # Every yardstick here is an error metric, so lower is better throughout.
-        higher_is_better={k: False for k in yardsticks},
+        higher_is_better={k: HIGHER_IS_BETTER[k] for k in yardsticks},
     )
     yardstick_prov["methods_excluded_for_partial_coverage"] = excluded_from_agreement
     (out / "yardstick_provenance.json").write_text(json.dumps(yardstick_prov, indent=2))

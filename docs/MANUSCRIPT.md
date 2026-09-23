@@ -16,7 +16,7 @@ Claims are tagged **[STRONG]** (replicated across cohorts or molecules), **[QUAL
 
 > WRITE: one sentence of motivation. Deconvolution is used to estimate tumour and immune content; there is no routine way to know when to believe it.
 
-1. **Anatomy detects, it does not rank.** Anatomic concordance separates real methods from negative controls, but its ranking does not predict accuracy against DNA-measured purity: Spearman **0.0698** (n=12) and **-0.0156** (n=14) when both arms use the same reference build. The registered bar (≥0.60) is met **only** against the pseudobulk yardstick that shares its atlas with the anatomy score (**0.7501**). **[STRONG]**
+1. **Anatomy detects, it does not rank.** Anatomic concordance separates real methods from negative controls, but its ranking does not predict accuracy against DNA-measured purity: Spearman **0.081** (n=12) and **0.3142** (n=14) when both arms use the same reference build. The registered bar (≥0.60) is met **only** against the pseudobulk yardstick that shares its atlas with the anatomy score (**0.6372**). **[STRONG]**
 2. **Deconvolution recovers a minority of true tumour-content variation.** Median **33.1%** in 147 glioblastomas and **23.3%** in 496 lower-grade gliomas (comparable methods only; **21.5%** / **17.2%** including degraded stand-ins). The purity association replicates: β **-0.13595** vs **-0.13386**, 12/12 methods, Holm p **0.00244**. **[STRONG]**
 3. **The lymphoid compartment is not recoverable at all.** DNA methylation places T cells above B cells in **94.8%** of glioblastomas and **93.2%** of lower-grade gliomas, at true ratios of **4.76:1** and **2.34:1**. **No method reproduces this in either cohort.** **[STRONG]**
 4. **The failure has two distinct forms.** **4 of 12** methods (GBM) and **4 of 12** (LGG) return *exactly zero* T, B and NK cells in the majority of samples. Of those that do report lymphocytes, **6 of 8** (GBM) and **8 of 8** (LGG) place B above T, paired per-sample. **Zero of twelve** reproduce the true T>NK>B ordering in either cohort. **[STRONG]**
@@ -45,10 +45,10 @@ Claims are tagged **[STRONG]** (replicated across cohorts or molecules), **[QUAL
 ## Result 1 — anatomy detects, it does not rank **[STRONG]**
 
 - ACS separates real methods from negative controls decisively; the ordering it produces among working methods does not survive external validation.
-- Against DNA purity, **the same reference build on both arms**: Spearman **-0.0156** across 14 methods, **0.0071** across the 12 comparable ones.
-- The registered bar is met only against the pseudobulk yardstick that **shares its atlas** with ACS (0.7501). Every yardstick sharing nothing with ACS fails — a pattern, not one bad run.
+- Against DNA purity, **the same reference build on both arms**: Spearman **0.3142** across 14 methods, **0.2817** across the 12 comparable ones.
+- The registered bar is met only against the pseudobulk yardstick that **shares its atlas** with ACS (0.6372). Every yardstick sharing nothing with ACS fails — a pattern, not one bad run.
 
-> WRITE: this is the cleanest refutation in the paper because the obvious objection — that the two arms used different reference builds, so `music` meant a different algorithm in each — was removed by measurement rather than argued away, and removing it changed nothing.
+> WRITE: the obvious objection — that the two arms used different reference builds, so `music` meant a different algorithm in each — was removed by measurement rather than argued away. **Say what removing it did, because it was not nothing.** On the log-matrix runs the parity figure was ≈ 0; rebuilding both arms from genuine counts (OPEN_DEFECTS D16) moved it to the value above. It still fails the registered bar and is not significant, so the conclusion holds — but the honest phrasing is *a weak positive that does not reach significance*, not *indistinguishable from zero*. Claiming the correction changed nothing would be false and is the kind of thing a reviewer checks.
 
 ## Result 2 — how much tumour content is recovered **[STRONG]**
 
@@ -111,8 +111,8 @@ _from `results/dwls_remeasured.json`, `results/bayesprism_remeasured.json`. Same
 
 | method | this project's reimplementation | the genuine R package | delta | runtime vs the 2,400 s pipeline budget |
 |---|---|---|---|---|
-| `dwls` | 0.7385 | **0.7846** | **+0.0461** | 2593 s — OVER |
-| `bayesprism` | 0.8769 | **0.8154** | **-0.0615** | 2045 s — under |
+| `dwls` | 0.7231 | **0.7846** | **+0.0615** | 2593 s — OVER |
+| `bayesprism` | 0.8000 | **0.8154** | **+0.0154** | 2045 s — under |
 
 **The reimplementations are not uniformly biased, and that is the point.** DWLS's reimplementation *understated* the package by 0.046; BayesPrism's *overstated* it by 0.062. A blanket "the reimplementation is close enough" would be wrong in both directions, and a blanket "reimplementations flatter their packages" would be wrong too.
 

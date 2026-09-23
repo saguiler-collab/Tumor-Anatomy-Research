@@ -1,0 +1,89 @@
+{
+  "method": "bayesprism",
+  "what_this_is": "A single-method re-measurement of the GENUINE bayesprism R package on the anatomic cohort, after it fell back to the Python reimplementation in the confirmatory run. Reported alongside that run, never substituted into it.",
+  "budget_seconds": 14400,
+  "pipeline_budget_seconds": 2400,
+  "elapsed_seconds": 4076.5,
+  "n_samples": 122,
+  "n_genes": 657,
+  "gene_space": {
+    "source": "results/benchmark/signature_genes.json",
+    "n_genes": 657,
+    "sha256": "0bb40fb93a2ecc474a7af6ce0e3cc8d3d7156300c9b17004b65b9500d36c7364",
+    "matches_recorded_hash": true,
+    "strategy": "the leaderboard's own gene space, read from the run artefact"
+  },
+  "input_equivalence": {
+    "1_gene_space": {
+      "n_genes": 657,
+      "sha256": "0bb40fb93a2ecc474a7af6ce0e3cc8d3d7156300c9b17004b65b9500d36c7364",
+      "matches_leaderboard": true
+    },
+    "2_train_donors": {
+      "n": 88,
+      "matches_recorded": true
+    },
+    "3_held_out_donors": {
+      "n": 22,
+      "matches_recorded": true,
+      "reference_excludes_held_out_donors": true,
+      "note": "the reference and the cell export carry TRAINING donors only, as run_all stage 4 does, so none of the 22 held-out donors' cells reach the method"
+    },
+    "4_no_silent_sample_loss": {
+      "n_anatomic_samples_selected": 122,
+      "n_samples_in_bulk": 122,
+      "equal": true,
+      "canonical_n_samples": 122
+    },
+    "5_sample_ids": {
+      "canonical_artefact": "results/estimates/ivygap_bayesprism.csv",
+      "identical_and_in_order": true,
+      "n_canonical": 122,
+      "same_membership": true
+    },
+    "6_cell_type_order": {
+      "order": [
+        "Tumor",
+        "Macrophage_Microglia",
+        "T_cell",
+        "NK_cell",
+        "B_cell",
+        "Endothelial",
+        "Oligodendrocyte",
+        "Astrocyte"
+      ],
+      "matches_config": true,
+      "matches_canonical": true
+    },
+    "7_normalisation_and_scale": {
+      "atlas_restricted_to_bulk_genes": true,
+      "n_atlas_genes_after_restriction": 16758,
+      "per_cell_normalisation": "1e6 across the restricted gene set, before profile averaging; raw totals captured first as cell_size",
+      "bulk_scaling": "CPM over the 657-gene space (columns sum to 1e6)",
+      "cell_size_sha256": "9e85b1445b61df7cf869a80dec7fb6a2af381a81c8208c2465fa4a439487127a",
+      "cell_size": {
+        "Tumor": 1000000.0,
+        "Macrophage_Microglia": 1000000.0,
+        "T_cell": 999999.9375,
+        "NK_cell": 1000000.0,
+        "B_cell": 1000000.0,
+        "Endothelial": 1000000.0,
+        "Oligodendrocyte": 1000000.0,
+        "Astrocyte": 1000000.0
+      },
+      "cell_size_spread_max_over_min": 1.0,
+      "apply_cell_size_correction": true
+    }
+  },
+  "central_cell_size_conversion_applied": true,
+  "failed": null,
+  "acs": 0.8154,
+  "ci": [
+    0.7096,
+    0.9153
+  ],
+  "null_p": 9.999000099990002e-05,
+  "n_pairs": 57,
+  "n_tumors": 9,
+  "estimates": "results/estimates/ivygap_bayesprism_genuine.csv"
+}

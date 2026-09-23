@@ -1,6 +1,6 @@
 {
   "project": "Ivy GAP GBM anatomic cell-type deconvolution",
-  "built": "2026-09-10",
+  "built": "2026-09-23",
   "data_source": {
     "bulk": "Ivy Glioblastoma Atlas Project (Allen Institute), anatomic-structure RNA-seq",
     "url": "https://glioblastoma.alleninstitute.org/",
@@ -57,7 +57,8 @@
   "survival_power": "BLOCKED: tumor_details.csv is present and joins correctly, but it publishes survival_days and NO vital-status column. Who was censored is not knowable from the release, so a C-index cannot be computed. Nothing is imputed and no prognostic claim is made.",
   "primary_result_status": "AVAILABLE",
   "yardsticks_with_real_ground_truth": [
-    "synthetic_mixtures"
+    "synthetic_mixtures",
+    "absolute_purity"
   ],
   "constraint_freeze_hash": "2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a",
   "constraint_file": {
@@ -255,36 +256,36 @@
       "public_path": "release/acs_leaderboard.csv",
       "source_path": "results/anatomic/acs_leaderboard.csv",
       "description": "THE LEADERBOARD. Anatomic Concordance Score per method, with a bootstrap CI over tumours and a p-value against the within-tumour label-permutation null. The two rows flagged is_control are negative controls and are what make the rest interpretable - read the control verdict in anatomic_report.json first.",
-      "sha256": "2ba181dcddad771e8bcf58786888d80df6558441570dfae3ec1aae03f8582a2c",
-      "bytes": 3489
+      "sha256": "033522cc4a4acd10ff48c72ba5111d093416d06c1ad9652c7f59dc8fbc996554",
+      "bytes": 3466
     },
     {
       "public_path": "release/agreement_test.csv",
       "source_path": "results/anatomic/agreement_test.csv",
       "description": "THE PRIMARY RESULT. Spearman rank correlation between the ACS ranking and the ranking from real ground truth, per yardstick, against a threshold fixed before it was computed. A yardstick marked UNAVAILABLE produced no scores in this run - that is not the same as disagreeing.",
-      "sha256": "160480ffe993cbd33d67f53a8141808fb9cee0e121f5a59fd6803ee35208ed6f",
-      "bytes": 883
+      "sha256": "149e92313d3d6cec9ce7f5cd79edac640ef55f639942cf8834afd3956c1fe2c9",
+      "bytes": 1367
     },
     {
       "public_path": "release/agreement_report.json",
       "source_path": "results/anatomic/agreement_report.json",
       "description": "The primary result with its pre-registered threshold and the requirement it was judged against (rho >= 0.60 AND a bootstrap CI excluding zero).",
-      "sha256": "2841a64b35d08d19f040ade481a56efa8e049928bf2b4687e11bc6ce208d2c6b",
-      "bytes": 2293
+      "sha256": "a72aa9e964628af9e39d1e158ec8948882e2022e576e30f099997d43b087098c",
+      "bytes": 3362
     },
     {
       "public_path": "release/agreement_method_ranks.csv",
       "source_path": "results/anatomic/agreement_method_ranks.csv",
       "description": "Each method's ACS rank beside its ground-truth rank, with the gap. This is where the agreement test is actually legible: a large gap means a method the anatomy likes and the truth does not, or vice versa.",
-      "sha256": "86842bde07cb8d47ac4a43365debdc135317c4f433f473a1b9fc659967c12749",
-      "bytes": 1150
+      "sha256": "681c9b1ffea31eb09d1020a2d423c96554dcfabe987940fb4be28ae20bd13407",
+      "bytes": 1883
     },
     {
       "public_path": "release/acs_per_constraint.csv",
       "source_path": "results/anatomic/acs_per_constraint.csv",
       "description": "Every constraint x every method: how many tumours could evaluate it and how many satisfied it. A constraint no method satisfies is evidence about the constraint, or about the reference - read it before reading the leaderboard.",
-      "sha256": "f905520aaf65a046c8c7daad3e09f70649578bc3a31dbe55b0f163313f853c6d",
-      "bytes": 8151
+      "sha256": "989c4a06479687dc512b6bac1d300ba4220f8329937c5c6a65620ca2d10ca389",
+      "bytes": 8238
     },
     {
       "public_path": "release/constraint_file.json",
@@ -297,78 +298,78 @@
       "public_path": "release/anatomic_report.json",
       "source_path": "results/anatomic/anatomic_report.json",
       "description": "Machine-readable summary, including the control verdict and the note that ACS was never used to select a method.",
-      "sha256": "446c319b23e101390f551d9dcb97ff04bdd1c329521bd5299639dddcbc799ce1",
-      "bytes": 23082
+      "sha256": "e534155a6d867f5ca6bd57537e315d8aa41cc5588db7b3ea07a104a0dec46247",
+      "bytes": 24101
     },
     {
       "public_path": "release/composition.csv",
       "source_path": "results/anatomic/composition_by_tumor_structure.csv",
       "description": "Composition per (tumour, anatomic structure) from the best-scoring real method. One row per tumour per structure - already collapsed, so uneven block counts cannot skew anything downstream.",
-      "sha256": "5ec36031fd63686a4463a072a91eca77febb3d147fc07b016b50aa2e3162c1fa",
-      "bytes": 6389
+      "sha256": "771a683e625ddb2cbffb6e2315f21af69c42f119d97d8ab32bd7806067b01df0",
+      "bytes": 6055
     },
     {
       "public_path": "release/benchmark_summary.csv",
       "source_path": "results/benchmark/benchmark_summary.csv",
       "description": "Per-method accuracy on donor-held-out pseudobulk with known composition. This is the ground-truth ranking the agreement test correlates ACS against, and the only evidence any method is selected on.",
-      "sha256": "deda3e94fef447a376981c92ec5dd3bb91729559fb7c31a292a258c8f2b65b51",
-      "bytes": 3624
+      "sha256": "e2a43bb90468cb82a27663f40d8ec460f7985dbf04a6c110b68dc3491bfef7d1",
+      "bytes": 3614
     },
     {
       "public_path": "release/benchmark_per_type.csv",
       "source_path": "results/benchmark/benchmark_per_type.csv",
       "description": "Per method, per cell type: MAE, RMSE, bias, correlation, the fraction invented where the type is truly absent, and the limit of detection.",
-      "sha256": "2d4d274636c54c73732d972a51fd97653b2c283fa10add362893bf3495216404",
-      "bytes": 22246
+      "sha256": "b8318c56a732e9ebe2651664567727287ffbe7b7fae828b2ab6a390d41eda67b",
+      "bytes": 22199
     },
     {
       "public_path": "release/benchmark_per_niche.csv",
       "source_path": "results/benchmark/benchmark_per_niche.csv",
       "description": "The same accuracy broken down by which anatomic niche each synthetic mixture was shaped after. A method can win overall and still fail at the leading edge.",
-      "sha256": "27d2901cae21a1cbf40fec7f9f8089165218791a2d303075258986712724fa9a",
-      "bytes": 21275
+      "sha256": "816166d6685dc8a67eb0ec7f46ef49e8d451ea791da1b1206b0accf6515a4667",
+      "bytes": 21238
     },
     {
       "public_path": "release/uncertainty_calibration.csv",
       "source_path": "results/benchmark/uncertainty_calibration.csv",
       "description": "For every method reporting credible intervals: how often the interval actually contained the truth, against a nominal 0.95. Read before quoting any interval.",
-      "sha256": "8ce8f9d90b177dde19e5c980efc0ff9d04d727f406edc645a86b3d8c2fed04ca",
-      "bytes": 707
+      "sha256": "8b5162b813ca90113f136c4203b7081d78156ef91c818e84cb1c975cd187221b",
+      "bytes": 698
     },
     {
       "public_path": "release/method_selection_decision.json",
       "source_path": "results/benchmark/method_selection_decision.json",
       "description": "Which method was selected, on what criterion, with the full ranking - and the explicit record that survival and the anatomic labels were not used.",
-      "sha256": "9db159c7268ed1dfdfe85f2bb5f61357f6f669c0ccb14f0e4c1a16b50a3192c3",
-      "bytes": 11375
+      "sha256": "95f64c49e34186d77f2260ebe389c3e06c818b5938ba504eeed037254818a3c6",
+      "bytes": 11380
     },
     {
       "public_path": "release/equal_footing_certificate.json",
       "source_path": "results/anatomic/equal_footing_certificate.json",
       "description": "Content hashes proving every method and control was given identical inputs, identical tumours and identical folds.",
-      "sha256": "0ef1af878c8b757768de707c9c3b93e48a9fb108af845f29128e7e8d8de5d4bf",
+      "sha256": "367efb2385d1c856781f92d48414377ac4e892b16b44754a8e2fb477f4110f03",
       "bytes": 1659
     },
     {
       "public_path": "release/implementation_report.json",
       "source_path": "results/anatomic/implementation_report.json",
       "description": "For each of MuSiC, DWLS, Bisque and SCDC: whether the genuine R package ran, and if not, exactly why the Python reimplementation was used instead.",
-      "sha256": "f44db37fbfe92bbfb32e21cc7e2068d5a51367222481350347bac1cb84e382b0",
-      "bytes": 6047
+      "sha256": "86d388cf71d6f4290b5ef6cbdab01db7c4dae9fc3b73c7cf02585a4679cf50a3",
+      "bytes": 7559
     },
     {
       "public_path": "release/registration_status.json",
       "source_path": "results/anatomic/registration_status.json",
       "description": "Whether the constraint file is actually pre-registered. A hash proves the constraints have not changed; it does not prove they were written before the results, which is what the pre-registration claim rests on. UNREGISTERED is the honest default and is stated as such.",
-      "sha256": "e46ce934b62eba0cd155e4bc94f2f6b5b90c952809209494ca45ec5f3f109a5a",
-      "bytes": 2073
+      "sha256": "6b84a28de8de38bf91bd105f94627a1080e4b3cebd7d0e2bf0b7ab5b3c369d5e",
+      "bytes": 482
     },
     {
       "public_path": "release/method_configs.json",
       "source_path": "results/anatomic/method_configs.json",
       "description": "Every method's configuration as run, with anything differing from its own defaults marked, and every declared departure from a tool's PUBLISHED defaults listed with the reason and when it was decided. The fairness rule is defaults with no per-method tuning, so a departure that is invisible is not defensible.",
-      "sha256": "72669f721540bb7adfcb61d86803617d24453de7579ac1266cc9bdf9ac081cbd",
-      "bytes": 11351
+      "sha256": "27379ae2917c57db2a097f9bd6111651b7cfa4de1dc92eeea267640ac10bc28b",
+      "bytes": 22369
     },
     {
       "public_path": "release/reference_coverage.json",
@@ -381,15 +382,15 @@
       "public_path": "release/control_calibration.json",
       "source_path": "results/anatomic/control_calibration.json",
       "description": "Each negative control scored over many independent draws, not once. The leaderboard's control rows are single draws; on real data the shuffled-signature control has a standard deviation of about 0.16 against a real-method spread of 0.29, so one draw cannot establish that the controls behave in either direction. Read this before reading a control row.",
-      "sha256": "30f1207c68adaa7d0fd9690d2a0be2341663eb1901c0ba8696c8f8389156a74e",
-      "bytes": 4849
+      "sha256": "767479eef93b56e63c81b5a797a5ec55e85cc6d22c6d3401040d69e0a23dfd66",
+      "bytes": 4793
     },
     {
       "public_path": "release/acs_per_tumor.csv",
       "source_path": "results/anatomic/acs_per_tumor.csv",
       "description": "Every method x every tumour: which constraints that tumour could evaluate and which it satisfied. The protocol asks for per-tumour results explicitly, because with 9 evaluable tumours a pooled ACS can be carried by one or two of them and the pooled number alone cannot show that.",
-      "sha256": "9d53e51b17850116ae261f14f3dc3214523d36b3e9e0fc1a54d6308908504406",
-      "bytes": 8753
+      "sha256": "004b8c09ff359037635d16c94591d2f700a48501df6e68f44273b5853a86e481",
+      "bytes": 9083
     },
     {
       "public_path": "release/acs_cohort_sensitivity.csv",
@@ -451,5 +452,5 @@
   "missing_from_this_build": [
     "benchmark/gene_space.json"
   ],
-  "notes": ""
+  "notes": "Rebuilt 2026-09-23 after OPEN_DEFECTS D20: the agreement stage had been given higher_is_better=False for `absolute_purity`, a correlation, inverting the sign of the orthogonal yardstick's rho. Only that artefact changed; every input is unchanged."
 }

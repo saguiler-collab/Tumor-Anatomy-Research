@@ -1,0 +1,15 @@
+Method,"GBM, frozen signature (%)","GBM, sigma-carrying reference (%)","LGG, frozen signature (%)","LGG, sigma-carrying reference (%)"
+bayesian,43.1,21.3,28.2,21.4
+bayesian_hierarchical,n/a,22.7,n/a,22.6
+bayesprism,9.8,30.0,8.2,2.3
+bisque,-1.5,35.9,0.3,17.1
+cibersortx,63.7,58.4,42.1,37.1
+cibersortx_smode,n/a,18.5,n/a,-4.7
+dwls,43.5,14.7,29.6,n/a
+elastic_net,20.1,15.2,17.0,1.9
+epic,29.1,16.5,36.5,3.4
+music,17.5,60.2,20.0,52.6
+nnls,17.5,23.7,20.0,2.4
+scdc,20.5,53.3,10.6,44.3
+scdc_ensemble,20.5,53.3,10.6,44.3
+svr,59.1,55.0,39.6,37.9

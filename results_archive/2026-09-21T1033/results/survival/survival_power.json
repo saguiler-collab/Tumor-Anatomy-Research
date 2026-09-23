@@ -1,0 +1,7 @@
+{
+  "verdict": "BLOCKED: tumor_details.csv is present and joins correctly, but it publishes survival_days and NO vital-status column. Who was censored is not knowable from the release, so a C-index cannot be computed. Nothing is imputed and no prognostic claim is made.",
+  "clinical_file_present": true,
+  "vital_status_column_published": false,
+  "adequately_powered": false,
+  "smallest_human_action": "None available from Ivy GAP. The Allen Institute does not publish vital status. Either obtain follow-up status for the 42 tumours from the authors, or read the recorded times under an explicitly declared assumption (--assume-recorded-survival-is-death), which this pipeline will do only into a separate, labelled directory."
+}

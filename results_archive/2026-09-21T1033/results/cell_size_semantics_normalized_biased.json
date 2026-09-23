@@ -1,0 +1,55 @@
+{
+  "what_this_is": "Measures, per package, whether it already converts mRNA share to CELL share. Replaces five numbers that previously existed only as prose in OPEN_DEFECTS.md and ROAD_TO_PAPER.md.",
+  "probe": {
+    "size_ratio": 3.0,
+    "big_type": "Tumor",
+    "small_type": "T_cell",
+    "true_cell_fraction_big": 0.5,
+    "true_mrna_fraction_big": 0.75,
+    "measured_cell_size_ratio": 3.0,
+    "n_samples": 12,
+    "n_genes": 220,
+    "tolerance": 0.08,
+    "central_correction_applied": false,
+    "export_scale": "normalized",
+    "subset_mode": "biased",
+    "bulk_gene_fraction": 1.0,
+    "n_reference_genes": 240,
+    "export_scale_meaning": "normalized = what production hands the R packages (1e6 CPM per cell, as build_from_h5ad returns); raw = per-cell library sizes preserved, which is what each package's published usage assumes. The reference PROFILE is built the production way in both, so only a package's own internal cell-size estimate can differ between them."
+  },
+  "methods": [
+    {
+      "method": "music",
+      "returned_big_fraction": 0.75,
+      "sd_across_samples": 0.0012,
+      "leakage_to_absent_types": 0.0008,
+      "convention": "mRNA share",
+      "meaning": "the package reports mRNA share; this project's central conversion is the FIRST and is correct",
+      "implementation": "R",
+      "elapsed_s": 40.0,
+      "failed": null
+    },
+    {
+      "method": "scdc",
+      "returned_big_fraction": 0.7469,
+      "sd_across_samples": 0.0017,
+      "leakage_to_absent_types": 0.0041,
+      "convention": "mRNA share",
+      "meaning": "the package reports mRNA share; this project's central conversion is the FIRST and is correct",
+      "implementation": "R",
+      "elapsed_s": 15.8,
+      "failed": null
+    },
+    {
+      "method": "epic",
+      "returned_big_fraction": 0.6104,
+      "sd_across_samples": 0.0018,
+      "leakage_to_absent_types": 0.0006,
+      "convention": "BETWEEN",
+      "meaning": "lands between the cell answer (0.500) and the mRNA answer (0.750); the package does partial size handling, so neither applying nor skipping the central conversion is right for it",
+      "implementation": "R",
+      "elapsed_s": 2.4,
+      "failed": null
+    }
+  ]
+}

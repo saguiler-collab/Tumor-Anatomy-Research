@@ -1,0 +1,59 @@
+{
+  "what_this_is": "Does the ACS ranking agree with published benchmarks that used real ground truth on other tissue? EXPLORATORY; pre-specified in scripts/benchmark_concordance.py before running.",
+  "acs_source": "results/anatomic/acs_leaderboard.csv",
+  "exclusions_declared_in_advance": {
+    "quantiseq": "Excluded from the STATISTIC, reported separately. quanTIseq models four of this project's eight roster types, so its ACS is computed over 15 constraint-tumour pairs rather than 57 and carries comparable=False. Including a score on a different denominator in a rank test would compare two different quantities.",
+    "dwls": "Retained in the statistic but flagged. In the confirmatory run DWLS ran as a Python reimplementation in both anatomic stages, having exceeded its 2,400s budget for the genuine R package. Avila Cobos evaluated the package. This is disclosed rather than dropped, because dropping the one method expected to disagree is exactly the move this design exists to prevent."
+  },
+  "comparisons": {
+    "avila_cobos_2020": {
+      "citation": "Avila Cobos F, et al. Benchmarking of cell type deconvolution pipelines for transcriptomics data. Nat Commun 11:5650 (2020). doi:10.1038/s41467-020-19015-1",
+      "published_claim": "the five best bulk deconvolution methods (OLS, nnls, RLR, FARDEEP, and CIBERSORT) and the three best methods that use scRNA-seq data as reference (DWLS, MuSiC, SCDC) achieved median RMSE values lower than 0.05",
+      "their_ground_truth": "simulated pseudobulk with known composition",
+      "their_top_tier_our_acs": {
+        "nnls": 0.9846,
+        "svr": 0.9846,
+        "dwls": 0.7385,
+        "music": 1.0,
+        "scdc": 0.9538
+      },
+      "evaluated_not_top_our_acs": {
+        "epic": 0.9846,
+        "bisque": 0.9231,
+        "elastic_net": 0.9846
+      },
+      "n_overlapping_methods": 8,
+      "mann_whitney_u": 8.0,
+      "p_one_sided_top_tier_higher": 0.5,
+      "our_rank_of_their_top_tier": {
+        "nnls": 2,
+        "svr": 2,
+        "dwls": 14,
+        "music": 1,
+        "scdc": 8
+      },
+      "n_comparable_methods": 14
+    },
+    "sturm_2019": {
+      "citation": "Sturm G, et al. Comprehensive evaluation of transcriptome-based cell-type quantification methods for immuno-oncology. Bioinformatics 35:i436 (2019). doi:10.1093/bioinformatics/btz363",
+      "published_claim": "due to a robust overall performance, we recommend EPIC and quanTIseq for general purpose deconvolution",
+      "their_ground_truth": "flow cytometry and simulated immune mixtures",
+      "their_top_tier_our_acs": {
+        "epic": 0.9846,
+        "quantiseq": 0.6
+      },
+      "evaluated_not_top_our_acs": {
+        "svr": 0.9846
+      },
+      "n_overlapping_methods": 3,
+      "mann_whitney_u": null,
+      "p_one_sided_top_tier_higher": null,
+      "why_no_statistic": "needs >=2 methods per group; have 1 top and 1 other. With this few overlapping methods the comparison is descriptive.",
+      "our_rank_of_their_top_tier": {
+        "epic": 2,
+        "quantiseq": null
+      },
+      "n_comparable_methods": 14
+    }
+  }
+}

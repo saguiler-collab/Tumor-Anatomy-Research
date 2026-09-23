@@ -1,0 +1,14 @@
+Method,T,NK,B,Ordering,Agrees T > B,Samples with zero lymphoid signal
+bayesian,0.0237,0.1433,0.8330,B>NK>T,no,0 / 510
+bayesprism,0.3038,0.2697,0.4265,B>T>NK,no,409 / 510
+bisque,0.1511,0.5077,0.3412,NK>B>T,no,42 / 510
+cibersortx,0.0316,0.0897,0.8787,B>NK>T,no,48 / 510
+dwls,0.4656,0.0502,0.4842,B>T>NK,no,187 / 510
+elastic_net,0.0108,0.0124,0.9768,B>NK>T,no,286 / 510
+epic,0.2854,0.2939,0.4208,B>NK>T,no,0 / 510
+music,0.0000,0.0425,0.9575,B>NK>T,no,443 / 510
+nnls,0.0000,0.0425,0.9575,B>NK>T,no,443 / 510
+scdc,0.2793,0.0687,0.6521,B>T>NK,no,0 / 510
+scdc_ensemble,0.2793,0.0687,0.6521,B>T>NK,no,0 / 510
+svr,0.0008,0.0636,0.9356,B>NK>T,no,28 / 510
+DNA methylation (truth),0.4758,0.3208,0.2034,T>NK>B,—,0

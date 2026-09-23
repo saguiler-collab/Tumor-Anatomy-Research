@@ -2074,6 +2074,46 @@ provenance records were written by different code.
 > **What is NOT explained:** how an R master reached 93 minutes under a 2,400 s budget on that
 > path. The cause of the synthetic hang is **unknown** and is being diagnosed with streaming
 > output rather than guessed at again.
+
+> ### ADDENDUM 2026-09-23 — reproduced, and one candidate mechanism is ruled out
+>
+> `run_all.py --synthetic --matrix raw/X` was launched at 22:32 local on 2026-09-22 as the
+> routine pre-flight check. It reproduced the hang exactly: at **7 h 25 m** the R master was
+> still alive under the same **2,400 s** budget — **11x over** — with the tempfile change from
+> the entry above already in place. So that change is now not merely "not demonstrated to cure
+> the hang"; it is **demonstrated not to cure it**.
+>
+> **The new observation, which the account above did not have.** The three socket-cluster
+> workers were sampled directly rather than inferred:
+>
+> | pid | ppid | state | CPU at t | CPU at t+40 s | %CPU |
+> |---|---|---|---|---|---|
+> | 25265 | 1 | R | 14:14.69 | 14:32.62 | ~42 |
+> | 25276 | 1 | R | 14:13.63 | 14:31.31 | ~31 |
+> | 25287 | 1 | R/S | 14:17.60 | 14:35.30 | ~37 |
+>
+> Each gained roughly 18 s of CPU in 40 s of wall clock. **The workers are neither dead nor
+> idle — they are computing continuously**, at about a 45% duty cycle, while the master sits at
+> 0:33 of CPU over seven hours. That rules out the reading in which the master blocks on a
+> connection to a worker that has died: there is nothing to block on, because the workers are
+> running. What is unbounded here is the computation itself, not a wait on a dead peer.
+>
+> It also sharpens the timeout question rather than answering it. The master is a **direct
+> child** of the Python process, which is exactly the process `_run_bounded` is supposed to be
+> able to kill at 2,400 s, and it did not. Why the budget does not fire against a direct child
+> remains **unknown**, and is still not to be guessed at.
+>
+> **Consequence for the working practice.** `python scripts/run_all.py --synthetic` is named in
+> `CLAUDE.md` as the end-to-end validation to run before touching the real-data path. On this
+> machine it does not complete, so it cannot serve that purpose, and treating it as a gate
+> would block every change indefinitely. Until the cause is found, the end-to-end validation
+> that actually runs is `pytest tests/` plus the stage-level checks
+> (`scripts/independent_verification.py`, `scripts/check_doc_numbers.py --against-current`).
+>
+> The run was left alive for seven hours to gather the evidence above and then terminated. It
+> wrote only into `results_synthetic/` and `release_synthetic/`; `config.use_synthetic_paths()`
+> was verified to redirect `RESULTS_DIR` **and** `RELEASE_DIR`, and the real `results/` tree was
+> confirmed byte-unchanged throughout.
 >
 > **What changed anyway, and why it is not called a fix:** `_run_bounded` now captures into
 > temporary files instead of pipes, so the wait depends only on the direct child's exit status
@@ -2200,3 +2240,84 @@ stamping its own copy with `not_the_canonical_record`. An identical re-run still
 which is what idempotence should do.
 
 Covered by `tests/test_sampling_record_not_clobbered.py`.
+
+---
+
+## D20 · The orthogonal yardstick's rho was published with its sign inverted
+
+**Status: FIXED 2026-09-23.** Found while validating the figure captions against artefacts
+for the CJSJ close-out, by noticing that two artefacts disagreed about the same number.
+
+### The symptom
+
+`results/anatomic/agreement_report.json` reported the ACS-vs-accuracy Spearman against
+DNA-measured tumour purity as **-0.0810** (n = 12). `results/yardstick_agreement.json`,
+written by a different script, reported **+0.0810** for the same statistic with the same n.
+Same magnitude, same p-value (0.8024), opposite sign. One of them had to be wrong.
+
+### Which one, established by recomputation rather than by reading the code
+
+Spearman was recomputed directly from the two underlying artefacts — per-method ACS from
+`acs_leaderboard.csv`, per-method accuracy from `absolute_purity_yardstick.json` — over the
+12 methods carrying both scores:
+
+| set | n | Spearman(ACS, accuracy) | p |
+|---|---|---|---|
+| all comparable methods | 12 | **+0.0810** | 0.8024 |
+| excluding degenerate | 9 | -0.1255 | 0.7476 |
+
+Both match `yardstick_agreement.json` exactly. `agreement_report.json` was the wrong one.
+
+### The cause
+
+`agreement.test_agreement` takes `higher_truth_is_better` and **negates the truth vector**
+when it is False — correct for an error metric, where a low score is a good method.
+`run_anatomic` passed:
+
+```python
+# Every yardstick here is an error metric, so lower is better throughout.
+higher_is_better={k: False for k in yardsticks},
+```
+
+The comment was true of `synthetic_mixtures`, whose loader returns `block["mae"].mean()`,
+and false of `absolute_purity`, whose loader returns `spearman_vs_purity` — a correlation
+between estimated tumour content and DNA purity, where **higher is better**. So the
+orthogonal yardstick, and only it, had its truth vector negated.
+
+The real cause is the duplication: the loader knew what it returned, the call site asserted
+the opposite, and nothing compared the two.
+
+### What it did and did not affect
+
+| quantity | affected |
+|---|---|
+| sign of `absolute_purity` rho | **yes** — the whole defect |
+| bootstrap CI | yes, it is the negation |
+| \|rho\|, p-value, n_methods | no |
+| `meets_threshold` (rho >= 0.60) | no — fails at -0.081 and at +0.081 |
+| the verdict: NULL RESULT | **no** |
+| `synthetic_mixtures` (+0.6372) | no — verified unchanged by the repair script |
+| every ACS, every leaderboard, the lymphoid and recovery arms | no — none reads this flag |
+
+**The study's conclusion does not move.** The claim is that ACS does not predict accuracy
+against orthogonal truth; a null at +0.081 says that exactly as a null at -0.081 did. What
+was wrong was a published number's sign, which is not something a paper may carry.
+
+### The fix
+
+The direction now lives beside the loaders that produce the scores, as
+`ivygap.bench.real_yardsticks.HIGHER_IS_BETTER`, and `run_anatomic` reads it instead of
+restating it. A yardstick with no declared direction raises rather than defaulting — a
+guessed direction can invert the study's headline correlation, so it may not be guessed.
+
+`scripts/repair_agreement_sign.py` regenerated the artefact through the same production
+functions (`_load_yardsticks`, `run_all_yardsticks`, `write_report`) rather than editing it,
+recomputing **every** yardstick so a second wrong direction could not survive. The pre-fix
+artefact is preserved at `results/anatomic/agreement_report.json.pre_sign_fix`.
+
+Covered by `tests/test_yardstick_direction.py`, including a negative control that a
+perfectly concordant pair returns rho of the expected sign under each flag value, and an
+end-to-end test that recomputes Spearman from the shipped artefacts and fails if
+`agreement_report.json` disagrees in sign. That last test is anchored to the real `results/`
+tree rather than to `config.RESULTS_DIR`, which `conftest` redirects — written the first way
+it silently skipped, and a test that always skips is not a test.

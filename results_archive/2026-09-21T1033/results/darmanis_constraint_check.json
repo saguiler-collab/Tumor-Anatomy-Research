@@ -1,0 +1,178 @@
+{
+  "what_this_is": "C1's direction tested across FOUR patients by comparing the neoplastic fraction within a fixed FACS sorting gate, core versus periphery. The only cross-patient test of any constraint in this project. EXPLORATORY; the constraint file is frozen and does not move on this.",
+  "why_not_composition": "Only 665 of 3589 cells are unpanned, and the unpanned PERIPHERY is 13 cells from 2 patient(s). A composition over sorted cells measures the sort, not the tissue, so the unbiased-composition route is not viable and the stratified test is used instead.",
+  "cannot_test": {
+    "C2": "needs oligodendrocyte abundance per region, which needs unbiased composition",
+    "C3/C4/C6": "no microvascular-proliferation region in this dissection",
+    "C5": "no peri-necrotic region",
+    "C7": "needs three ordered regions; this dissection has two"
+  },
+  "constraint_freeze_hash": "2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a",
+  "n_cells": 3589,
+  "n_patients": 4,
+  "min_cells_per_region_to_score": 30,
+  "n_permutations": 20000,
+  "n_gates_scored": 4,
+  "n_gates_supporting_C1": 4,
+  "n_gates_supporting_at_p_lt_0.05": 2,
+  "per_gate": [
+    {
+      "gate": "Astrocytes(HEPACAM)",
+      "scored": true,
+      "n_tumour": 398,
+      "n_periphery": 316,
+      "neoplastic_fraction_tumour": 0.9698,
+      "neoplastic_fraction_periphery": 0.1835,
+      "difference": 0.7863,
+      "null_p_one_sided": 5e-05,
+      "supports_C1": true,
+      "per_patient": {
+        "BT_S2": {
+          "n_tumour": 153,
+          "n_periphery": 118,
+          "neoplastic_tumour": 0.9739,
+          "neoplastic_periphery": 0.2373,
+          "direction_supports_C1": true
+        },
+        "BT_S4": {
+          "n_tumour": 50,
+          "n_periphery": 142,
+          "neoplastic_tumour": 0.98,
+          "neoplastic_periphery": 0.1831,
+          "direction_supports_C1": true
+        },
+        "BT_S6": {
+          "n_tumour": 25,
+          "n_periphery": 50,
+          "neoplastic_tumour": 0.88,
+          "neoplastic_periphery": 0.04,
+          "direction_supports_C1": true
+        }
+      },
+      "n_patients_scored": 3,
+      "n_patients_supporting": 3
+    },
+    {
+      "gate": "Endothelial(BSC)",
+      "n_tumour": 122,
+      "n_periphery": 1,
+      "scored": false,
+      "why": "fewer than 30 cells in one region"
+    },
+    {
+      "gate": "Microglia(CD45)",
+      "scored": true,
+      "n_tumour": 540,
+      "n_periphery": 568,
+      "neoplastic_fraction_tumour": 0.0056,
+      "neoplastic_fraction_periphery": 0.0018,
+      "difference": 0.0038,
+      "null_p_one_sided": 0.28974,
+      "supports_C1": true,
+      "per_patient": {
+        "BT_S1": {
+          "n_tumour": 85,
+          "n_periphery": 28,
+          "neoplastic_tumour": 0.0235,
+          "neoplastic_periphery": 0.0,
+          "direction_supports_C1": true
+        },
+        "BT_S2": {
+          "n_tumour": 172,
+          "n_periphery": 182,
+          "neoplastic_tumour": 0.0058,
+          "neoplastic_periphery": 0.0055,
+          "direction_supports_C1": true
+        },
+        "BT_S4": {
+          "n_tumour": 267,
+          "n_periphery": 245,
+          "neoplastic_tumour": 0.0,
+          "neoplastic_periphery": 0.0,
+          "direction_supports_C1": false
+        },
+        "BT_S6": {
+          "n_tumour": 16,
+          "n_periphery": 113,
+          "neoplastic_tumour": 0.0,
+          "neoplastic_periphery": 0.0,
+          "direction_supports_C1": false
+        }
+      },
+      "n_patients_scored": 4,
+      "n_patients_supporting": 2
+    },
+    {
+      "gate": "Neurons(Thy1)",
+      "scored": true,
+      "n_tumour": 400,
+      "n_periphery": 285,
+      "neoplastic_fraction_tumour": 0.5175,
+      "neoplastic_fraction_periphery": 0.007,
+      "difference": 0.5105,
+      "null_p_one_sided": 5e-05,
+      "supports_C1": true,
+      "per_patient": {
+        "BT_S2": {
+          "n_tumour": 165,
+          "n_periphery": 138,
+          "neoplastic_tumour": 0.8727,
+          "neoplastic_periphery": 0.0,
+          "direction_supports_C1": true
+        },
+        "BT_S4": {
+          "n_tumour": 224,
+          "n_periphery": 129,
+          "neoplastic_tumour": 0.2723,
+          "neoplastic_periphery": 0.0155,
+          "direction_supports_C1": true
+        },
+        "BT_S6": {
+          "n_tumour": 11,
+          "n_periphery": 18,
+          "neoplastic_tumour": 0.1818,
+          "neoplastic_periphery": 0.0,
+          "direction_supports_C1": true
+        }
+      },
+      "n_patients_scored": 3,
+      "n_patients_supporting": 3
+    },
+    {
+      "gate": "Oligodendrocytes(GC)",
+      "scored": true,
+      "n_tumour": 231,
+      "n_periphery": 63,
+      "neoplastic_fraction_tumour": 0.0173,
+      "neoplastic_fraction_periphery": 0.0,
+      "difference": 0.0173,
+      "null_p_one_sided": 0.38648,
+      "supports_C1": true,
+      "per_patient": {
+        "BT_S1": {
+          "n_tumour": 57,
+          "n_periphery": 21,
+          "neoplastic_tumour": 0.0702,
+          "neoplastic_periphery": 0.0,
+          "direction_supports_C1": true
+        },
+        "BT_S4": {
+          "n_tumour": 174,
+          "n_periphery": 34,
+          "neoplastic_tumour": 0.0,
+          "neoplastic_periphery": 0.0,
+          "direction_supports_C1": false
+        }
+      },
+      "n_patients_scored": 2,
+      "n_patients_supporting": 1
+    },
+    {
+      "gate": "Unpanned",
+      "n_tumour": 652,
+      "n_periphery": 13,
+      "scored": false,
+      "why": "fewer than 30 cells in one region"
+    }
+  ]
+}

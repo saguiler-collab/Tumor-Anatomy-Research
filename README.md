@@ -273,17 +273,17 @@ so the leaderboard means something.
 
 | method | ACS | 95% CI | implementation |
 |---|---|---|---|
-| MuSiC | 1.000 | [1.000, 1.000] | R:MuSiC |
+| MuSiC | 0.969 | [0.930, 1.000] | R:MuSiC |
 | NNLS / SVR / Elastic Net / EPIC | 0.985 | [0.953, 1.000] | mixed |
 | CIBERSORTx **B-mode** | 0.969 | [0.930, 1.000] | this project |
 | CIBERSORTx **S-mode** | 0.969 | [0.906, 1.000] | this project |
 | SCDC / SCDC ENSEMBLE | 0.954 | [0.911, 0.986] | R:SCDC |
-| Bisque | 0.923 | [0.866, 0.983] | R:BisqueRNA |
-| BayesPrism | 0.877 | [0.786, 0.968] | reimplementation |
+| Bisque | 0.708 | [0.597, 0.817] | R:BisqueRNA |
+| BayesPrism | 0.800 | [0.679, 0.902] | reimplementation |
 | Bayesian / Hierarchical | 0.769 | [0.627, 0.921] | this project |
-| DWLS | 0.738 | [0.600, 0.867] | reimplementation — the genuine R package was measured separately but **on a different gene space**, see below |
+| DWLS | 0.723 | [0.606, 0.846] | reimplementation — the genuine R package was measured separately but **on a different gene space**, see below |
 | *control_random* | *0.400* | | |
-| *control_shuffled_signature* | *0.138* | | |
+| *control_shuffled_signature* | *0.369* | | |
 | quanTIseq | 0.600 | [0.333, 0.882] | **not ranked** — partial coverage |
 
 ### The headline

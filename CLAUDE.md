@@ -64,9 +64,13 @@ An exit code is not evidence. As applicable:
 ## Working practices
 
 - Run `pytest tests/ -q` before and after any change to `deconv/`, `bench/` or
-  `anatomic/`. It is ~40 seconds.
+  `anatomic/`. It runs 4-6 minutes as of 2026-09-23 (298 tests; 4m03s on an idle machine, longer when something else is using the cores), not the ~40 seconds this line said when the suite was a third of its size — it has not hung.
 - Validate end-to-end with `python scripts/run_all.py --synthetic` before touching the
-  real-data path.
+  real-data path — **but see OPEN_DEFECTS D18: on this machine it does not complete.** It
+  hangs in BayesPrism at 11x its own 2,400 s budget (reproduced 2026-09-23 at 7 h 25 m,
+  writing nothing). Until that is diagnosed the validation that actually runs is
+  `pytest tests/`, plus `scripts/independent_verification.py` and
+  `scripts/check_doc_numbers.py --against-current` for the stage-level checks.
 - Add new work under explicit versioned paths. Label superseded work as superseded
   through additive documentation rather than deleting it.
 - Do not commit, push, open a pull request, publish or deploy unless explicitly asked.

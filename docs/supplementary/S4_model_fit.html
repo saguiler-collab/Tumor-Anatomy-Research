@@ -1,0 +1,43 @@
+<p><b>Table S4. How much of real bulk the additive mixing model explains, with a floor and a ceiling. Shuffling which gene belongs to which cell type destroys the fit, so the reference carries real structure; the top-8 SVD is the best any eight-dimensional basis could do on the same samples.</b></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: left;">
+      <th>Cohort</th>
+      <th>Samples</th>
+      <th>Marker genes</th>
+      <th>R² of best additive fit (median)</th>
+      <th>Variance unexplained (%)</th>
+      <th>Samples below R² = 0.5 (%)</th>
+      <th>Floor: gene labels shuffled</th>
+      <th>Floor: random basis</th>
+      <th>Ceiling: top-8 SVD</th>
+      <th>Reference as % of achievable</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GBM</td>
+      <td>175</td>
+      <td>1597</td>
+      <td>0.3621</td>
+      <td>63.8</td>
+      <td>82.9</td>
+      <td>-0.0077</td>
+      <td>+0.0016</td>
+      <td>0.9803</td>
+      <td>38.9</td>
+    </tr>
+    <tr>
+      <td>LGG</td>
+      <td>534</td>
+      <td>1597</td>
+      <td>0.2360</td>
+      <td>76.4</td>
+      <td>89.1</td>
+      <td>-0.0071</td>
+      <td>+0.0016</td>
+      <td>0.9904</td>
+      <td>25.0</td>
+    </tr>
+  </tbody>
+</table>

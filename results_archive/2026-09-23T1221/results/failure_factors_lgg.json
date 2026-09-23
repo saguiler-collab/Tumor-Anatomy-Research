@@ -1,0 +1,269 @@
+{
+  "cohort": "lgg",
+  "prespecification": "prespecified/biological_failure_factors.md",
+  "hypothesis": "Biological properties of GBM that alter the relationship between malignant-cell abundance and transcriptomic composition will predict systematic errors in bulk RNA deconvolution.",
+  "n_samples_complete_cases": 496,
+  "n_methods": 12,
+  "alpha": 0.05,
+  "correction": "Holm across seven primary tests",
+  "degenerate_methods": [
+    "bisque",
+    "music",
+    "scdc_ensemble"
+  ],
+  "factors": {
+    "purity": {
+      "direction": "neg",
+      "outcome": "signed",
+      "median_beta": -0.13386,
+      "n_methods": 12,
+      "n_in_predicted_direction": 12,
+      "sign_test_p": 0.00049,
+      "per_method_beta": {
+        "nnls": -0.13707,
+        "svr": -0.11048,
+        "cibersortx": -0.10431,
+        "elastic_net": -0.12487,
+        "bayesian": -0.13238,
+        "music": -0.13707,
+        "dwls": -0.13166,
+        "bisque": -0.13534,
+        "scdc": -0.16635,
+        "scdc_ensemble": -0.16635,
+        "epic": -0.09608,
+        "bayesprism": -0.16121
+      },
+      "holm_p": 0.00244,
+      "supported": true,
+      "sign_test_is_definitional": true,
+      "interpretable_statistic": {
+        "what": "fraction of true purity variation recovered, = 1 + slope of (estimate - purity) on purity. 0 means no information, 1 means perfect.",
+        "median_recovered_fraction": 0.1725,
+        "per_method": {
+          "nnls": {
+            "slope": -0.8275,
+            "recovered_fraction": 0.1725,
+            "pearson_r_with_purity": 0.2626
+          },
+          "svr": {
+            "slope": -0.5883,
+            "recovered_fraction": 0.4117,
+            "pearson_r_with_purity": 0.5179
+          },
+          "cibersortx": {
+            "slope": -0.564,
+            "recovered_fraction": 0.436,
+            "pearson_r_with_purity": 0.5222
+          },
+          "elastic_net": {
+            "slope": -0.8557,
+            "recovered_fraction": 0.1443,
+            "pearson_r_with_purity": 0.0852
+          },
+          "bayesian": {
+            "slope": -0.7062,
+            "recovered_fraction": 0.2938,
+            "pearson_r_with_purity": 0.4825
+          },
+          "music": {
+            "slope": -0.8275,
+            "recovered_fraction": 0.1725,
+            "pearson_r_with_purity": 0.2626
+          },
+          "dwls": {
+            "slope": -0.6903,
+            "recovered_fraction": 0.3097,
+            "pearson_r_with_purity": 0.437
+          },
+          "bisque": {
+            "slope": -1.0003,
+            "recovered_fraction": -0.0003,
+            "pearson_r_with_purity": -0.0002
+          },
+          "scdc": {
+            "slope": -0.8899,
+            "recovered_fraction": 0.1101,
+            "pearson_r_with_purity": 0.1649
+          },
+          "scdc_ensemble": {
+            "slope": -0.8899,
+            "recovered_fraction": 0.1101,
+            "pearson_r_with_purity": 0.1649
+          },
+          "epic": {
+            "slope": -0.6498,
+            "recovered_fraction": 0.3502,
+            "pearson_r_with_purity": 0.2399
+          },
+          "bayesprism": {
+            "slope": -0.9277,
+            "recovered_fraction": 0.0723,
+            "pearson_r_with_purity": 0.2147
+          }
+        }
+      },
+      "without_degenerate": {
+        "n_methods": 9,
+        "n_in_predicted_direction": 9,
+        "sign_test_p": 0.00391,
+        "median_beta": -0.13166
+      }
+    },
+    "ploidy": {
+      "direction": "pos",
+      "outcome": "abs",
+      "median_beta": -0.00328,
+      "n_methods": 12,
+      "n_in_predicted_direction": 5,
+      "sign_test_p": 0.77441,
+      "per_method_beta": {
+        "nnls": -0.00328,
+        "svr": 0.05859,
+        "cibersortx": 0.03768,
+        "elastic_net": 0.04798,
+        "bayesian": 0.12901,
+        "music": -0.00328,
+        "dwls": 0.03315,
+        "bisque": -0.01762,
+        "scdc": -0.02768,
+        "scdc_ensemble": -0.02768,
+        "epic": -0.13194,
+        "bayesprism": -0.02617
+      },
+      "holm_p": 1.0,
+      "supported": false,
+      "without_degenerate": {
+        "n_methods": 9,
+        "n_in_predicted_direction": 5,
+        "sign_test_p": 1.0,
+        "median_beta": 0.03315
+      }
+    },
+    "genome_doublings": {
+      "direction": "pos",
+      "outcome": "abs",
+      "median_beta": -0.03507,
+      "n_methods": 12,
+      "n_in_predicted_direction": 4,
+      "sign_test_p": 0.3877,
+      "per_method_beta": {
+        "nnls": -0.04201,
+        "svr": -0.05571,
+        "cibersortx": -0.02813,
+        "elastic_net": -0.05425,
+        "bayesian": -0.08416,
+        "music": -0.04201,
+        "dwls": -0.05663,
+        "bisque": 0.05058,
+        "scdc": 0.05432,
+        "scdc_ensemble": 0.05432,
+        "epic": 0.12722,
+        "bayesprism": -0.02271
+      },
+      "holm_p": 1.0,
+      "supported": false,
+      "without_degenerate": {
+        "n_methods": 9,
+        "n_in_predicted_direction": 2,
+        "sign_test_p": 0.17969,
+        "median_beta": -0.04201
+      }
+    },
+    "subclonal_fraction": {
+      "direction": "pos",
+      "outcome": "abs",
+      "median_beta": -0.00216,
+      "n_methods": 12,
+      "n_in_predicted_direction": 5,
+      "sign_test_p": 0.77441,
+      "per_method_beta": {
+        "nnls": 0.00282,
+        "svr": -0.00367,
+        "cibersortx": 0.0003,
+        "elastic_net": 0.00214,
+        "bayesian": -0.01011,
+        "music": 0.00282,
+        "dwls": -0.00122,
+        "bisque": -0.0031,
+        "scdc": -0.01214,
+        "scdc_ensemble": -0.01214,
+        "epic": -0.00798,
+        "bayesprism": 0.00133
+      },
+      "holm_p": 1.0,
+      "supported": false,
+      "without_degenerate": {
+        "n_methods": 9,
+        "n_in_predicted_direction": 4,
+        "sign_test_p": 1.0,
+        "median_beta": -0.00122
+      }
+    },
+    "idh1_mutant": {
+      "direction": "pos",
+      "outcome": "abs",
+      "median_beta": -0.00236,
+      "n_methods": 12,
+      "n_in_predicted_direction": 5,
+      "sign_test_p": 0.77441,
+      "per_method_beta": {
+        "nnls": -0.00236,
+        "svr": 0.01788,
+        "cibersortx": 0.02187,
+        "elastic_net": -0.00548,
+        "bayesian": 0.02953,
+        "music": -0.00236,
+        "dwls": -0.00939,
+        "bisque": 0.0276,
+        "scdc": -0.00396,
+        "scdc_ensemble": -0.00396,
+        "epic": -0.01494,
+        "bayesprism": 0.00848
+      },
+      "holm_p": 1.0,
+      "supported": false,
+      "without_degenerate": {
+        "n_methods": 9,
+        "n_in_predicted_direction": 4,
+        "sign_test_p": 1.0,
+        "median_beta": -0.00236
+      }
+    },
+    "mes_score": {
+      "direction": "neg",
+      "outcome": "signed",
+      "median_beta": -0.0075,
+      "n_methods": 12,
+      "n_in_predicted_direction": 6,
+      "sign_test_p": 1.0,
+      "per_method_beta": {
+        "nnls": 0.03729,
+        "svr": -0.04186,
+        "cibersortx": -0.03358,
+        "elastic_net": 0.07395,
+        "bayesian": -0.04851,
+        "music": 0.03729,
+        "dwls": -0.04915,
+        "bisque": 0.11443,
+        "scdc": -0.03065,
+        "scdc_ensemble": -0.03065,
+        "epic": 0.08934,
+        "bayesprism": 0.01565
+      },
+      "without_degenerate": {
+        "n_methods": 9,
+        "n_in_predicted_direction": 5,
+        "sign_test_p": 1.0,
+        "median_beta": -0.03065
+      },
+      "holm_p": null,
+      "secondary_not_prespecified_variable": true,
+      "supported": false
+    }
+  },
+  "supported": [
+    "purity"
+  ],
+  "f1_caveat": "F1's sign test is DEFINITIONAL -- e = estimate - purity, so the slope is mechanically -1 for a method with no information. The interpretable statistic is the recovery fraction, reported under factors.purity.interpretable_statistic.",
+  "falsified": false
+}

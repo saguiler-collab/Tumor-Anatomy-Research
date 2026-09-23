@@ -1,0 +1,54 @@
+{
+  "decision_rule": "EPIC's published contribution is variance weighting via refProfiles.var. The harness never supplied it and the package warned. By this project's invariant -- never report a degenerate method under its own name -- the variance-weighted run IS EPIC and the uniform-weight run is not, whichever scores higher. Stated before the scores were computed.",
+  "acs": {
+    "EPIC_variance_weighted": {
+      "acs": 0.9846,
+      "ci": [
+        0.9531,
+        1.0
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_samples": 122
+    },
+    "EPIC_uniform_weights": {
+      "acs": 0.9846,
+      "ci": [
+        0.9531,
+        1.0
+      ],
+      "null_p": 9.999000099990002e-05,
+      "n_pairs": 57,
+      "n_samples": 122
+    }
+  },
+  "delta_variance_minus_uniform": 0.0,
+  "mean_abs_difference_per_type": {
+    "Tumor": 0.0829,
+    "Macrophage_Microglia": 0.0149,
+    "T_cell": 0.0013,
+    "NK_cell": 0.0012,
+    "B_cell": 0.0106,
+    "Endothelial": 0.0134,
+    "Oligodendrocyte": 0.0393,
+    "Astrocyte": 0.0529
+  },
+  "max_abs_difference": 0.3539,
+  "convergence": {
+    "n_samples_probed": 25,
+    "n_samples_in_cohort": 122,
+    "converge_code_counts": {
+      "0": 21,
+      "1": 4
+    },
+    "n_failed": 4,
+    "spearman_fit_min": 0.9965,
+    "caveat": "PARTIAL. The diagnostic covers 25 of 122 anatomic samples, so the non-convergence rate is an estimate on a subset, not a cohort figure."
+  },
+  "other_cells": {
+    "n_samples_probed": 25,
+    "max": 0.0027897595730146,
+    "median": 3.3381397646081702e-09,
+    "reading": "EPIC's ninth column is essentially empty on this cohort, so the harness dropping it changes almost nothing -- but it was never recorded until now, and 'small' is a measurement rather than an assumption."
+  }
+}

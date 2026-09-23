@@ -5,7 +5,7 @@ are made late, and nobody re-reads them. Every cell here is read from a results 
 table cannot drift from the analysis the way a hand-built one does.
 
 Writes `docs/SUPPLEMENTARY.md` (for reading) and one CSV per table under
-`results/supplementary/` (for submission). Regenerate after any analysis change.
+`docs/supplementary/` (for submission). Regenerate after any analysis change.
 
     python scripts/build_supplementary.py
 """
@@ -19,7 +19,11 @@ import pandas as pd
 from ivygap import config
 
 OUT_MD = config.PROJECT_ROOT / "docs" / "SUPPLEMENTARY.md"
-OUT_DIR = config.RESULTS_DIR / "supplementary"
+# TRACKED, not `results/`, which is gitignored. The point of these files is that a human
+# pastes them into the manuscript, so they have to survive a clone -- same reason the
+# figures live in docs/figures/. Emitting them into an ignored directory meant the
+# CSV/HTML/LaTeX existed only on the machine that last ran the script.
+OUT_DIR = config.PROJECT_ROOT / "docs" / "supplementary"
 
 
 def J(name: str) -> dict:
@@ -66,7 +70,8 @@ def emit(tables: dict[str, tuple[str, pd.DataFrame]]) -> None:
             df.to_html(index=False, border=1, justify="left"))
         tex_parts.append(latex_table(caption, df, key))
         lines.append(f"\n## {caption}\n")
-        lines.append(f"*`results/supplementary/{key}.csv`*\n")
+        rel = OUT_DIR.relative_to(config.PROJECT_ROOT)
+        lines.append(f"*`{rel}/{key}.csv`*\n")
         lines.append(df.to_markdown(index=False))
         lines.append("")
     OUT_MD.write_text("\n".join(lines) + "\n")

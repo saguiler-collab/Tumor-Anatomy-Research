@@ -1,0 +1,10 @@
+{
+  "freeze_hash": "2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a",
+  "recorded_hash": "2d1fb47c98832adfae20e5b79a97b731ac3cced25fa14c1dd7bb02da7895807a",
+  "registered_utc": "2026-09-10T03:32:03Z",
+  "registry": "OSF",
+  "results_predating_registration": [],
+  "state": "REGISTERED",
+  "url": "https://osf.io/dm2t8",
+  "verdict": "REGISTERED: constraint file 2d1fb47c98832adf... registered at 2026-09-10T03:32:03Z with OSF, and every result file postdates it."
+}

@@ -1,0 +1,63 @@
+{
+  "what_this_is": "Measures, per package, whether it already converts mRNA share to CELL share. Replaces five numbers that previously existed only as prose in OPEN_DEFECTS.md and ROAD_TO_PAPER.md.",
+  "probe": {
+    "size_ratio": 3.0,
+    "big_type": "Tumor",
+    "small_type": "T_cell",
+    "true_cell_fraction_big": 0.5,
+    "true_mrna_fraction_big": 0.75,
+    "measured_cell_size_ratio": 3.0,
+    "n_samples": 12,
+    "n_genes": 240,
+    "tolerance": 0.08,
+    "central_correction_applied": false,
+    "export_scale": "raw",
+    "export_scale_meaning": "normalized = what production hands the R packages (1e6 CPM per cell, as build_from_h5ad returns); raw = per-cell library sizes preserved, which is what each package's published usage assumes. The reference PROFILE is built the production way in both, so only a package's own internal cell-size estimate can differ between them."
+  },
+  "methods": [
+    {
+      "method": "music",
+      "returned_big_fraction": 0.5001,
+      "sd_across_samples": 0.001,
+      "leakage_to_absent_types": 0.0017,
+      "convention": "CELL share",
+      "meaning": "the package already divided out cell size; this project's central conversion would be the SECOND one \u2014 a defect",
+      "implementation": "R",
+      "elapsed_s": 36.3,
+      "failed": null
+    },
+    {
+      "method": "bisque",
+      "returned_big_fraction": 0.5,
+      "sd_across_samples": 0.0,
+      "leakage_to_absent_types": 0.75,
+      "convention": "UNREADABLE",
+      "meaning": "assigned 75.0% of its mass to the six cell types absent from the mixture, so the BIG:SMALL ratio does not measure a cell-size convention here",
+      "implementation": "R",
+      "elapsed_s": 3.0,
+      "failed": null
+    },
+    {
+      "method": "scdc",
+      "returned_big_fraction": 0.5336,
+      "sd_across_samples": 0.0014,
+      "leakage_to_absent_types": 0.0,
+      "convention": "CELL share",
+      "meaning": "the package already divided out cell size; this project's central conversion would be the SECOND one \u2014 a defect",
+      "implementation": "R",
+      "elapsed_s": 14.0,
+      "failed": null
+    },
+    {
+      "method": "epic",
+      "returned_big_fraction": 0.7501,
+      "sd_across_samples": 0.0007,
+      "leakage_to_absent_types": 0.0006,
+      "convention": "mRNA share",
+      "meaning": "the package reports mRNA share; this project's central conversion is the FIRST and is correct",
+      "implementation": "R",
+      "elapsed_s": 2.1,
+      "failed": null
+    }
+  ]
+}

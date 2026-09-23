@@ -1,0 +1,10 @@
+SUPERSEDED LOCATION.
+
+The supplementary tables now build into  docs/supplementary/  which is TRACKED by git.
+This directory is under the gitignored results/ tree, so anything here exists only on the
+machine that last ran the script and will not survive a clone.
+
+Any .csv / .html / .tex still sitting beside this file is a stale copy from before
+2026-09-22 and predates the raw/X rebuild (OPEN_DEFECTS D16). Do not edit or paste from it.
+
+Regenerate with:  python3 scripts/build_supplementary.py

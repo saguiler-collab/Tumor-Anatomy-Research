@@ -1,0 +1,48 @@
+{
+  "synthetic_mixtures": {
+    "available": true,
+    "source": "this run's own donor-held-out pseudobulk benchmark",
+    "is_real_ground_truth": true,
+    "methods_covered": [
+      "bayesian",
+      "bayesian_hierarchical",
+      "bayesprism",
+      "bisque",
+      "cibersortx",
+      "cibersortx_smode",
+      "control_random",
+      "control_shuffled_signature",
+      "dwls",
+      "elastic_net",
+      "epic",
+      "music",
+      "nnls",
+      "quantiseq",
+      "scdc",
+      "scdc_ensemble",
+      "svr"
+    ]
+  },
+  "absolute_purity": {
+    "available": true,
+    "is_real_ground_truth": true,
+    "source": "results/absolute_purity_yardstick.json",
+    "measurement": "ABSOLUTE tumour purity from DNA copy number (PanCanAtlas), Spearman against each method's Tumor column on TCGA-GBM.",
+    "n_samples": 154,
+    "n_methods": 12,
+    "independent": "the YARDSTICK only. ABSOLUTE purity comes from DNA copy number and shares no failure mode with any RNA method under test.",
+    "not_independent": "the REFERENCE. Every method solves against the vendored frozen signature, which is GBmap-derived (reference_frozen/PROVENANCE.json). This removes the shared dependence on the ground truth, not on the reference.",
+    "caveats": [
+      "no cross-donor variance, so MuSiC degenerates to residual-weighted NNLS",
+      "cell_size factors have real spread here (unlike D12's uniform vector), so the mRNA-to-cell conversion is NOT the identity on this cohort"
+    ]
+  },
+  "sc_pseudobulk": {
+    "available": false,
+    "is_real_ground_truth": true,
+    "reason": "requires paired single-cell GBM data where composition is counted rather than estimated. Not present in this repository."
+  },
+  "methods_excluded_for_partial_coverage": [
+    "quantiseq"
+  ]
+}

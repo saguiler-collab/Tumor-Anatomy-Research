@@ -168,6 +168,25 @@ def load_sc_pseudobulk() -> tuple[dict[str, float], dict]:
     }
 
 
+#: WHICH DIRECTION EACH YARDSTICK'S SCORE POINTS, declared next to the loaders that produce
+#: the scores. This lived at the call site in `run_anatomic.py` as a blanket
+#: `{k: False for k in yardsticks}` under the comment "every yardstick here is an error
+#: metric". That was true of `synthetic_mixtures` (mean absolute error) and false of
+#: `absolute_purity`, which returns `spearman_vs_purity` -- a CORRELATION, where higher is
+#: better. The agreement test negates the truth vector when told lower is better, so the
+#: orthogonal yardstick's rho was reported with its sign inverted: -0.0810 where the data
+#: give +0.0810. |rho|, p and every verdict threshold were unaffected, but the published
+#: sign was wrong.
+#:
+#: A loader and the direction of what it returns cannot be kept in agreement across two
+#: files, so the direction is declared HERE and read by the caller.
+HIGHER_IS_BETTER: dict[str, bool] = {
+    "synthetic_mixtures": False,   # mean absolute error against known mixture fractions
+    "absolute_purity": True,       # Spearman of estimated tumour content vs DNA purity
+    "sc_pseudobulk": False,        # unavailable; declared for completeness
+}
+
+
 def load_all() -> tuple[dict[str, dict[str, float]], dict]:
     """
     Every protocol yardstick, plus a provenance block naming exactly what each one

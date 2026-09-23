@@ -133,6 +133,39 @@ def _synthetic_ivygap(expression: pd.DataFrame, meta: pd.DataFrame,
     return pd.DataFrame(cols, index=expression.index), pd.DataFrame.from_dict(rows, orient="index")
 
 
+def _write_run_provenance(args) -> None:
+    """Record the run's input provenance where a later reader can find it.
+
+    Deliberately written BEFORE the pipeline runs, not after: a run that dies halfway
+    still leaves a results tree, and that tree needs to say what it was built from.
+    """
+    from datetime import datetime, timezone          # `subprocess` is already imported
+    try:
+        commit = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True,
+                                text=True, cwd=config.PROJECT_ROOT,
+                                timeout=10).stdout.strip() or None
+    except (OSError, subprocess.SubprocessError):
+        commit = None
+    prov = {
+        "what_this_is": "Input provenance for the results tree in this directory. "
+                        "Selects nothing; describes only what the run was given.",
+        "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "matrix": args.matrix,
+        "matrix_meaning": {
+            "X": "GBmap's `X` layer: log1p(counts * size_factor). NOT counts. "
+                 "See OPEN_DEFECTS D16.",
+            "raw/X": "GBmap's `raw/X` layer: the genuine integer counts.",
+        }.get(args.matrix, "unknown"),
+        "synthetic": bool(args.synthetic),
+        "argv": sys.argv[1:],
+        "git_commit": commit,
+        "established_by": "recorded by run_all.py at run start",
+    }
+    out = config.RESULTS_DIR / "run_provenance.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(prov, indent=2) + "\n")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -186,6 +219,13 @@ def main() -> int:
         # overwrite the output of a real one.
         config.use_synthetic_paths()
     config.ensure_dirs()
+
+    # WHICH INPUT MATRIX THIS RUN USED, written to an artefact rather than only printed.
+    # OPEN_DEFECTS D16 was possible partly because `--matrix` existed only in stdout: an
+    # archived results tree carried no record of whether it came from GBmap's
+    # log-transformed `X` or the genuine counts in `raw/X`, so the two were
+    # indistinguishable after the fact. `archive_run.py` copies this into the manifest.
+    _write_run_provenance(args)
 
     # Exclusive from here on. Two runs writing one results tree is how this project lost
     # a completed run once, and nearly did so a second time when a background run

@@ -1,0 +1,16 @@
+Method,Implementation,Genuine published package,Degenerate on this input,Enters quantitative comparison
+music,R:MuSiC,yes,no,yes
+nnls,python,no,no,yes
+svr,python,no,no,yes
+elastic_net,python,no,no,yes
+epic,R:EPIC,yes,no,yes
+cibersortx,python,no,no,yes
+cibersortx_smode,python,no,no,yes
+scdc,R:SCDC,yes,no,yes
+scdc_ensemble,R:SCDC,yes,yes,yes
+bisque,R:BisqueRNA,yes,yes,yes
+bayesprism,python-reimplementation,no,no,yes
+bayesian,python,no,no,yes
+bayesian_hierarchical,python,no,no,yes
+dwls,python-reimplementation,no,no,yes
+quantiseq,R:quantiseqr,yes,no,no

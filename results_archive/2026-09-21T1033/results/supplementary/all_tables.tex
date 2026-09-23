@@ -1,0 +1,161 @@
+% S1_method_roster
+\begin{table}[htbp]
+\centering
+\small
+\caption{Table S1. The 15-method panel, with implementation provenance. A method is 'degenerate' when it ran without an input its published algorithm requires, and is reported as such rather than under the package's name.}
+\label{tab:S1_method_roster}
+\begin{tabular}{lllll}
+\toprule
+\textbf{Method} & \textbf{Implementation} & \textbf{Genuine published package} & \textbf{Degenerate on this input} & \textbf{Enters quantitative comparison} \\
+\midrule
+music & R:MuSiC & yes & no & yes \\
+nnls & python & no & no & yes \\
+svr & python & no & no & yes \\
+elastic\_net & python & no & no & yes \\
+epic & R:EPIC & yes & no & yes \\
+cibersortx & python & no & no & yes \\
+cibersortx\_smode & python & no & no & yes \\
+scdc & R:SCDC & yes & no & yes \\
+scdc\_ensemble & R:SCDC & yes & yes & yes \\
+bisque & R:BisqueRNA & yes & yes & yes \\
+bayesprism & python-reimplementation & no & no & yes \\
+bayesian & python & no & no & yes \\
+bayesian\_hierarchical & python & no & no & yes \\
+dwls & python-reimplementation & no & no & yes \\
+quantiseq & R:quantiseqr & yes & no & no \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% S2_tumour_recovery
+\begin{table}[htbp]
+\centering
+\small
+\caption{Table S2. Recovery of true tumour-content variation against DNA-measured purity, per method and reference. Recovery is 1 + slope of (estimate − truth) regressed on truth: 0 = no information, 1 = perfect. It is invariant to a constant offset.}
+\label{tab:S2_tumour_recovery}
+\begin{tabular}{lllll}
+\toprule
+\textbf{Method} & \textbf{GBM, frozen signature (\%)} & \textbf{GBM, sigma-carrying reference (\%)} & \textbf{LGG, frozen signature (\%)} & \textbf{LGG, sigma-carrying reference (\%)} \\
+\midrule
+bayesian & 43.1 & 21.3 & 28.2 & 21.4 \\
+bayesian\_hierarchical & n/a & 22.7 & n/a & 22.6 \\
+bayesprism & 9.8 & 30.0 & 8.2 & 2.3 \\
+bisque & -1.5 & 35.9 & 0.3 & 17.1 \\
+cibersortx & 63.7 & 58.4 & 42.1 & 37.1 \\
+cibersortx\_smode & n/a & 18.5 & n/a & -4.7 \\
+dwls & 43.5 & 14.7 & 29.6 & n/a \\
+elastic\_net & 20.1 & 15.2 & 17.0 & 1.9 \\
+epic & 29.1 & 16.5 & 36.5 & 3.4 \\
+music & 17.5 & 60.2 & 20.0 & 52.6 \\
+nnls & 17.5 & 23.7 & 20.0 & 2.4 \\
+scdc & 20.5 & 53.3 & 10.6 & 44.3 \\
+scdc\_ensemble & 20.5 & 53.3 & 10.6 & 44.3 \\
+svr & 59.1 & 55.0 & 39.6 & 37.9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% S3_lymphoid_gbm
+\begin{table}[htbp]
+\centering
+\small
+\caption{Table S3a. GBM: lymphoid composition per method against DNA methylation, both renormalised within \{T, B, NK\} so the leukocyte-subcomposition and all-cell-fraction denominators cancel. n = 155 methylation samples.}
+\label{tab:S3_lymphoid_gbm}
+\begin{tabular}{lllllll}
+\toprule
+\textbf{Method} & \textbf{T} & \textbf{NK} & \textbf{B} & \textbf{Ordering} & \textbf{Agrees T > B} & \textbf{Samples with zero lymphoid signal} \\
+\midrule
+bayesian & 0.0225 & 0.0731 & 0.9044 & B>NK>T & no & 0 / 56 \\
+bayesprism & 0.2000 & 0.0240 & 0.7760 & B>T>NK & no & 51 / 56 \\
+bisque & 0.2026 & 0.5394 & 0.2579 & NK>B>T & no & 6 / 56 \\
+cibersortx & 0.0557 & 0.0964 & 0.8479 & B>NK>T & no & 8 / 56 \\
+dwls & 0.4523 & 0.0531 & 0.4946 & B>T>NK & no & 6 / 56 \\
+elastic\_net & 0.0484 & 0.0128 & 0.9388 & B>T>NK & no & 48 / 56 \\
+epic & 0.3123 & 0.3457 & 0.3420 & NK>B>T & no & 0 / 56 \\
+music & 0.0000 & 0.0024 & 0.9976 & B>NK>T & no & 55 / 56 \\
+nnls & 0.0000 & 0.0024 & 0.9976 & B>NK>T & no & 55 / 56 \\
+scdc & 0.4119 & 0.0579 & 0.5302 & B>T>NK & no & 0 / 56 \\
+scdc\_ensemble & 0.4119 & 0.0579 & 0.5302 & B>T>NK & no & 0 / 56 \\
+svr & 0.0130 & 0.1851 & 0.8019 & B>NK>T & no & 5 / 56 \\
+DNA methylation (truth) & 0.5224 & 0.3678 & 0.1098 & T>NK>B & — & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% S3_lymphoid_lgg
+\begin{table}[htbp]
+\centering
+\small
+\caption{Table S3b. LGG: lymphoid composition per method against DNA methylation, both renormalised within \{T, B, NK\} so the leukocyte-subcomposition and all-cell-fraction denominators cancel. n = 530 methylation samples.}
+\label{tab:S3_lymphoid_lgg}
+\begin{tabular}{lllllll}
+\toprule
+\textbf{Method} & \textbf{T} & \textbf{NK} & \textbf{B} & \textbf{Ordering} & \textbf{Agrees T > B} & \textbf{Samples with zero lymphoid signal} \\
+\midrule
+bayesian & 0.0237 & 0.1433 & 0.8330 & B>NK>T & no & 0 / 510 \\
+bayesprism & 0.3038 & 0.2697 & 0.4265 & B>T>NK & no & 409 / 510 \\
+bisque & 0.1511 & 0.5077 & 0.3412 & NK>B>T & no & 42 / 510 \\
+cibersortx & 0.0316 & 0.0897 & 0.8787 & B>NK>T & no & 48 / 510 \\
+dwls & 0.4656 & 0.0502 & 0.4842 & B>T>NK & no & 187 / 510 \\
+elastic\_net & 0.0108 & 0.0124 & 0.9768 & B>NK>T & no & 286 / 510 \\
+epic & 0.2854 & 0.2939 & 0.4208 & B>NK>T & no & 0 / 510 \\
+music & 0.0000 & 0.0425 & 0.9575 & B>NK>T & no & 443 / 510 \\
+nnls & 0.0000 & 0.0425 & 0.9575 & B>NK>T & no & 443 / 510 \\
+scdc & 0.2793 & 0.0687 & 0.6521 & B>T>NK & no & 0 / 510 \\
+scdc\_ensemble & 0.2793 & 0.0687 & 0.6521 & B>T>NK & no & 0 / 510 \\
+svr & 0.0008 & 0.0636 & 0.9356 & B>NK>T & no & 28 / 510 \\
+DNA methylation (truth) & 0.4758 & 0.3208 & 0.2034 & T>NK>B & — & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% S4_model_fit
+\begin{table}[htbp]
+\centering
+\small
+\caption{Table S4. How much of real bulk the additive mixing model explains, with a floor and a ceiling. Shuffling which gene belongs to which cell type destroys the fit, so the reference carries real structure; the top-8 SVD is the best any eight-dimensional basis could do on the same samples.}
+\label{tab:S4_model_fit}
+\begin{tabular}{llllllllll}
+\toprule
+\textbf{Cohort} & \textbf{Samples} & \textbf{Marker genes} & \textbf{R² of best additive fit (median)} & \textbf{Variance unexplained (\%)} & \textbf{Samples below R² = 0.5 (\%)} & \textbf{Floor: gene labels shuffled} & \textbf{Floor: random basis} & \textbf{Ceiling: top-8 SVD} & \textbf{Reference as \% of achievable} \\
+\midrule
+GBM & 175 & 1597 & 0.3621 & 63.8 & 82.9 & -0.0077 & +0.0016 & 0.9803 & 38.9 \\
+LGG & 534 & 1597 & 0.2360 & 76.4 & 89.1 & -0.0071 & +0.0016 & 0.9904 & 25.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% S5_rejected_mechanisms
+\begin{table}[htbp]
+\centering
+\small
+\caption{Table S5. Candidate explanations for the lymphoid failure, each tested and each rejected. Listed because five failed explanations with working controls constrain the answer more than one untested story would.}
+\label{tab:S5_rejected_mechanisms}
+\begin{tabular}{llll}
+\toprule
+\textbf{Proposed explanation} & \textbf{Test} & \textbf{Result} & \textbf{Verdict} \\
+\midrule
+The signature cannot separate T from B & NNLS on mixtures built from the reference itself, planted T:B = 2.333 & recovered exactly; survives 100\% noise and deletion of a whole cell type; condition number 5.29 & REFUTED \\
+B absorbs macrophage/microglia spillover & corr(B, Macrophage) > corr(T, Macrophage) across samples & 5 of 10 methods, sign-test p = 0.623047 & REJECTED \\
+High tumour purity explains the absence mode & one-sided Mann–Whitney, purity in zero-lymphoid vs other samples & GBM 2/8; LGG 1/8; several run the other way & REJECTED \\
+Per-sample model fit is a ground-truth-free trust signal & corr(R², |estimate − purity|) per method; control confirms R² is not a purity proxy & GBM 1/12; LGG 6/12; 2 LGG methods significant in the WRONG direction & REJECTED \\
+Misfit in Tumor/Astrocyte markers propagates to lymphoid coefficients & refit on lymphoid-owned markers only (596 genes) & T > B in 0.0\% of samples; mass moves to NK & REJECTED \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% S6_genuine_vs_reimplementation
+\begin{table}[htbp]
+\centering
+\small
+\caption{Table S6. Two methods fell back to this project's reimplementation during the confirmatory runs and were re-measured as the genuine R packages on the same cohort and gene space. The reimplementations are biased in OPPOSITE directions, so neither 'close enough' nor 'reimplementations flatter their packages' holds.}
+\label{tab:S6_genuine_vs_reimplementation}
+\begin{tabular}{llllll}
+\toprule
+\textbf{Method} & \textbf{Reimplementation (ACS)} & \textbf{Genuine R package (ACS)} & \textbf{Difference} & \textbf{Runtime (s)} & \textbf{Pipeline budget (s)} \\
+\midrule
+dwls & 0.7385 & 0.7846 & +0.0461 & 2593 & 2400 \\
+bayesprism & 0.8769 & 0.8154 & -0.0615 & 2045 & 2400 \\
+\bottomrule
+\end{tabular}
+\end{table}

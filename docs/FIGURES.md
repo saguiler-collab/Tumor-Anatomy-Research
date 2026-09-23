@@ -11,7 +11,7 @@
 
 ![Figure 1](figures/Figure_detects_not_ranks.png)
 
-**Figure 1.** *Anatomic concordance predicts accuracy only against the yardstick that shares its own reference atlas.* Spearman correlation between the ranking produced by the Anatomic Concordance Score (ACS) and the ranking produced by each external yardstick. Points are the correlation; bars are 95% bootstrap confidence intervals over methods. The dashed line is the pre-registered bar (ρ ≥ 0.60), fixed before any result was computed. Only the synthetic pseudobulk yardstick clears it (ρ = 0.7501), and that yardstick is built from GBmap — the same single-cell atlas the ACS arm deconvolves against. Against DNA-measured tumour purity, which shares nothing with ACS, the correlation is 0.0698 (n = 12 methods) and -0.1044 restricted to comparable methods. Scoring both arms on the same reference build removes the one remaining objection and changes nothing: -0.0156 (n = 14) and 0.0071 (n = 12).
+**Figure 1.** *Anatomic concordance predicts accuracy only against the yardstick that shares its own reference atlas.* Spearman correlation between the ranking produced by the Anatomic Concordance Score (ACS) and the ranking produced by each external yardstick. Points are the correlation; bars are 95% bootstrap confidence intervals over methods. The dashed line is the pre-registered bar (ρ ≥ 0.60), fixed before any result was computed. Only the synthetic pseudobulk yardstick clears it (ρ = 0.6372), and that yardstick is built from GBmap — the same single-cell atlas the ACS arm deconvolves against. Against DNA-measured tumour purity, which shares nothing with ACS, the correlation is 0.081 (n = 12 methods) and -0.1255 restricted to comparable methods. Scoring both arms on the same reference build removes the one remaining objection and changes nothing: 0.3142 (n = 14) and 0.2817 (n = 12).
 
 <sub>`docs/figures/Figure_detects_not_ranks.png` · `docs/figures/Figure_detects_not_ranks.pdf`</sub>
 
@@ -29,7 +29,7 @@
 
 ![Figure 3](figures/Figure_lymphoid_paired.png)
 
-**Figure 3.** *Methods place B cells above T cells; DNA methylation places T above B.* Mean ± SD of the T-cell and B-cell fraction within {T, NK, B}, per method and for the methylation truth bar. p-values are two-sided Wilcoxon signed-rank tests paired within sample, not comparisons of two cohort averages. Two sample counts are given per panel and they differ: 'truth n' is the number of samples with methylation data, 'per-method n' the number that also have a deconvolution estimate. In GBM these are 154 and 56, because most TCGA-GBM methylation was assayed on the older HM27 platform rather than HM450.
+**Figure 3.** *Methods place B cells above T cells; DNA methylation places T above B.* Mean ± SD of the T-cell and B-cell fraction within {T, NK, B}, per method and for the methylation truth bar. p-values are two-sided Wilcoxon signed-rank tests paired within sample, not comparisons of two cohort averages. Sample counts differ within a panel and the difference is not incidental: 155 GBM samples have methylation data, 154 of those admit an ordering at all (the remaining 1 returned exactly zero T, NK and B, so no ordering is defined), and only 56 also have a deconvolution estimate — most TCGA-GBM methylation was assayed on the older HM27 platform rather than HM450.
 
 <sub>`docs/figures/Figure_lymphoid_paired.png` · `docs/figures/Figure_lymphoid_paired.pdf`</sub>
 

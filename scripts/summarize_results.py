@@ -224,6 +224,20 @@ def control_audit(lb_path: Path, pc_path: Path) -> str:
     out += [
            f"- best control: **{best_c} = {best_c_acs:.3f}**",
            f"- worst real method: {worst_r} = {worst_r_acs:.3f}"]
+    # State the margin BOTH WAYS. The bottom of the real-method range is the method most
+    # likely to be non-evaluable rather than merely bad, so a separation claim that rests
+    # on it alone is the weakest form of the claim. Recomputing over only the
+    # fully-scored methods says whether the margin depends on that method.
+    _med = float(real["n_constraint_tumor_pairs"].median())
+    _full = real[real["n_constraint_tumor_pairs"] >= 0.6 * _med]
+    if len(_full) and len(_full) < len(real):
+        _w = _full["acs"].idxmin()
+        out.append(f"- worst **fully-scored** real method (excluding "
+                   f"{len(real) - len(_full)} method(s) scored on a fraction of the "
+                   f"constraint-tumour pairs): {_w} = {float(_full.loc[_w, 'acs']):.3f}"
+                   f" — the control margin is "
+                   f"{float(_full.loc[_w, 'acs']) - best_c_acs:+.3f}, versus "
+                   f"{worst_r_acs - best_c_acs:+.3f} using all real methods")
     if tied_or_beaten:
         out.append(f"- real methods the best control **ties or beats**: "
                    f"**{', '.join(tied_or_beaten)}**")
@@ -234,6 +248,45 @@ def control_audit(lb_path: Path, pc_path: Path) -> str:
                    f"**{', '.join(beats_null)}**")
     else:
         out.append("- controls beating their own permutation null: none")
+
+    # SYMMETRY. This block tested the CONTROLS against their nulls and never the real
+    # methods against theirs, which is the asymmetry that lets a real method sit in the
+    # leaderboard above the controls while being indistinguishable from its own null.
+    # quanTIseq is exactly that case: ACS 0.600 at null_p = 0.31.
+    fails = real.index[~real["beats_null"].astype(bool)].tolist()
+    if fails:
+        out.append("")
+        out.append("**Real methods that do NOT beat their own permutation null.** A method "
+                   "can sit above every control and still be indistinguishable from chance "
+                   "*for itself*, because each method's null is drawn over the constraints "
+                   "**that method can be scored on**. Reporting such a method's ACS as a "
+                   "rank without this line would overstate it:")
+        out.append("")
+        out.append("| method | ACS | its own null mean | null p | constraint-tumour pairs scored | verdict |")
+        out.append("|---|---|---|---|---|---|")
+        med = float(real["n_constraint_tumor_pairs"].median())
+        for m in fails:
+            r = real.loc[m]
+            n = int(r["n_constraint_tumor_pairs"])
+            # underpowered vs genuinely-at-chance are different findings and the protocol
+            # names the first INCONCLUSIVE, not a failure. The discriminator is how many
+            # constraint-tumour pairs the method could be scored on at all.
+            verdict = ("**INCONCLUSIVE — underpowered**" if n < 0.6 * med
+                       else "**at chance**")
+            out.append(f"| {m} | {r['acs']:.3f} | {r['null_mean']:.3f} | "
+                       f"{r['null_p']:.3f} | {n} of {int(med)} | {verdict} |")
+        under = [m for m in fails
+                 if int(real.loc[m, "n_constraint_tumor_pairs"]) < 0.6 * med]
+        if under:
+            out.append("")
+            out.append(f"`{', '.join(under)}` is scored on a **fraction** of the pairs the "
+                       "other methods are, because it does not estimate every cell type the "
+                       "constraints name. That raises its null (a smaller constraint set is "
+                       "easier to satisfy by chance) and removes the power to clear it. This "
+                       "is the project's standing distinction between *a method produced a "
+                       "bad estimate* and *a method could not be evaluated* — the second, "
+                       "here. Its ACS is reported for completeness and **must not be read "
+                       "as a rank against the fully-scored methods**.")
 
     pc = _load_csv(pc_path)
     if pc is not None:
@@ -1116,6 +1169,18 @@ def render(results_dir: Path) -> str:
     sens = _load_csv(anat / "acs_cohort_sensitivity.csv", index_col=0)
     if sens is not None:
         A("\n## 6. Does deconvolving all 270 samples change the ranking?\n")
+        # PROVENANCE FOR THE WHOLE SECTION. The main pipeline was re-run with
+        # `--matrix raw/X` on 2026-09-22 (OPEN_DEFECTS D16). This 270-sample sensitivity arm
+        # was NOT re-run, so every ACS below comes from the log-transformed `X`. The values
+        # are correct for what they describe and are not comparable cell-by-cell with
+        # section 3. The label must sit at the top of the section, not inside one subsection,
+        # because the stale tables begin here.
+        A("> **Reference build for this entire section: GBmap `X` (log-transformed).** The "
+          "main pipeline was rebuilt from `raw/X` on 2026-09-22 (OPEN_DEFECTS D16); this "
+          "sensitivity arm was not re-run. The question it asks — *does adding 148 "
+          "ISH-cluster samples change the ordering?* — is internal to this run and unaffected "
+          "by the matrix. The ACS values below are **not** comparable cell-by-cell with the "
+          "leaderboard in section 3.\n")
         A("| method | ACS (122 anatomic) | ACS (270 deconvolved) | delta | rank change |")
         A("|---|---|---|---|---|")
         for m, r in sens.iterrows():
@@ -1146,6 +1211,7 @@ def render(results_dir: Path) -> str:
         frep = _load_json(full / "anatomic_report.json")
         if frep:
             A("\n### The full-database run\n")
+
             A(f"- deconvolved **{frep['n_samples_deconvolved']} samples / "
               f"{frep['n_tumors_deconvolved']} tumours**")
             A(f"- ACS still scored on **{frep['n_samples']} samples / "
