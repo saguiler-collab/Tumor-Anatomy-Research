@@ -56,6 +56,26 @@ COHORTS = {
     "gbm": PRED / "TCGA-GBM.star_counts.tsv",
     "lgg": ROOT / "TCGA_LGG" / "TCGA-LGG.star_counts.tsv",
 }
+
+
+def _resolve(path: Path) -> Path:
+    """The STAR table, whether it is stored plain or gzipped.
+
+    The 318 MB LGG table is kept on disk **gzipped and untracked** -- it is a raw input
+    that has already been consumed into `data/processed/tcga_lgg_bulk_cpm.csv.gz`, and at
+    318 MB it cannot go to GitHub (100 MB hard limit). `pandas.read_csv` decompresses by
+    extension, so resolving to the `.gz` here is all that shelving it costs. A missing
+    input must say which file and how to restore it, not fail on a bare FileNotFoundError.
+    """
+    if path.exists():
+        return path
+    gz = path.with_suffix(path.suffix + ".gz")
+    if gz.exists():
+        return gz
+    raise FileNotFoundError(
+        f"neither {path} nor {gz} is present. This is a raw input that is deliberately "
+        f"NOT in git (too large for GitHub). See docs/SHELVED_INPUTS.md for what it is, "
+        f"its recorded sha256, and where to re-download it.")
 GRID = 0.5          # the underlying quantity's spacing, measured not assumed
 
 
@@ -87,7 +107,7 @@ def main() -> int:
             print(f"BLOCKED: {p} not found."); return 2
 
     print(f"reading {STAR.name} ({STAR.stat().st_size / 1e6:.0f} MB) ...")
-    df = pd.read_csv(STAR, sep="\t", index_col=0)
+    df = pd.read_csv(_resolve(STAR), sep="\t", index_col=0)
     print(f"  {df.shape[0]:,} gene rows x {df.shape[1]} samples")
 
     # --- GATE 1: is it really log2(x+1) with x on a 0.5 grid? ------------------------

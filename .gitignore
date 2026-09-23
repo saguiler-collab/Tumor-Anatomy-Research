@@ -74,3 +74,12 @@ celldecov_reference_papers/
 /TCGA_*/
 *.tsv.gz
 *.sampleMap_*
+
+# Shelved raw inputs — see docs/SHELVED_INPUTS.md. Kept on disk gzipped, out of git.
+# The LGG STAR table is 318 MB, over GitHub's 100 MB hard limit. The Ivy GAP FPKM copy
+# is byte-identical to data/raw/ivygap/fpkm_table.csv, which is what the pipeline reads.
+# Everything else in these directories — clinical, biospecimen, rows-genes — stays tracked.
+TCGA_LGG/TCGA-LGG.star_counts.tsv
+TCGA_LGG/TCGA-LGG.star_counts.tsv.gz
+ivygap/ivygap_downloads/gene_expression_matrix_2014-11-25/fpkm_table.csv
+ivygap/ivygap_downloads/gene_expression_matrix_2014-11-25/fpkm_table.csv.gz
