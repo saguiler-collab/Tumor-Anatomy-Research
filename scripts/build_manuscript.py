@@ -84,7 +84,7 @@ def main() -> int:
       f"**{a2h.get('all_methods', {}).get('spearman')}** (n={a2h.get('all_methods', {}).get('n_methods')}) "
       f"when both arms use the same reference build. The registered bar (≥0.60) is met **only** "
       f"against the pseudobulk yardstick that shares its atlas with the anatomy score "
-      f"(**{ya.get('arm_1_pseudobulk', {}).get('rho')}**). **[STRONG]**")
+      f"(**{ya.get('arm_1_pseudobulk', {}).get('rho'):.4f}**). **[STRONG]**")
     A(f"2. **Deconvolution recovers a minority of true tumour-content variation.** Median "
       f"**{pct(rf.get('gbm_median_comparable'))}** in {cc.get('n_gbm')} glioblastomas and "
       f"**{pct(rf.get('lgg_median_comparable'))}** in {cc.get('n_lgg')} lower-grade gliomas "
@@ -162,12 +162,16 @@ def main() -> int:
       f"**{a2h.get('excluding_degenerate', {}).get('spearman')}** across the "
       f"{a2h.get('excluding_degenerate', {}).get('n_methods')} comparable ones.")
     A(f"- The registered bar is met only against the pseudobulk yardstick that **shares its "
-      f"atlas** with ACS ({ya.get('arm_1_pseudobulk', {}).get('rho')}). Every yardstick sharing "
+      f"atlas** with ACS ({ya.get('arm_1_pseudobulk', {}).get('rho'):.4f}). Every yardstick sharing "
       f"nothing with ACS fails — a pattern, not one bad run.")
-    A("\n> WRITE: this is the cleanest refutation in the paper because the obvious objection — "
-      "that the two arms used different reference builds, so `music` meant a different algorithm "
-      "in each — was removed by measurement rather than argued away, and removing it changed "
-      "nothing.\n")
+    A("\n> WRITE: the obvious objection — that the two arms used different reference builds, so "
+      "`music` meant a different algorithm in each — was removed by measurement rather than "
+      "argued away. **Say what removing it did, because it was not nothing.** On the "
+      "log-matrix runs the parity figure was ≈ 0; rebuilding both arms from genuine counts "
+      "(OPEN_DEFECTS D16) moved it to the value above. It still fails the registered bar and is "
+      "not significant, so the conclusion holds — but the honest phrasing is *a weak positive "
+      "that does not reach significance*, not *indistinguishable from zero*. Claiming the "
+      "correction changed nothing would be false and is the kind of thing a reviewer checks.\n")
 
     A("## Result 2 — how much tumour content is recovered **[STRONG]**\n")
     A(f"- Median recovery **{pct(rf.get('gbm_median_comparable'))}** (GBM) and "

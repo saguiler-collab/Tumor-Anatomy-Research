@@ -43,7 +43,7 @@ def main() -> int:
          f"correlation; bars are 95% bootstrap confidence intervals over methods. The dashed "
          f"line is the pre-registered bar (ρ ≥ 0.60), fixed before any result was computed. "
          f"Only the synthetic pseudobulk yardstick clears it (ρ = "
-         f"{fz.get('arm_1_pseudobulk', {}).get('rho')}), and that yardstick is built from "
+         f"{fz.get('arm_1_pseudobulk', {}).get('rho'):.4f}), and that yardstick is built from "
          f"GBmap — the same single-cell atlas the ACS arm deconvolves against. Against "
          f"DNA-measured tumour purity, which shares nothing with ACS, the correlation is "
          f"{a2f.get('all_methods', {}).get('spearman')} "

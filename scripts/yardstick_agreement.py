@@ -49,7 +49,25 @@ from ivygap import config                                          # noqa: E402
 YARD = config.RESULTS_DIR / "absolute_purity_yardstick.json"
 LB = config.RESULTS_DIR / "anatomic" / "acs_leaderboard.csv"
 REGISTERED_BAR = 0.60
-REGISTERED_RHO = 0.7501
+# READ IT, DO NOT HARDCODE IT. This was frozen at 0.7501 -- the value from the runs built on
+# GBmap's log-transformed `X`. Rebuilding the reference from `raw/X` (OPEN_DEFECTS D16) moved it
+# to 0.6372, and the constant went on printing the superseded figure in every comparison line.
+def _registered_rho() -> float:
+    p = config.RESULTS_DIR / "anatomic" / "agreement_report.json"
+    if p.exists():
+        try:
+            for y in (json.loads(p.read_text()).get("by_yardstick") or []):
+                # the artefact calls it `synthetic_mixtures`; `sc_pseudobulk` is a DIFFERENT
+                # yardstick that carries no rho in this run, so matching on "pseudobulk"
+                # alone found the wrong row and returned nan.
+                if str(y.get("yardstick", "")) == "synthetic_mixtures" and y.get("rho") is not None:
+                    return float(y["rho"])
+        except Exception:                                          # noqa: BLE001
+            pass
+    return float("nan")
+
+
+REGISTERED_RHO = _registered_rho()
 
 
 def boot_spearman(x, y, n=10000, seed=config.RANDOM_SEED):

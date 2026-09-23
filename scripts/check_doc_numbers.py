@@ -177,11 +177,76 @@ def scan() -> tuple[list[tuple], int, int]:
     return problems, checked, len(files)
 
 
+
+def _check_against_current() -> list[tuple]:
+    """Does each ACS match the CURRENT run, not merely SOME run?
+
+    THE HOLE THIS CLOSES. The main check asks whether a printed value appears in *any*
+    artefact. That passes a value which is correct for an ARCHIVED run and wrong for the
+    live one -- "right number, wrong run". It is the most likely way for a document to go
+    stale, because re-running the pipeline changes the values while leaving every one of
+    them present *somewhere* in the results tree.
+
+    Found 2026-09-22 after `run_all.py --matrix raw/X` rebuilt the leaderboard: the main
+    check reported 3 problems, this one found **12**, including `MuSiC` printed as 1.0000
+    where the current run says 0.9692.
+    """
+    lb_path = ROOT / "results" / "anatomic" / "acs_leaderboard.csv"
+    if not lb_path.exists():
+        return []
+    lb = pd.read_csv(lb_path).set_index("method")
+    cur = {m: float(r["acs"]) for m, r in lb.iterrows()}
+    alias = {"musiC": "music", "MuSiC": "music", "SVR": "svr", "EPIC": "epic",
+             "Bisque": "bisque", "DWLS": "dwls", "NNLS": "nnls", "BayesPrism": "bayesprism",
+             "Bayesian": "bayesian", "SCDC": "scdc", "CIBERSORTx": "cibersortx",
+             "quanTIseq": "quantiseq"}
+    out = []
+    for f in sorted(ROOT.rglob("*.md")):
+        rel = str(f.relative_to(ROOT))
+        # `results_superseded/` holds documents deliberately kept AS WRITTEN at the time --
+        # correcting them would destroy the record they exist to preserve. Same for the
+        # hash-verified archives and the release bundle, which are snapshots by definition.
+        if any(s in rel for s in ("results_archive/", "results_superseded/", "release/",
+                                  "node_modules", ".git", "pipeline_packages")):
+            continue
+        # HEADER-AWARE, because a bare "| method | 0.1234 |" match is not enough. The first
+        # draft flagged the lymphoid composition tables in SUPPLEMENTARY.md -- whose second
+        # column is a T-cell FRACTION, not an ACS -- and reported a dozen false positives. A
+        # check that cries wolf gets ignored, which is worse than not having it.
+        header_is_acs = False
+        for ln, line in enumerate(f.read_text(errors="replace").split("\n"), 1):
+            if line.lstrip().startswith("|"):
+                cells = [c.strip().lower() for c in line.strip("| \n").split("|")]
+                # a header row names its columns; remember whether this table is an ACS table
+                if any(re.fullmatch(r"\*{0,2}acs\*{0,2}", c) for c in cells):
+                    header_is_acs = True
+                elif cells and not re.match(r"^[-: ]+$", cells[0]) and \
+                        any(re.fullmatch(r"\*{0,2}[a-z ]*(fraction|t|nk|b|rho|ci|delta|p)\*{0,2}",
+                                         c) for c in cells[1:2]):
+                    header_is_acs = False
+            else:
+                header_is_acs = False          # a blank line or prose ends the table
+            if not header_is_acs:
+                continue
+            m = re.match(r"\|\s*\*{0,2}([A-Za-z_/ ]+?)\*{0,2}\s*\|\s*\*{0,2}([01]\.\d{3,4})\*{0,2}\s*\|",
+                         line)
+            if not m:
+                continue
+            raw, val = m.group(1).strip(), float(m.group(2))
+            key = alias.get(raw, raw.lower().replace(" ", "_"))
+            if key in cur and abs(cur[key] - val) > 0.0015:
+                out.append((rel, ln, raw, val, cur[key], line.strip()[:90]))
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--strict", action="store_true",
                     help="exit non-zero if any document quotes an ACS no artefact holds")
+    ap.add_argument("--against-current", action="store_true",
+                    help="ALSO check each ACS against the CURRENT leaderboard, not merely "
+                         "against the set of all artefacts. See _check_against_current.")
     args = ap.parse_args()
 
     problems, checked, n_files = scan()
@@ -195,7 +260,16 @@ def main() -> int:
         print(f"  {f}:{ln}\n    {name} is printed as {val}; artefacts hold {ok}\n    {txt}")
     print("\nEither the document is stale (fix the document) or a run was not archived "
           "(archive it). Do not add the value to DECLARED_REMEASUREMENTS to silence this.")
-    return 1 if args.strict else 0
+    rc = 1 if args.strict else 0
+    if args.against_current:
+        stale = _check_against_current()
+        if stale:
+            print(f"\n{len(stale)} value(s) match SOME artefact but NOT the current run:\n")
+            for rel, ln, raw, val, now, txt in stale:
+                print(f"  {rel}:{ln}\n    {raw}: document says {val:.4f}, current run says "
+                      f"{now:.4f}\n    {txt}")
+            rc = 1 if args.strict else rc
+    return rc
 
 
 if __name__ == "__main__":
