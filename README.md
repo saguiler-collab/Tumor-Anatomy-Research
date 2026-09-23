@@ -1,5 +1,8 @@
 # The Anatomy Test
 
+> **Limits of this study's measurements** — quanTIseq is INCONCLUSIVE rather than bad (scored on 15 of 57 constraint pairs, p = 0.31 against its own null), two genuine R packages fell back to reimplementations on this hardware, and two more could not be built at all. All of it is in [docs/METHOD_LIMITATIONS.md](docs/METHOD_LIMITATIONS.md).
+
+
 **Anatomic Concordance: Neuropathology as a Ground-Truth-Free Benchmark for Cell-Type
 Deconvolution in Glioblastoma**
 
@@ -281,7 +284,7 @@ so the leaderboard means something.
 | Bisque | 0.708 | [0.597, 0.817] | R:BisqueRNA |
 | BayesPrism | 0.800 | [0.679, 0.902] | reimplementation |
 | Bayesian / Hierarchical | 0.769 | [0.627, 0.921] | this project |
-| DWLS | 0.723 | [0.606, 0.846] | reimplementation — the genuine R package was measured separately but **on a different gene space**, see below |
+| DWLS | 0.723 | [0.606, 0.846] | reimplementation — the genuine R package scores **0.7846** on the *same* gene space (657 genes, hash-matched); it fell back here only because it took 2593 s against the pipeline's 2400 s budget, see below |
 | *control_random* | *0.400* | | |
 | *control_shuffled_signature* | *0.369* | | |
 | quanTIseq | 0.600 | [0.333, 0.882] | **not ranked** — partial coverage |

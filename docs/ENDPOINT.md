@@ -1,5 +1,8 @@
 # The endpoint: what this project found, and what the paper says
 
+> **Limits of this study's measurements** — quanTIseq is INCONCLUSIVE rather than bad (scored on 15 of 57 constraint pairs, p = 0.31 against its own null), two genuine R packages fell back to reimplementations on this hardware, and two more could not be built at all. All of it is in [METHOD_LIMITATIONS.md](METHOD_LIMITATIONS.md).
+
+
 > # ⚠ NUMBERS UPDATED 2026-09-22 — the reference was rebuilt from genuine counts
 >
 > Every figure in this document was originally computed against a reference built from GBmap's

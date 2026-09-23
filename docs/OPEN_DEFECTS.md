@@ -24,6 +24,7 @@ keeping, marked RESOLVED at the top.
 | **D12** the cell-size correction has never been applied — it is the identity | **OPEN, high** — supersedes most of D1; no number changes, but the registration says otherwise |
 | **D13** EPIC runs with `refProfiles.var` unset, so its gene weighting is off; its output is mislabelled as a cell fraction | **MEASURED and CLOSED** 2026-09-17 — restoring variance weighting changes the estimates materially (mean 0.0829 on Tumor, max 0.3539) and changes ACS by **exactly 0.0000**. `otherCells` max 2.79e-03. Convergence 4 of 25 probed samples fail (PARTIAL). The variance-weighted run is the one that is EPIC, decided on the invariant before the scores were seen. `ROAD_TO_PAPER.md` 0.4 |
 | **D20** the frozen arms predate the `patient_id` fix, so they carry 12 methods against the h5ad arms' 13–14 | **OPEN, low — a provenance fact, not an error.** `bayesian_hierarchical` raised `KeyError: 'patient_id'` before the manifest was supplied; it runs cleanly now (GBM h5ad rho 0.7000, LGG h5ad 0.5483). Deliberately not re-run at the freeze, because that would shift the published medians for one extra method the h5ad arms already have. Kendall tau is unaffected — it uses only methods rankable under both. |
+| **D21** the orthogonal yardstick's rho was published with its sign inverted | **FIXED 2026-09-23.** `absolute_purity` is a correlation, not an error metric; the agreement stage negated it. -0.0810 published where the data give +0.0810. Conclusion (NULL RESULT) unchanged; the sign was not. |
 | **D19** a fallback to a Python reimplementation is recorded without its REASON | **OPEN, medium-low** — nothing is mislabelled, but `dwls` falling rank 3 → 12 cannot be read as "bad method" vs "timed out" from the artefact. All R packages are installed, so these are runtime failures, not absent software. |
 | **D18** BayesPrism's socket-cluster workers are killed for MEMORY, so the row labelled `bayesprism` was the Python reimplementation | **RESOLVED 2026-09-19** — cause found (`unserialize(node$con)`: three workers each holding a full data copy on 8.6 GB RAM; not a timeout, 155 s against 2,400 s). `n.cores = 1` removes the cluster and is **result-neutral**: ACS 0.8154 and CI [0.7096, 0.9153] identical to the three-worker run, 2.0× slower. Two earlier causes were proposed and withdrawn; both kept on the record. |
 | **D17** variant reference builds overwrote the primary reference's sampling record | **FIXED** 2026-09-15 — a figure script reads that path, so a sensitivity build's numbers could be published as the leaderboard's. Variant builds now get their own file. |
@@ -856,8 +857,29 @@ mtimes alone on a tree whose files all share a copy timestamp.
 
 ## D10 · Both single-method re-measurements ran on a different gene space than the leaderboard they were compared against
 
-**Status: the false comparisons are WITHDRAWN and the mechanism is FIXED. The
-re-measurements themselves must be redone. Found 2026-09-12.**
+**Status: the false comparisons are WITHDRAWN, the mechanism is FIXED, and the
+re-measurements HAVE BEEN REDONE. Found 2026-09-12; closed 2026-09-23.**
+
+> ### CLOSED — both re-measurements now run on the leaderboard's own gene space
+>
+> This line read *"the re-measurements themselves must be redone"* for eleven days after they
+> had been. Both artefacts record the gene space they used and both now match the leaderboard
+> exactly — read from the run artefact rather than rebuilt, which is the fix:
+>
+> | re-measurement | n_genes | sha256 matches the leaderboard's | ACS |
+> |---|---|---|---|
+> | genuine `R:DWLS` | 657 | true | **0.7846** |
+> | genuine `R:BayesPrism` | 657 | true | **0.8154** |
+>
+> Both also record a full `input_equivalence` block — gene space, training donors (88),
+> held-out donors (22), and that the reference excludes the held-out donors — so the
+> comparison against the reimplementation is now like-for-like and the withdrawn conclusions
+> could be re-drawn honestly. The 1,591-gene figures in the table below are the WITHDRAWN
+> ones and are kept only as the record of the error.
+>
+> One consumer was not updated when they were redone: `README.md` still described DWLS's
+> genuine package as measured *"on a different gene space"*. That caveat was true of the
+> withdrawn measurement and false of the current one; corrected 2026-09-23.
 
 ### What happened
 
@@ -2243,7 +2265,7 @@ Covered by `tests/test_sampling_record_not_clobbered.py`.
 
 ---
 
-## D20 · The orthogonal yardstick's rho was published with its sign inverted
+## D21 · The orthogonal yardstick's rho was published with its sign inverted
 
 **Status: FIXED 2026-09-23.** Found while validating the figure captions against artefacts
 for the CJSJ close-out, by noticing that two artefacts disagreed about the same number.
