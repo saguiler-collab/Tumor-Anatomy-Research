@@ -50,21 +50,32 @@ hypothesis, and what is deliberately left undone.
 
 ## The closing measurement: the registered outcome, computed against BOTH yardsticks
 
-The registration asks whether the ACS ranking agrees with a ranking from real ground truth. It
-reported **rho = 0.7501**, above the pre-registered bar of 0.60. Correction **C4** observed that
-both arms of that comparison use GBmap. That was an argument. This is the measurement:
+The registration asks whether the ACS ranking agrees with a ranking from real ground truth. On
+the `raw/X` build it reports **rho = 0.6372**, above the pre-registered bar of 0.60
+(0.7501 in the superseded log-`X` arm). Correction **C4** observed that both arms of that
+comparison use GBmap. That was an argument. This is the measurement:
 
 | yardstick | shares with the ACS arm | rho | 95% CI | meets the registered bar? |
 |---|---|---|---|---|
-| synthetic pseudobulk | **GBmap** — mixtures built from its cells | **+0.7501** | [0.328, 0.957] | **yes** |
-| **ABSOLUTE purity, from DNA** | **nothing** | **+0.0698** (p = 0.83) | **[−0.510, +0.769]** | **no** |
-| ... excluding 3 degenerate methods | | **−0.1044** (p = 0.79) | [−0.753, +0.743] | no |
+| synthetic pseudobulk | **GBmap** — mixtures built from its cells | **+0.6372** (p = 0.0143) | [+0.1040, +0.9430] | **yes** |
+| **ABSOLUTE purity, from DNA** | **nothing** | **+0.0810** (p = 0.80) | **[-0.6286, +0.6866]** | **no** |
+| ... excluding 3 degenerate methods | | **-0.1255** (p = 0.75) | | no |
+
+> **These are the `raw/X` values**, read from `results/anatomic/agreement_report.json`. The
+> log-`X` arm reported +0.7501 [0.328, 0.957], +0.0698 [−0.510, +0.769] and −0.1044
+> [−0.753, +0.743]. Every verdict in the right-hand column is the same under both builds — the
+> pseudobulk arm clears the bar, the independent arm does not — which is why the rebuild
+> changed no conclusion. `scripts/check_doc_statistics.py` pins each of these to its artefact
+> field so a future rebuild cannot leave this table behind again.
 
 **The registered criterion is definitively not met against an independent yardstick** — it
 requires rho >= 0.60 *and* a CI excluding zero, and this fails both.
 
 **But it is a failure to reproduce, not a refutation, and the difference matters.** With twelve
-methods the interval is wide enough to contain 0.7501 itself. What twelve points cannot do is
+methods the interval [-0.6286, +0.6866] is wide enough to contain the
+pseudobulk arm's 0.6372 itself. (On the superseded log-`X` arm the same sentence named
+0.7501, which the current interval would *not* reach — the argument survives the rebuild but its
+numbers do not carry over.) What twelve points cannot do is
 distinguish "no relationship" from "a relationship this test is too small to see". Per this
 project's own rule, an underpowered result is reported as **INCONCLUSIVE** — which is an answer.
 
@@ -141,8 +152,10 @@ Darmanis, and both GBmap assay subsets. It is the most robust result in the proj
 
 ### The registered primary outcome passed its pre-registered bar
 
-**Spearman rho = 0.7501** between the ACS ranking and the accuracy ranking, CI [0.328, 0.957],
-p = 0.0020. The bar, fixed in advance, was rho ≥ 0.60 with a CI excluding zero.
+**Spearman rho = 0.6372** between the ACS ranking and the accuracy ranking, CI
+[+0.1040, +0.9430], p = 0.0143, on
+14 methods. The bar, fixed in advance, was rho ≥ 0.60 with a CI excluding zero.
+(The log-`X` arm reported 0.7501, CI [0.328, 0.957], p = 0.0020. Both clear the bar.)
 
 **It passed. And Part 2 is about what it actually measures.**
 
@@ -181,7 +194,8 @@ is itself a symptom of §2d. **Changing the atlas leaves about half the ordering
 atlas rows have not been rerun per-arm, so they are compared like-for-like only on the shared
 space. And the registered primary outcome compares two rankings that
 **both** use GBmap — the ACS arm deconvolves against it, the accuracy arm builds its mixtures
-from its cells (C4). Part of rho = 0.7501 is two GBmap-based rankings agreeing about GBmap.
+from its cells (C4). Part of rho = 0.6372 is two GBmap-based rankings agreeing about
+GBmap.
 
 **And it is not only the atlas — it is what the reference CARRIES.** Measured 2026-09-18
 against DNA purity on TCGA-GBM, holding the atlas fixed and changing only whether the reference
@@ -237,6 +251,8 @@ on both sides:
 
 
 
+**SUPERSEDED TABLE — values below are from the log-`X` arm.** Kept as the record of what was published; the `raw/X` values and the corrected conclusion follow immediately after it.
+
 | purity arm scored on | n methods | Spearman(ACS, purity recovery) | 95% CI | meets bar (≥0.60) |
 |---|---|---|---|---|
 | frozen signature (as published) | 12 | **+0.0698** | [-0.510, +0.769] | no |
@@ -244,18 +260,41 @@ on both sides:
 | **h5ad — same build as the ACS arm** | **14** | **-0.0156** | [-0.723, +0.660] | **no** |
 | **h5ad, excluding degenerate** | **12** | **+0.0071** | [-0.760, +0.708] | **no** |
 
-**Reference parity does not rescue it.** On matched references the correlation is
-**-0.0156** across fourteen methods and **+0.0071** across the twelve that are comparable — indistinguishable
-from zero, on *more* methods than the published comparison had. The mismatch was a real defect in
-the comparison and it was worth removing; removing it changes nothing.
+> ### ⚠ SUPERSEDED — the four values in the table above are the log-`X` arm's
+>
+> They are kept because they are the record of what was published, not because they are
+> current. On `raw/X` the same quantities are **+0.0810**
+> (n = 12),
+> **-0.1255** (n = 9),
+> **+0.3142** (n = 14,
+> p = 0.274) and
+> **+0.2817** (n = 12,
+> p = 0.3751). The paragraph below has been rewritten to the
+> `raw/X` numbers. The pre-`raw/X` wording is preserved in git history — the commit
+> *"Close the CJSJ version on raw/X; fix a sign error in the orthogonal yardstick"* is the
+> last one to carry it. (It is **not** in `results_superseded/`; that directory holds
+> superseded result artefacts, not superseded prose, and an earlier draft of this note said
+> otherwise.)
+
+**Reference parity does not rescue it — but it does not leave the correlation at zero either,
+and that distinction is the honest one.** On matched references the correlation is
+**+0.3142** across 14 methods
+and **+0.2817** across the
+12 that are comparable. Neither is significant
+(p = 0.274 and p = 0.3751), neither comes near
+the pre-registered 0.60, and both confidence intervals span zero — so the claim *anatomy does
+not rank methods* stands. What does **not** stand is the older phrasing *"indistinguishable from
+zero"*: a weak positive that fails to reach significance is a different statement, and the
+earlier version of this paragraph overstated the result in the study's own favour.
 
 So the refutation no longer rests on a comparison anyone can object to on those grounds. **ACS
 ranks methods; DNA purity ranks methods; on the same cohort-independent footing the two rankings
-are uncorrelated.**
+show no relationship that survives its own confidence interval.**
 
-*(The bar was met only against the GBmap-derived pseudobulk yardstick, rho = 0.7501 — the arm that
-shares its atlas with ACS, which is correction C4's point. Every yardstick that shares nothing with
-ACS fails, and that is the pattern, not one bad run.)*
+*(The bar was met only against the GBmap-derived pseudobulk yardstick, rho = **0.6372** on
+`raw/X` — 0.7501 in the superseded log-`X` arm — the arm that shares its atlas with ACS, which is
+correction C4's point. Every yardstick that shares nothing with ACS fails, and that is the
+pattern, not one bad run.)*
 
 ### 2g. The most promising replacement for ACS was tested, and it also fails
 
@@ -466,7 +505,7 @@ record is part of the result.
    (p = 0.50), fails a pre-registered test against protein ground truth (p = 0.0090, wrong
    direction), cannot resolve the top of its own leaderboard (a four-way tie), rests largely on
    one constraint, and moves by 0.31 on marker-set size alone.
-4. The apparent success of the registered outcome (rho = 0.7501) is **substantially a shared
+4. The apparent success of the registered outcome (rho = 0.6372) is **substantially a shared
    dependence on one reference atlas**, and every analysis that breaks that dependence weakens
    it. **But the atlas is not merely a source of bias.** Reference-free estimation lands at the
    bottom of the real methods, tying DWLS, with 13 of 14 reference-using methods above it — so

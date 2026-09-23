@@ -32,7 +32,7 @@ claim.
 > three-quarters of the range it is used to rank fifteen methods across. It also cannot resolve
 > its own top: a **four-way tie at 0.9846**, with MuSiC's win resting on one pair out of 57.
 >
-> The registered outcome (rho = 0.7501) passed its pre-registered bar, and every analysis that
+> The registered outcome (rho = 0.6372 on `raw/X`; 0.7501 on the superseded log-`X` arm) passed its pre-registered bar, and every analysis that
 > breaks its shared dependence on one atlas weakens it.
 
 
@@ -291,7 +291,7 @@ so the leaderboard means something.
 
 ### The headline
 
-**ρ = 0.7501** (95% CI [0.328, 0.957], p = 0.0020, 14 methods) — above the
+**ρ = 0.6372** (95% CI [+0.1040, +0.9430], p = 0.0143, 14 methods; 0.7501 [0.328, 0.957] p = 0.0020 on the superseded log-`X` arm) — above the
 pre-registered 0.60 bar with the interval excluding zero. On the wider 270-sample cohort,
 **ρ = 0.7607**. The two ACS rankings agree with each other at **ρ = 0.985**.
 
@@ -302,7 +302,7 @@ pre-registered 0.60 bar with the interval excluding zero. On the wider 270-sampl
 **Both halves matter, and the second was measured after registration.** The separation from
 the negative controls holds under every reference tested. The *ordering* does not: holding the
 atlas and changing the sequencing platform preserves it (rho 0.817), while holding the platform
-and changing the atlas destroys it (0.221). And both arms of the rho = 0.7501 above use GBmap,
+and changing the atlas destroys it (0.221). And both arms of the rho = 0.6372 above use GBmap,
 so part of that agreement is agreement about the reference rather than about the tissue. See
 `RESULTS.md` §5d and `docs/OPEN_DEFECTS.md` D14.
 
