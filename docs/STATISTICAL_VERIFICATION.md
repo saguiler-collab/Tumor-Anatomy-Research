@@ -133,10 +133,59 @@ cohorts, on an instrument that shares nothing with the deconvolution arm.
 
 ---
 
+## 6. The one way the headline could have been an artefact, tested and ruled out
+
+The claim that 0 of 12 methods reproduce T > B has exactly one artefactual explanation: if
+the harness had the **T and B columns transposed**, every method would appear to place B above
+T regardless of what it estimated.
+
+Correlating estimates against methylation truth cannot settle this. Estimated-B and
+methylation-T both rise with overall lymphocyte abundance, so a positive association appears
+with or without a swap — and indeed 6 of 10 methods in LGG show estimated-B tracking
+methylation-T more closely than estimated-T does, which looks alarming and means nothing.
+
+The decisive check is at the reference. Canonical lineage markers must score highest in their
+own column:
+
+| marker set | present | highest in the expected column |
+|---|---|---|
+| B-cell (MS4A1, CD79A, CD79B, CD19, BANK1, BLK, PAX5, TNFRSF13C, FCRL1) | 9 | **9 of 9 in `B_cell`** |
+| T-cell, highest in `B_cell` | 9 tested | **0 — none** |
+
+The margins are not marginal: CD79A scores 3038.3 in `B_cell` against 0.79 in `T_cell`, CD19
+1117.0 against 0.41. **There is no transposition, and the headline result is a finding rather
+than a labelling artefact.**
+
+One real property of the reference is recorded rather than glossed. CD3D, CD3E, CD3G, CD2 and
+LCK score highest in `NK_cell`, not `T_cell`. That is expected — NK and T share the lymphoid
+lineage, and brain-tumour NK annotations routinely include CD3-positive NKT and cytotoxic
+populations — and it is a known characteristic of single-cell atlases rather than a defect
+here. It does not touch the T-versus-B claim, because the B column is unambiguous. It does
+mean the **T/NK boundary in this reference is soft**, which is why the study's claim is posed
+as T versus B and not as a three-way ordering accuracy.
+
+Covered by `tests/test_signature_label_integrity.py`.
+
+---
+
 ## What this exercise does not establish
 
-It verifies that each reported number is the correct output of its stated procedure, and that
-the procedures' approximations hold at these sample sizes. It cannot establish that the
+**The verification chain reaches back to per-sample data, but not all the way to raw.** It
+recomputed ~14,800 per-sample values — 154 x 14 and 510 x 14 estimate/purity cells, 155 x 8
+and 530 x 8 methylation cells — and everything derived from them. The methylation truth goes
+further still: `scripts/independent_verification.py` reads the **raw beta matrix**, pulls
+`centDHSbloodDMC.m` from R, and solves with `scipy.optimize.nnls` instead of EpiDISH RPC —
+a different algorithm in a different language.
+
+What it does **not** redo is the step from 9.2 GB of raw input — the 8.1 GB GBmap atlas, the
+bulk expression matrices, the methylation arrays — down to the per-sample estimate tables.
+That step is the deconvolution itself, and re-running it would not be a check: it would be the
+same code producing the same numbers. An independent check of that layer means a second
+implementation, which exists only for the methylation arm (above) and for the marker-label
+integrity test (section 6).
+
+So: it verifies that each reported number is the correct output of its stated procedure, and
+that the procedures' approximations hold at these sample sizes. It cannot establish that the
 procedure is the right one to have chosen, or that the input data mean what the source
 describes them as meaning. Those are judgements, and they are argued in `docs/METHODS.md` and
 bounded in `docs/METHOD_LIMITATIONS.md` rather than settled here.
