@@ -74,23 +74,23 @@ _from `results/anatomic/acs_leaderboard.csv`_
 
 | method | ACS | 95% CI | null mean | null p | tumours | control |
 |---|---|---|---|---|---|---|
-| music | 0.969 | 0.930 – 1.000 | 0.372 | 0.000 | 9 |  |
-| svr | 0.954 | 0.891 – 1.000 | 0.374 | 0.000 | 9 |  |
-| scdc | 0.938 | 0.897 – 0.983 | 0.374 | 0.000 | 9 |  |
-| scdc_ensemble | 0.938 | 0.897 – 0.983 | 0.374 | 0.000 | 9 |  |
-| cibersortx | 0.862 | 0.731 – 0.969 | 0.375 | 0.000 | 9 |  |
-| cibersortx_smode | 0.862 | 0.757 – 0.952 | 0.380 | 0.000 | 9 |  |
-| elastic_net | 0.862 | 0.781 – 0.938 | 0.372 | 0.000 | 9 |  |
-| nnls | 0.846 | 0.760 – 0.919 | 0.377 | 0.000 | 9 |  |
-| bayesprism | 0.800 | 0.679 – 0.902 | 0.374 | 0.000 | 9 |  |
-| epic | 0.769 | 0.657 – 0.879 | 0.377 | 0.000 | 9 |  |
-| bayesian | 0.754 | 0.629 – 0.871 | 0.382 | 0.000 | 9 |  |
-| bayesian_hierarchical | 0.738 | 0.614 – 0.864 | 0.382 | 0.000 | 9 |  |
-| dwls | 0.723 | 0.606 – 0.846 | 0.375 | 0.000 | 9 |  |
-| bisque | 0.708 | 0.597 – 0.817 | 0.382 | 0.000 | 9 |  |
-| **control_random** | 0.400 | 0.288 – 0.530 | 0.382 | 0.431 | 9 | **yes** |
-| **control_shuffled_signature** | 0.369 | 0.282 – 0.467 | 0.376 | 0.568 | 9 | **yes** |
-| quantiseq | 0.600 | 0.333 – 0.882 | 0.502 | 0.309 | 9 |  |
+| music | 0.969 | 0.930 – 1.000 | 0.372 | < 1e-4 | 9 |  |
+| svr | 0.954 | 0.891 – 1.000 | 0.374 | < 1e-4 | 9 |  |
+| scdc | 0.938 | 0.897 – 0.983 | 0.374 | < 1e-4 | 9 |  |
+| scdc_ensemble | 0.938 | 0.897 – 0.983 | 0.374 | < 1e-4 | 9 |  |
+| cibersortx | 0.862 | 0.731 – 0.969 | 0.375 | < 1e-4 | 9 |  |
+| cibersortx_smode | 0.862 | 0.757 – 0.952 | 0.380 | < 1e-4 | 9 |  |
+| elastic_net | 0.862 | 0.781 – 0.938 | 0.372 | < 1e-4 | 9 |  |
+| nnls | 0.846 | 0.760 – 0.919 | 0.377 | < 1e-4 | 9 |  |
+| bayesprism | 0.800 | 0.679 – 0.902 | 0.374 | < 1e-4 | 9 |  |
+| epic | 0.769 | 0.657 – 0.879 | 0.377 | < 1e-4 | 9 |  |
+| bayesian | 0.754 | 0.629 – 0.871 | 0.382 | < 1e-4 | 9 |  |
+| bayesian_hierarchical | 0.738 | 0.614 – 0.864 | 0.382 | < 1e-4 | 9 |  |
+| dwls | 0.723 | 0.606 – 0.846 | 0.375 | < 1e-4 | 9 |  |
+| bisque | 0.708 | 0.597 – 0.817 | 0.382 | < 1e-4 | 9 |  |
+| **control_random** | 0.400 | 0.288 – 0.530 | 0.382 | 0.4309 | 9 | **yes** |
+| **control_shuffled_signature** | 0.369 | 0.282 – 0.467 | 0.376 | 0.5681 | 9 | **yes** |
+| quantiseq | 0.600 | 0.333 – 0.882 | 0.502 | 0.3088 | 9 |  |
 
 
 **Control verdict.** CONTROLS BEHAVE: best control 0.400 sits below the median real method 0.854, ties no real method, and does not beat its own permutation null. The constraint set discriminates.
@@ -119,7 +119,7 @@ _The control is a **single permutation** drawn from `config.RANDOM_SEED`. Everyt
 
 | method | ACS | its own null mean | null p | constraint-tumour pairs scored | verdict |
 |---|---|---|---|---|---|
-| quantiseq | 0.600 | 0.502 | 0.309 | 15 of 57 | **INCONCLUSIVE — underpowered** |
+| quantiseq | 0.600 | 0.502 | 0.3088 | 15 of 57 | **INCONCLUSIVE — underpowered** |
 
 `quantiseq` is scored on a **fraction** of the pairs the other methods are, because it does not estimate every cell type the constraints name. That raises its null (a smaller constraint set is easier to satisfy by chance) and removes the power to clear it. This is the project's standing distinction between *a method produced a bad estimate* and *a method could not be evaluated* — the second, here. Its ACS is reported for completeness and **must not be read as a rank against the fully-scored methods**.
 
@@ -322,7 +322,7 @@ Mossa Albiach et al. (2023) dissected one glioblastoma into **27 samples across 
 
 | constraint | claim | measured | permutation p | verdict |
 |---|---|---|---|---|
-| C1 | Tumor: CT > LE | CT 0.5342 vs LE 0.0401 | 0.0001 | **SATISFIED** |
+| C1 | Tumor: CT > LE | CT 0.5342 vs LE 0.0401 | < 5e-5 | **SATISFIED** |
 | C2 | Oligodendrocyte: LE > CT | LE 0.1761 vs CT 0.0499 | 0.0008 | **SATISFIED** |
 | C3 | — | — | — | not testable: no Albiach zone maps to MVP |
 | C4 | — | — | — | not testable: no Albiach zone maps to MVP |
@@ -332,7 +332,7 @@ Mossa Albiach et al. (2023) dissected one glioblastoma into **27 samples across 
 
 **3 of 4 testable constraints are satisfied**, on 20,000-draw within-zone permutation nulls.
 
-**This settles what the ISH panel could not.** §5a found C1 and C7 marker-dependent — CD44 satisfied C1 at 0.900 while SOX2 and PTPRZ1 contradicted it at 0.000 and 0.056 — and concluded that no marker in that panel measures tumour cell *density*. Counted cells do. C1 is satisfied at 0.534 against 0.040 (p = 0.0001) and C7's ordering holds (0.040 < 0.471 < 0.534). The two constraints ISH left open are the two this closes.
+**This settles what the ISH panel could not.** §5a found C1 and C7 marker-dependent — CD44 satisfied C1 at 0.900 while SOX2 and PTPRZ1 contradicted it at 0.000 and 0.056 — and concluded that no marker in that panel measures tumour cell *density*. Counted cells do. C1 is satisfied at 0.534 against 0.040 (p < 5e-5) and C7's ordering holds (0.040 < 0.471 < 0.534). The two constraints ISH left open are the two this closes.
 
 **C5 comes out violated, and the likeliest reason is the region mapping rather than the biology.** Ivy GAP's PAN is the *hypercellular pseudopalisading rim around* necrosis; Albiach's nearest label is `Necrotic core`, the dying centre. Macrophages accumulate in the rim, so a PAN constraint tested on the core is tested on the wrong side of that boundary. The mapping is declared with a confidence per row in the artefact, and this row is marked WEAK. It is reported, not resolved.
 
@@ -349,8 +349,8 @@ Darmanis et al. (2017, GSE84465) dissected **4 glioblastomas** into tumour core 
 
 | sorting gate | core | periphery | difference | permutation p | patients supporting |
 |---|---|---|---|---|---|
-| Astrocytes(HEPACAM) | 0.970 | 0.183 | **+0.786** | 0.0001 | 3/3 |
-| Neurons(Thy1) | 0.517 | 0.007 | **+0.510** | 0.0001 | 3/3 |
+| Astrocytes(HEPACAM) | 0.970 | 0.183 | **+0.786** | < 5e-5 | 3/3 |
+| Neurons(Thy1) | 0.517 | 0.007 | **+0.510** | < 5e-5 | 3/3 |
 | Oligodendrocytes(GC) | 0.017 | 0.000 | **+0.017** | 0.3865 | 1/2 |
 | Microglia(CD45) | 0.006 | 0.002 | **+0.004** | 0.2897 | 2/4 |
 | Endothelial(BSC) | — | — | — | — | not scored: fewer than 30 cells in one region (core 122, periphery 1) |
@@ -508,23 +508,23 @@ Note the direction: **adding 148 more real samples made Bisque's anatomic concor
 
 | method | ACS | 95% CI | null mean | null p | tumours | control |
 |---|---|---|---|---|---|---|
-| music | 1.000 | 1.000 – 1.000 | 0.370 | 0.000 | 9 |  |
-| nnls | 0.985 | 0.953 – 1.000 | 0.375 | 0.000 | 9 |  |
-| svr | 0.985 | 0.953 – 1.000 | 0.374 | 0.000 | 9 |  |
-| elastic_net | 0.985 | 0.953 – 1.000 | 0.374 | 0.000 | 9 |  |
-| epic | 0.985 | 0.953 – 1.000 | 0.377 | 0.000 | 9 |  |
-| cibersortx | 0.969 | 0.930 – 1.000 | 0.374 | 0.000 | 9 |  |
-| cibersortx_smode | 0.969 | 0.906 – 1.000 | 0.377 | 0.000 | 9 |  |
-| bisque | 0.969 | 0.930 – 1.000 | 0.379 | 0.000 | 9 |  |
-| scdc | 0.954 | 0.911 – 0.986 | 0.374 | 0.000 | 9 |  |
-| scdc_ensemble | 0.954 | 0.911 – 0.986 | 0.374 | 0.000 | 9 |  |
-| bayesprism | 0.877 | 0.786 – 0.968 | 0.374 | 0.000 | 9 |  |
-| bayesian_hierarchical | 0.785 | 0.648 – 0.925 | 0.380 | 0.000 | 9 |  |
-| bayesian | 0.769 | 0.627 – 0.921 | 0.381 | 0.000 | 9 |  |
-| dwls | 0.738 | 0.600 – 0.867 | 0.374 | 0.000 | 9 |  |
-| **control_random** | 0.338 | 0.217 – 0.486 | 0.388 | 0.779 | 9 | **yes** |
-| **control_shuffled_signature** | 0.138 | 0.059 – 0.228 | 0.349 | 0.999 | 9 | **yes** |
-| quantiseq | 0.600 | 0.333 – 0.882 | 0.502 | 0.309 | 9 |  |
+| music | 1.000 | 1.000 – 1.000 | 0.370 | < 1e-4 | 9 |  |
+| nnls | 0.985 | 0.953 – 1.000 | 0.375 | < 1e-4 | 9 |  |
+| svr | 0.985 | 0.953 – 1.000 | 0.374 | < 1e-4 | 9 |  |
+| elastic_net | 0.985 | 0.953 – 1.000 | 0.374 | < 1e-4 | 9 |  |
+| epic | 0.985 | 0.953 – 1.000 | 0.377 | < 1e-4 | 9 |  |
+| cibersortx | 0.969 | 0.930 – 1.000 | 0.374 | < 1e-4 | 9 |  |
+| cibersortx_smode | 0.969 | 0.906 – 1.000 | 0.377 | < 1e-4 | 9 |  |
+| bisque | 0.969 | 0.930 – 1.000 | 0.379 | < 1e-4 | 9 |  |
+| scdc | 0.954 | 0.911 – 0.986 | 0.374 | < 1e-4 | 9 |  |
+| scdc_ensemble | 0.954 | 0.911 – 0.986 | 0.374 | < 1e-4 | 9 |  |
+| bayesprism | 0.877 | 0.786 – 0.968 | 0.374 | < 1e-4 | 9 |  |
+| bayesian_hierarchical | 0.785 | 0.648 – 0.925 | 0.380 | < 1e-4 | 9 |  |
+| bayesian | 0.769 | 0.627 – 0.921 | 0.381 | < 1e-4 | 9 |  |
+| dwls | 0.738 | 0.600 – 0.867 | 0.374 | < 1e-4 | 9 |  |
+| **control_random** | 0.338 | 0.217 – 0.486 | 0.388 | 0.7786 | 9 | **yes** |
+| **control_shuffled_signature** | 0.138 | 0.059 – 0.228 | 0.349 | 0.9991 | 9 | **yes** |
+| quantiseq | 0.600 | 0.333 – 0.882 | 0.502 | 0.3088 | 9 |  |
 
 
 ## 7. Survival

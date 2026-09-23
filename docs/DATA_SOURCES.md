@@ -534,7 +534,7 @@ clustering, no inferCNV.
 
 `scripts/darmanis_constraint_check.py`, rendered in `RESULTS.md` §5c. **C1's direction only**,
 tested within a fixed FACS gate so the selection bias is held constant. 4 of 4 scored gates
-support it, two at p = 0.0001 with 3/3 patients each.
+support it, two at p < 5e-5 with 3/3 patients each.
 
 **It is NOT a composition test.** Only 665 of 3,589 cells are `Unpanned`, and the unpanned
 periphery is **13 cells** — twelve from BT_S4, one from BT_S6, none from BT_S1 or BT_S2. A

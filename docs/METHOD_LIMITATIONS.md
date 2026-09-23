@@ -19,7 +19,7 @@ methods. That number must not be read as a rank against the others.
 |---|---|---|
 | constraint-tumour pairs scored | **15** | 57 |
 | its own permutation null (mean) | 0.502 | ~0.375 |
-| p against that null | **0.309** | 0.0001 |
+| p against that null | **0.309** | < 1e-4 |
 | beats its own null | **no** | yes |
 | `comparable` flag in the leaderboard | **false** | true |
 

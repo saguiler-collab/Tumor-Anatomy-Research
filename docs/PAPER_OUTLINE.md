@@ -59,8 +59,8 @@ that association **does not replicate** in lower-grade glioma, and is reported a
 
 **What works — report first, it is real.**
 - Constraints verified in two external single-cell datasets never deconvolved: Albiach, Tumor
-  CT>LE **13.34-fold, p = 0.00005**; Darmanis, **4 of 4** gates across 4 patients.
-- All 14 methods beat a within-tumour permutation null at **p = 0.0001**;
+  CT>LE **13.34-fold, p < 5e-5**; Darmanis, **4 of 4** gates across 4 patients.
+- All 14 methods beat a within-tumour permutation null at **p < 1e-4**;
   `control_random` **0.3385** and `control_shuffled_signature` **0.1385** do not — under **every**
   reference atlas tested.
 

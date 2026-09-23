@@ -1,5 +1,8 @@
 # The Anatomy Test
 
+> **Every correlation, p-value and confidence interval in this study was independently recomputed and, where it rests on an approximation, checked against an exact or permutation alternative** — see [docs/STATISTICAL_VERIFICATION.md](docs/STATISTICAL_VERIFICATION.md).
+
+
 > **Limits of this study's measurements** — quanTIseq is INCONCLUSIVE rather than bad (scored on 15 of 57 constraint pairs, p = 0.31 against its own null), two genuine R packages fell back to reimplementations on this hardware, and two more could not be built at all. All of it is in [docs/METHOD_LIMITATIONS.md](docs/METHOD_LIMITATIONS.md).
 
 
@@ -20,8 +23,8 @@ claim.
 > and an INVALID RANKER of which one works best.**
 >
 > The constraints are real biology, confirmed in two external single-cell datasets that were
-> never deconvolved (Albiach: Tumor CT>LE **13.34-fold**, p = 0.00005; Darmanis: 4 of 4 gates
-> across 4 patients). Every real method beats its permutation null at p = 0.0001 while
+> never deconvolved (Albiach: Tumor CT>LE **13.34-fold**, p < 5e-5; Darmanis: 4 of 4 gates
+> across 4 patients). Every real method beats its permutation null at p &lt; 1e-4 — no permutation of 10,000 reached the observed score — while
 > `control_random` (0.3385) and `control_shuffled_signature` (0.1385) do not, under **every**
 > reference atlas tested.
 >

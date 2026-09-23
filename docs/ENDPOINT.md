@@ -1,5 +1,8 @@
 # The endpoint: what this project found, and what the paper says
 
+> **Every correlation, p-value and confidence interval in this study was independently recomputed and, where it rests on an approximation, checked against an exact or permutation alternative** — see [STATISTICAL_VERIFICATION.md](STATISTICAL_VERIFICATION.md).
+
+
 > **Limits of this study's measurements** — quanTIseq is INCONCLUSIVE rather than bad (scored on 15 of 57 constraint pairs, p = 0.31 against its own null), two genuine R packages fell back to reimplementations on this hardware, and two more could not be built at all. All of it is in [METHOD_LIMITATIONS.md](METHOD_LIMITATIONS.md).
 
 
@@ -132,8 +135,8 @@ single-cell composition, with no deconvolution method involved:
 
 | source | what it is | result |
 |---|---|---|
-| **Albiach et al. 2023** | 135,482 annotated cells with anatomic zones | **3 of 4 testable constraints satisfied.** C1 (Tumor CT > LE) **13.34-fold**, p = 0.00005. C2 (Oligodendrocyte LE > CT) **3.53-fold**, p = 0.00075. C7 by ordering. C5 violated and marked WEAK. |
-| **Darmanis et al. 2017** | 4 patients, FACS-gated neoplastic fraction, core vs periphery | **4 of 4 gates support C1**, two at p = 0.0001 with 3 of 3 patients. The only cross-patient constraint test in the project. |
+| **Albiach et al. 2023** | 135,482 annotated cells with anatomic zones | **3 of 4 testable constraints satisfied.** C1 (Tumor CT > LE) **13.34-fold**, p < 5e-5. C2 (Oligodendrocyte LE > CT) **3.53-fold**, p = 0.00075. C7 by ordering. C5 violated and marked WEAK. |
+| **Darmanis et al. 2017** | 4 patients, FACS-gated neoplastic fraction, core vs periphery | **4 of 4 gates support C1**, two at p < 5e-5 with 3 of 3 patients. The only cross-patient constraint test in the project. |
 | **Ivy GAP ISH** | 18,778 rows, 480 genes, 899 sub-blocks, 42 donors | Markers declared before values were read; C2 explicitly **not checkable** because the panel has no oligodendrocyte-lineage marker, and OLIG2 was refused on the grounds that in glioma it measures tumour. |
 
 **The constraint file was frozen and hashed before any of this** (`2d1fb47c…5807a`) and was not
@@ -143,7 +146,7 @@ edited when a constraint failed. C5's violation is reported, not repaired.
 
 | | ACS | beats permutation null? |
 |---|---|---|
-| 14 real methods | 0.7385 – 1.0000 | **all yes, p = 0.0001** |
+| 14 real methods | 0.7385 – 1.0000 | **all yes, p < 1e-4** |
 | `control_random` | **0.3385** | no, p = 0.78 |
 | `control_shuffled_signature` | **0.1385** | no, p = 0.999 |
 
@@ -387,10 +390,10 @@ remove. Every method is scored on the **same 41 constraint–tumour pairs**.
 
 | | ACS | p |
 |---|---|---|
-| MuSiC, CIBERSORTx S-mode | 1.0000 | 0.0001 |
-| elastic net, EPIC, NNLS, SVR | 0.9756 | 0.0001 |
-| BayesPrism, SCDC | 0.9268 | 0.0001 |
-| Bisque | 0.7077 | 0.0001 |
+| MuSiC, CIBERSORTx S-mode | 1.0000 | < 1e-4 |
+| elastic net, EPIC, NNLS, SVR | 0.9756 | < 1e-4 |
+| BayesPrism, SCDC | 0.9268 | < 1e-4 |
+| Bisque | 0.7077 | < 1e-4 |
 | **DWLS** | **0.7231** | 0.0002 |
 | **CDSeq — atlas for labelling only** | **0.7561** | 0.0002 |
 | **CDSeq — no atlas at all** | **0.6829** | 0.0009 |

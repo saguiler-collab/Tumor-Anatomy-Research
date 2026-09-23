@@ -33,6 +33,36 @@ def _load_json(path: Path):
     return json.loads(path.read_text()) if path.exists() else None
 
 
+
+#: Permutation draws behind every `null_p` on the leaderboard. The p is
+#: (hits + 1) / (draws + 1), so with zero hits it takes the value 1/10001 and cannot go
+#: lower. That is a FLOOR, not a measurement.
+PERMUTATION_DRAWS = 10_000
+
+
+def fmt_perm_p(v, draws: int = PERMUTATION_DRAWS) -> str:
+    """Format a permutation p-value, saying `< x` when it is at the floor.
+
+    WHY THIS EXISTS. 14 of 17 methods sit at exactly 1/10001 = 9.999e-05, which several
+    documents printed as "p = 0.0001". That reads as a measured value to four decimal
+    places. What it actually means is that **no permutation out of 10,000 reached the
+    observed ACS**, so the honest statement is `p < 1e-4`; the test cannot resolve any
+    finer without more draws. A reviewer who checks the arithmetic finds the floor
+    immediately, and a point estimate there looks like overstatement.
+    """
+    import math
+    if v is None or (isinstance(v, float) and math.isnan(v)):
+        return "—"
+    v = float(v)
+    # Two conventions are in use in this project: (hits+1)/(draws+1) on the ACS leaderboard
+    # and hits/draws on the 20,000-draw constraint checks. Treat a value at or below 1/draws
+    # as the floor, which covers both without having to know which produced it.
+    floor = 1.0 / draws
+    if v <= floor * 1.000001:
+        return f"< {floor:.0e}".replace("e-0", "e-")
+    return f"{v:.4f}"
+
+
 def _load_csv(path: Path, **kw):
     return pd.read_csv(path, **kw) if path.exists() else None
 
@@ -274,7 +304,7 @@ def control_audit(lb_path: Path, pc_path: Path) -> str:
             verdict = ("**INCONCLUSIVE — underpowered**" if n < 0.6 * med
                        else "**at chance**")
             out.append(f"| {m} | {r['acs']:.3f} | {r['null_mean']:.3f} | "
-                       f"{r['null_p']:.3f} | {n} of {int(med)} | {verdict} |")
+                       f"{fmt_perm_p(r['null_p'])} | {n} of {int(med)} | {verdict} |")
         under = [m for m in fails
                  if int(real.loc[m, "n_constraint_tumor_pairs"]) < 0.6 * med]
         if under:
@@ -363,7 +393,7 @@ def leaderboard_table(path: Path) -> str:
         name = f"**{m}**" if r.get("is_control") else m
         lines.append(
             f"| {name} | {_fmt(r['acs'])} | {_fmt(r['ci_low'])} – {_fmt(r['ci_high'])} "
-            f"| {_fmt(r['null_mean'])} | {_fmt(r['null_p'])} | "
+            f"| {_fmt(r['null_mean'])} | {fmt_perm_p(r['null_p'])} | "
             f"{int(r['n_tumors'])} | {ctrl} |")
     return "\n".join(lines) + "\n"
 
@@ -646,7 +676,7 @@ def ish_section(results_dir: Path) -> str:
            "|---|---|---|---|---|---|---|"]
     for _, r in df.iterrows():
         rate = "—" if pd.isna(r["donor_equal_rate"]) else f"{r['donor_equal_rate']:.3f}"
-        pv = "—" if pd.isna(r["null_p"]) else f"{r['null_p']:.4f}"
+        pv = fmt_perm_p(r["null_p"])
         mark = " **" if (not pd.isna(r["null_p"]) and r["null_p"] < 0.05) else ""
         end = "**" if mark else ""
         out.append(f"| {r['constraint']} | {r['claim']} | `{r['marker']}` "
@@ -729,7 +759,7 @@ def albiach_section(results_dir: Path) -> str:
         elif r.get("kind") == "pairwise":
             out.append(f"| {r['constraint']} | {r['claim']} | "
                        f"{r['hi']} {r['mean_hi']:.4f} vs {r['lo']} {r['mean_lo']:.4f} | "
-                       f"{r['null_p_one_sided']:.4f} | **{r['verdict']}** |")
+                       f"{fmt_perm_p(r['null_p_one_sided'], 20_000)} | **{r['verdict']}** |")
         elif r.get("kind") == "monotone":
             seq = " < ".join(f"{s} {m:.4f}" for s, m in zip(r["sequence"], r["means"]))
             out.append(f"| {r['constraint']} | {r['claim']} | {seq} | — | "
@@ -742,7 +772,7 @@ def albiach_section(results_dir: Path) -> str:
                "marker-dependent — CD44 satisfied C1 at 0.900 while SOX2 and PTPRZ1 "
                "contradicted it at 0.000 and 0.056 — and concluded that no marker in that "
                "panel measures tumour cell *density*. Counted cells do. C1 is satisfied at "
-               "0.534 against 0.040 (p = 0.0001) and C7's ordering holds "
+               "0.534 against 0.040 (p < 5e-5) and C7's ordering holds "
                "(0.040 < 0.471 < 0.534). The two constraints ISH left open are the two this "
                "closes.")
     out.append("")
@@ -789,7 +819,7 @@ def darmanis_section(results_dir: Path) -> str:
     for r in sorted(scored, key=lambda x: -x["difference"]):
         out.append(f"| {r['gate']} | {r['neoplastic_fraction_tumour']:.3f} "
                    f"| {r['neoplastic_fraction_periphery']:.3f} "
-                   f"| **{r['difference']:+.3f}** | {r['null_p_one_sided']:.4f} "
+                   f"| **{r['difference']:+.3f}** | {fmt_perm_p(r['null_p_one_sided'], 20_000)} "
                    f"| {r['n_patients_supporting']}/{r['n_patients_scored']} |")
     for r in d["per_gate"]:
         if not r.get("scored"):
