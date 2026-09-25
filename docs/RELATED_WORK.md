@@ -100,14 +100,41 @@ orthogonal arm is the broken one."* The answer is no longer only our own interna
 Li et al. find **"MuSiC showed limited performance with real-world data, potentially due to its
 sensitivity to noise."**
 
-In our study **MuSiC ranks first of fifteen on anatomic concordance (ACS 0.9692)** — and
-recovers only **18.1%** (GBM) and **17.2%** (LGG) of true tumour-content variation, and places B
-cells above T cells in **100%** of GBM and **98.5%** of LGG samples.
+In our study **MuSiC ranks first of fifteen on anatomic concordance (ACS 0.9692)**.
 
-So the method our ground-truth-free metric likes *best* is the one an independent real-data
-benchmark of 5,891 samples singles out as performing *worst*. That is "anatomy detects, it does
-not rank" confirmed from outside this project, on different cancers, by different authors, using
-a different criterion. It belongs in the discussion.
+> **CORRECTION, 2026-09-24 — an earlier version of this section was wrong and the error is
+> instructive.** It continued: *"and recovers only 18.1% (GBM) and 17.2% (LGG) of true
+> tumour-content variation, and places B cells above T cells in 100% / 98.5% of samples."*
+> Those numbers are real but they are **NOT MuSiC's**. They come from the frozen-signature
+> path, where the reference carries no cross-donor variance, so MuSiC's gene weighting is
+> constant and the result is *arithmetically NNLS* — which is why its rho against purity is
+> **0.4271, identical to NNLS to four decimals**, and why the artefact flags it
+> `degenerate: true` and `comparable: false`. Reporting them under MuSiC's name breaks this
+> project's own invariant: *"Never report a degenerate method under its own name."*
+
+**What genuine MuSiC actually does here.** On the cell-level reference — real cells, real
+cross-donor variance, the arm where MuSiC is MuSiC — it is **not** degenerate and it does not
+look bad at all:
+
+| method | ACS | ρ vs DNA purity (matched-reference arm) |
+|---|---|---|
+| **MuSiC** | **0.9692** | **+0.673** — the highest of the panel |
+| CIBERSORTx | 0.8615 | +0.6381 |
+| NNLS | 0.8462 | +0.245 |
+| BayesPrism | 0.8000 | +0.1641 |
+| DWLS | 0.7231 | +0.1562 |
+
+So the honest comparison with Li et al. is **not** "our best method is their worst". It is more
+interesting than that: **when MuSiC is given the cross-donor variance its algorithm is built
+on, it is strong on both of our criteria.** Its weighting scheme is the whole method, and it
+collapses to NNLS the moment the reference cannot supply it.
+
+That suggests a reconciliation worth testing rather than asserting: MuSiC's performance may be
+unusually *reference-dependent*. This study hands it GBmap, a large multi-donor glioma atlas;
+Li et al. apply it across nine cancer types with references assembled per tissue. A method
+whose entire contribution is cross-donor consistency weighting should be expected to track
+the donor depth of whatever reference it is given. **We have not tested that**, and it is a
+hypothesis for the STS extension, not a result.
 
 ---
 
