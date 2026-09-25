@@ -1,5 +1,8 @@
 # The Anatomy Test
 
+> **The registered research question, and whether this study answers it** — both clauses mapped to their evidence, with what the paper may and may not claim: [docs/RESEARCH_QUESTION.md](docs/RESEARCH_QUESTION.md).
+
+
 > **Every correlation, p-value and confidence interval in this study was independently recomputed and, where it rests on an approximation, checked against an exact or permutation alternative** — see [docs/STATISTICAL_VERIFICATION.md](docs/STATISTICAL_VERIFICATION.md).
 
 

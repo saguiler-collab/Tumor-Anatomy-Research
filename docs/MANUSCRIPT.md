@@ -8,9 +8,11 @@ Claims are tagged **[STRONG]** (replicated across cohorts or molecules), **[QUAL
 
 ## Title
 
-**Bulk RNA deconvolution cannot report the lymphoid compartment of a glioma**
+**Anatomic concordance detects broken deconvolution but cannot choose a working one: the best-scoring method inverts the lymphoid compartment in both glioma cohorts**
 
-*Alternative, if the reviewer wants the method-comparison angle foregrounded:* "Two independent ground truths show bulk RNA deconvolution fails on the immune compartment of glioma, and no ground-truth-free check detects it"
+*This names both clauses of the registered question. Clause 1 — can anatomy stand in for ground truth when choosing a method? — is answered `it detects, it does not rank`. Clause 2 — does a method that gets the anatomy right also get the biology right? — is answered `no`, categorically, by the pre-registered T > B criterion.*
+
+*Alternatives, if a reviewer wants a different angle foregrounded:* "Bulk RNA deconvolution cannot report the lymphoid compartment of a glioma" (capability angle) or "Two independent ground truths show bulk RNA deconvolution fails on the immune compartment of glioma, and no ground-truth-free check detects it" (method-comparison angle).
 
 ## Abstract — the six sentences, in order
 
@@ -42,6 +44,8 @@ Claims are tagged **[STRONG]** (replicated across cohorts or molecules), **[QUAL
 
 ---
 
+> **The registered question has two clauses.** *Can a tumor's own anatomy stand in for ground truth when choosing a cell-type deconvolution method* — Result 1 — *and does a method that gets the anatomy right also get the biology right?* — Result 1b. They are different questions and this study answers them differently.
+
 ## Result 1 — anatomy detects, it does not rank **[STRONG]**
 
 - ACS separates real methods from negative controls decisively; the ordering it produces among working methods does not survive external validation.
@@ -49,6 +53,23 @@ Claims are tagged **[STRONG]** (replicated across cohorts or molecules), **[QUAL
 - The registered bar is met only against the pseudobulk yardstick that **shares its atlas** with ACS (0.6372). Every yardstick sharing nothing with ACS fails — a pattern, not one bad run.
 
 > WRITE: the obvious objection — that the two arms used different reference builds, so `music` meant a different algorithm in each — was removed by measurement rather than argued away. **Say what removing it did, because it was not nothing.** On the log-matrix runs the parity figure was ≈ 0; rebuilding both arms from genuine counts (OPEN_DEFECTS D16) moved it to the value above. It still fails the registered bar and is not significant, so the conclusion holds — but the honest phrasing is *a weak positive that does not reach significance*, not *indistinguishable from zero*. Claiming the correction changed nothing would be false and is the kind of thing a reviewer checks.
+
+## Result 1b — a method that gets the anatomy right does NOT get the biology right **[STRONG]**
+
+This is the second clause of the registered question, tested directly against the pre-registered criterion rather than through the underpowered rank correlation above.
+
+| | GBM | LGG |
+|---|---|---|
+| methods reproducing the registered **T > B** | **0 of 12** | **0 of 12** |
+| method ranked **first** by anatomic concordance | `music`, ACS 0.9692 | `music`, ACS 0.9692 |
+| …does it get T > B right? | **no** | **no** |
+| …fraction of samples it places **B above T** | **100.0%** | **98.5%** |
+
+**In every cohort tested, ZERO methods reproduce the pre-registered T > B ordering, and the method ranked FIRST by anatomic concordance is among the failures. Anatomic concordance therefore cannot be used to choose a method that gets the lymphoid compartment right, because no such method is present at any concordance level. This claim is categorical and needs no correlation.**
+
+> WRITE: this is the study's registered null — *"the answer matches known biology" is not evidence that the answer is right* — demonstrated outright. Rest it HERE, not on the rank correlation in Result 1, which is underpowered and cannot carry it. State the timestamp: the prediction preceded the measurement by ninety-five minutes and named its own falsifier.
+
+**What must NOT be claimed.** The rank correlation between anatomic concordance and lymphoid failure runs *opposite* to the hypothesis — GBM +0.45 (p = 0.14), LGG +0.48 (p = 0.12) on 12 methods — but it is **not significant** and must be reported as directional only, if at all. The categorical finding above needs no correlation.
 
 ## Result 2 — how much tumour content is recovered **[STRONG]**
 
@@ -58,7 +79,9 @@ Claims are tagged **[STRONG]** (replicated across cohorts or molecules), **[QUAL
 
 ## Result 3 — the lymphoid compartment. THE HEADLINE. **[STRONG]**
 
-| | GBM | LGG |
+> **The two cohorts play different roles and the distinction is the design's strength, not a caveat.** The B-over-T anomaly was *observed* in glioblastoma, where it had no way to be checked because no per-cell-type truth existed. The prediction *"DNA methylation will show T cells > B cells"* was then registered in `prespecified/immune_failure_factors.md` at **2026-09-17 23:37:27**, naming its own falsifier — *"methylation showing B ≥ T … the anomaly withdrawn"*. The LGG methylation measurement was produced at **2026-09-18 01:12:23**, ninety-five minutes later. **GBM is discovery; LGG is the pre-registered replication**, in a different tumour type, at 3.4x the sample size.
+
+| | GBM *(discovery)* | LGG *(registered replication)* |
 |---|---|---|
 | methylation truth T : NK : B | 0.5224 : 0.3678 : 0.1098 | 0.4758 : 0.3208 : 0.2034 |
 | T ranked first, per sample | 63.6% | 79.2% |

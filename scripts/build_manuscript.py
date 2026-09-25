@@ -69,10 +69,25 @@ def main() -> int:
 
     # ---- title / abstract -------------------------------------------------------------
     A("## Title\n")
-    A("**Bulk RNA deconvolution cannot report the lymphoid compartment of a glioma**\n")
-    A("*Alternative, if the reviewer wants the method-comparison angle foregrounded:* "
-      "\"Two independent ground truths show bulk RNA deconvolution fails on the immune "
-      "compartment of glioma, and no ground-truth-free check detects it\"\n")
+    # THE TITLE MUST NAME THE REGISTERED QUESTION. The earlier draft read "Bulk RNA
+    # deconvolution cannot report the lymphoid compartment of a glioma" -- true, supported,
+    # and a claim about deconvolution's capability rather than about the Anatomy Test. The
+    # registered question is whether anatomy can substitute for ground truth when CHOOSING a
+    # method. A reader comparing the registration against the report would see a study that
+    # asked one thing and titled itself another, which invites the reading that the headline
+    # was promoted post hoc. It was not -- the T > B criterion is itself pre-registered with a
+    # timestamp -- but the title has to show that. See docs/RESEARCH_QUESTION.md.
+    A("**Anatomic concordance detects broken deconvolution but cannot choose a working one: "
+      "the best-scoring method inverts the lymphoid compartment in both glioma cohorts**\n")
+    A("*This names both clauses of the registered question. Clause 1 — can anatomy stand in "
+      "for ground truth when choosing a method? — is answered `it detects, it does not rank`. "
+      "Clause 2 — does a method that gets the anatomy right also get the biology right? — is "
+      "answered `no`, categorically, by the pre-registered T > B criterion.*\n")
+    A("*Alternatives, if a reviewer wants a different angle foregrounded:* "
+      "\"Bulk RNA deconvolution cannot report the lymphoid compartment of a glioma\" "
+      "(capability angle) or \"Two independent ground truths show bulk RNA deconvolution "
+      "fails on the immune compartment of glioma, and no ground-truth-free check detects "
+      "it\" (method-comparison angle).\n")
 
     A("## Abstract — the six sentences, in order\n")
     A("> WRITE: one sentence of motivation. Deconvolution is used to estimate tumour and "
@@ -153,6 +168,17 @@ def main() -> int:
     A("---\n")
 
     # ---- results ----------------------------------------------------------------------
+    # THE REGISTERED QUESTION, ANSWERED IN THE ORDER IT WAS ASKED. It has two clauses and
+    # they are different questions. Result 1 answers clause 1 (can anatomy CHOOSE a method?).
+    # Result 1b answers clause 2 (does anatomy-right imply biology-right?) directly, against
+    # the pre-registered T > B criterion, instead of leaving it to the underpowered clause-1
+    # correlation. Before this section existed the paper answered clause 2 only by proxy, on
+    # its weakest evidence. See docs/RESEARCH_QUESTION.md.
+    A("> **The registered question has two clauses.** *Can a tumor's own anatomy stand in "
+      "for ground truth when choosing a cell-type deconvolution method* — Result 1 — *and "
+      "does a method that gets the anatomy right also get the biology right?* — Result 1b. "
+      "They are different questions and this study answers them differently.\n")
+
     A("## Result 1 — anatomy detects, it does not rank **[STRONG]**\n")
     A(f"- ACS separates real methods from negative controls decisively; the ordering it produces "
       f"among working methods does not survive external validation.")
@@ -173,6 +199,42 @@ def main() -> int:
       "that does not reach significance*, not *indistinguishable from zero*. Claiming the "
       "correction changed nothing would be false and is the kind of thing a reviewer checks.\n")
 
+    # ---- Result 1b: clause 2 of the registered question ------------------------------
+    avb = J("anatomy_vs_biology.json")
+    if avb and avb.get("cohorts"):
+        A("## Result 1b — a method that gets the anatomy right does NOT get the biology "
+          "right **[STRONG]**\n")
+        A("This is the second clause of the registered question, tested directly against the "
+          "pre-registered criterion rather than through the underpowered rank correlation "
+          "above.\n")
+        A("| | " + " | ".join(avb["cohorts"]) + " |")
+        A("|---|" + "---|" * len(avb["cohorts"]))
+        def row(label, fn):
+            A(f"| {label} | " + " | ".join(str(fn(b)) for b in avb["cohorts"].values()) + " |")
+        row("methods reproducing the registered **T > B**",
+            lambda b: f"**{b['n_getting_T_over_B_right']} of {b['n_methods']}**")
+        row("method ranked **first** by anatomic concordance",
+            lambda b: f"`{b['top_method_by_acs']}`, ACS {b['top_method_acs']}")
+        row("…does it get T > B right?",
+            lambda b: "**no**" if not b["top_method_gets_T_over_B_right"] else "yes")
+        row("…fraction of samples it places **B above T**",
+            lambda b: f"**{b['top_method_frac_placing_B_over_T']*100:.1f}%**"
+                      if b["top_method_frac_placing_B_over_T"] is not None else "—")
+        A("")
+        A(f"**{avb['categorical_finding']}**\n")
+        A("> WRITE: this is the study's registered null — *\"the answer matches known "
+          "biology\" is not evidence that the answer is right* — demonstrated outright. Rest "
+          "it HERE, not on the rank correlation in Result 1, which is underpowered and cannot "
+          "carry it. State the timestamp: the prediction preceded the measurement by "
+          "ninety-five minutes and named its own falsifier.\n")
+        A("**What must NOT be claimed.** The rank correlation between anatomic concordance "
+          "and lymphoid failure runs *opposite* to the hypothesis — "
+          + ", ".join(f"{c} {b['spearman_acs_vs_fraction_placing_B_over_T']:+.2f} "
+                      f"(p = {b['p_value']:.2f})" for c, b in avb["cohorts"].items())
+          + f" on {list(avb['cohorts'].values())[0]['n_in_correlation']} methods — but it is "
+            "**not significant** and must be reported as directional only, if at all. "
+            "The categorical finding above needs no correlation.\n")
+
     A("## Result 2 — how much tumour content is recovered **[STRONG]**\n")
     A(f"- Median recovery **{pct(rf.get('gbm_median_comparable'))}** (GBM) and "
       f"**{pct(rf.get('lgg_median_comparable'))}** (LGG) among comparable methods.")
@@ -185,7 +247,22 @@ def main() -> int:
     A("")
 
     A("## Result 3 — the lymphoid compartment. THE HEADLINE. **[STRONG]**\n")
-    A("| | GBM | LGG |")
+    # THE TWO COHORTS ARE NOT EQUIVALENT AND THE TABLE MUST NOT IMPLY THEY ARE. The
+    # pre-specification is explicit: "This is LGG, not GBM. The anomaly was measured in GBM."
+    # So GBM is DISCOVERY and LGG is the PRE-REGISTERED REPLICATION. Presenting them as two
+    # equal confirmations overstates GBM and discards the strongest structural feature of the
+    # design -- anomaly observed, prediction registered with a named falsifier, independent
+    # confirmation in a different tumour type at 3.4x the sample size.
+    A("> **The two cohorts play different roles and the distinction is the design's "
+      "strength, not a caveat.** The B-over-T anomaly was *observed* in glioblastoma, where "
+      "it had no way to be checked because no per-cell-type truth existed. The prediction "
+      "*\"DNA methylation will show T cells > B cells\"* was then registered in "
+      "`prespecified/immune_failure_factors.md` at **2026-09-17 23:37:27**, naming its own "
+      "falsifier — *\"methylation showing B ≥ T … the anomaly withdrawn\"*. The LGG "
+      "methylation measurement was produced at **2026-09-18 01:12:23**, ninety-five minutes "
+      "later. **GBM is discovery; LGG is the pre-registered replication**, in a different "
+      "tumour type, at 3.4x the sample size.\n")
+    A("| | GBM *(discovery)* | LGG *(registered replication)* |")
     A("|---|---|---|")
     A(f"| methylation truth T : NK : B | {log.get('truth_mean', {}).get('T_cell'):.4f} : "
       f"{log.get('truth_mean', {}).get('NK_cell'):.4f} : {log.get('truth_mean', {}).get('B_cell'):.4f} | "
