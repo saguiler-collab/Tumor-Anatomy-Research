@@ -79,21 +79,20 @@ def fig_lymphoid():
                         color="white" if z / n > .35 else "#333",
                         fontweight="bold" if z / n > .5 else "normal")
         ax.set_yticks(y)
-        ax.set_yticklabels([l.replace("_", " ") for l in labels], fontsize=9.5)
+        ax.set_yticklabels([PS.display(l) for l in labels], fontsize=9.5)
         ax.get_yticklabels()[-1].set_fontweight("bold")
         ax.axhline(len(order) + 0.5, color="#999", lw=0.9, ls="--")
         ax.set_xlim(0, 1)
-        ax.set_xlabel("relative composition within {T, NK, B}", fontsize=9.5)
+        ax.set_xlabel("Relative composition within {T, NK, B}", fontsize=9.5)
         ax.set_title(title, loc="left", fontsize=11.5, fontweight="bold", pad=10)
         ax.invert_yaxis()
     # one legend for both panels, below the figure so it covers no data
     h, lg = axes[0].get_legend_handles_labels()
     fig.legend(h, lg, loc="lower center", ncol=3, frameon=False, fontsize=10,
                bbox_to_anchor=(0.5, 0.005))
-    fig.suptitle("No method reproduces the lymphoid ordering that DNA methylation measures",
-                 fontsize=13.5, fontweight="bold", y=0.96)
-    fig.text(0.5, 0.905, "grey labels count samples in which the method returned EXACTLY ZERO "
-                         "T, NK and B \u2014 a second, distinct failure",
+    fig.suptitle("Relative composition within {T, NK, B}, by method and by methylation",
+                 fontsize=12.5, fontweight="regular", y=0.96)
+    fig.text(0.5, 0.905, "Grey labels, number of samples returning exactly zero T, NK and B.",
              ha="center", fontsize=9, color="#555")
     save(fig, "Figure_lymphoid_failure")
 
@@ -121,7 +120,7 @@ def fig_model_fit():
     for i, k in enumerate(labs):
         f = co[k]["controls"]["fraction_of_achievable"]
         # value label INSIDE the navy bar, so it cannot collide with the legend above
-        ax.text(i, real[i] / 2, f"{real[i]:.3f}\n{f:.0%} of\nachievable", ha="center",
+        ax.text(i, real[i] / 2, f"{real[i]:.3f}\n({f:.0%} of ceiling)", ha="center",
                 va="center", fontsize=10, fontweight="bold", color="white")
         ax.text(i + .30, ceil[i], f"{ceil[i]:.3f}", ha="left", va="center", fontsize=9,
                 color="#555")
@@ -132,9 +131,9 @@ def fig_model_fit():
     ax.set_ylim(-.10, 1.05)
     ax.set_xlim(-.6, len(labs) - .15)
     ax.axhline(0, color="#bbb", lw=.9)
-    ax.set_title("The mixing model explains a minority of real bulk — but far more than\n"
-                 "chance, so the reference carries real structure",
-                 fontsize=12, fontweight="bold", loc="left", pad=12)
+    ax.set_title("Per-sample fit of the non-negative mixing model, against floor and "
+                 "ceiling controls",
+                 fontsize=12, fontweight="regular", loc="left", pad=12)
     h, lg = ax.get_legend_handles_labels()
     fig.legend(h, lg, loc="lower center", ncol=2, frameon=False, fontsize=9,
                bbox_to_anchor=(0.54, 0.0))
@@ -155,17 +154,18 @@ def fig_recovery():
     ax.barh(y + .2, [l.get(m, np.nan) * 100 if m in l else np.nan for m in ms],
             height=.38, color=C_LGG, label="LGG")
     ax.set_yticks(y)
-    ax.set_yticklabels([f"{m}  †" if m in nc else m for m in ms], fontsize=9)
+    ax.set_yticklabels([f"{PS.display(m)}  \u2020" if m in nc else PS.display(m)
+                        for m in ms], fontsize=9)
     ax.invert_yaxis()
     ax.axvline(0, color="#999", lw=.9)
-    ax.set_xlabel("recovery of true tumour-content variation (%)   "
-                  "0 = no information, 100 = perfect", fontsize=9)
-    ax.set_title("Deconvolution recovers a minority of true tumour-content variation",
-                 fontsize=11.5, fontweight="bold", loc="left")
+    ax.set_xlabel("Recovery of true tumour-content variation (%)\n"
+                  "0, no information; 100, perfect.", fontsize=9)
+    ax.set_title("Recovery of true tumour-content variation, by method and cohort",
+                 fontsize=11.5, fontweight="regular", loc="left")
     ax.legend(frameon=False, fontsize=9)
-    ax.text(0.99, 0.02, "†  not evaluable: ran without an input its published algorithm "
-                        "requires", transform=ax.transAxes, ha="right", fontsize=7.6,
-            color="#666")
+    ax.text(0.99, 0.02, "\u2020 not evaluable \u2014 ran without an input its published "
+                        "algorithm requires",
+            transform=ax.transAxes, ha="right", fontsize=7.6, color="#666")
     save(fig, "Figure_tumour_recovery")
 
 
@@ -176,7 +176,7 @@ def fig_detects_not_ranks():
         return
     bar = fz.get("registered_bar", 0.60)
     a1 = fz["arm_1_pseudobulk"]
-    rows = [("Synthetic pseudobulk\n(built from GBmap — the SAME atlas ACS uses)",
+    rows = [("Synthetic pseudobulk\n(built from GBmap, the atlas the ACS arm deconvolves against)",
              a1["rho"], None, None, True)]
     for d, lab in ((fz, "frozen signature"), (h5, "sigma-carrying reference")):
         if not d:
@@ -190,29 +190,32 @@ def fig_detects_not_ranks():
             rows.append((f"DNA tumour purity\n({lab}, {tag}, n={v['n_methods']})",
                          v["spearman"], v["ci"][0], v["ci"][1], False))
     fig, ax = plt.subplots(figsize=(10.2, 4.6))
-    fig.subplots_adjust(left=0.40, right=0.97, top=0.76, bottom=0.20)
+    fig.subplots_adjust(left=0.40, right=0.97, top=0.86, bottom=0.20)
     y = np.arange(len(rows))[::-1]
     for i, (lab, rho, lo, hi, shares) in zip(y, rows):
         col = C_B if shares else C_GBM
         if lo is not None:
             ax.plot([lo, hi], [i, i], color=col, lw=2.4, alpha=.40, solid_capstyle="round")
         ax.plot(rho, i, "o", color=col, ms=11, zorder=5)
-        ax.text(rho, i + .22, f"{rho:+.3f}", ha="center", fontsize=9.5, fontweight="bold",
-                color=col)
+        # Nudge the label off the pre-registered bar line when it would sit on top of it;
+        # at rho = 0.637 against a bar of 0.60 the two collided.
+        dx, ha = (0.0, "center")
+        if abs(rho - bar) < 0.12:
+            dx, ha = (-0.055, "right")
+        ax.text(rho + dx, i + .22, f"{rho:+.3f}", ha=ha, fontsize=9.5, color=col)
     ax.axvline(bar, color="#111", ls="--", lw=1.4)
     # annotation sits at the BOTTOM of the axes, clear of both the title and the data
-    ax.text(bar - .03, -0.62, f"registered bar  ρ ≥ {bar}", fontsize=9, fontweight="bold",
+    ax.text(bar - .03, -0.62, f"pre-registered bar, \u03c1 \u2265 {bar}", fontsize=9,
             ha="right", va="center")
     ax.axvline(0, color="#ccc", lw=.9)
     ax.set_yticks(y)
     ax.set_yticklabels([r[0] for r in rows], fontsize=9)
     ax.set_ylim(-1.0, len(rows) - 0.4)
     ax.set_xlim(-1.02, 1.02)
-    ax.set_xlabel("Spearman correlation between the ACS ranking and the yardstick's ranking\n"
-                  "bars are 95% bootstrap CI over methods", fontsize=9.5)
-    ax.set_title("Anatomic concordance predicts accuracy only against the\n"
-                 "yardstick that shares its own reference atlas",
-                 fontsize=12.5, fontweight="bold", loc="left", pad=10)
+    ax.set_xlabel("Spearman correlation between the two rankings\n"
+                  "Bars, 95% bootstrap CI over methods.", fontsize=9.5)
+    fig.text(0.015, 0.965, "Rank correlation between the ACS ordering and each yardstick's "
+                           "ordering", fontsize=12, ha="left", va="top")
     save(fig, "Figure_detects_not_ranks")
 
 

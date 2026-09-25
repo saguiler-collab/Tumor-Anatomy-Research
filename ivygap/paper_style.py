@@ -45,7 +45,10 @@ def apply() -> None:
         "legend.fontsize": 11.5,
         "figure.titlesize": 14.5,
         # Journals set panel letters and titles in bold; everything else stays regular.
-        "axes.titleweight": "bold",
+        # Regular, not bold. A bold sentence-style title is the single strongest
+        # "designed" signal in a figure, and journals set titles regular anyway --
+        # Choi et al. carry no in-plot title at all, only panel letters and a caption.
+        "axes.titleweight": "regular",
         "axes.labelweight": "regular",
         # ---- axes -------------------------------------------------------------------
         # Heavy black spines, and only the two that carry information.
@@ -104,3 +107,39 @@ def italicise(ax, axis: str = "y") -> None:
     labels = ax.get_yticklabels() if axis == "y" else ax.get_xticklabels()
     for t in labels:
         t.set_fontstyle("italic")
+
+
+#: How each method is PRINTED in a figure. The code uses lowercase keys with underscores;
+#: a published figure should carry the published name. Leaving `scdc_ensemble` and
+#: `bayesprism` on an axis is the clearest signal that a plot was dumped straight out of a
+#: script, and it also misspells other people's software.
+#:
+#: Degenerate variants keep their own name rather than borrowing the package's: the project
+#: invariant is "never report a degenerate method under its own name", and a figure axis is
+#: a report.
+DISPLAY_NAME: dict[str, str] = {
+    "music": "MuSiC",
+    "scdc": "SCDC",
+    "scdc_ensemble": "SCDC ENSEMBLE",
+    "bisque": "Bisque",
+    "epic": "EPIC",
+    "quantiseq": "quanTIseq",
+    "bayesprism": "BayesPrism",
+    "dwls": "DWLS",
+    "cibersortx": "CIBERSORTx",
+    "cibersortx_smode": "CIBERSORTx S-mode",
+    "svr": "nu-SVR",
+    "nnls": "NNLS",
+    "elastic_net": "Elastic net",
+    "bayesian": "Bayesian",
+    "bayesian_hierarchical": "Bayesian hierarchical",
+    "control_random": "Control: random",
+    "control_shuffled_signature": "Control: shuffled genes",
+}
+
+
+def display(name: str) -> str:
+    """Printable name for a method key. Unknown keys fall back to a readable form."""
+    if name in DISPLAY_NAME:
+        return DISPLAY_NAME[name]
+    return str(name).replace("_", " ")

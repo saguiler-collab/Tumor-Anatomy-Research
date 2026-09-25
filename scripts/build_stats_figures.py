@@ -95,7 +95,7 @@ def fig_purity_scatter(tag: str, label: str, n_panels: int = 6):
             b, a = np.polyfit(x, y, 1)
             xs = np.linspace(x.min(), x.max(), 50)
             ax.plot(xs, a + b * xs, color=C_FIT, lw=2, zorder=3)
-        ax.set_title(m, fontsize=10.5, fontweight="bold", loc="left")
+        ax.set_title(PS.display(m), fontsize=10.5, fontweight="bold", loc="left")
         ax.text(.03, .97, f"ρ = {r.statistic:+.3f}\n{p_text(r.pvalue)}\nn = {ok.sum()}",
                 transform=ax.transAxes, va="top", fontsize=8.6,
                 bbox=dict(fc="white", ec="#ddd", alpha=.85, boxstyle="round,pad=0.3"))
@@ -110,12 +110,10 @@ def fig_purity_scatter(tag: str, label: str, n_panels: int = 6):
     # which is range compression and is exactly what the recovery statistic measures. An
     # earlier draft said "sit far below the identity line", which is true of `bayesian` and
     # false of `svr`, `cibersortx` and `dwls`.
-    fig.suptitle(f"{label}: every fitted slope is shallower than identity — "
-                 f"estimates compress the true range",
-                 fontsize=13, fontweight="bold", y=1.0)
-    fig.text(.5, -0.015, "dashed grey = identity (a perfect estimate); red = least-squares "
-                         "fit; ρ = Spearman. A slope below 1 means the method under-calls "
-                         "high-purity samples and over-calls low-purity ones.",
+    fig.suptitle(f"Estimated tumour fraction against DNA-measured purity — {label}",
+                 fontsize=12.5, fontweight="regular", y=1.0)
+    fig.text(.5, -0.015, "Dashed grey, identity. Red, least-squares fit. "
+                         "\u03c1, Spearman correlation; n per panel.",
              ha="center", fontsize=8.6, color="#666")
     fig.tight_layout()
     save(fig, f"Figure_purity_scatter{tag or '_gbm'}")
@@ -162,7 +160,7 @@ def fig_paired_lymphoid():
             sub = sub.div(sub.sum(axis=1).replace(0, np.nan), axis=0).dropna()
             if len(sub) < 20:
                 continue
-            names.append(m)
+            names.append(PS.display(m))
             n_matched = max(n_matched, len(sub))
             Tm.append(sub.T_cell.mean()); Ts.append(sub.T_cell.std())
             Bm.append(sub.B_cell.mean()); Bs.append(sub.B_cell.std())
@@ -193,7 +191,7 @@ def fig_paired_lymphoid():
                            fontsize=9)
         ax.get_xticklabels()[-1].set_fontweight("bold")
         ax.set_ylim(0, 1.52)
-        ax.set_ylabel("relative composition within {T, NK, B}", fontsize=10)
+        ax.set_ylabel("Relative composition within {T, NK, B}", fontsize=10)
         # TWO DIFFERENT n's, and conflating them misleads. `len(ros)` is how many samples
         # have methylation truth; `n_matched` is how many of those also have an estimate from
         # this cohort's deconvolution run, which is what every method bar is computed on.
@@ -203,10 +201,10 @@ def fig_paired_lymphoid():
                      fontsize=11.5, fontweight="bold", loc="left")
         ax.axvline(len(names) - 1.5, color="#999", ls="--", lw=.9)
     axes[0].legend(frameon=False, fontsize=10, loc="upper left")
-    fig.suptitle("Methods place B cells above T cells; DNA methylation places T above B",
-                 fontsize=13.5, fontweight="bold", y=1.0)
-    fig.text(.5, -0.06, "Bars are mean ± SD. p-values are two-sided Wilcoxon signed-rank, "
-                        "paired within sample.", ha="center", fontsize=9, color="#555")
+    fig.suptitle("T-cell and B-cell fraction within {T, NK, B}, by method",
+                 fontsize=12.5, fontweight="regular", y=1.0)
+    fig.text(.5, -0.06, "Bars, mean \u00b1 SD. p, two-sided Wilcoxon signed-rank, paired "
+                        "within sample.", ha="center", fontsize=9, color="#555")
     fig.tight_layout()
     save(fig, "Figure_lymphoid_paired")
 
