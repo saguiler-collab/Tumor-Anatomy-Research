@@ -101,6 +101,24 @@ both ways — the anatomy is recoverable without an atlas, and the atlas still e
 Scaden is **recommended for dropping** rather than chased with a second Python environment;
 the reasoning is in `docs/ROAD_TO_PAPER.md`.
 
+> **Scaden, re-verified 2026-09-24.** The blocker is unchanged and was re-tested rather than
+> re-quoted. The source is present at `~/Downloads/scaden-master`; its `setup.py` declares
+> `install_requires=[... "tensorflow>=2.0" ...]`; the project runs **Python 3.14.5**; and
+> `pip install --dry-run --no-deps "tensorflow>=2.0"` returns **`ERROR: No matching
+> distribution found`** today. TensorFlow publishes no wheel for this interpreter.
+>
+> **The practical blocker is the weaker of the two reasons, and it is the one that can
+> expire.** If TensorFlow ships a 3.14 wheel tomorrow, Scaden becomes installable and the
+> substantive objection still stands: Scaden is *trained on simulated bulk mixtures*, which is
+> precisely the construction this study already discloses as a limitation of its own accuracy
+> arm. Adding a method that shares the simulator's assumptions to a benchmark already
+> criticised for leaning on simulated mixtures compounds the weakness instead of testing
+> against it. CDSeq was pursued instead because, being reference-free, it is independent of
+> both the simulator and the signature matrix — and it ran.
+>
+> So Scaden is a **deliberate exclusion with a stated rationale**, not a method that failed.
+> The paper should say which of the two reasons it is resting on.
+
 ---
 
 ## 4. Three methods are on ACS but not on the accuracy yardstick
