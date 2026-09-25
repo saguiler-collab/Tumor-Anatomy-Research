@@ -18,6 +18,7 @@ the reviews below names it explicitly.
 | **Nguyen et al. 2024**, *Nucleic Acids Res* 52:4761 | "Fourteen years of cellular deconvolution" — reviews and benchmarks **53 methods** across 283 cell types, 30 tissues, 63 individuals. doi:10.1093/nar/gkae267 |
 | **Gaspard-Boulinc et al. 2025**, *Nat Rev Genet* 26:828 | Deconvolution for **spatial** transcriptomics. doi:10.1038/s41576-025-00845-y |
 | **Liu, Qian & Ma 2025**, *bioRxiv* | **DNA-methylation-based** deconvolution of the brain-tumour microenvironment. doi:10.1101/2025.01.19.633794 |
+| **Li et al. 2026**, *Genome Biology* 27:38 | Benchmarks **5 methods** on **18 real bulk cohorts, 5,891 samples, 9 cancer types**, scoring *reproducibility* of differentially-proportioned cell types instead of accuracy against known proportions. doi:10.1186/s13059-026-03942-1 |
 
 *(The file `Nguyen et al., 2014.pdf` is misnamed — it is the 2024 NAR review.)*
 
@@ -67,7 +68,78 @@ spreading evenly.
 
 ---
 
+### Li et al. 2026 independently confirm the objection this study raises against its own primary outcome
+
+This is the closest paper to ours in motivation, published contemporaneously, and it reaches
+our central methodological conclusion from a completely different direction.
+
+Their opening premise is the one our correction **C4** makes about our own registered outcome:
+
+> *"current benchmarking studies for deconvolution methods invariably lean on pseudobulk data
+> or flow cytometry, assuming known absolute cell type proportions. In real bulk RNA-expression
+> deconvolution, such precision is a mirage."*
+
+And they measured it. On **GSE176078**, a breast-cancer cohort profiled by *both* scRNA-seq and
+bulk RNA-seq on the same samples, they report that pseudobulk yields **systematically higher
+sample-level correlations than real bulk**, and — the part that matters for us — that **method
+rankings transfer poorly between the two**: ranking consistency is significantly lower across
+pseudobulk-versus-real-bulk than within either modality alone (p < 0.001).
+
+That is an independent, 5,891-sample demonstration of the exact pattern our two yardsticks
+produce. Our synthetic-mixture arm clears the pre-registered bar at **ρ = 0.6372**; our
+orthogonal DNA-purity arm fails it at **ρ = 0.0810**. We attributed the gap to the pseudobulk
+yardstick sharing its atlas with the ACS arm. Li et al. show the gap is general, not an artefact
+of our cohort or our reference.
+
+**What this changes for us: nothing in the numbers, and a great deal in the framing.** A
+reviewer's most natural objection to our study is *"your pseudobulk arm passed — maybe your
+orthogonal arm is the broken one."* The answer is no longer only our own internal argument.
+
+### The MuSiC convergence, which is the sharper point
+
+Li et al. find **"MuSiC showed limited performance with real-world data, potentially due to its
+sensitivity to noise."**
+
+In our study **MuSiC ranks first of fifteen on anatomic concordance (ACS 0.9692)** — and
+recovers only **18.1%** (GBM) and **17.2%** (LGG) of true tumour-content variation, and places B
+cells above T cells in **100%** of GBM and **98.5%** of LGG samples.
+
+So the method our ground-truth-free metric likes *best* is the one an independent real-data
+benchmark of 5,891 samples singles out as performing *worst*. That is "anatomy detects, it does
+not rank" confirmed from outside this project, on different cancers, by different authors, using
+a different criterion. It belongs in the discussion.
+
+---
+
 ## 3 · Where our results disagree, and why
+
+### BayesPrism: they call it robust; our orthogonal truth puts it near the bottom
+
+Li et al. conclude that **ReCIDE and BayesPrism** are the two robust methods across all three of
+their scenarios. Our results do not look like that:
+
+| | Li et al. 2026 | this study |
+|---|---|---|
+| BayesPrism | one of two most robust across 3 scenarios | ACS **0.8000** (9th of 15); recovery **10.3%** GBM / **7.2%** LGG; places B over T in **80.0%** / **57.4%** of samples |
+
+**The disagreement is real and should not be smoothed over — but it is probably not a
+contradiction, because the two studies measure different things.** Li et al. score the
+*reproducibility* of which cell types shift between conditions, and say so explicitly: they
+focus on *"the presence or absence of DP cell types"* rather than magnitudes, having found the
+qualitative criterion more stable than the quantitative one. We score *quantitative* recovery of
+a continuous truth and *per-cell-type ordering correctness*.
+
+A method can reproducibly detect **which** populations move while getting **how much** they move,
+and their relative ranking, wrong. Those are compatible findings about different properties, and
+the practical implication is the interesting part: **BayesPrism may be the right choice for
+"which cell types differ between my two groups" and the wrong choice for "what fraction of this
+tumour is T cells"** — a distinction no single benchmark score expresses.
+
+The honest caveat on our side: BayesPrism runs here as a Python reimplementation (the genuine R
+package scores **0.8154**, still mid-table), and our cohort is glioma only.
+
+---
+
 
 ### DWLS: they rank it best among scRNA-reference methods; we rank it last
 
@@ -157,6 +229,54 @@ own denominator and refusing to rank it is the correct handling, and it is what
 ---
 
 ## 4 · What is original here
+
+### What remains original AFTER Li et al. 2026 — read this before writing the introduction
+
+Li et al. is the nearest neighbour this study has, and pretending otherwise would be the
+fastest way to lose a reviewer. Both papers reject pseudobulk as the arbiter and both build a
+benchmark that needs no known cell proportions. The differences are real and worth naming
+precisely rather than asserting novelty in general terms.
+
+| | Li et al. 2026 | this study |
+|---|---|---|
+| ground-truth-free criterion | **reproducibility** — do the same cell types shift across independent cohorts? | **anatomy** — does the estimate obey constraints a pathologist fixed in advance? |
+| what it asks of a method | *consistency* | *correctness against a named prior* |
+| minimum data needed | two or more cohorts sharing a disease contrast | **one** cohort with region labels |
+| is it checked against orthogonal truth? | **no** — reproducibility is the endpoint | **yes** — DNA methylation per cell type, DNA copy-number purity |
+| negative controls | not reported | **two**, and the margin over them licenses every claim |
+| scale | 5,891 samples, 9 cancers, 5 methods | 122 anatomic + 664 truth-linked samples, 1 cancer type, 15 estimators |
+
+Three things follow, and they are the introduction's argument:
+
+1. **Reproducibility is not correctness, and this study supplies the missing half.** Li et al.
+   establish that ReCIDE and BayesPrism reproduce their DP cell-type calls across cohorts.
+   Nothing in that design can detect a method that is *reproducibly wrong* — and we exhibit
+   exactly that failure: **0 of 12 methods** reproduce a T > B lymphoid ordering that DNA
+   methylation measures at p = 1.1 × 10⁻²⁴ (GBM) and 1.1 × 10⁻⁷⁶ (LGG), and they fail
+   *consistently*, in both cohorts. A reproducibility benchmark would score that consistency
+   favourably. An orthogonal-truth benchmark scores it as the failure it is.
+
+2. **Their design needs a contrast; ours needs a slide.** DP cell types are defined by
+   condition-level change, so the method requires at least two groups and, for the strongest
+   scenario, several cohorts. Anatomic concordance is computed within a single tumour set from
+   histology labels. For the low-resource setting this project is motivated by — one cohort,
+   no matched single-cell data, no second site — that difference is the whole point.
+
+3. **Neither benchmark can select a method, and only one of us can show it.** Li et al. rank
+   methods and stop. We rank methods, then check the ranking against independent truth, and
+   report that it does not survive (ρ = +0.081, n = 12, p = 0.80 — inconclusive) and that the
+   top-ranked method inverts the lymphoid compartment. **The negative result about our own
+   metric is the contribution**, and it is a kind of result their design has no way to produce.
+
+### What we should concede, plainly
+
+- **ReCIDE is not in our panel.** Li et al.'s best performer is absent here. Say so; it is a
+  stated limitation, not a hidden one.
+- **One cancer type against their nine.** Our replication is GBM → LGG, both glioma. Their
+  generalisation across nine cancers is broader than anything we claim.
+- **Their sample size is 8× ours.** The power ceiling we disclose (12 comparable methods) is
+  the one thing more data would genuinely fix, and they have more data.
+
 
 ### The gap, named by the field's own review
 

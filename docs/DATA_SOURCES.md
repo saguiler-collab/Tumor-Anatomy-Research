@@ -866,6 +866,10 @@ survive complete-case filtering in these matrices — 64 are all-NA.
   doi:10.1093/bioinformatics/btz363
 - Nguyen H, Nguyen H, Tran D, Draghici S, Nguyen T. Fourteen years of cellular deconvolution.
   *Nucleic Acids Res* **52**:4761 (2024). doi:10.1093/nar/gkae267
+- Li M, Su Y, Tang Y, Lee Y, Tian W. Evaluating deconvolution methods using real bulk
+  RNA-expression data for robust prognostic insights across cancer types. *Genome Biology*
+  **27**:38 (2026). doi:10.1186/s13059-026-03942-1 — 5 methods, 18 real bulk cohorts,
+  5,891 samples, 9 cancer types. Read in full 2026-09-24; PDF in `celldecov_reference_papers/`.
 - Gaspard-Boulinc LC, *et al.* Cell-type deconvolution methods for spatial transcriptomics.
   *Nat Rev Genet* **26**:828 (2025). doi:10.1038/s41576-025-00845-y
 - Liu F, *et al.* DNA Methylation-Based Cell Type Deconvolution Reveals the Distinct Cell
