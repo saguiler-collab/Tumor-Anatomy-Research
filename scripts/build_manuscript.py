@@ -246,6 +246,31 @@ def main() -> int:
       "subclonal fraction, IDH1 mutation. Reported at equal prominence.")
     A("")
 
+    # WHAT "THE METHODS" ARE. A title saying "bulk RNA deconvolution fails" must survive
+    # the question "which methods, and are they all really deconvolution tools?". They all
+    # take bulk RNA, but 4 of 15 are generic regressors this project wrote, so the claim has
+    # to be shown to hold on the PUBLISHED tools alone.
+    mc = J("method_composition.json")
+    if mc and mc.get("lymphoid_by_tier"):
+        A("> **What \"the methods\" are, and whether the claim needs the baselines.** All "
+          f"{mc.get('n_real_methods')} estimators decompose **bulk RNA**; none reads another "
+          "modality, which is the point — every ground truth here (DNA methylation, DNA copy "
+          "number, H&E histology) is a *different* instrument. But they are not all published "
+          "tools: "
+          + "; ".join(f"**{v}** {k}" for k, v in mc.get("tiers", {}).items())
+          + ". The lymphoid result does **not** depend on the baselines:\n")
+        A("| cohort | all methods | published tools and algorithms | classical baselines |")
+        A("|---|---|---|---|")
+        for coh, b in mc["lymphoid_by_tier"].items():
+            pu, ba = b["published_tools_and_algorithms"], b["classical_baselines"]
+            A(f"| {coh} | **{b['n_correct_all']} of {b['n_compared']}** | "
+              f"**{pu['n_correct']} of {pu['n']}** | {ba['n_correct']} of {ba['n']} |")
+        absent = list(mc["lymphoid_by_tier"].values())[0]["absent_no_estimate_returned"]
+        if absent:
+            A(f"\n`{'`, `'.join(absent)}` return no lymphoid estimate at all and are absent "
+              f"from this comparison rather than counted as failures — *could not be "
+              f"evaluated*, not *evaluated and wrong*.\n")
+
     A("## Result 3 — the lymphoid compartment. THE HEADLINE. **[STRONG]**\n")
     # THE TWO COHORTS ARE NOT EQUIVALENT AND THE TABLE MUST NOT IMPLY THEY ARE. The
     # pre-specification is explicit: "This is LGG, not GBM. The anomaly was measured in GBM."

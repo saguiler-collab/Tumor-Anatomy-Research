@@ -77,6 +77,15 @@ This is the second clause of the registered question, tested directly against th
 - Purity is the one biological factor that replicates: β -0.13595 / -0.13386, 12/12, Holm p 0.00244 — **REPLICATED**.
 - Everything else tested is null in both cohorts: ploidy, whole-genome doublings, subclonal fraction, IDH1 mutation. Reported at equal prominence.
 
+> **What "the methods" are, and whether the claim needs the baselines.** All 15 estimators decompose **bulk RNA**; none reads another modality, which is the point — every ground truth here (DNA methylation, DNA copy number, H&E histology) is a *different* instrument. But they are not all published tools: **6** published package, run as the vendor's code; **4** classical regression baseline, not a published tool; **3** published algorithm, reimplemented here; **2** published package, Python reimplementation used. The lymphoid result does **not** depend on the baselines:
+
+| cohort | all methods | published tools and algorithms | classical baselines |
+|---|---|---|---|
+| GBM | **0 of 12** | **0 of 9** | 0 of 3 |
+| LGG | **0 of 12** | **0 of 9** | 0 of 3 |
+
+`bayesian_hierarchical`, `cibersortx_smode`, `quantiseq` return no lymphoid estimate at all and are absent from this comparison rather than counted as failures — *could not be evaluated*, not *evaluated and wrong*.
+
 ## Result 3 — the lymphoid compartment. THE HEADLINE. **[STRONG]**
 
 > **The two cohorts play different roles and the distinction is the design's strength, not a caveat.** The B-over-T anomaly was *observed* in glioblastoma, where it had no way to be checked because no per-cell-type truth existed. The prediction *"DNA methylation will show T cells > B cells"* was then registered in `prespecified/immune_failure_factors.md` at **2026-09-17 23:37:27**, naming its own falsifier — *"methylation showing B ≥ T … the anomaly withdrawn"*. The LGG methylation measurement was produced at **2026-09-18 01:12:23**, ninety-five minutes later. **GBM is discovery; LGG is the pre-registered replication**, in a different tumour type, at 3.4x the sample size.
