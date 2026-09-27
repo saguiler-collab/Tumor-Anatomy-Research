@@ -1,5 +1,8 @@
 # The Anatomy Test
 
+> **References, numbered in order of use in the manuscript** (CJSJ / IEEE style): [docs/REFERENCES.md](docs/REFERENCES.md). `docs/DATA_SOURCES.md` remains the provenance record; this is the citation list.
+
+
 > **The registered research question, and whether this study answers it** — both clauses mapped to their evidence, with what the paper may and may not claim: [docs/RESEARCH_QUESTION.md](docs/RESEARCH_QUESTION.md).
 
 

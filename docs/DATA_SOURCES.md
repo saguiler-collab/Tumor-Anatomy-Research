@@ -882,6 +882,8 @@ survive complete-case filtering in these matrices — 64 are all-NA.
 
 ---
 
+> **For the paper's numbered reference list, ordered by first use in the manuscript, see [REFERENCES.md](REFERENCES.md).** This file is the provenance record — what the archive contains and how it was verified. That one is the citation list.
+
 ## C · How to read this list
 
 **Section A is load-bearing.** Remove any entry and a result disappears.
