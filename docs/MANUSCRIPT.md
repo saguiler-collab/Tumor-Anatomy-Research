@@ -102,7 +102,7 @@ This is the second clause of the registered question, tested directly against th
 **Two failure modes, counted separately — do not merge them.**
 
 - **ABSENCE.** 4 of 12 (GBM) and 4 of 12 (LGG) methods return **exactly 0.0000** for T, B *and* NK in the majority of samples. `music`/`nnls`: 443 of 510 LGG samples, 55 of 56 GBM. Verified as exact zeros, not small values.
-- **MISASSIGNMENT.** Of the methods that do report lymphocytes, **8 of 8** (LGG) and **6 of 8** (GBM) place B above T on a majority of the samples they score, paired within sample. Discordance with methylation runs up to 93.5% (LGG) and 94.6% (GBM).
+- **MISASSIGNMENT.** Of the methods that do report lymphocytes, **8 of 8** (LGG) and **6 of 8** (GBM) place B above T on a majority of the samples they score, paired within sample. Discordance with methylation reaches 94.6% (LGG, `elastic_net`) and 100.0% (GBM, `elastic_net`).
 
 > WRITE: the pre-registration named the falsifier in advance — *"methylation showing B ≥ T ... the anomaly withdrawn"*. Quote it. A prediction that could have killed the finding and did not is worth more than the result stated flat.
 
@@ -134,7 +134,7 @@ This is the second clause of the registered question, tested directly against th
 
 - **Replicates:** MuSiC moves from excluded-as-arithmetically-NNLS to **rank 1** given the cross-donor variance it is designed to use (GBM 17.5% → 60.2%; LGG 20.0% → 52.6%). A method that could not previously be measured at all.
 - **Replicates:** the lymphoid trade-off. Methods agreeing on T > B go 0/12 → 3/14 (GBM) and 0/12 → 2/13 (LGG), while methods returning zero lymphoid content go 4/12 → 6/14 and 4/12 → 7/13. Misassignment partly repairs; absence worsens.
-- **Replicates:** equal footing makes the absolute under-call **worse** — GBM median bias −0.028 → −0.472, methods under-calling 7/12 → 12/12.
+- **Replicates:** equal footing makes the absolute under-call **worse** — GBM median bias -0.0277 → -0.4767, methods under-calling 7/12 → 14/14. (The two arms score different-sized panels, 12 and 14, because equal footing makes more methods runnable.)
 - **DOES NOT REPLICATE:** the ranking reshuffle. Kendall tau **+0.214** (GBM) and **+0.333** (LGG); but excluding the one method whose implementation also changed gives **+0.143** (GBM, effect intact) and **+0.733** (LGG, rankings largely agree). Six to seven methods per tau. **Report as a partial replication failure.**
 
 ## Result 5b — the two reimplementations were measured as genuine packages **[STRONG]**
@@ -146,13 +146,15 @@ _from `results/dwls_remeasured.json`, `results/bayesprism_remeasured.json`. Same
 | `dwls` | 0.7231 | **0.7846** | **+0.0615** | 2593 s — OVER |
 | `bayesprism` | 0.8000 | **0.8154** | **+0.0154** | 2045 s — under |
 
-**The reimplementations are not uniformly biased, and that is the point.** DWLS's reimplementation *understated* the package by 0.046; BayesPrism's *overstated* it by 0.062. A blanket "the reimplementation is close enough" would be wrong in both directions, and a blanket "reimplementations flatter their packages" would be wrong too.
+**Both reimplementations are biased in the same direction, and neither is close enough to ignore.** `dwls` understated it by 0.0615, `bayesprism` understated it by 0.0154. A blanket "the reimplementation is close enough" is wrong on both counts. Note that this direction is NOT stable across reference builds: on the log-`X` arm the BayesPrism reimplementation scored *above* its package, so the sign of this bias is a property of the run and not of the software.
 
-**DWLS's fallback was a coin flip, not a verdict.** It needed 2,474 s against a 2,400 s budget — the threshold sat almost exactly on the method's runtime, which is the worst place for a threshold to be, because it decides the answer by machine load rather than by the method. That is why the budget was raised and the method re-measured, and the raised-budget result is reported alongside the original row rather than substituted into it.
+**DWLS's fallback was a coin flip, not a verdict.** It needed 2,593 s against a 2,400 s budget — the threshold sat almost exactly on the method's runtime, which is the worst place for a threshold to be, because it decides the answer by machine load rather than by the method. That is why the budget was raised and the method re-measured, and the raised-budget result is reported alongside the original row rather than substituted into it.
 
 **BayesPrism's fallback is intermittent, which is worse than a clean failure.** It completed in 2,045 s — *under* budget — in this re-measurement, yet fell back in every confirmatory run. The cause is memory, not time: its `parallel` socket cluster spawns three worker processes, each with its own copy of the data, and on an 8.6 GB machine they are killed (`Error in unserialize(node$con)`). **Whether the row labelled `bayesprism` is BayesPrism therefore depends on how much RAM was free at the time**, which is not a scientific variable. `docs/OPEN_DEFECTS.md` D18, D19.
 
-**The genuine DWLS figure is confirmed by independent replication.** It was measured twice, five days apart, in separate processes with different wall-clock (2,474 s and 2,593 s): **ACS 0.7846 and CI [0.6571, 0.9063] both times, identical to four decimals including the bootstrap interval.** So the 0.7846 is a property of the package on this cohort, not of one run.
+**The genuine DWLS figure replicated across two runs, and only one artefact survives.** It was measured on 2026-09-14 at **2,474 s** and again at **2,593 s**, in separate processes with different wall-clock, returning **ACS 0.7846 and CI [0.6571, 0.9063] both times — identical to four decimals including the bootstrap interval.** So the figure is a property of the package on this cohort, not of one run.
+
+> **Where that evidence lives, stated because it is not where a reader would look.** The second run overwrote the first artefact, so no file on disk holds the 2,474 s measurement; it survives in git, in commit `4fe399a` of 2026-09-14, which recorded `2,474 s` alongside the same ACS. Every `dwls_remeasured.json` in the results tree and in all three archives reports the later run. An overwrite guard was added to `scripts/remeasure_method.py` afterwards, which is why this cannot happen again — but it happened here, and the replication claim rests on version control rather than on an artefact.
 
 > WRITE: this belongs in the paper as a reproducibility finding, not buried in limitations. Two of fifteen methods silently became different software depending on machine state, the artefacts recorded *that* it happened but not *why*, and the direction of the resulting error was not predictable. Any benchmark that does not check this has the same exposure and would not know.
 

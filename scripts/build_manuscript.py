@@ -19,6 +19,30 @@ from ivygap import config
 OUT = config.PROJECT_ROOT / "docs" / "MANUSCRIPT.md"
 
 
+
+
+def _bias_summary(artefact: str):
+    """(median bias, n under-calling, n total) over methods reporting a purity bias."""
+    import numpy as _np
+    m = (J(artefact) or {}).get("methods") or {}
+    v = [x.get("bias_tumor_minus_purity") for x in m.values()
+         if x.get("bias_tumor_minus_purity") is not None]
+    if not v:
+        return None
+    a = _np.array(v, dtype="float64")
+    return (float(_np.median(a)), int((a < 0).sum()), int(a.size))
+
+
+def _max_disc(block: dict) -> tuple[str, float]:
+    """Method with the highest per-sample discordance against methylation, and its value."""
+    d = {m: v.get("frac_samples_discordant") for m, v in (block.get("methods") or {}).items()
+         if v.get("frac_samples_discordant") is not None}
+    if not d:
+        return ("\u2014", float("nan"))
+    top = max(d, key=d.get)
+    return (top, float(d[top]))
+
+
 def J(name: str) -> dict:
     p = config.RESULTS_DIR / name
     if not p.exists():
@@ -311,8 +335,14 @@ def main() -> int:
       f"exact zeros, not small values.")
     A(f"- **MISASSIGNMENT.** Of the methods that do report lymphocytes, "
       f"**{bt_major(lol)} of {sub(lol)}** (LGG) and **{bt_major(log)} of {sub(log)}** (GBM) place B "
-      f"above T on a majority of the samples they score, paired within sample. Discordance with "
-      f"methylation runs up to 93.5% (LGG) and 94.6% (GBM).")
+      f"above T on a majority of the samples they score, paired within sample. "
+      # DERIVED. These read "93.5% (LGG) and 94.6% (GBM)": the cohorts were SWAPPED --
+      # 94.6% is LGG's maximum, not GBM's -- and the GBM figure was stale, the current
+      # maximum being 100.0%. Two labels and one number wrong in nine words, which is what
+      # hand-typed maxima do when the pipeline is re-run.
+      f"Discordance with methylation reaches "
+      f"{_max_disc(lol)[1]*100:.1f}% (LGG, `{_max_disc(lol)[0]}`) and "
+      f"{_max_disc(log)[1]*100:.1f}% (GBM, `{_max_disc(log)[0]}`).")
     A("\n> WRITE: the pre-registration named the falsifier in advance — *\"methylation showing "
       "B ≥ T ... the anomaly withdrawn\"*. Quote it. A prediction that could have killed the "
       "finding and did not is worth more than the result stated flat.\n")
@@ -376,8 +406,18 @@ def main() -> int:
       f"{lol.get('n_agree_T_over_B')}/{lol.get('n_methods')} → {lolh.get('n_agree_T_over_B')}/{lolh.get('n_methods')} (LGG), while methods "
       f"returning zero lymphoid content go {emp(log)}/{log.get('n_methods')} → {emp(logh)}/{logh.get('n_methods')} and "
       f"{emp(lol)}/{lol.get('n_methods')} → {emp(lolh)}/{lolh.get('n_methods')}. Misassignment partly repairs; absence worsens.")
-    A(f"- **Replicates:** equal footing makes the absolute under-call **worse** — GBM median bias "
-      f"−0.028 → −0.472, methods under-calling 7/12 → 12/12.")
+    # DERIVED. This read "-0.028 -> -0.472, under-calling 7/12 -> 12/12". The first pair
+    # was right; the second was not. The h5ad arm's median bias is -0.4767, and it carries
+    # 14 methods, not 12 -- so "12/12" both understated the denominator and quietly implied
+    # the two arms scored the same panel. They do not, which is the whole reason the arm
+    # exists.
+    _fz, _h5 = _bias_summary("absolute_purity_yardstick.json"), \
+               _bias_summary("absolute_purity_yardstick_h5ad.json")
+    if _fz and _h5:
+        A(f"- **Replicates:** equal footing makes the absolute under-call **worse** — GBM "
+          f"median bias {_fz[0]:+.4f} \u2192 {_h5[0]:+.4f}, methods under-calling "
+          f"{_fz[1]}/{_fz[2]} \u2192 {_h5[1]}/{_h5[2]}. (The two arms score different-sized "
+          f"panels, {_fz[2]} and {_h5[2]}, because equal footing makes more methods runnable.)")
     A(f"- **DOES NOT REPLICATE:** the ranking reshuffle. Kendall tau "
       f"**{efg.get('kendall_tau'):+.3f}** (GBM) and **{efl.get('kendall_tau'):+.3f}** (LGG); but excluding "
       f"the one method whose implementation also changed gives "
@@ -406,12 +446,34 @@ def main() -> int:
             A(f"| `{m}` | {a:.4f} | **{b:.4f}** | **{b - a:+.4f}** | "
               f"{g['elapsed_seconds']:.0f} s — {'OVER' if g['elapsed_seconds'] > 2400 else 'under'} |")
         A("")
-        A("**The reimplementations are not uniformly biased, and that is the point.** DWLS's "
-          "reimplementation *understated* the package by 0.046; BayesPrism's *overstated* it by "
-          "0.062. A blanket \"the reimplementation is close enough\" would be wrong in both "
-          "directions, and a blanket \"reimplementations flatter their packages\" would be wrong "
-          "too.\n")
-        A("**DWLS's fallback was a coin flip, not a verdict.** It needed 2,474 s against a "
+        # DERIVED, not typed. This paragraph carried "understated by 0.046" and
+        # "overstated by 0.062" — both correct on 2026-09-14 against the log-`X`
+        # reimplementation scores, and both stale after the raw/X rebuild. Worse, the
+        # BayesPrism direction inverted: its reimplementation now scores BELOW the package,
+        # so "overstated" became false. The rhetorical claim went with it — on the current
+        # numbers the two reimplementations are biased the SAME way, not opposite ways.
+        _d = {m: (float(lb.loc[m, "acs"]), J(f"{m}_remeasured.json").get("acs"))
+              for m in ("dwls", "bayesprism")
+              if m in lb.index and J(f"{m}_remeasured.json").get("acs") is not None}
+        if len(_d) == 2:
+            _same = len({r < g for r, g in _d.values()}) == 1
+            _parts = ", ".join(
+                f"`{m}` {'understated' if r < g else 'overstated'} it by {abs(g - r):.4f}"
+                for m, (r, g) in _d.items())
+            if _same:
+                A(f"**Both reimplementations are biased in the same direction, and neither is "
+                  f"close enough to ignore.** {_parts[0].upper() + _parts[1:]}. A blanket "
+                  f"\"the reimplementation is close enough\" is wrong on both counts. Note that "
+                  f"this direction is NOT stable across reference builds: on the log-`X` arm "
+                  f"the BayesPrism reimplementation scored *above* its package, so the sign of "
+                  f"this bias is a property of the run and not of the software.\n")
+            else:
+                A(f"**The reimplementations are not uniformly biased, and that is the point.** "
+                  f"{_parts[0].upper() + _parts[1:]}. A blanket \"the reimplementation is close "
+                  f"enough\" would be wrong in both directions, and a blanket "
+                  f"\"reimplementations flatter their packages\" would be wrong too.\n")
+        A(f"**DWLS's fallback was a coin flip, not a verdict.** It needed "
+          f"{J('dwls_remeasured.json').get('elapsed_seconds', 0):,.0f} s against a "
           "2,400 s budget — the threshold sat almost exactly on the method's runtime, which is "
           "the worst place for a threshold to be, because it decides the answer by machine "
           "load rather than by the method. That is why the budget was raised and the method "
@@ -424,11 +486,22 @@ def main() -> int:
           "machine they are killed (`Error in unserialize(node$con)`). **Whether the row labelled "
           "`bayesprism` is BayesPrism therefore depends on how much RAM was free at the time**, "
           "which is not a scientific variable. `docs/OPEN_DEFECTS.md` D18, D19.\n")
-        A("**The genuine DWLS figure is confirmed by independent replication.** It was measured "
-          "twice, five days apart, in separate processes with different wall-clock "
-          "(2,474 s and 2,593 s): **ACS 0.7846 and CI [0.6571, 0.9063] both times, identical to "
-          "four decimals including the bootstrap interval.** So the 0.7846 is a property of the "
-          "package on this cohort, not of one run.\n")
+        _dw = J("dwls_remeasured.json")
+        A(f"**The genuine DWLS figure replicated across two runs, and only one artefact "
+          f"survives.** It was measured on 2026-09-14 at **2,474 s** and again at "
+          f"**{_dw.get('elapsed_seconds', 0):,.0f} s**, in separate processes with different "
+          f"wall-clock, returning **ACS {_dw.get('acs')} and CI "
+          f"[{_dw.get('ci', [None, None])[0]}, {_dw.get('ci', [None, None])[1]}] both times — "
+          f"identical to four decimals including the bootstrap interval.** So the figure is a "
+          f"property of the package on this cohort, not of one run.\n")
+        A("> **Where that evidence lives, stated because it is not where a reader would "
+          "look.** The second run overwrote the first artefact, so no file on disk holds the "
+          "2,474 s measurement; it survives in git, in commit `4fe399a` of 2026-09-14, which "
+          "recorded `2,474 s` alongside the same ACS. Every `dwls_remeasured.json` in the "
+          "results tree and in all three archives reports the later run. An overwrite guard "
+          "was added to `scripts/remeasure_method.py` afterwards, which is why this cannot "
+          "happen again — but it happened here, and the replication claim rests on version "
+          "control rather than on an artefact.\n")
         A("> WRITE: this belongs in the paper as a reproducibility finding, not buried in "
           "limitations. Two of fifteen methods silently became different software depending on "
           "machine state, the artefacts recorded *that* it happened but not *why*, and the "
