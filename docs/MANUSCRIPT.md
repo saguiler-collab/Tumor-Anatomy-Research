@@ -8,9 +8,11 @@ Claims are tagged **[STRONG]** (replicated across cohorts or molecules), **[QUAL
 
 ## Title
 
-**Anatomic concordance detects broken deconvolution but cannot choose a working one: the best-scoring method inverts the lymphoid compartment in both glioma cohorts**
+**Anatomic Concordance Detects Broken Bulk-RNA Deconvolution: No Method Recovers the Lymphoid Compartment in Two Glioma Cohorts**
 
-*This names both clauses of the registered question. Clause 1 — can anatomy stand in for ground truth when choosing a method? — is answered `it detects, it does not rank`. Clause 2 — does a method that gets the anatomy right also get the biology right? — is answered `no`, categorically, by the pre-registered T > B criterion.*
+*Both clauses of the registered question are named. Clause 1 — can anatomy stand in for ground truth when choosing a method? — is answered by `Detects`, with the colon carrying what it cannot do. Clause 2 — does a method that gets the anatomy right also get the biology right? — is answered `no`, categorically, by the pre-registered T > B criterion.*
+
+*A caution for anyone shortening this. An earlier draft read "the best-scoring method inverts the lymphoid compartment". That is false: the best-scoring method is `music`, which returns exactly zero T, NK and B in 55 of 56 GBM and 443 of 510 LGG samples — absence, not inversion. "Top methods invert" is defensible (3 of the top 5 do, in both cohorts) but invites exactly that check. `No method recovers` makes no claim about any single method and is the stronger statement anyway.*
 
 *Alternatives, if a reviewer wants a different angle foregrounded:* "Bulk RNA deconvolution cannot report the lymphoid compartment of a glioma" (capability angle) or "Two independent ground truths show bulk RNA deconvolution fails on the immune compartment of glioma, and no ground-truth-free check detects it" (method-comparison angle).
 

@@ -119,8 +119,18 @@ secondary finding was promoted to the headline.
 timestamp. But the title should *show* that, by naming both halves. A title that connects them
 is both more honest and stronger, because it states the null the protocol set out to prove:
 
-> **Anatomic concordance detects broken deconvolution but cannot choose a working one: the
-> best-scoring method inverts the lymphoid compartment in both glioma cohorts**
+> **Anatomic Concordance Detects Broken Bulk-RNA Deconvolution: No Method Recovers the
+> Lymphoid Compartment in Two Glioma Cohorts**
+>
+> *Corrected 2026-09-27.* An earlier version of this line ended *"the best-scoring method
+> inverts the lymphoid compartment"*. That is **false**. The best-scoring method is `music`,
+> which returns exactly zero T, NK and B in **55 of 56** GBM and **443 of 510** LGG samples —
+> it does not invert the compartment, it reports none, and the artefact flags it
+> `comparable: false` for exactly that reason. Absence and misassignment are the two failure
+> modes this study separates by design, and the title named the wrong one for the method it
+> pointed at. *"Top methods invert"* is defensible — `svr`, `scdc` and `scdc_ensemble` do, in
+> both cohorts — but it invites the same check. *"No method recovers"* claims nothing about
+> any single method, covers both failure modes, and is the stronger statement.
 
 ### 2. GBM and LGG are presented as equivalent cohorts; they are not
 
@@ -144,7 +154,8 @@ better story than "we saw it twice", and it is the one that actually happened.
 |---|---|
 | Anatomic concordance separates real methods from negative controls | **May state plainly.** Margin +0.308 over the best control on fully-scored methods. |
 | No method reproduces the pre-registered T > B ordering | **May state plainly.** 0 of 12 in both cohorts; truth at p = 1.1e-24 and 1.1e-76. |
-| The anatomy-best method inverts the lymphoid compartment | **May state plainly.** `music`, ACS 0.9692, places B over T in 100% (GBM) and 98.5% (LGG). |
+| The anatomy-best method inverts the lymphoid compartment | **MUST NOT be claimed.** `music` (ACS 0.9692) returns exactly zero T, NK and B in 55/56 GBM and 443/510 LGG samples — absence, not inversion. Its 100% / 98.5% B-over-T is computed over the 1 and 67 samples where it returned anything at all. |
+| Methods near the top of the ACS ranking invert the lymphoid compartment | **May state plainly.** `svr`, `scdc`, `scdc_ensemble` report lymphocytes in ≥91% of samples and place B above T in 67.9–96.5%, in both cohorts. |
 | Reproducing known biology is not evidence of correctness | **May state plainly**, sourced to the clause-2 result, not the correlation. |
 | Anatomic concordance does not predict numerical accuracy | **Must be qualified as INCONCLUSIVE.** ρ = +0.081, p = 0.80, n = 12. Underpowered. |
 | Higher anatomy scores go with worse lymphoid accuracy | **Must not be claimed.** Direction is opposite to the hypothesis but p = 0.14 / 0.12 at n = 12. Report as directional only. |

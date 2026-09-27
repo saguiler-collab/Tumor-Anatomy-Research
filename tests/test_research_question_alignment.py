@@ -111,3 +111,50 @@ def test_the_claims_table_keeps_the_inconclusive_result_inconclusive():
     assert "INCONCLUSIVE" in t, (
         "docs/RESEARCH_QUESTION.md no longer marks the ACS-versus-accuracy result as "
         "inconclusive. At n = 12 it cannot be reported as a refutation.")
+
+
+def test_the_title_does_not_claim_the_best_method_inverts_the_compartment():
+    """The best-scoring method ABSTAINS; it does not invert.
+
+    `music` has the highest ACS and returns exactly zero T, NK and B in 55 of 56 GBM and
+    443 of 510 LGG samples. Its B-over-T fraction is computed over the handful of samples
+    where it returned anything, so quoting it as "the best method inverts the lymphoid
+    compartment" reads a 1-sample statistic as a cohort result AND names the wrong failure
+    mode. Absence and misassignment are separated by design everywhere else in this study.
+    """
+    import json
+    import pandas as pd
+
+    # Scope to the TITLE LINE, not the whole file. The document deliberately quotes the
+    # retracted phrasing in a caution note -- keeping the record is the project's practice --
+    # and a whole-file search fires on that, which is how this test failed on its first run.
+    ms = MS.read_text() if MS.exists() else ""
+    title_line = ""
+    for ln in ms.split("\n"):
+        if ln.startswith("**") and ln.rstrip().endswith("**") and len(ln) > 40:
+            title_line = ln
+            break
+    for bad in ("best-scoring method inverts", "top-ranked method inverts",
+                "best method inverts"):
+        assert bad not in title_line, (
+            f"the TITLE claims {bad!r}. The highest-ACS method returns no lymphocytes in "
+            f"the large majority of samples — that is absence, not inversion.")
+
+    lb_path = ROOT / "results" / "anatomic" / "acs_leaderboard.csv"
+    lo_path = ROOT / "results" / "lymphoid_ordering.json"
+    if not (lb_path.exists() and lo_path.exists()):
+        pytest.skip("artefacts absent")
+    lb = pd.read_csv(lb_path).set_index("method")
+    lo = json.loads(lo_path.read_text())["methods"]
+    real = lb[~lb["is_control"].astype(bool)]
+    top = real["acs"].idxmax()
+    d = lo.get(top)
+    if d is None:
+        pytest.skip(f"top method {top} is not in the lymphoid comparison")
+    n, z = d.get("n") or 0, d.get("n_no_lymphoid_signal") or 0
+    # Guards the premise: if the top method ever DOES report lymphocytes in most samples,
+    # this test's reasoning no longer applies and the title may be revisited.
+    assert n and z / n > 0.5, (
+        f"the top-ACS method {top} now reports lymphocytes in most samples "
+        f"({z}/{n} zero). The absence-versus-inversion argument behind the current title "
+        f"no longer holds — re-derive it before changing the title back.")

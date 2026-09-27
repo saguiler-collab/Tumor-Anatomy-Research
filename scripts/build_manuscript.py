@@ -101,12 +101,29 @@ def main() -> int:
     # asked one thing and titled itself another, which invites the reading that the headline
     # was promoted post hoc. It was not -- the T > B criterion is itself pre-registered with a
     # timestamp -- but the title has to show that. See docs/RESEARCH_QUESTION.md.
-    A("**Anatomic concordance detects broken deconvolution but cannot choose a working one: "
-      "the best-scoring method inverts the lymphoid compartment in both glioma cohorts**\n")
-    A("*This names both clauses of the registered question. Clause 1 — can anatomy stand in "
-      "for ground truth when choosing a method? — is answered `it detects, it does not rank`. "
-      "Clause 2 — does a method that gets the anatomy right also get the biology right? — is "
-      "answered `no`, categorically, by the pre-registered T > B criterion.*\n")
+    # "the best-scoring method inverts the lymphoid compartment" was WRONG and had to go.
+    # The best-scoring method is MuSiC, which returns exactly zero T, NK and B in 55 of 56
+    # GBM samples and 443 of 510 LGG samples. It does not invert the compartment; it
+    # reports none. Inversion and absence are the two failure modes this paper separates
+    # by design, and the title named the wrong one for the method it pointed at.
+    #
+    # "No method recovers" is both safer and stronger: it is the categorical, pre-registered
+    # finding (0 of 12 in each cohort, against a criterion registered 95 minutes before its
+    # data existed), it covers BOTH failure modes, and it cannot be attacked on the MuSiC
+    # point because it makes no claim about any single method.
+    A("**Anatomic Concordance Detects Broken Bulk-RNA Deconvolution: No Method Recovers "
+      "the Lymphoid Compartment in Two Glioma Cohorts**\n")
+    A("*Both clauses of the registered question are named. Clause 1 — can anatomy stand in "
+      "for ground truth when choosing a method? — is answered by `Detects`, with the colon "
+      "carrying what it cannot do. Clause 2 — does a method that gets the anatomy right also "
+      "get the biology right? — is answered `no`, categorically, by the pre-registered T > B "
+      "criterion.*\n")
+    A("*A caution for anyone shortening this. An earlier draft read \"the best-scoring method "
+      "inverts the lymphoid compartment\". That is false: the best-scoring method is `music`, "
+      "which returns exactly zero T, NK and B in 55 of 56 GBM and 443 of 510 LGG samples — "
+      "absence, not inversion. \"Top methods invert\" is defensible (3 of the top 5 do, in "
+      "both cohorts) but invites exactly that check. `No method recovers` makes no claim "
+      "about any single method and is the stronger statement anyway.*\n")
     A("*Alternatives, if a reviewer wants a different angle foregrounded:* "
       "\"Bulk RNA deconvolution cannot report the lymphoid compartment of a glioma\" "
       "(capability angle) or \"Two independent ground truths show bulk RNA deconvolution "

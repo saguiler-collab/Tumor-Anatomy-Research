@@ -292,7 +292,7 @@ Three things follow, and they are the introduction's argument:
 3. **Neither benchmark can select a method, and only one of us can show it.** Li et al. rank
    methods and stop. We rank methods, then check the ranking against independent truth, and
    report that it does not survive (ρ = +0.081, n = 12, p = 0.80 — inconclusive) and that the
-   top-ranked method inverts the lymphoid compartment. **The negative result about our own
+   top-ranked methods misreport it entirely. **The negative result about our own
    metric is the contribution**, and it is a kind of result their design has no way to produce.
 
 ### What we should concede, plainly
