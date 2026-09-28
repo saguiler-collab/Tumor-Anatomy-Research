@@ -190,9 +190,21 @@ def main() -> int:
       f"10,000 within-tumour permutations | `results/anatomic/anatomic_report.json` |")
     A(f"| Tumour-purity truth | ABSOLUTE purity from DNA copy number, "
       f"{cc.get('n_gbm')} GBM / {cc.get('n_lgg')} LGG complete cases | PanCanAtlas |")
+    # THE TWO COHORTS DO NOT USE THE SAME NUMBER OF CpGs, and this row covers both. It
+    # printed the GBM figure alone (258), which is wrong for LGG; docs/DATA_SOURCES.md
+    # printed the LGG figure alone (255), which is wrong for GBM. Each was half right.
+    # The counts differ because complete-case filtering drops a different set of all-NA
+    # probes in each matrix, which is a property of the cohorts and worth stating.
+    _cg = mc_g.get("n_reference_cpgs_used", "?")
+    _cl = mc_l.get("n_reference_cpgs_used", "?")
+    _sup = mc_g.get("n_reference_cpgs_supplied", 333)
+    _same = _cg == _cl
     A(f"| Per-cell-type truth | EpiDISH RPC, `centDHSbloodDMC.m`; "
-      f"{mc_g.get('n_reference_cpgs_used', '?')} of {mc_g.get('n_reference_cpgs_supplied', 333)} "
-      f"reference CpGs used after complete-case filtering | `results/methylation_celltypes*.json` |")
+      + (f"{_cg} of {_sup} reference CpGs used after complete-case filtering"
+         if _same else
+         f"of {_sup} reference CpGs, **{_cg} survive complete-case filtering in GBM and "
+         f"{_cl} in LGG** \u2014 the all-NA probes differ between the two matrices")
+      + " | `results/methylation_celltypes*.json` |")
     A("| Reference | GBmap single-cell atlas, 8-type roster; both the vendored frozen "
       "signature and a rebuild from `raw/X` counts | `reference_frozen/PROVENANCE.json` |")
     A("| Methods | 15 attempted, 12–14 scored per run; degenerate and non-evaluable methods "

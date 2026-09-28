@@ -814,8 +814,7 @@ the per-cell-type lymphoid truth (T / NK / B) in both cohorts.
 
 Two limits, both measured rather than assumed: it is a **blood** reference applied to **brain
 tumour** tissue, so it is used only for lymphoid *sub-composition* and never absolute scale, and
-`Macrophage_Microglia` is explicitly not measurable by this route. Only **255 of 333** CpGs
-survive complete-case filtering in these matrices — 64 are all-NA.
+`Macrophage_Microglia` is explicitly not measurable by this route. Of the 333 reference CpGs, **258 survive complete-case filtering in GBM and 255 in LGG** — the all-NA probes are not the same set in the two matrices. An earlier version of this line gave the LGG figure alone as though it covered both cohorts.
 
 - Teschendorff AE, Breeze CE, Zheng SC, Beck S. EpiDISH. **[VERIFY]**
 

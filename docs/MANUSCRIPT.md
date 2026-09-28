@@ -37,7 +37,7 @@ Claims are tagged **[STRONG]** (replicated across cohorts or molecules), **[QUAL
 |---|---|---|
 | Anatomy cohort | Ivy GAP, 122 anatomic samples / 9 evaluable tumours, 10,000 within-tumour permutations | `results/anatomic/anatomic_report.json` |
 | Tumour-purity truth | ABSOLUTE purity from DNA copy number, 147 GBM / 496 LGG complete cases | PanCanAtlas |
-| Per-cell-type truth | EpiDISH RPC, `centDHSbloodDMC.m`; 258 of 333 reference CpGs used after complete-case filtering | `results/methylation_celltypes*.json` |
+| Per-cell-type truth | EpiDISH RPC, `centDHSbloodDMC.m`; of 333 reference CpGs, **258 survive complete-case filtering in GBM and 255 in LGG** — the all-NA probes differ between the two matrices | `results/methylation_celltypes*.json` |
 | Reference | GBmap single-cell atlas, 8-type roster; both the vendored frozen signature and a rebuild from `raw/X` counts | `reference_frozen/PROVENANCE.json` |
 | Methods | 15 attempted, 12–14 scored per run; degenerate and non-evaluable methods excluded by declared input requirements | `ivygap/deconv/comparability.py` |
 | Recovery statistic | `1 + slope` of (estimate − truth) regressed on truth; 0 = no information, 1 = perfect. Bias-invariant by construction (tested). | `tests/test_lymphoid_ordering.py` |
