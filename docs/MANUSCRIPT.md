@@ -16,9 +16,15 @@ Claims are tagged **[STRONG]** (replicated across cohorts or molecules), **[QUAL
 
 *Alternatives, if a reviewer wants a different angle foregrounded:* "Bulk RNA deconvolution cannot report the lymphoid compartment of a glioma" (capability angle) or "Two independent ground truths show bulk RNA deconvolution fails on the immune compartment of glioma, and no ground-truth-free check detects it" (method-comparison angle).
 
-## Abstract — the six sentences, in order
+## Abstract
 
-> WRITE: one sentence of motivation. Deconvolution is used to estimate tumour and immune content; there is no routine way to know when to believe it.
+Knowing which cell types make up a tumour changes how it is treated, but measuring that directly requires single-cell sequencing at a cost most laboratories cannot meet. Deconvolution infers the same composition from inexpensive bulk RNA, but choosing among the dozens of available methods still requires ground truth — the measurement deconvolution exists to avoid. This study asked whether a tumour's own anatomy can stand in. Cell-composition gradients that a neuropathologist would predict across the anatomic regions of glioblastoma were written down, hashed and publicly registered before any method was scored, then used to rank 15 estimators against two deliberately broken controls. The resulting Anatomic Concordance Score separates real methods from noise decisively. Its ranking, however, does not predict accuracy against DNA-measured tumour purity — an instrument that shares nothing with it — and the pre-registered bar is cleared only against a yardstick built from the same single-cell atlas the score itself uses. Tested against DNA methylation, 0 of 12 methods reproduced the T-cell-over-B-cell ordering that methylation measures, in a glioblastoma cohort and again in an independent lower-grade glioma cohort, against a prediction registered before that data existed. Reproducing known biology is therefore not evidence that a composition estimate is correct — and that is the informal check the field currently relies on.
+
+> WRITE: the abstract above is complete and artefact-derived; edit for voice, not for content. If you shorten it, the sentence that must survive is the last one.
+
+## Key findings — the six, with the numbers
+
+*These are the abstract's claims at full precision. Draw on them for the Results section; do not move them back into the abstract.*
 
 1. **Anatomy detects, it does not rank.** Anatomic concordance separates real methods from negative controls, but its ranking does not predict accuracy against DNA-measured purity: Spearman **0.081** (n=12) and **0.3142** (n=14) when both arms use the same reference build. The registered bar (≥0.60) is met **only** against the pseudobulk yardstick that shares its atlas with the anatomy score (**0.6372**). **[STRONG]**
 2. **Deconvolution recovers a minority of true tumour-content variation.** Median **33.1%** in 147 glioblastomas and **23.3%** in 496 lower-grade gliomas (comparable methods only; **21.5%** / **17.2%** including degraded stand-ins). The purity association replicates: β **-0.13595** vs **-0.13386**, 12/12 methods, Holm p **0.00244**. **[STRONG]**

@@ -130,9 +130,46 @@ def main() -> int:
       "fails on the immune compartment of glioma, and no ground-truth-free check detects "
       "it\" (method-comparison angle).\n")
 
-    A("## Abstract — the six sentences, in order\n")
-    A("> WRITE: one sentence of motivation. Deconvolution is used to estimate tumour and "
-      "immune content; there is no routine way to know when to believe it.\n")
+    # AN ABSTRACT IS PROSE, NOT A RESULTS TABLE. This was six bold numbered sentences
+    # carrying eighteen figures; the CJSJ format reference (Choi) runs ~160 words of
+    # continuous prose with TWO result numbers. A reader decides from the abstract whether
+    # to read the paper, and cannot hold eighteen numbers while deciding.
+    #
+    # The numbers are not deleted -- they move to "Key findings" immediately below, where
+    # they are still one glance away and still artefact-derived. The abstract keeps only
+    # the figures that carry a claim it actually makes.
+    A("## Abstract\n")
+    # Panel size from the composition artefact, which already counts it. Neither `lb` nor
+    # `pd` is in scope here -- both arrive much further down, in the genuine-package section.
+    _n_meth = (J("method_composition.json") or {}).get("n_real_methods", 15)
+    _agree = log.get("n_agree_T_over_B")
+    _nm = log.get("n_methods")
+    A(f"Knowing which cell types make up a tumour changes how it is treated, but measuring "
+      f"that directly requires single-cell sequencing at a cost most laboratories cannot "
+      f"meet. Deconvolution infers the same composition from inexpensive bulk RNA, but "
+      f"choosing among the dozens of available methods still requires ground truth — the "
+      f"measurement deconvolution exists to avoid. This study asked whether a tumour's own "
+      f"anatomy can stand in. "
+      f"Cell-composition gradients that a neuropathologist would predict across the "
+      f"anatomic regions of glioblastoma were written down, hashed and publicly registered "
+      f"before any method was scored, then used to rank {_n_meth} estimators against two "
+      f"deliberately broken controls. The resulting Anatomic Concordance Score separates "
+      f"real methods from noise decisively. Its ranking, however, does not predict "
+      f"accuracy against DNA-measured tumour purity — an instrument that shares nothing "
+      f"with it — and the pre-registered bar is cleared only against a yardstick built from "
+      f"the same single-cell atlas the score itself uses. Tested against DNA methylation, "
+      f"{_agree} of {_nm} methods reproduced the T-cell-over-B-cell ordering that "
+      f"methylation measures, in a glioblastoma cohort and again in an independent "
+      f"lower-grade glioma cohort, against a prediction registered before that data "
+      f"existed. Reproducing known biology is therefore not evidence that a composition "
+      f"estimate is correct — and that is the informal check the field currently relies "
+      f"on.\n")
+    A("> WRITE: the abstract above is complete and artefact-derived; edit for voice, not "
+      "for content. If you shorten it, the sentence that must survive is the last one.\n")
+
+    A("## Key findings — the six, with the numbers\n")
+    A("*These are the abstract's claims at full precision. Draw on them for the Results "
+      "section; do not move them back into the abstract.*\n")
     A(f"1. **Anatomy detects, it does not rank.** Anatomic concordance separates real methods "
       f"from negative controls, but its ranking does not predict accuracy against DNA-measured "
       f"purity: Spearman **{a2f.get('all_methods', {}).get('spearman')}** "
