@@ -138,17 +138,47 @@ def main() -> int:
     # The numbers are not deleted -- they move to "Key findings" immediately below, where
     # they are still one glance away and still artefact-derived. The abstract keeps only
     # the figures that carry a claim it actually makes.
+    # AN INTRODUCTION SECTION, because there was none and the motivation had nowhere to
+    # live -- which is why the cost-of-sequencing framing ended up in the abstract, where
+    # it does not belong. Scaffolding only: the facts, the citations and the order. The
+    # prose is the author's to write, and this file should stop drafting it.
+    A("## Introduction\n")
+    A("> WRITE. Four beats, in this order. Everything below is a fact or a citation to "
+      "build on, not a sentence to keep.\n")
+    A("> **1 · Why composition matters clinically.** The proportion of T cells, macrophages "
+      "and vasculature in a tumour predicts response to immunotherapy. One or two sentences; "
+      "this is the only part a clinical reader needs.\n")
+    A("> **2 · Why deconvolution exists — the cost argument.** Single-cell sequencing "
+      "measures composition directly and costs on the order of thousands of dollars per "
+      "sample, plus instruments and staff most hospitals do not have. Bulk RNA-seq is "
+      "already routine and a fraction of the price; deconvolution recovers composition from "
+      "it computationally, with no extra tissue and no extra instrument. **Cite a current "
+      "per-sample figure rather than asserting `expensive` — this project holds no costing "
+      "artefact, so the number must come from a source you cite [3].** This is the "
+      "equity argument: if deconvolution is trustworthy, tumour immune profiling becomes "
+      "available anywhere bulk sequencing already is.\n")
+    A("> **3 · The circularity.** Dozens of methods exist and they disagree. Choosing "
+      "between them conventionally needs ground truth — the expensive measurement. "
+      "Benchmarks lean on simulated mixtures or flow cytometry [1][2][3], and rankings "
+      "derived from simulated bulk do not transfer to real bulk [4]. So the labs that most "
+      "need deconvolution are the least able to validate it.\n")
+    A("> **4 · What this study does about it.** Glioblastoma has pathologist-named anatomic "
+      "regions with cell-composition gradients that are textbook and independent of any "
+      "algorithm [5]. Scoring a method on whether it reproduces them needs a slide and a "
+      "label, not a cell count. State the question in the registered form: *can a tumour's "
+      "own anatomy stand in for ground truth when choosing a method — and does a method "
+      "that gets the anatomy right also get the biology right?*\n")
     A("## Abstract\n")
     # Panel size from the composition artefact, which already counts it. Neither `lb` nor
     # `pd` is in scope here -- both arrive much further down, in the genuine-package section.
     _n_meth = (J("method_composition.json") or {}).get("n_real_methods", 15)
     _agree = log.get("n_agree_T_over_B")
     _nm = log.get("n_methods")
-    A(f"Knowing which cell types make up a tumour changes how it is treated, but measuring "
-      f"that directly requires single-cell sequencing at a cost most laboratories cannot "
-      f"meet. Deconvolution infers the same composition from inexpensive bulk RNA, but "
-      f"choosing among the dozens of available methods still requires ground truth — the "
-      f"measurement deconvolution exists to avoid. This study asked whether a tumour's own "
+    A(f"Deconvolution infers cell-type composition from bulk RNA, and is widely used "
+      f"because the alternative is prohibitive for most laboratories. Choosing among the "
+      f"dozens of available methods, however, still requires ground truth — the "
+      f"measurement deconvolution exists to avoid. This study asked whether a "
+      f"tumour's own "
       f"anatomy can stand in. "
       f"Cell-composition gradients that a neuropathologist would predict across the "
       f"anatomic regions of glioblastoma were written down, hashed and publicly registered "
