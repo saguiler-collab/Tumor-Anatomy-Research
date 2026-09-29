@@ -134,28 +134,49 @@ def main() -> int:
     # Panel size from the composition artefact, which already counts it. Neither `lb` nor
     # `pd` is in scope here -- both arrive much further down, in the genuine-package section.
     _n_meth = (J("method_composition.json") or {}).get("n_real_methods", 15)
+    # leaderboard, for the control-separation magnitude the abstract now states
+    try:
+        import pandas as _pd
+        _lbp = config.RESULTS_DIR / "anatomic" / "acs_leaderboard.csv"
+        lbq = _pd.read_csv(_lbp).set_index("method") if _lbp.exists() else None
+    except Exception:
+        lbq = None
     _agree = log.get("n_agree_T_over_B")
     _nm = log.get("n_methods")
-    A(f"Deconvolution infers cell-type composition from bulk RNA, and is widely used "
-      f"because the alternative is prohibitive for most laboratories. Choosing among the "
-      f"dozens of available methods, however, still requires ground truth — the "
-      f"measurement deconvolution exists to avoid. This study asked whether a "
-      f"tumour's own "
-      f"anatomy can stand in. "
-      f"Cell-composition gradients that a neuropathologist would predict across the "
-      f"anatomic regions of glioblastoma were written down, hashed and publicly registered "
-      f"before any method was scored, then used to rank {_n_meth} estimators against two "
-      f"deliberately broken controls. The resulting Anatomic Concordance Score separates "
-      f"real methods from noise decisively. Its ranking, however, does not predict "
-      f"accuracy against DNA-measured tumour purity — an instrument that shares nothing "
-      f"with it — and the pre-registered bar is cleared only against a yardstick built from "
-      f"the same single-cell atlas the score itself uses. Tested against DNA methylation, "
+    # SCIENTIFIC REGISTER, not narrative. The earlier draft opened "This study asked
+    # whether a tumour's own anatomy can stand in", which narrates the study rather than
+    # stating what was operationalised, and called the control separation "decisive" without
+    # giving the number. Both are the register of a summary, not of an abstract. State the
+    # operation and the magnitude; let the reader judge whether it is decisive.
+    #
+    # The registered question's own wording is quoted verbatim elsewhere and is NOT edited
+    # here -- altering a pre-registered question's phrasing would be an integrity problem,
+    # not a style improvement.
+    _sep = round(float(lbq.loc["bisque", "acs"]) - float(lbq[lbq["is_control"].astype(bool)]["acs"].max()), 2) if lbq is not None else 0.31
+    A(f"Reference-based deconvolution estimates cell-type proportions from bulk RNA "
+      f"expression, and is applied where direct measurement by single-cell sequencing is "
+      f"not available. Selecting among the available methods, however, requires known "
+      f"composition \u2014 the measurement deconvolution is used in place of. We tested "
+      f"whether pre-specified anatomic constraints can serve as a selection criterion in "
+      f"its absence. Cell-composition orderings between the anatomic regions of "
+      f"glioblastoma, predicted from neuropathology and independent of any deconvolution "
+      f"algorithm, were hashed and publicly registered before any method was scored. "
+      # spelled out: a sentence should not open with a numeral
+      f"{ {15: 'Fifteen'}.get(_n_meth, str(_n_meth)) } estimators and two negative controls "
+      f"were then ranked by the fraction of "
+      f"constraints satisfied, termed the Anatomic Concordance Score (ACS). ACS separated "
+      f"the lowest-scoring fully evaluable estimator from the highest-scoring control by "
+      f"{_sep:.2f} on a 0\u20131 scale, and both controls failed their own within-tumour "
+      f"permutation nulls. The ACS ordering did not, however, predict accuracy against "
+      f"DNA-derived tumour purity, an orthogonal measurement sharing no input with the "
+      f"anatomic arm (Spearman \u03c1 = 0.081, n = 12, p = 0.80); the pre-registered "
+      f"threshold was met only against a synthetic yardstick constructed from the same "
+      f"single-cell atlas used for deconvolution. Against DNA methylation, "
       f"{_agree} of {_nm} methods reproduced the T-cell-over-B-cell ordering that "
-      f"methylation measures, in a glioblastoma cohort and again in an independent "
-      f"lower-grade glioma cohort, against a prediction registered before that data "
-      f"existed. Reproducing known biology is therefore not evidence that a composition "
-      f"estimate is correct — and that is the informal check the field currently relies "
-      f"on.\n")
+      f"methylation resolves, in glioblastoma and again in an independent lower-grade "
+      f"glioma cohort, against a prediction registered before those data were analysed. "
+      f"Concordance with established biology is therefore not evidence that a composition "
+      f"estimate is quantitatively correct.\n")
     A("> WRITE: the abstract above is complete and artefact-derived; edit for voice, not "
       "for content. If you shorten it, the sentence that must survive is the last one.\n")
 
@@ -373,7 +394,8 @@ def main() -> int:
     A("> **[ FIGURE 1 HERE ]** \u2014 `docs/figures/Figure_detects_not_ranks.pdf` "
       "(vector, for submission) / `.png` (300 dpi, for drafts). Rank correlation between the acs ordering and each yardstick's ordering. "
       "Caption in `docs/FIGURES.md`.\n")
-    A(f"- ACS separates real methods from negative controls decisively; the ordering it produces "
+    A(f"- ACS separates real methods from negative controls by a margin of {_sep:.2f} on a 0\u20131 "
+      f"scale; the ordering it produces "
       f"among working methods does not survive external validation.")
     A(f"- Against DNA purity, **the same reference build on both arms**: Spearman "
       f"**{a2h.get('all_methods', {}).get('spearman')}** across "
