@@ -741,7 +741,13 @@ def main() -> int:
     A("")
     A("## What NOT to claim\n")
     A("- Do **not** claim the ranking reshuffle replicates. It does not (Result 5).")
-    A("- Do **not** claim a mechanism for the lymphoid failure. Five were tested and rejected.")
+    A("- Do **not** claim a mechanism for the lymphoid failure. Five were tested and rejected, "
+      "and two structural properties of the reference are suspects that have NOT been shown to "
+      "cause it: the `NK_cell` column carries pan-T markers (CD3D/E/G, CD2, LCK) at 1.4\u20135.8x "
+      "the `T_cell` column's level, and `B_cell`'s profile is closest to "
+      "`Macrophage_Microglia` (r = 0.497). Both are measured in `docs/WHY_B_OVER_T.md`, which "
+      "also names the four experiments that would settle it. Report them as properties of the "
+      "reference, never as the explanation.")
     A("- Do **not** claim per-sample model fit identifies untrustworthy samples. Tested; fails.")
     A("- Do **not** headline mesenchymal character. GBM-only.")
     A("- Do **not** call `cibersortx` here the hosted CIBERSORTx, or `dwls`/`bayesprism` the "
