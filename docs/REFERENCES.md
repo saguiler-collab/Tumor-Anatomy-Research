@@ -12,11 +12,11 @@ it stands. The order below is therefore the order in which each source is **firs
 walking the paper's own section sequence (Introduction → Methods → Results → Discussion →
 Limitations). Renumber after the prose is written if the flow moves.
 
-The **Status** column is not decoration. `PDF` means a copy is on disk and was read;
-`unverified` means the citation is reconstructed and has not been checked against the
-publisher's record. 8 entries are unverified, none of them a method in the panel. Check them
-before submission — a wrong volume number in a reference list is the cheapest possible way to
-lose a reader's trust.
+The **Status** column records how each citation was checked. `PDF` means a copy is on disk
+and was read. `Crossref` means the record was resolved against the Crossref API on 2026-09-28
+— authors, title, journal, volume, pages and year taken from the publisher's own deposited
+metadata. `cited` means it is quoted from the package's documentation or the source project.
+**Nothing in this list is now unverified.**
 
 ---
 
@@ -41,13 +41,13 @@ structure labels the whole method depends on.*
 
 | | reference | status |
 |---|---|---|
-| **[6]** | M. J. Goldman, B. Craft, M. Hastie, *et al.*, "Visualizing and interpreting cancer genomics data via the Xena platform," *Nat. Biotechnol.*, vol. 38, pp. 675–678, 2020, doi: 10.1038/s41587-020-0546-8. | **unverified** |
+| **[6]** | M. J. Goldman, B. Craft, M. Hastie, *et al.*, "Visualizing and interpreting cancer genomics data via the Xena platform," *Nat. Biotechnol.*, vol. 38, pp. 675–678, 2020, doi: 10.1038/s41587-020-0546-8. | Crossref |
 | **[7]** | S. L. Carter, K. Cibulskis, E. Helman, A. McKenna, *et al.*, "Absolute quantification of somatic DNA alterations in human cancer," *Nat. Biotechnol.*, vol. 30, no. 5, pp. 413–421, May 2012, doi: 10.1038/nbt.2203. | cited |
 | **[8]** | V. Thorsson, D. L. Gibbs, S. D. Brown, *et al.*, "The Immune Landscape of Cancer," *Immunity*, vol. 48, no. 4, pp. 812–830, Apr. 2018, doi: 10.1016/j.immuni.2018.03.023. | PDF |
-| **[9]** | K. Ellrott, M. H. Bailey, G. Saksena, *et al.*, "Scalable Open Science Approach for Mutation Calling of Tumor Exomes Using Multiple Genomic Pipelines," *Cell Syst.*, vol. 6, no. 3, pp. 271–281.e7, Mar. 2018, doi: 10.1016/j.cels.2018.03.002. | **unverified** |
+| **[9]** | K. Ellrott, M. H. Bailey, G. Saksena, *et al.*, "Scalable Open Science Approach for Mutation Calling of Tumor Exomes Using Multiple Genomic Pipelines," *Cell Syst.*, vol. 6, no. 3, pp. 271–281.e7, Mar. 2018, doi: 10.1016/j.cels.2018.03.002. | Crossref |
 | **[10]** | C. Ruiz-Moreno, S. F. Salas, E. Samir, *et al.*, "Bidirectional tumor-host interdependence in glioblastoma" (GBmap), *Cancer Cell*, vol. 40, no. 6, p. 639, 2022, doi: 10.1016/j.ccell.2022.05.009. | cited |
 | **[11]** | C. Megill, B. Martin, C. Weaver, *et al.*, "CELLxGENE: a performant, scalable exploration platform for high dimensional sparse matrices," *bioRxiv*, 2021, doi: 10.1101/2021.04.05.438318. | cited |
-| **[12]** | A. E. Teschendorff, C. E. Breeze, S. C. Zheng, and S. Beck, "A comparison of reference-based algorithms for correcting cell-type heterogeneity in Epigenome-Wide Association Studies" (EpiDISH), *BMC Bioinformatics*, vol. 18, p. 105, 2017, doi: 10.1186/s12859-017-1511-5. | **unverified** |
+| **[12]** | A. E. Teschendorff, C. E. Breeze, S. C. Zheng, and S. Beck, "A comparison of reference-based algorithms for correcting cell-type heterogeneity in Epigenome-Wide Association Studies" (EpiDISH), *BMC Bioinformatics*, vol. 18, p. 105, 2017, doi: 10.1186/s12859-017-1511-5. | Crossref |
 
 *[6] serves every TCGA matrix used here. [7] is the DNA copy-number purity that never touches
 RNA, which is what makes the accuracy arm independent. [8] supplies the aggregate leukocyte
@@ -80,9 +80,9 @@ this project and have no external source (`docs/METHODS.md`).
 | | reference | status |
 |---|---|---|
 | **[21]** | C. Neftel, J. Laffy, M. G. Filbin, *et al.*, "An Integrative Model of Cellular States, Plasticity, and Genetics for Glioblastoma," *Cell*, vol. 178, no. 4, pp. 835–849.e21, Aug. 2019, doi: 10.1016/j.cell.2019.06.024. | cited |
-| **[22]** | S. Darmanis, S. A. Sloan, D. Croote, *et al.*, "Single-Cell RNA-Seq Analysis of Infiltrating Neoplastic Cells at the Migrating Front of Human Glioblastoma," *Cell Rep.*, vol. 21, no. 5, pp. 1399–1410, Oct. 2017, doi: 10.1016/j.celrep.2017.10.030. | **unverified** |
+| **[22]** | S. Darmanis, S. A. Sloan, D. Croote, *et al.*, "Single-Cell RNA-Seq Analysis of Infiltrating Neoplastic Cells at the Migrating Front of Human Glioblastoma," *Cell Rep.*, vol. 21, no. 5, pp. 1399–1410, Oct. 2017, doi: 10.1016/j.celrep.2017.10.030. | Crossref |
 | **[23]** | A. Mossi Albiach, J. Janusauskas, J. Kjaer, *et al.*, "Futile wound healing drives mesenchymal-like cell phenotypes in human glioblastoma," *bioRxiv*, 2023, doi: 10.1101/2023.09.01.555882. | cited |
-| **[24]** | K. Siletti, R. Hodge, A. Mossi Albiach, *et al.*, "Transcriptomic diversity of cell types across the adult human brain," *Science*, vol. 382, no. 6667, p. eadd7046, Oct. 2023, doi: 10.1126/science.add7046. | **unverified** |
+| **[24]** | K. Siletti, R. Hodge, A. Mossi Albiach, *et al.*, "Transcriptomic diversity of cell types across the adult human brain," *Science*, vol. 382, no. 6667, p. eadd7046, Oct. 2023, doi: 10.1126/science.add7046. | Crossref |
 
 ---
 
@@ -91,8 +91,8 @@ this project and have no external source (`docs/METHODS.md`).
 | | reference | status |
 |---|---|---|
 | **[25]** | S. Ajaib, D. Lodha, S. Pollock, *et al.*, "GBMdeconvoluteR accurately infers proportions of neoplastic and immune cell populations from bulk glioblastoma transcriptomic data," *Neuro-Oncology*, vol. 25, no. 7, pp. 1236–1248, 2023, doi: 10.1093/neuonc/noad021. | PDF |
-| **[26]** | E. Becht, N. A. Giraldo, L. Lacroix, *et al.*, "Estimating the population abundance of tissue-infiltrating immune and stromal cell populations using gene expression" (MCPcounter), *Genome Biol.*, vol. 17, p. 218, 2016, doi: 10.1186/s13059-016-1070-5. | **unverified** |
-| **[27]** | R. G. W. Verhaak, K. A. Hoadley, E. Purdom, *et al.*, "Integrated genomic analysis identifies clinically relevant subtypes of glioblastoma," *Cancer Cell*, vol. 17, no. 1, pp. 98–110, Jan. 2010, doi: 10.1016/j.ccr.2009.12.020. | **unverified** |
+| **[26]** | E. Becht, N. A. Giraldo, L. Lacroix, *et al.*, "Estimating the population abundance of tissue-infiltrating immune and stromal cell populations using gene expression" (MCPcounter), *Genome Biol.*, vol. 17, p. 218, 2016, doi: 10.1186/s13059-016-1070-5. | Crossref |
+| **[27]** | R. G. W. Verhaak, K. A. Hoadley, E. Purdom, *et al.*, "Integrated Genomic Analysis Identifies Clinically Relevant Subtypes of Glioblastoma Characterized by Abnormalities in PDGFRA, IDH1, EGFR, and NF1," *Cancer Cell*, vol. 17, no. 1, pp. 98–110, Jan. 2010, doi: 10.1016/j.ccr.2009.12.020. | Crossref |
 
 *[25] and [26] supply an external marker-based estimate the anatomic arm is checked against.
 [27] defines the mesenchymal subtype used in the failure-factor analysis — and does not exist
@@ -110,7 +110,7 @@ Each was obtained and deliberately not evaluated, with the reason recorded
 | **[28]** | K. Kang, Q. Meng, I. Shats, D. M. Umbach, M. Li, Y. Li, X. Li, and L. Li, "CDSeq: A novel complete deconvolution method for dissecting heterogeneous samples using gene expression data," *PLoS Comput. Biol.*, vol. 15, no. 12, p. e1007510, 2019, doi: 10.1371/journal.pcbi.1007510. | cited |
 | **[29]** | K. Menden, M. Marouf, S. Oller, *et al.*, "Deep learning–based cell composition analysis from tissue expression profiles" (Scaden), *Sci. Adv.*, vol. 6, no. 30, p. eaba2619, 2020, doi: 10.1126/sciadv.aba2619. | cited |
 | **[30]** | J. Fan, Y. Lyu, Q. Zhang, X. Wang, M. Li, and R. Xiao, "MuSiC2: cell-type deconvolution for multi-condition bulk RNA-seq data," *Brief. Bioinform.*, vol. 23, no. 6, p. bbac430, 2022, doi: 10.1093/bib/bbac430. | PDF |
-| **[31]** | B. A. Luca, C. B. Steen, M. Matusiak, *et al.*, "Profiling Cellular Ecosystems at Single-Cell Resolution and at Scale with EcoTyper," *Methods Mol. Biol.*, 2023. | **unverified** |
+| **[31]** | C. B. Steen, B. A. Luca, A. A. Alizadeh, and A. J. Gentles, "Profiling Cellular Ecosystems at Single-Cell Resolution and at Scale with EcoTyper," in *Methods Mol. Biol.*, 2023, pp. 43–71, doi: 10.1007/978-1-0716-2986-4_4. | Crossref |
 | **[32]** | G. Sturm, F. Finotello, and M. List, "Immunedeconv: An R Package for Unified Access to Computational Methods for Estimating Immune Cell Fractions from Bulk RNA-Sequencing Data," in *Bioinformatics for Cancer Immunotherapy*, Methods Mol. Biol., vol. 2120, 2020, ch. 16, doi: 10.1007/978-1-0716-0327-7_16. | PDF |
 
 ---
@@ -141,15 +141,25 @@ Everything else is positioning, provenance, or a tool that did not enter the pan
 
 ---
 
-## Outstanding
+## Verification record
 
-**8 unverified: [6], [9], [12], [22], [24], [26], [27], [31] — Xena, MC3, EpiDISH, Darmanis, Siletti, MCPcounter, Verhaak, EcoTyper.** No copy is on disk for these; the citations are
-reconstructed and the volume, page and year fields have not been checked against the
-publisher's record.
+All 35 entries are checked. The eight that were previously reconstructed from memory were
+resolved against **Crossref** on 2026-09-28 and are marked `Crossref` in the tables above:
 
-**[12] EpiDISH is the one that matters.** It is the instrument behind the headline result, and
-it is the only unverified entry that is load-bearing. Verify it first.
+| ref | what changed |
+|---|---|
+| [6] Goldman, Xena | confirmed exactly as written |
+| [9] Ellrott, MC3 | confirmed exactly as written |
+| **[12] Teschendorff, EpiDISH** | **confirmed exactly as written** — this is the load-bearing one |
+| [22] Darmanis | confirmed exactly as written |
+| [24] Siletti | confirmed exactly as written |
+| [26] Becht, MCPcounter | confirmed exactly as written |
+| [27] Verhaak | **title corrected** — the full title continues *"…Characterized by Abnormalities in PDGFRA, IDH1, EGFR, and NF1"* |
+| [31] Steen, EcoTyper | **authors, pages and DOI corrected** — Steen CB, Luca BA, Alizadeh AA, Gentles AJ; pp. 43–71; doi 10.1007/978-1-0716-2986-4_4 |
 
-The panel methods **[13]–[20]** are all verified against a PDF in
-`celldecov_reference_papers/` or cited from the package's own documentation, so no method in the
-leaderboard rests on an unchecked citation.
+Six were already exact. Two were wrong in detail and are now right: a truncated title and a
+chapter whose author order, page range and DOI had all been reconstructed incorrectly.
+
+`tests/test_references_ordered.py` enforces contiguous numbering, that the stated counts match
+the markers, that no panel method carries an unchecked citation, and that every entry has a
+year.

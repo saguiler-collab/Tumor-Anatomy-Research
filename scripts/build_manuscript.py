@@ -805,11 +805,11 @@ def main() -> int:
     A("> The full numbered list, in order of first use, is in **`docs/REFERENCES.md`** — "
       "35 entries in IEEE style with DOIs, matching the CJSJ format. Paste it here at "
       "submission, or `\\input` the file if the venue takes LaTeX.\n")
-    A("> **Before submitting, resolve the 8 entries marked `unverified`** — no copy is held "
-      "on disk and their volume, page and year fields have not been checked against the "
-      "publisher's record. None is a method in the panel, so no leaderboard entry rests on "
-      "an unchecked citation, but **[12] EpiDISH is load-bearing for the headline result** "
-      "and should be verified first.\n")
+    A("> **All 35 entries are verified.** Every citation is either read from a PDF held in "
+      "the repository or resolved against the Crossref API on 2026-09-28 from the "
+      "publisher's own deposited metadata. Two were wrong and are corrected: [27] Verhaak "
+      "had a truncated title, and [31] EcoTyper had the wrong author order, page range and "
+      "DOI. **[12] EpiDISH — load-bearing for the headline result — is confirmed exactly.**\n")
 
     OUT.write_text("\n".join(L) + "\n")
     print(f"wrote {OUT.relative_to(config.PROJECT_ROOT)} ({len(L)} blocks)")
