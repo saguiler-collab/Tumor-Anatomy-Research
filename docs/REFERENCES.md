@@ -141,6 +141,50 @@ Everything else is positioning, provenance, or a tool that did not enter the pan
 
 ---
 
+## How many of these does the paper actually need?
+
+The CJSJ format reference (Choi) carries **6 references in a ~2,300-word paper**. This list
+has **35**. That gap is worth understanding before cutting, because most of it is forced by
+the design rather than by padding.
+
+**The difference is what the two papers are.** Choi tests one technique, so one or two
+citations cover the method. This study *benchmarks fifteen estimators*, and every published
+tool in the panel must be cited or it is being tested anonymously. That alone is eight
+references Choi's design never incurs.
+
+| tier | n | refs | can it be cut? |
+|---|---|---|---|
+| **Load-bearing data** | 5 | [5] [6] [7] [10] [12] | **No.** Remove one and a result disappears. |
+| **Panel methods** | 8 | [13]–[20] | **No.** You cannot benchmark software without citing it. |
+| **Positioning** | 4 | [1]–[4] | **Keep.** The Introduction's argument is that benchmarks lean on simulated mixtures; [1]–[3] establish it and [4] independently confirms it. |
+| Supporting | 9 | [8] [9] [11] [21] [22] [23] [25] [26] [27] | Cut with the analysis. Each attaches to one arm — reference sensitivity, a failure factor, an external comparison. |
+| Optional | 9 | [24] [28]–[35] | Cut freely. Tools assessed and excluded, adjacent fields, technical background. |
+
+**Three defensible targets:**
+
+| target | n | what it costs you |
+|---|---|---|
+| **13** | load-bearing + panel | the Introduction loses its evidence and reads as assertion |
+| **17** | + positioning | **recommended.** Every claim in the paper is still sourced |
+| **35** | everything | complete, and long for a venue that expects ~6 |
+
+**At 17 you are still citing nearly three times Choi**, and every one of them is doing work:
+five datasets the results rest on, eight pieces of software under test, four benchmarks the
+study positions against. That is defensible to any reviewer. Going below 13 is not — it would
+mean either an unsourced dataset or an uncited method in the leaderboard.
+
+**What to cut first, if you must.** The Optional tier, in this order: [35] technical
+background, [33] [34] adjacent fields, [30] [31] [32] tools assessed but never run, [28] [29]
+CDSeq and Scaden — though [29] Scaden is worth keeping if you state the exclusion rationale,
+since a deliberate exclusion with a reason reads better than silence.
+
+**What the manuscript currently cites:** [1] [2] [3] [4] [5] [12] [27] [31]. The rest are
+available in the list and will attach as the prose is written — a Methods section naming
+MuSiC, SCDC, Bisque, EPIC, quanTIseq, DWLS, BayesPrism and CIBERSORTx pulls in [13]–[20] by
+itself.
+
+---
+
 ## Verification record
 
 All 35 entries are checked. The eight that were previously reconstructed from memory were
