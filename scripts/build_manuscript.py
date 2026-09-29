@@ -130,44 +130,6 @@ def main() -> int:
       "fails on the immune compartment of glioma, and no ground-truth-free check detects "
       "it\" (method-comparison angle).\n")
 
-    # AN ABSTRACT IS PROSE, NOT A RESULTS TABLE. This was six bold numbered sentences
-    # carrying eighteen figures; the CJSJ format reference (Choi) runs ~160 words of
-    # continuous prose with TWO result numbers. A reader decides from the abstract whether
-    # to read the paper, and cannot hold eighteen numbers while deciding.
-    #
-    # The numbers are not deleted -- they move to "Key findings" immediately below, where
-    # they are still one glance away and still artefact-derived. The abstract keeps only
-    # the figures that carry a claim it actually makes.
-    # AN INTRODUCTION SECTION, because there was none and the motivation had nowhere to
-    # live -- which is why the cost-of-sequencing framing ended up in the abstract, where
-    # it does not belong. Scaffolding only: the facts, the citations and the order. The
-    # prose is the author's to write, and this file should stop drafting it.
-    A("## Introduction\n")
-    A("> WRITE. Four beats, in this order. Everything below is a fact or a citation to "
-      "build on, not a sentence to keep.\n")
-    A("> **1 · Why composition matters clinically.** The proportion of T cells, macrophages "
-      "and vasculature in a tumour predicts response to immunotherapy. One or two sentences; "
-      "this is the only part a clinical reader needs.\n")
-    A("> **2 · Why deconvolution exists — the cost argument.** Single-cell sequencing "
-      "measures composition directly and costs on the order of thousands of dollars per "
-      "sample, plus instruments and staff most hospitals do not have. Bulk RNA-seq is "
-      "already routine and a fraction of the price; deconvolution recovers composition from "
-      "it computationally, with no extra tissue and no extra instrument. **Cite a current "
-      "per-sample figure rather than asserting `expensive` — this project holds no costing "
-      "artefact, so the number must come from a source you cite [3].** This is the "
-      "equity argument: if deconvolution is trustworthy, tumour immune profiling becomes "
-      "available anywhere bulk sequencing already is.\n")
-    A("> **3 · The circularity.** Dozens of methods exist and they disagree. Choosing "
-      "between them conventionally needs ground truth — the expensive measurement. "
-      "Benchmarks lean on simulated mixtures or flow cytometry [1][2][3], and rankings "
-      "derived from simulated bulk do not transfer to real bulk [4]. So the labs that most "
-      "need deconvolution are the least able to validate it.\n")
-    A("> **4 · What this study does about it.** Glioblastoma has pathologist-named anatomic "
-      "regions with cell-composition gradients that are textbook and independent of any "
-      "algorithm [5]. Scoring a method on whether it reproduces them needs a slide and a "
-      "label, not a cell count. State the question in the registered form: *can a tumour's "
-      "own anatomy stand in for ground truth when choosing a method — and does a method "
-      "that gets the anatomy right also get the biology right?*\n")
     A("## Abstract\n")
     # Panel size from the composition artefact, which already counts it. Neither `lb` nor
     # `pd` is in scope here -- both arrive much further down, in the genuine-package section.
@@ -250,11 +212,58 @@ def main() -> int:
     A("---\n")
 
     # ---- methods ---------------------------------------------------------------------
-    A("## Methods — what a reader needs to reproduce it\n")
+    # The anatomic report, loaded once and used by both the Methods table and the
+    # Statistical Analysis section. Both previously hardcoded 122 and 9.
+    _rep = J("anatomic/anatomic_report.json") or {}
+    # "evaluable tumours" is the count that contributes at least one constraint pair, which
+    # is what every method's row reports -- not `n_tumors`, which is the cohort size (10).
+    _mc = J("method_composition.json") or {}
+    _n_eval = next((m.get("n_tumors") for m in _mc.get("methods", [])
+                    if m.get("n_tumors")), None) or 9
+    # AN ABSTRACT IS PROSE, NOT A RESULTS TABLE. This was six bold numbered sentences
+    # carrying eighteen figures; the CJSJ format reference (Choi) runs ~160 words of
+    # continuous prose with TWO result numbers. A reader decides from the abstract whether
+    # to read the paper, and cannot hold eighteen numbers while deciding.
+    #
+    # The numbers are not deleted -- they move to "Key findings" immediately below, where
+    # they are still one glance away and still artefact-derived. The abstract keeps only
+    # the figures that carry a claim it actually makes.
+    # AN INTRODUCTION SECTION, because there was none and the motivation had nowhere to
+    # live -- which is why the cost-of-sequencing framing ended up in the abstract, where
+    # it does not belong. Scaffolding only: the facts, the citations and the order. The
+    # prose is the author's to write, and this file should stop drafting it.
+    A("## I. Introduction\n")
+    A("> WRITE. Four beats, in this order. Everything below is a fact or a citation to "
+      "build on, not a sentence to keep.\n")
+    A("> **1 · Why composition matters clinically.** The proportion of T cells, macrophages "
+      "and vasculature in a tumour predicts response to immunotherapy. One or two sentences; "
+      "this is the only part a clinical reader needs.\n")
+    A("> **2 · Why deconvolution exists — the cost argument.** Single-cell sequencing "
+      "measures composition directly and costs on the order of thousands of dollars per "
+      "sample, plus instruments and staff most hospitals do not have. Bulk RNA-seq is "
+      "already routine and a fraction of the price; deconvolution recovers composition from "
+      "it computationally, with no extra tissue and no extra instrument. **Cite a current "
+      "per-sample figure rather than asserting `expensive` — this project holds no costing "
+      "artefact, so the number must come from a source you cite [3].** This is the "
+      "equity argument: if deconvolution is trustworthy, tumour immune profiling becomes "
+      "available anywhere bulk sequencing already is.\n")
+    A("> **3 · The circularity.** Dozens of methods exist and they disagree. Choosing "
+      "between them conventionally needs ground truth — the expensive measurement. "
+      "Benchmarks lean on simulated mixtures or flow cytometry [1][2][3], and rankings "
+      "derived from simulated bulk do not transfer to real bulk [4]. So the labs that most "
+      "need deconvolution are the least able to validate it.\n")
+    A("> **4 · What this study does about it.** Glioblastoma has pathologist-named anatomic "
+      "regions with cell-composition gradients that are textbook and independent of any "
+      "algorithm [5]. Scoring a method on whether it reproduces them needs a slide and a "
+      "label, not a cell count. State the question in the registered form: *can a tumour's "
+      "own anatomy stand in for ground truth when choosing a method — and does a method "
+      "that gets the anatomy right also get the biology right?*\n")
+    A("## II. Methods\n")
     A("| item | value | source |")
     A("|---|---|---|")
-    A(f"| Anatomy cohort | Ivy GAP, 122 anatomic samples / 9 evaluable tumours, "
-      f"10,000 within-tumour permutations | `results/anatomic/anatomic_report.json` |")
+    A(f"| Anatomy cohort | Ivy GAP, {_rep.get('n_samples', 122)} anatomic samples / "
+      f"{_n_eval} evaluable tumours, 10,000 within-tumour permutations "
+      f"| `results/anatomic/anatomic_report.json` |")
     A(f"| Tumour-purity truth | ABSOLUTE purity from DNA copy number, "
       f"{cc.get('n_gbm')} GBM / {cc.get('n_lgg')} LGG complete cases | PanCanAtlas |")
     # THE TWO COHORTS DO NOT USE THE SAME NUMBER OF CpGs, and this row covers both. It
@@ -299,7 +308,71 @@ def main() -> int:
       "does a method that gets the anatomy right also get the biology right?* — Result 1b. "
       "They are different questions and this study answers them differently.\n")
 
+    # ---- III. Statistical analysis ------------------------------------------------
+    # Choi's paper carries this as its own numbered section and so should this one: every
+    # test, its null, its n, and how it was checked. All of it is already verified in
+    # docs/STATISTICAL_VERIFICATION.md -- this section is where a reader meets it.
+    A("## III. Statistical Analysis, Data Analysis and Measurements\n")
+    A("> WRITE: beats and facts below; compose the prose. Every figure here is verified in "
+      "`docs/STATISTICAL_VERIFICATION.md`, which recomputed each one from the underlying "
+      "data and, where a statistic rests on an approximation, checked it against an exact "
+      "or permutation alternative.\n")
+
+    A("**The measurement.** The Anatomic Concordance Score is the fraction of "
+      "pre-registered constraint/tumour pairs a method satisfies. Constraints are "
+      "cell-composition orderings between anatomic regions that a neuropathologist would "
+      "predict; they were fixed and hashed before any method was scored "
+      "(`ivygap/anatomic/constraints.py`).\n")
+
+    A("| quantity | test | null | n |")
+    A("|---|---|---|---|")
+    A(f"| Anatomic Concordance Score | fraction of constraint/tumour pairs satisfied | "
+      f"**within-tumour permutation** of structure labels, 10,000 draws | "
+      f"{_rep.get('n_samples')} samples, {_n_eval} evaluable tumours |")
+    A("| ACS vs accuracy | Spearman rank correlation over methods | pre-registered "
+      "bar \u03c1 \u2265 0.60 **and** a bootstrap CI excluding zero | 9\u201314 methods |")
+    A("| confidence intervals | percentile bootstrap resampling **methods**, 5,000 draws, "
+      "seed fixed in `config.RANDOM_SEED` | \u2014 | as above |")
+    A("| tumour-content recovery | `1 + slope` of (estimate \u2212 truth) regressed on "
+      "truth | 0 = no information, 1 = perfect | 147 GBM / 496 LGG |")
+    A("| lymphoid ordering | two-sided Wilcoxon signed-rank, **paired within sample** | "
+      "\u2014 | 56 GBM / 510 LGG per method |")
+    A("| per-sample model fit | R\u00b2 of the best non-negative fit | floor = shuffled "
+      "gene\u2192type labels; ceiling = top-8 SVD | 175 GBM / 534 LGG |")
+    A("")
+
+    A("> **1 · Why the null is a permutation, not a coin flip.** Cell fractions are "
+      "compositional and correlated, so a 50% null is wrong. Structure labels are permuted "
+      "**within** each tumour, which preserves both the tumour's composition and the "
+      "structure sizes. State this explicitly — it is the difference between a real null "
+      "and a decorative one.\n")
+    A("> **2 · Two negative controls, and why they license every claim.** One method "
+      "receives random cell proportions; the other a signature matrix with its gene labels "
+      "shuffled. A scorer that rates real and broken inputs alike measures nothing, and you "
+      "cannot discover that by looking at real inputs alone. Report the margin.\n")
+    A("> **3 · Nesting.** Samples are nested within tumours, so all scoring collapses to "
+      "(tumour, structure) before aggregation. Say so; a reviewer will check.\n")
+    A("> **4 · What was excluded, and on what rule.** Methods run without an input their "
+      "published algorithm requires are marked *degenerate* or *not comparable* by declared "
+      "rule (`ivygap/deconv/comparability.py`), before any score is seen. Distinguish "
+      "**could not be evaluated** from **evaluated and wrong** — quanTIseq is the first, "
+      "not the second.\n")
+    A("> **5 · How the statistics were checked.** p-values come from an asymptotic "
+      "t-approximation, which is worth distrusting at n = 9\u201314. Each was compared "
+      "against a permutation p computed on ranks — exact by full enumeration at n = 9 "
+      "(362,880 permutations), Monte-Carlo above. No difference exceeded 0.004, and the "
+      "registered outcome clears the bar under either calculation. Both bootstrap intervals "
+      "reproduce bit-for-bit from the recorded seed.\n")
+    A("> **6 · Reporting convention for permutation p-values.** With 10,000 draws the "
+      "smallest attainable p is 1/10001. Values at that floor are reported as "
+      "**p < 1e-4**, never as a point estimate, because the test cannot resolve finer.\n")
+
+    A("## IV. Results\n")
+
     A("## Result 1 — anatomy detects, it does not rank **[STRONG]**\n")
+    A("> **[ FIGURE 1 HERE ]** \u2014 `docs/figures/Figure_detects_not_ranks.pdf` "
+      "(vector, for submission) / `.png` (300 dpi, for drafts). Rank correlation between the acs ordering and each yardstick's ordering. "
+      "Caption in `docs/FIGURES.md`.\n")
     A(f"- ACS separates real methods from negative controls decisively; the ordering it produces "
       f"among working methods does not survive external validation.")
     A(f"- Against DNA purity, **the same reference build on both arms**: Spearman "
@@ -356,6 +429,9 @@ def main() -> int:
             "The categorical finding above needs no correlation.\n")
 
     A("## Result 2 — how much tumour content is recovered **[STRONG]**\n")
+    A("> **[ FIGURE 7 HERE ]** \u2014 `docs/figures/Figure_tumour_recovery.pdf` "
+      "(vector, for submission) / `.png` (300 dpi, for drafts). Recovery of true tumour-content variation, by method and cohort. "
+      "Caption in `docs/FIGURES.md`.\n")
     A(f"- Median recovery **{pct(rf.get('gbm_median_comparable'))}** (GBM) and "
       f"**{pct(rf.get('lgg_median_comparable'))}** (LGG) among comparable methods.")
     A(f"- Purity is the one biological factor that replicates: β "
@@ -392,6 +468,9 @@ def main() -> int:
               f"evaluated*, not *evaluated and wrong*.\n")
 
     A("## Result 3 — the lymphoid compartment. THE HEADLINE. **[STRONG]**\n")
+    A("> **[ FIGURE 2 HERE ]** \u2014 `docs/figures/Figure_lymphoid_failure.pdf` "
+      "(vector, for submission) / `.png` (300 dpi, for drafts). Relative composition within {t, nk, b}, by method and by methylation. "
+      "Caption in `docs/FIGURES.md`.\n")
     # THE TWO COHORTS ARE NOT EQUIVALENT AND THE TABLE MUST NOT IMPLY THEY ARE. The
     # pre-specification is explicit: "This is LGG, not GBM. The anomaly was measured in GBM."
     # So GBM is DISCOVERY and LGG is the PRE-REGISTERED REPLICATION. Presenting them as two
@@ -447,6 +526,9 @@ def main() -> int:
       "made on cohort means. That correction is part of the result.\n")
 
     A("## Result 4 — why: the model's premise is violated **[STRONG]**\n")
+    A("> **[ FIGURE 6 HERE ]** \u2014 `docs/figures/Figure_model_fit_bound.pdf` "
+      "(vector, for submission) / `.png` (300 dpi, for drafts). Per-sample fit of the non-negative mixing model, against floor and ceiling controls. "
+      "Caption in `docs/FIGURES.md`.\n")
     A("| | GBM | LGG |")
     A("|---|---|---|")
     for k, lab in (("r2_median", "R² of best additive fit (median)"),
@@ -619,6 +701,29 @@ def main() -> int:
       "in 6 of 6 tumours, p = 0.0142, trend r = +0.957. **Suggestive, not established.**\n")
     A("---\n")
 
+    A("> **[ FIGURE 3 HERE ]** \u2014 `docs/figures/Figure_lymphoid_paired.pdf`. T-cell and "
+      "B-cell fraction within {T, NK, B}, by method, with the paired Wilcoxon test. Place "
+      "immediately after the two failure modes are distinguished.\n")
+    A("> **[ FIGURES 4 AND 5 HERE ]** \u2014 `docs/figures/Figure_purity_scatter_gbm.pdf` and "
+      "`Figure_purity_scatter_lgg.pdf`. Estimated tumour fraction against DNA-measured "
+      "purity, one panel per method. These support Result 2; place them there if the "
+      "journal allows, or as supplementary if the figure budget is tight.\n")
+
+    A("## Figure inventory\n")
+    A("| # | file | placement | what it shows |")
+    A("|---|---|---|---|")
+    A("| 1 | `Figure_detects_not_ranks` | Result 1 | ACS ordering vs each yardstick's ordering |")
+    A("| 2 | `Figure_lymphoid_failure` | Result 3 (headline) | composition within {T, NK, B} by method |")
+    A("| 3 | `Figure_lymphoid_paired` | Result 3 | T vs B per method, paired Wilcoxon |")
+    A("| 4 | `Figure_purity_scatter_gbm` | Result 2 | estimate vs DNA purity, GBM |")
+    A("| 5 | `Figure_purity_scatter_lgg` | Result 2 | estimate vs DNA purity, LGG |")
+    A("| 6 | `Figure_model_fit_bound` | Result 4 | model fit against floor and ceiling |")
+    A("| 7 | `Figure_tumour_recovery` | Result 2 | recovery by method and cohort |")
+    A("")
+    A("*Every figure exists as PDF (vector, submission) and PNG (300 dpi, drafts) in "
+      "`docs/figures/`. Captions are in `docs/FIGURES.md` and are the place for "
+      "interpretation \u2014 the plots themselves carry no argument, per journal "
+      "convention and the CJSJ format reference.*\n")
     A("## Figures to build\n")
     A("1. **Anatomy detects but does not rank** — ACS vs each external yardstick, one panel per "
       "yardstick, with the registered 0.60 bar drawn. The pseudobulk panel is the only one that "
@@ -644,11 +749,61 @@ def main() -> int:
     A("- Do **not** quote \"12 of 12 methods put B above T\" without the denominator. It is a "
       "mean over samples with any lymphoid signal.")
     A("")
+    # ---- V. Discussion ------------------------------------------------------------
+    A("## V. Discussion\n")
+    A("> WRITE: five beats. Facts and citations below; the prose is yours.\n")
+    A("> **1 · What the study answers.** Both clauses of the registered question, in the "
+      "order registered. Anatomy *detects* — the margin over the negative controls is the "
+      "evidence. It does not *rank* — and the ranking result is INCONCLUSIVE at n = 12, "
+      "not refuted. Say inconclusive and mean it.\n")
+    A("> **2 · The finding that carries the paper.** No method reproduces the "
+      "pre-registered T > B ordering, in either cohort, against an instrument that shares "
+      "nothing with the deconvolution arm. The prediction was registered 95 minutes before "
+      "the data existed and named its own falsifier. GBM is discovery; LGG is the "
+      "registered replication in a different tumour type at 3.4x the sample size.\n")
+    A("> **3 · Where this sits in the field.** [4] reaches the same conclusion about "
+      "pseudobulk benchmarks from a different direction and at 5,891 samples, which removes "
+      "the obvious objection that our orthogonal arm is the broken one. But their criterion "
+      "is *reproducibility* and ours is *correctness against an orthogonal instrument*: "
+      "nothing in a reproducibility design can detect a method that is reproducibly wrong, "
+      "which is exactly what we exhibit. `docs/RELATED_WORK.md` has the comparison table "
+      "and the one genuine disagreement (BayesPrism).\n")
+    A("> **4 · What it means practically.** A published immune fraction for a glioma cannot "
+      "be believed without an orthogonal measurement, and no internal check substitutes. "
+      "Connect this back to the equity argument from the Introduction: the labs that most "
+      "need deconvolution are the least able to validate it, and this study does not solve "
+      "that — it measures how far the cheapest available check gets you.\n")
+    A("> **5 · What would settle the open question.** More comparable methods. The power "
+      "ceiling here is twelve, and no reanalysis widens it.\n")
+
     A("## Limitations — see `docs/PAPER_OUTLINE.md` §9, all ten, none in a footnote\n")
+
+
     A("The two that a reviewer will find first: the **GBM per-type arm is n = 56** (most TCGA-GBM "
       "methylation is HM27, not HM450), and **one reference atlas** underlies every method, so "
       "\"biology breaks deconvolution\" cannot be fully separated from \"the biology is "
       "under-represented in GBmap\".\n")
+
+    A("## Acknowledgements\n")
+    A("> WRITE. Name, in this order: anyone who supervised or advised; the Allen Institute "
+      "for Brain Science for the Ivy GAP release; TCGA and its contributing patients; the "
+      "authors of every package in the panel, since this study is a test OF their software "
+      "and they are entitled to the courtesy of being named; and any compute or funding "
+      "support. If AI tooling was used in the analysis or the writing, disclose it here in "
+      "the form the venue requires — CJSJ and Regeneron STS both ask.\n")
+    A("> **Data and code availability.** State that the constraint file was registered at "
+      "OSF `dm2t8` before scoring, that every result is frozen in a hash-verified archive, "
+      "and where the repository lives.\n")
+
+    A("## References\n")
+    A("> The full numbered list, in order of first use, is in **`docs/REFERENCES.md`** — "
+      "35 entries in IEEE style with DOIs, matching the CJSJ format. Paste it here at "
+      "submission, or `\\input` the file if the venue takes LaTeX.\n")
+    A("> **Before submitting, resolve the 8 entries marked `unverified`** — no copy is held "
+      "on disk and their volume, page and year fields have not been checked against the "
+      "publisher's record. None is a method in the panel, so no leaderboard entry rests on "
+      "an unchecked citation, but **[12] EpiDISH is load-bearing for the headline result** "
+      "and should be verified first.\n")
 
     OUT.write_text("\n".join(L) + "\n")
     print(f"wrote {OUT.relative_to(config.PROJECT_ROOT)} ({len(L)} blocks)")
