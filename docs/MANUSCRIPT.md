@@ -22,21 +22,6 @@ Reference-based deconvolution estimates cell-type proportions from bulk RNA expr
 
 > WRITE: the abstract above is complete and artefact-derived; edit for voice, not for content. If you shorten it, the sentence that must survive is the last one.
 
-## Key findings — the six, with the numbers
-
-*These are the abstract's claims at full precision. Draw on them for the Results section; do not move them back into the abstract.*
-
-1. **Anatomy detects, it does not rank.** Anatomic concordance separates real methods from negative controls, but its ranking does not predict accuracy against DNA-measured purity: Spearman **0.081** (n=12) and **0.3142** (n=14) when both arms use the same reference build. The registered bar (≥0.60) is met **only** against the pseudobulk yardstick that shares its atlas with the anatomy score (**0.6372**). **[STRONG]**
-2. **Deconvolution recovers a minority of true tumour-content variation.** Median **33.1%** in 147 glioblastomas and **23.3%** in 496 lower-grade gliomas (comparable methods only; **21.5%** / **17.2%** including degraded stand-ins). The purity association replicates: β **-0.13595** vs **-0.13386**, 12/12 methods, Holm p **0.00244**. **[STRONG]**
-3. **The lymphoid compartment is not recoverable at all.** DNA methylation places T cells above B cells in **94.8%** of glioblastomas and **93.2%** of lower-grade gliomas, at true ratios of **4.76:1** and **2.34:1**. **No method reproduces this in either cohort.** **[STRONG]**
-4. **The failure has two distinct forms.** **4 of 12** methods (GBM) and **4 of 12** (LGG) return *exactly zero* T, B and NK cells in the majority of samples. Of those that do report lymphocytes, **6 of 8** (GBM) and **8 of 8** (LGG) place B above T, paired per-sample. **Zero of twelve** reproduce the true T>NK>B ordering in either cohort. **[STRONG]**
-5. **The mixing model itself is violated.** The best non-negative fit leaves a median **63.8%** (GBM) and **76.4%** (LGG) of marker-space variance unexplained. Shuffling gene-to-cell-type assignment drops R² to ≈0 (so the reference does carry real structure) while the top-8 SVD ceiling is **0.9803** — the reference reaches only **39%** of the achievable. **[STRONG]**
-6. **And no ground-truth-free signal detects any of it.** Five candidate explanations and diagnostics were tested and rejected, each with a working control. **[STRONG]**
-
-> WRITE: one closing sentence. The practical implication is that a published immune fraction for a glioma cannot be believed without an orthogonal measurement, and no internal check substitutes.
-
----
-
 ## I. Introduction
 
 > WRITE. Four beats, in this order. Everything below is a fact or a citation to build on, not a sentence to keep.
@@ -64,7 +49,7 @@ Reference-based deconvolution estimates cell-type proportions from bulk RNA expr
 
 ---
 
-> **The registered question has two clauses.** *Can a tumor's own anatomy stand in for ground truth when choosing a cell-type deconvolution method* — Result 1 — *and does a method that gets the anatomy right also get the biology right?* — Result 1b. They are different questions and this study answers them differently.
+> **The registered question has two clauses.** *Can a tumor's own anatomy stand in for ground truth when choosing a cell-type deconvolution method* — Result 1 — *and does a method that gets the anatomy right also get the biology right?* — §4.2. They are different questions and this study answers them differently.
 
 ## III. Statistical Analysis, Data Analysis and Measurements
 
@@ -95,7 +80,7 @@ Reference-based deconvolution estimates cell-type proportions from bulk RNA expr
 
 ## IV. Results
 
-## Result 1 — anatomy detects, it does not rank **[STRONG]**
+### 4.1 · Anatomic concordance separates working methods from broken ones
 
 > **[ FIGURE 1 HERE ]** — `docs/figures/Figure_detects_not_ranks.pdf` (vector, for submission) / `.png` (300 dpi, for drafts). Rank correlation between the acs ordering and each yardstick's ordering. Caption in `docs/FIGURES.md`.
 
@@ -105,7 +90,7 @@ Reference-based deconvolution estimates cell-type proportions from bulk RNA expr
 
 > WRITE: the obvious objection — that the two arms used different reference builds, so `music` meant a different algorithm in each — was removed by measurement rather than argued away. **Say what removing it did, because it was not nothing.** On the log-matrix runs the parity figure was ≈ 0; rebuilding both arms from genuine counts (OPEN_DEFECTS D16) moved it to the value above. It still fails the registered bar and is not significant, so the conclusion holds — but the honest phrasing is *a weak positive that does not reach significance*, not *indistinguishable from zero*. Claiming the correction changed nothing would be false and is the kind of thing a reviewer checks.
 
-## Result 1b — a method that gets the anatomy right does NOT get the biology right **[STRONG]**
+### 4.2 · Anatomic concordance does not identify a method that is biologically correct
 
 This is the second clause of the registered question, tested directly against the pre-registered criterion rather than through the underpowered rank correlation above.
 
@@ -122,7 +107,7 @@ This is the second clause of the registered question, tested directly against th
 
 **What must NOT be claimed.** The rank correlation between anatomic concordance and lymphoid failure runs *opposite* to the hypothesis — GBM +0.45 (p = 0.14), LGG +0.48 (p = 0.12) on 12 methods — but it is **not significant** and must be reported as directional only, if at all. The categorical finding above needs no correlation.
 
-## Result 2 — how much tumour content is recovered **[STRONG]**
+### 4.3 · Recovery of true tumour-content variation
 
 > **[ FIGURE 7 HERE ]** — `docs/figures/Figure_tumour_recovery.pdf` (vector, for submission) / `.png` (300 dpi, for drafts). Recovery of true tumour-content variation, by method and cohort. Caption in `docs/FIGURES.md`.
 
@@ -139,7 +124,7 @@ This is the second clause of the registered question, tested directly against th
 
 `bayesian_hierarchical`, `cibersortx_smode`, `quantiseq` return no lymphoid estimate at all and are absent from this comparison rather than counted as failures — *could not be evaluated*, not *evaluated and wrong*.
 
-## Result 3 — the lymphoid compartment. THE HEADLINE. **[STRONG]**
+### 4.4 · No method reproduces the methylation-resolved lymphoid ordering
 
 > **[ FIGURE 2 HERE ]** — `docs/figures/Figure_lymphoid_failure.pdf` (vector, for submission) / `.png` (300 dpi, for drafts). Relative composition within {t, nk, b}, by method and by methylation. Caption in `docs/FIGURES.md`.
 
@@ -163,7 +148,7 @@ This is the second clause of the registered question, tested directly against th
 
 > WRITE: say plainly that reporting *no lymphocytes at all* in a glioma is a worse failure than reversing the T:B ratio, and that it was invisible while the comparison was made on cohort means. That correction is part of the result.
 
-## Result 4 — why: the model's premise is violated **[STRONG]**
+### 4.5 · The additive mixing model accounts for a minority of real bulk
 
 > **[ FIGURE 6 HERE ]** — `docs/figures/Figure_model_fit_bound.pdf` (vector, for submission) / `.png` (300 dpi, for drafts). Per-sample fit of the non-negative mixing model, against floor and ceiling controls. Caption in `docs/FIGURES.md`.
 
@@ -187,14 +172,14 @@ This is the second clause of the registered question, tested directly against th
 
 > WRITE: state that the failures are measured, replicated, bounded — and **not explained**. Five failed explanations with controls is stronger evidence of rigour than one convenient mechanism, and a reader will trust the rest of the paper more for it.
 
-## Result 5 — equal footing **[QUALIFIED — do not put the tau in the abstract]**
+### 4.6 · Reference parity, and what it changes
 
 - **Replicates:** MuSiC moves from excluded-as-arithmetically-NNLS to **rank 1** given the cross-donor variance it is designed to use (GBM 17.5% → 60.2%; LGG 20.0% → 52.6%). A method that could not previously be measured at all.
 - **Replicates:** the lymphoid trade-off. Methods agreeing on T > B go 0/12 → 3/14 (GBM) and 0/12 → 2/13 (LGG), while methods returning zero lymphoid content go 4/12 → 6/14 and 4/12 → 7/13. Misassignment partly repairs; absence worsens.
 - **Replicates:** equal footing makes the absolute under-call **worse** — GBM median bias -0.0277 → -0.4767, methods under-calling 7/12 → 14/14. (The two arms score different-sized panels, 12 and 14, because equal footing makes more methods runnable.)
 - **DOES NOT REPLICATE:** the ranking reshuffle. Kendall tau **+0.214** (GBM) and **+0.333** (LGG); but excluding the one method whose implementation also changed gives **+0.143** (GBM, effect intact) and **+0.733** (LGG, rankings largely agree). Six to seven methods per tau. **Report as a partial replication failure.**
 
-## Result 5b — the two reimplementations were measured as genuine packages **[STRONG]**
+### 4.7 · Genuine packages versus reimplementations
 
 _from `results/dwls_remeasured.json`, `results/bayesprism_remeasured.json`. Same anatomic cohort, same 657-gene space (sha256 verified against the leaderboard's own), same donor split by name; all 7 declared equivalence conditions pass._
 
@@ -215,12 +200,12 @@ _from `results/dwls_remeasured.json`, `results/bayesprism_remeasured.json`. Same
 
 > WRITE: this belongs in the paper as a reproducibility finding, not buried in limitations. Two of fifteen methods silently became different software depending on machine state, the artefacts recorded *that* it happened but not *why*, and the direction of the resulting error was not predictable. Any benchmark that does not check this has the same exposure and would not know.
 
-## Result 6 — biology that predicts error **[QUALIFIED]**
+### 4.8 · Biological factors associated with estimation error
 
 - **Mesenchymal character** predicts a larger under-call in GBM. **Does not replicate in LGG** — the Verhaak class does not exist there and the expression-score surrogate is null. Report as cohort-specific; do **not** headline it.
 - **Genomic instability does not predict error**: ploidy, whole-genome doubling, subclonal fraction all null in both cohorts, at equal prominence.
 
-## Result 7 — where the failure sits spatially **[EXPLORATORY]**
+### 4.9 · Spatial distribution of the mesenchymal program (exploratory)
 
 MES score across five Ivy GAP niches is monotone with the hypoxic perinecrotic zone highest. **The pre-specified test is not significant (p = 0.3312)** — the statistic was "which structure is the maximum", weak at five categories. Post hoc: PAN − LE positive in 6 of 6 tumours, p = 0.0142, trend r = +0.957. **Suggestive, not established.**
 
@@ -230,40 +215,19 @@ MES score across five Ivy GAP niches is monotone with the hypoxic perinecrotic z
 
 > **[ FIGURES 4 AND 5 HERE ]** — `docs/figures/Figure_purity_scatter_gbm.pdf` and `Figure_purity_scatter_lgg.pdf`. Estimated tumour fraction against DNA-measured purity, one panel per method. These support Result 2; place them there if the journal allows, or as supplementary if the figure budget is tight.
 
-## Figure inventory
-
-| # | file | placement | what it shows |
-|---|---|---|---|
-| 1 | `Figure_detects_not_ranks` | Result 1 | ACS ordering vs each yardstick's ordering |
-| 2 | `Figure_lymphoid_failure` | Result 3 (headline) | composition within {T, NK, B} by method |
-| 3 | `Figure_lymphoid_paired` | Result 3 | T vs B per method, paired Wilcoxon |
-| 4 | `Figure_purity_scatter_gbm` | Result 2 | estimate vs DNA purity, GBM |
-| 5 | `Figure_purity_scatter_lgg` | Result 2 | estimate vs DNA purity, LGG |
-| 6 | `Figure_model_fit_bound` | Result 4 | model fit against floor and ceiling |
-| 7 | `Figure_tumour_recovery` | Result 2 | recovery by method and cohort |
-
-*Every figure exists as PDF (vector, submission) and PNG (300 dpi, drafts) in `docs/figures/`. Captions are in `docs/FIGURES.md` and are the place for interpretation — the plots themselves carry no argument, per journal convention and the CJSJ format reference.*
-
-## Figures to build
-
-1. **Anatomy detects but does not rank** — ACS vs each external yardstick, one panel per yardstick, with the registered 0.60 bar drawn. The pseudobulk panel is the only one that clears it; label that it shares its atlas with ACS.
-2. **Recovery of tumour content** — per-method recovery, GBM and LGG side by side, degenerate methods hatched and labelled *not evaluable* rather than omitted.
-3. **THE HEADLINE FIGURE.** Methylation truth vs every method on the lymphoid triple. Suggested form: stacked T/NK/B bars per method with a truth bar, both renormalised within {T,B,NK}; annotate the *count of samples with exactly zero lymphoid signal* on each bar, so the two failure modes are visible in one panel.
-4. **The model-fit bound** — histogram of per-sample R² with the two control floors and the SVD ceiling as vertical lines. This single panel carries Result 4.
-5. **Equal footing** — slope chart, frozen rank → h5ad rank, with the implementation-switched method marked. Show both cohorts so the non-replication is visible, not buried.
-
-## What NOT to claim
-
-- Do **not** claim the ranking reshuffle replicates. It does not (Result 5).
-- Do **not** claim a mechanism for the lymphoid failure. Five were tested and rejected, and two structural properties of the reference are suspects that have NOT been shown to cause it: the `NK_cell` column carries pan-T markers (CD3D/E/G, CD2, LCK) at 1.4–5.8x the `T_cell` column's level, and `B_cell`'s profile is closest to `Macrophage_Microglia` (r = 0.497). Both are measured in `docs/WHY_B_OVER_T.md`, which also names the four experiments that would settle it. Report them as properties of the reference, never as the explanation.
-- Do **not** claim per-sample model fit identifies untrustworthy samples. Tested; fails.
-- Do **not** headline mesenchymal character. GBM-only.
-- Do **not** call `cibersortx` here the hosted CIBERSORTx, or `dwls`/`bayesprism` the published R packages. All are labelled in the artefacts; keep the labels.
-- Do **not** quote "12 of 12 methods put B above T" without the denominator. It is a mean over samples with any lymphoid signal.
-
 ## V. Discussion
 
-> WRITE: five beats. Facts and citations below; the prose is yours.
+> WRITE: six beats. Facts and citations below; the prose is yours.
+
+> **0 · What is new here, stated before what was found.** Three things, and each is a property of the design rather than a characterisation of the outcome:
+
+>   • **A ground-truth-free benchmark tested against orthogonal molecular truth.** Existing ground-truth-free approaches score *reproducibility* — whether the same cell types shift across cohorts [4]. Reproducibility cannot detect a method that is reproducibly wrong. This study scores *correctness* against two instruments that share no input with the estimator under test: DNA copy number and DNA methylation.
+
+>   • **Negative controls in a deconvolution benchmark.** Two deliberately broken estimators were scored alongside the real ones. The nearest comparable study [4] reports none. **Verify [1][2][3] yourself before generalising this** — only [4] was read in full here. Without a control a score cannot be shown to measure anything. The margin over them is what licenses every claim made here.
+
+>   • **A pre-registered prediction with a named falsifier and a timestamp.** The T > B prediction was committed 95 minutes before the data that tested it existed, together with the outcome that would have withdrawn it. Deconvolution benchmarks are not usually pre-registered at all.
+
+> **And the finding is consequential rather than merely negative.** Immune composition estimated by deconvolution is used to stratify patients and to interpret immunotherapy response. In two glioma cohorts, none of the twelve methods that returned a lymphoid estimate recovered the direction of the T-versus-B relationship that an orthogonal molecular instrument resolves at p < 10⁻²⁴. State the practical reading plainly: a published lymphoid fraction for a glioma cannot be relied upon without an orthogonal measurement, and no internal diagnostic tested here substitutes for one.
 
 > **1 · What the study answers.** Both clauses of the registered question, in the order registered. Anatomy *detects* — the margin over the negative controls is the evidence. It does not *rank* — and the ranking result is INCONCLUSIVE at n = 12, not refuted. Say inconclusive and mean it.
 
@@ -275,7 +239,9 @@ MES score across five Ivy GAP niches is monotone with the hypoxic perinecrotic z
 
 > **5 · What would settle the open question.** More comparable methods. The power ceiling here is twelve, and no reanalysis widens it.
 
-## Limitations — see `docs/PAPER_OUTLINE.md` §9, all ten, none in a footnote
+## Limitations
+
+> WRITE: all ten from `docs/PAPER_OUTLINE.md` §9, in the body. None in a footnote.
 
 The two that a reviewer will find first: the **GBM per-type arm is n = 56** (most TCGA-GBM methylation is HM27, not HM450), and **one reference atlas** underlies every method, so "biology breaks deconvolution" cannot be fully separated from "the biology is under-represented in GBmap".
 

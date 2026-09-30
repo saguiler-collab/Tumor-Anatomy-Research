@@ -48,17 +48,22 @@ def test_the_manuscript_names_both_clauses_of_the_registered_question():
 @pytest.mark.skipif(not MS.exists(), reason="manuscript absent")
 def test_clause_two_is_answered_directly_not_only_by_the_correlation():
     t = MS.read_text()
-    assert "## Result 1b" in t, (
-        "Result 1b is gone. Clause 2 would then rest only on the ACS-versus-purity "
-        "correlation, which is underpowered (n = 12, p = 0.80) and cannot carry the "
-        "study's registered null.")
+    # The heading was "## Result 1b" before the manuscript adopted numbered sections; it is
+    # now "### 4.2". Match on what the section CLAIMS, not on either label, so a future
+    # renumbering does not break the test and a deletion still does.
+    assert "does not identify a method that is biologically correct" in t, (
+        "the clause-2 section is gone. Clause 2 would then rest only on the "
+        "ACS-versus-purity correlation, which is underpowered (n = 12, p = 0.80) and cannot "
+        "carry the study's registered null.")
 
 
 @pytest.mark.skipif(not (MS.exists() and AVB.exists()), reason="manuscript or artefact absent")
 def test_result_1b_matches_its_artefact():
     avb = json.loads(AVB.read_text())
     t = MS.read_text()
-    sec = t[t.index("## Result 1b"):t.index("## Result 2")]
+    start = t.index("does not identify a method that is biologically correct")
+    nxt = t.find("### 4.3", start)
+    sec = t[start:nxt if nxt > 0 else start + 4000]
     for cohort, b in avb["cohorts"].items():
         assert f"{b['n_getting_T_over_B_right']} of {b['n_methods']}" in sec, (
             f"{cohort}: the count of methods reproducing T > B does not match the artefact")

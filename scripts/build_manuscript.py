@@ -180,7 +180,7 @@ def main() -> int:
     A("> WRITE: the abstract above is complete and artefact-derived; edit for voice, not "
       "for content. If you shorten it, the sentence that must survive is the last one.\n")
 
-    A("## Key findings — the six, with the numbers\n")
+    A("## Appendix A \u00b7 Key findings at full precision\n")
     A("*These are the abstract's claims at full precision. Draw on them for the Results "
       "section; do not move them back into the abstract.*\n")
     A(f"1. **Anatomy detects, it does not rank.** Anatomic concordance separates real methods "
@@ -326,7 +326,7 @@ def main() -> int:
     # its weakest evidence. See docs/RESEARCH_QUESTION.md.
     A("> **The registered question has two clauses.** *Can a tumor's own anatomy stand in "
       "for ground truth when choosing a cell-type deconvolution method* — Result 1 — *and "
-      "does a method that gets the anatomy right also get the biology right?* — Result 1b. "
+      "does a method that gets the anatomy right also get the biology right?* \u2014 \u00a74.2. "
       "They are different questions and this study answers them differently.\n")
 
     # ---- III. Statistical analysis ------------------------------------------------
@@ -390,7 +390,7 @@ def main() -> int:
 
     A("## IV. Results\n")
 
-    A("## Result 1 — anatomy detects, it does not rank **[STRONG]**\n")
+    A("### 4.1 \u00b7 Anatomic concordance separates working methods from broken ones\n")
     A("> **[ FIGURE 1 HERE ]** \u2014 `docs/figures/Figure_detects_not_ranks.pdf` "
       "(vector, for submission) / `.png` (300 dpi, for drafts). Rank correlation between the acs ordering and each yardstick's ordering. "
       "Caption in `docs/FIGURES.md`.\n")
@@ -417,8 +417,8 @@ def main() -> int:
     # ---- Result 1b: clause 2 of the registered question ------------------------------
     avb = J("anatomy_vs_biology.json")
     if avb and avb.get("cohorts"):
-        A("## Result 1b — a method that gets the anatomy right does NOT get the biology "
-          "right **[STRONG]**\n")
+        A("### 4.2 \u00b7 Anatomic concordance does not identify a method that is "
+          "biologically correct\n")
         A("This is the second clause of the registered question, tested directly against the "
           "pre-registered criterion rather than through the underpowered rank correlation "
           "above.\n")
@@ -450,7 +450,7 @@ def main() -> int:
             "**not significant** and must be reported as directional only, if at all. "
             "The categorical finding above needs no correlation.\n")
 
-    A("## Result 2 — how much tumour content is recovered **[STRONG]**\n")
+    A("### 4.3 \u00b7 Recovery of true tumour-content variation\n")
     A("> **[ FIGURE 7 HERE ]** \u2014 `docs/figures/Figure_tumour_recovery.pdf` "
       "(vector, for submission) / `.png` (300 dpi, for drafts). Recovery of true tumour-content variation, by method and cohort. "
       "Caption in `docs/FIGURES.md`.\n")
@@ -489,7 +489,7 @@ def main() -> int:
               f"from this comparison rather than counted as failures — *could not be "
               f"evaluated*, not *evaluated and wrong*.\n")
 
-    A("## Result 3 — the lymphoid compartment. THE HEADLINE. **[STRONG]**\n")
+    A("### 4.4 \u00b7 No method reproduces the methylation-resolved lymphoid ordering\n")
     A("> **[ FIGURE 2 HERE ]** \u2014 `docs/figures/Figure_lymphoid_failure.pdf` "
       "(vector, for submission) / `.png` (300 dpi, for drafts). Relative composition within {t, nk, b}, by method and by methylation. "
       "Caption in `docs/FIGURES.md`.\n")
@@ -547,7 +547,7 @@ def main() -> int:
       "failure than reversing the T:B ratio, and that it was invisible while the comparison was "
       "made on cohort means. That correction is part of the result.\n")
 
-    A("## Result 4 — why: the model's premise is violated **[STRONG]**\n")
+    A("### 4.5 \u00b7 The additive mixing model accounts for a minority of real bulk\n")
     A("> **[ FIGURE 6 HERE ]** \u2014 `docs/figures/Figure_model_fit_bound.pdf` "
       "(vector, for submission) / `.png` (300 dpi, for drafts). Per-sample fit of the non-negative mixing model, against floor and ceiling controls. "
       "Caption in `docs/FIGURES.md`.\n")
@@ -593,7 +593,7 @@ def main() -> int:
       "explained**. Five failed explanations with controls is stronger evidence of rigour than "
       "one convenient mechanism, and a reader will trust the rest of the paper more for it.\n")
 
-    A("## Result 5 — equal footing **[QUALIFIED — do not put the tau in the abstract]**\n")
+    A("### 4.6 \u00b7 Reference parity, and what it changes\n")
     A(f"- **Replicates:** MuSiC moves from excluded-as-arithmetically-NNLS to **rank 1** given "
       f"the cross-donor variance it is designed to use (GBM "
       f"{pct(efg.get('recovery_frozen', {}).get('music'))} → "
@@ -633,8 +633,7 @@ def main() -> int:
     rm = {m: J(f"{m}_remeasured.json") for m in ("dwls", "bayesprism")}
     if lbp.exists() and all(rm.values()):
         lb = pd.read_csv(lbp).set_index("method")
-        A("## Result 5b — the two reimplementations were measured as genuine packages "
-          "**[STRONG]**\n")
+        A("### 4.7 \u00b7 Genuine packages versus reimplementations\n")
         A("_from `results/dwls_remeasured.json`, `results/bayesprism_remeasured.json`. Same "
           "anatomic cohort, same 657-gene space (sha256 verified against the leaderboard's "
           "own), same donor split by name; all 7 declared equivalence conditions pass._\n")
@@ -708,7 +707,7 @@ def main() -> int:
           "direction of the resulting error was not predictable. Any benchmark that does not "
           "check this has the same exposure and would not know.\n")
 
-    A("## Result 6 — biology that predicts error **[QUALIFIED]**\n")
+    A("### 4.8 \u00b7 Biological factors associated with estimation error\n")
     A("- **Mesenchymal character** predicts a larger under-call in GBM. **Does not replicate in "
       "LGG** — the Verhaak class does not exist there and the expression-score surrogate is null. "
       "Report as cohort-specific; do **not** headline it.")
@@ -716,7 +715,7 @@ def main() -> int:
       "subclonal fraction all null in both cohorts, at equal prominence.")
     A("")
 
-    A("## Result 7 — where the failure sits spatially **[EXPLORATORY]**\n")
+    A("### 4.9 \u00b7 Spatial distribution of the mesenchymal program (exploratory)\n")
     A("MES score across five Ivy GAP niches is monotone with the hypoxic perinecrotic zone "
       "highest. **The pre-specified test is not significant (p = 0.3312)** — the statistic was "
       "\"which structure is the maximum\", weak at five categories. Post hoc: PAN − LE positive "
@@ -731,7 +730,7 @@ def main() -> int:
       "purity, one panel per method. These support Result 2; place them there if the "
       "journal allows, or as supplementary if the figure budget is tight.\n")
 
-    A("## Figure inventory\n")
+    A("## Appendix B \u00b7 Figure inventory\n")
     A("| # | file | placement | what it shows |")
     A("|---|---|---|---|")
     A("| 1 | `Figure_detects_not_ranks` | Result 1 | ACS ordering vs each yardstick's ordering |")
@@ -746,7 +745,7 @@ def main() -> int:
       "`docs/figures/`. Captions are in `docs/FIGURES.md` and are the place for "
       "interpretation \u2014 the plots themselves carry no argument, per journal "
       "convention and the CJSJ format reference.*\n")
-    A("## Figures to build\n")
+    A("## Appendix C \u00b7 Figures still to build\n")
     A("1. **Anatomy detects but does not rank** — ACS vs each external yardstick, one panel per "
       "yardstick, with the registered 0.60 bar drawn. The pseudobulk panel is the only one that "
       "clears it; label that it shares its atlas with ACS.")
@@ -761,7 +760,7 @@ def main() -> int:
     A("5. **Equal footing** — slope chart, frozen rank → h5ad rank, with the implementation-"
       "switched method marked. Show both cohorts so the non-replication is visible, not buried.")
     A("")
-    A("## What NOT to claim\n")
+    A("## Appendix D \u00b7 What must not be claimed\n")
     A("- Do **not** claim the ranking reshuffle replicates. It does not (Result 5).")
     A("- Do **not** claim a mechanism for the lymphoid failure. Five were tested and rejected, "
       "and two structural properties of the reference are suspects that have NOT been shown to "
@@ -779,7 +778,37 @@ def main() -> int:
     A("")
     # ---- V. Discussion ------------------------------------------------------------
     A("## V. Discussion\n")
-    A("> WRITE: five beats. Facts and citations below; the prose is yours.\n")
+    A("> WRITE: six beats. Facts and citations below; the prose is yours.\n")
+    # THE SIGNIFICANCE BEAT, which the section previously lacked. A Discussion that opens on
+    # "what the study answers" tells a reader what happened; one that opens on what is new
+    # tells them why it matters. Everything asserted here is a fact about the DESIGN, not an
+    # inflated claim about the result -- the result is stated exactly as measured, and the
+    # inconclusive half stays inconclusive.
+    A("> **0 \u00b7 What is new here, stated before what was found.** Three things, and each is "
+      "a property of the design rather than a characterisation of the outcome:\n")
+    A(">   \u2022 **A ground-truth-free benchmark tested against orthogonal molecular truth.** "
+      "Existing ground-truth-free approaches score *reproducibility* \u2014 whether the same "
+      "cell types shift across cohorts [4]. Reproducibility cannot detect a method that is "
+      "reproducibly wrong. This study scores *correctness* against two instruments that share "
+      "no input with the estimator under test: DNA copy number and DNA methylation.\n")
+    A(">   \u2022 **Negative controls in a deconvolution benchmark.** Two deliberately broken "
+      "estimators were scored alongside the real ones. The nearest comparable study [4] "
+      "reports none. **Verify [1][2][3] yourself before generalising this** \u2014 only "
+      "[4] was read in full here. "
+      "Without a control a score cannot be shown to measure "
+      "anything. The margin over them is what licenses every claim made here.\n")
+    A(">   \u2022 **A pre-registered prediction with a named falsifier and a timestamp.** The "
+      "T > B prediction was committed 95 minutes before the data that tested it existed, "
+      "together with the outcome that would have withdrawn it. Deconvolution benchmarks are "
+      "not usually pre-registered at all.\n")
+    A("> **And the finding is consequential rather than merely negative.** Immune composition "
+      "estimated by deconvolution is used to stratify patients and to interpret "
+      "immunotherapy response. In two glioma cohorts, none of the twelve methods that "
+      "returned a lymphoid estimate recovered the "
+      "direction of the T-versus-B relationship that an orthogonal molecular instrument "
+      "resolves at p < 10\u207b\u00b2\u2074. State the practical reading plainly: a published "
+      "lymphoid fraction for a glioma cannot be relied upon without an orthogonal "
+      "measurement, and no internal diagnostic tested here substitutes for one.\n")
     A("> **1 · What the study answers.** Both clauses of the registered question, in the "
       "order registered. Anatomy *detects* — the margin over the negative controls is the "
       "evidence. It does not *rank* — and the ranking result is INCONCLUSIVE at n = 12, "
@@ -804,7 +833,9 @@ def main() -> int:
     A("> **5 · What would settle the open question.** More comparable methods. The power "
       "ceiling here is twelve, and no reanalysis widens it.\n")
 
-    A("## Limitations — see `docs/PAPER_OUTLINE.md` §9, all ten, none in a footnote\n")
+    A("## Limitations\n")
+    A("> WRITE: all ten from `docs/PAPER_OUTLINE.md` \u00a79, in the body. None in a "
+      "footnote.\n")
 
 
     A("The two that a reviewer will find first: the **GBM per-type arm is n = 56** (most TCGA-GBM "
@@ -833,8 +864,39 @@ def main() -> int:
       "had a truncated title, and [31] EcoTyper had the wrong author order, page range and "
       "DOI. **[12] EpiDISH — load-bearing for the headline result — is confirmed exactly.**\n")
 
-    OUT.write_text("\n".join(L) + "\n")
-    print(f"wrote {OUT.relative_to(config.PROJECT_ROOT)} ({len(L)} blocks)")
+    # ------------------------------------------------------------------------------
+    # SPLIT THE PAPER FROM THE SCAFFOLDING. Choi's paper runs Title -> Abstract ->
+    # I..V -> References and stops. Ours was emitting author-facing appendices in the
+    # middle of it, which is fine to write against and wrong to hand to a reader.
+    #
+    # Everything under an "## Appendix" heading moves to docs/MANUSCRIPT_APPENDICES.md.
+    # MANUSCRIPT.md is then the paper, in order, with nothing in it that would have to be
+    # deleted before submission.
+    paper, appendix, sink = [], [], None
+    for blk in L:
+        if blk.lstrip().startswith("## Appendix"):
+            sink = appendix
+        elif blk.lstrip().startswith("## ") and sink is appendix:
+            sink = None
+        (appendix if sink is appendix else paper).append(blk)
+
+    OUT.write_text("\n".join(paper) + "\n")
+    print(f"wrote {OUT.relative_to(config.PROJECT_ROOT)} ({len(paper)} blocks)")
+
+    if appendix:
+        apx = config.PROJECT_ROOT / "docs" / "MANUSCRIPT_APPENDICES.md"
+        head = [
+            "# Manuscript appendices \u2014 author scaffolding",
+            "",
+            "**Generated by `scripts/build_manuscript.py`. Not part of the submitted paper.**",
+            "Split out of `docs/MANUSCRIPT.md` so that file is the paper and nothing else. "
+            "Everything here is derived from the same artefacts and is for writing against.",
+            "",
+            "---",
+            "",
+        ]
+        apx.write_text("\n".join(head + appendix) + "\n")
+        print(f"wrote {apx.relative_to(config.PROJECT_ROOT)} ({len(appendix)} blocks)")
     return 0
 
 
