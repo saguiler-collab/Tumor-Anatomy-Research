@@ -919,7 +919,7 @@ failed. Every earlier run had exported 2 workers.
   test failed (they guard false positives only), reason recorded in the script.
 - BayesPrism probe failed once from machine overload (Edge) → keep ≤ 2 heavy jobs.
 
-## 4 · Files (this session; nothing committed)
+## 4 · Files (committed in 971aeb3 on 2026-10-03)
 **2026-10-03 (GIMiCC truth check, atlas counts, Linseed).**
 - **New:**
   - `R/run_gimicc.R`, `R/run_linseed.R`;
@@ -963,7 +963,13 @@ docs, `ivygap/{data/reference.py, deconv/r_bridge.py, bench/run_benchmark.py}`, 
   1. If the user supplies Klemm 2020 Table S2 (`data/external/klemm2020/`), pre-register a T-vs-B count
      by IDH status before opening it. This is the test that settles LGG.
   2. E3 (gene-resampling stability) is still unregistered.
-  3. The user decides on committing and on any abstract change; nothing is committed.
+  3. The user decides on any abstract change (the LGG caveat; see MANUSCRIPT §4.4).
+- **COMMITTED AND PUSHED 2026-10-03 at the user's request ("commit and push and sync"):** `971aeb3`
+  on `anatomy-test-full-database`, `main` fast-forwarded to it, both pushed to origin.
+  - 250 files, 8.8 MB, none over 5 MB.
+  - GSE182109 raw data (4.2 GB) are ignored by an anchored rule; only `gsm_to_sample.tsv` is tracked.
+  - `vendor/` (MIT, 5.2 MB, with provenance) is committed.
+  - `results/` stays gitignored by design.
 
 0. (2026-10-02, ~12:40) DONE:
    - REGEN and the FARDEEP re-run: every frozen summary identical to the backup;
