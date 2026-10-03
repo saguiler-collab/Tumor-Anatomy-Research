@@ -1,0 +1,199 @@
+<p><b>Table S7. Every public dataset the study uses, with its accession and version. Generated from docs/DATA_INVENTORY.md, where each local copy is hashed, re-checked against its public server, traced to the code that reads it, and its citation resolved against Crossref; datasets on disk but unused, and those considered but not obtained, are listed there.</b></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: left;">
+      <th>ID</th>
+      <th>Dataset</th>
+      <th>Repository and accession</th>
+      <th>Version</th>
+      <th>Used for</th>
+      <th>Citation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>D01</td>
+      <td>Ivy Glioblastoma Atlas Project (Ivy GAP) RNA-seq, normalised FPKM matrix</td>
+      <td>Allen Institute for Brain Science, Ivy GAP portal; mirrored at GEO; GEO GSE107559; portal well-known file 305873915</td>
+      <td>release 2014-11-25 (gene_expression_matrix_2014-11-25.zip)</td>
+      <td>The tissue every anatomic claim is scored on: 270 laser-microdissected samples (122 H&amp;E-selected anatomic samples from 10 tumours across LE, IT, CT, MVP, PAN; 148 ISH-selected cluster samples, never scored as anatomic).</td>
+      <td>Puchalski RB, et al. Science 360:660-663 (2018), doi:10.1126/science.aaf2666</td>
+    </tr>
+    <tr>
+      <td>D02</td>
+      <td>Ivy GAP portal metadata: tumour, RNA-seq sample, sub-block and ISH-gene tables</td>
+      <td>Allen Institute Ivy GAP portal, /api/v2/gbm/ namespace; tumor_details.csv, rna_seq_samples_details.csv, sub_block_details.csv, gene_expression_details.csv</td>
+      <td>fetched 2026-09-03; sha256 recorded at download (CLINICAL_PROVENANCE.json)</td>
+      <td>Tumour and structure assignment, the donor-tumour join, the clinical table (survival is BLOCKED: no event indicator), and the per-sub-block ISH values used by the no-deconvolution constraint check.</td>
+      <td>Puchalski RB, et al. Science 360:660-663 (2018), doi:10.1126/science.aaf2666</td>
+    </tr>
+    <tr>
+      <td>D03</td>
+      <td>Ivy GAP per-sample RSEM gene results (expected counts)</td>
+      <td>Allen Institute Ivy GAP portal, per-sample well-known files; 270 x *.genes.results (URLs and sha256 per file in provenance.json)</td>
+      <td>fetched 2026-09-15; GEO GSE107559 states raw data are not provided there</td>
+      <td>Fractional expected counts for the count-based arms (CDSeq reference-free ACS, count-model inputs) and closure of the published matrix's provenance chain.</td>
+      <td>Puchalski RB, et al. Science 360:660-663 (2018), doi:10.1126/science.aaf2666</td>
+    </tr>
+    <tr>
+      <td>D04</td>
+      <td>TCGA-GBM RNA-seq, STAR gene counts</td>
+      <td>UCSC Xena, GDC hub (data from the NCI Genomic Data Commons); Xena dataset TCGA-GBM.star_counts.tsv</td>
+      <td>as vendored by the predecessor project (stored decompressed; delivered as log2(x+1) despite the name -- linearised here)</td>
+      <td>Validation cohort: per-sample Tumor fraction against ABSOLUTE purity (154 samples), the lymphoid ordering against methylation, model fit, extension panel.</td>
+      <td>Goldman MJ, et al. Nat Biotechnol 38:675-678 (2020) [Xena], doi:10.1038/s41587-020-0546-8</td>
+    </tr>
+    <tr>
+      <td>D05</td>
+      <td>TCGA-LGG RNA-seq, STAR gene counts</td>
+      <td>UCSC Xena, GDC hub; Xena dataset TCGA-LGG.star_counts.tsv</td>
+      <td>downloaded 2026-09-17</td>
+      <td>Independent second cohort (534 samples; 510 matched to methylation, 496 to ABSOLUTE) for every TCGA analysis.</td>
+      <td>Goldman MJ, et al. Nat Biotechnol 38:675-678 (2020) [Xena], doi:10.1038/s41587-020-0546-8</td>
+    </tr>
+    <tr>
+      <td>D06</td>
+      <td>GENCODE v36 comprehensive gene annotation</td>
+      <td>GENCODE (EMBL-EBI FTP); gencode.v36.annotation.gtf.gz</td>
+      <td>release 36 -- the annotation the Xena GDC hub's STAR counts are keyed to</td>
+      <td>Ensembl id -&gt; gene symbol for both TCGA expression matrices.</td>
+      <td>Frankish A, et al. Nucleic Acids Res 49:D916-D923 (2021) [GENCODE 2021], doi:10.1093/nar/gkaa1087</td>
+    </tr>
+    <tr>
+      <td>D07</td>
+      <td>TCGA-GBM DNA methylation, Illumina HumanMethylation450</td>
+      <td>UCSC Xena, TCGA hub; Xena dataset TCGA.GBM.sampleMap/HumanMethylation450</td>
+      <td>downloaded 2026-09-18 (stored decompressed)</td>
+      <td>Per-cell-type lymphoid truth (T / NK / B) through EpiDISH -- the methylation side of the headline lymphoid comparison (cohort-level only; see D23).</td>
+      <td>Goldman MJ, et al. Nat Biotechnol 38:675-678 (2020) [Xena], doi:10.1038/s41587-020-0546-8</td>
+    </tr>
+    <tr>
+      <td>D08</td>
+      <td>TCGA-LGG DNA methylation, Illumina HumanMethylation450</td>
+      <td>UCSC Xena, TCGA hub (the same hub as GBM, deliberately); Xena dataset TCGA.LGG.sampleMap/HumanMethylation450</td>
+      <td>downloaded 2026-09-18</td>
+      <td>As D07, for LGG.</td>
+      <td>Goldman MJ, et al. Nat Biotechnol 38:675-678 (2020) [Xena], doi:10.1038/s41587-020-0546-8</td>
+    </tr>
+    <tr>
+      <td>D09</td>
+      <td>ABSOLUTE tumour purity and ploidy, TCGA PanCanAtlas master calls</td>
+      <td>NCI GDC, PanCanAtlas publication page; GDC file 4f277128-f793-4354-a13d-30cc7fe9f6b5</td>
+      <td>TCGA_mastercalls.abs_tables_JSedit.fixed.txt, downloaded 2026-09-11</td>
+      <td>The DNA ground truth for tumour content, sharing no input with any RNA method (147 GBM / 496 LGG complete cases); ploidy, genome doublings and subclonal fraction as candidate failure factors.</td>
+      <td>Carter SL, et al. Nat Biotechnol 30:413-421 (2012), doi:10.1038/nbt.2203</td>
+    </tr>
+    <tr>
+      <td>D10</td>
+      <td>MC3 somatic mutation calls, gene level, TCGA-LGG</td>
+      <td>UCSC Xena, TCGA hub; Xena dataset mc3_gene_level/LGG_mc3_gene_level.txt</td>
+      <td>downloaded 2026-09-17 (stored decompressed)</td>
+      <td>IDH1 status as a candidate biological failure factor in LGG.</td>
+      <td>Ellrott K, et al. Cell Syst 6:271-281 (2018), doi:10.1016/j.cels.2018.03.002</td>
+    </tr>
+    <tr>
+      <td>D11</td>
+      <td>Leukocyte fraction from DNA methylation, TCGA PanImmune</td>
+      <td>NCI GDC, PanImmune (Immune Landscape of Cancer) publication page; GDC file 6f75c9d7-5134-4ed1-b8f3-72856c98a4e8</td>
+      <td>TCGA_all_leuk_estimate.masked.20170107.tsv</td>
+      <td>Aggregate immune truth for the pre-registered immune arm (P1/P2 over-call test).</td>
+      <td>Thorsson V, et al. Immunity 48:812-830 (2018), doi:10.1016/j.immuni.2018.03.023</td>
+    </tr>
+    <tr>
+      <td>D12</td>
+      <td>TCGA-GBM clinical sample annotations (Brennan 2013 study)</td>
+      <td>cBioPortal for Cancer Genomics, study gbm_tcga_pub2013; gbm_tcga_pub2013_clinical_sample.txt (+ _clinical_patient.txt)</td>
+      <td>as vendored by the predecessor project</td>
+      <td>Verhaak expression subtype, IDH1 mutation and G-CIMP status as candidate failure factors in GBM.</td>
+      <td>Brennan CW, et al. Cell 155:462-477 (2013), doi:10.1016/j.cell.2013.09.034</td>
+    </tr>
+    <tr>
+      <td>D13</td>
+      <td>GBmap (core) -- harmonised glioblastoma single-cell atlas</td>
+      <td>CZ CELLxGENE Discover; collection 999f2a15-3d7e-440b-96ae-2c806799c08c; dataset version 861acfd8-25f0-418b-a445-aa96da232827 (title 'Core GBmap', schema 7.1.0)</td>
+      <td>338,564 cells x 27,632 genes; identifiers read from the file's own uns/citation</td>
+      <td>The reference every method solves against: the vendored frozen signature (8-type roster, annotation_level_3) and the raw/X-count rebuild that is primary; the source of the synthetic mixtures.</td>
+      <td>Ruiz-Moreno C, et al. Neuro-Oncology 27:2281-2295 (2025), doi:10.1093/neuonc/noaf113</td>
+    </tr>
+    <tr>
+      <td>D14</td>
+      <td>Abdelfattah et al. 2022 glioma single-cell RNA-seq (independent atlas)</td>
+      <td>GEO (raw and sample identifiers); processed matrix and clusters from the Broad Single Cell Portal; GEO GSE182109 (GSM5518596-GSM5518639; raw supplementary archive GSE182109_RAW); processed matrix + clusters from the Single Cell Portal, whose study accession was not recorded -- content verified against GEO's raw counts</td>
+      <td>Processed_matrix.mtx.gz (Seurat log-normalised, inverted to counts here), genes.tsv, barcodes.tsv, Cluster_GBM.txt</td>
+      <td>The independent-atlas test of the B-over-T result: a reference not among GBmap's 16 source studies. All 201,986 barcodes carry one of the series' 44 GSM prefixes; none comes from Neftel's GSE131928. Provenance closed against GEO (scripts/verify_gse182109_raw.py): 201,893 of the 201,986 processed cells are in their own sample's Cell Ranger barcodes (the 93 others, in two samples, look like a more permissive cell call), and on the samples checked every recovered count equals GEO's raw count and every library equals the raw UMI total.</td>
+      <td>Abdelfattah N, et al. Nat Commun 13:767 (2022), doi:10.1038/s41467-022-28372-y</td>
+    </tr>
+    <tr>
+      <td>D15</td>
+      <td>Neftel et al. 2019 glioblastoma single-cell RNA-seq</td>
+      <td>GEO; GEO GSE131928; the Smart-seq2 matrix and cell assignments as distributed on the Broad Single Cell Portal</td>
+      <td>processed TPM tables and authors' metadata</td>
+      <td>Reference-dependence arm (a Neftel-only reference). One of GBmap's constituent studies, so NOT an independent reference.</td>
+      <td>Neftel C, et al. Cell 178:835-849 (2019), doi:10.1016/j.cell.2019.06.024</td>
+    </tr>
+    <tr>
+      <td>D16</td>
+      <td>Darmanis et al. 2017 glioblastoma single-cell RNA-seq (core vs periphery)</td>
+      <td>GEO; GEO GSE84465</td>
+      <td>GSE84465_GBM_All_data.csv.gz and the series matrix, fetched 2026-09-14</td>
+      <td>Two uses: the only cross-patient core-vs-periphery constraint check (C1, four gates), and a Darmanis-only reference in the reference-dependence arm (a GBmap constituent, so not independent).</td>
+      <td>Darmanis S, et al. Cell Rep 21:1399-1410 (2017), doi:10.1016/j.celrep.2017.10.030</td>
+    </tr>
+    <tr>
+      <td>D17</td>
+      <td>Mossi Albiach et al. 2023 spatially sampled glioblastoma single-cell atlas</td>
+      <td>CZ CELLxGENE Discover; collection 113a558a-e96e-4643-81db-140e95c58578; dataset d45b4ce6-9725-4d79-b97a-70a44158bdbf (donor SL040, schema 7.1.0)</td>
+      <td>135,482 cells x 58,234 genes, one donor, 27 samples in 12 locations</td>
+      <td>Tests the registered constraints against counted (not inferred) composition per anatomic zone: 3 of 4 testable constraints hold.</td>
+      <td>Mossi Albiach A, et al. bioRxiv (2023), doi:10.1101/2023.09.01.555882</td>
+    </tr>
+    <tr>
+      <td>D18</td>
+      <td>Ivy GAP in-situ hybridisation (ISH) by anatomic structure</td>
+      <td>Allen Institute Ivy GAP portal: the per-(gene x sub-block) ISH table in D02; gene_expression_details.csv (/api/v2/gbm/ namespace)</td>
+      <td>the portal table, sha256 recorded at download; the API-based route (scripts/fetch_ivygap_ish.py) is SUPERSEDED and its output is not used</td>
+      <td>A constraint check with no deconvolution anywhere in the chain: CD44 / BIRC5 ISH support C1 and C7.</td>
+      <td>Puchalski RB, et al. Science 360:660-663 (2018), doi:10.1126/science.aaf2666</td>
+    </tr>
+    <tr>
+      <td>D19</td>
+      <td>GBMDeconvoluteR marker sets (Ajaib immune, Ruiz-Moreno level-3 immune, Neftel four-state) and Ajaib's published imaging-mass-cytometry correlations</td>
+      <td>GBMDeconvoluteR source repository (vendored); Ajaib et al. 2023 paper; Ajaib_et_al_2022_GBM_Immune_markers.rds, Moreno_et_al_2022_lvl3_immune_markers.rds, Neftel_et_al_2019_four_state_neoplastic_markers.rds</td>
+      <td>vendored copy in pipeline_packages / repos/GBMDeconvoluteR</td>
+      <td>The pre-registered IMC protein test (an external instrument for ACS) and the mesenchymal-program score.</td>
+      <td>Ajaib S, et al. Neuro-Oncology 25:1236-1248 (2023), doi:10.1093/neuonc/noad021</td>
+    </tr>
+    <tr>
+      <td>D20</td>
+      <td>MCPcounter default marker genes</td>
+      <td>MCPcounter source repository; Signatures/genes.txt</td>
+      <td>fetched 2026-09-15</td>
+      <td>The default-marker arm of the IMC test.</td>
+      <td>Becht E, et al. Genome Biol 17:218 (2016), doi:10.1186/s13059-016-1070-5</td>
+    </tr>
+    <tr>
+      <td>D21</td>
+      <td>EpiDISH blood reference centDHSbloodDMC.m (333 CpGs x 7 blood cell types)</td>
+      <td>Bioconductor package EpiDISH (data object); EpiDISH::centDHSbloodDMC.m</td>
+      <td>EpiDISH 2.28.0 as installed (packageVersion, read 2026-10-01; the methylation artefacts do not record it)</td>
+      <td>Turns D07/D08 into per-cell-type lymphoid fractions (RPC mode); a blood reference applied to brain tumour, so used for lymphoid sub-composition only.</td>
+      <td>Teschendorff AE, et al. BMC Bioinformatics 18:105 (2017), doi:10.1186/s12859-017-1511-5</td>
+    </tr>
+    <tr>
+      <td>D22</td>
+      <td>BayesPrism's bundled gene annotation (gene groups and gene types, GENCODE v22)</td>
+      <td>BayesPrism source repository (vendored, Danko lab); cleanup.genes() gene groups; select.gene.type() 'protein_coding'</td>
+      <td>BayesPrism 2.2.3 as installed (packageVersion, read 2026-10-01); source vendored in pipeline_packages / repos/BayesPrism-main</td>
+      <td>The authors' own gene filtering in the authors'-workflow BayesPrism runs on TCGA (post-registration extension).</td>
+      <td>Chu T, et al. Nat Cancer 3:505-517 (2022), doi:10.1038/s43018-022-00356-3</td>
+    </tr>
+    <tr>
+      <td>D23</td>
+      <td>Frozen GBM signature matrix and cell-size factors (from GBmap, by the predecessor project) and its synthetic held-out benchmark</td>
+      <td>this repository, reference_frozen/ (vendored unchanged); signature_matrix.tsv, cell_size_factors.csv, tcga_benchmark/*</td>
+      <td>frozen 2026-07-12T03:36:26Z; sha256 recorded in PROVENANCE.json</td>
+      <td>The registered signature; yardstick 1 (500 pseudobulk mixtures, NNLS and SVR only), which shares GBmap with the ACS arm.</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>

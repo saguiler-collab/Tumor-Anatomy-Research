@@ -162,6 +162,8 @@ the practical implication is the interesting part: **BayesPrism may be the right
 "which cell types differ between my two groups" and the wrong choice for "what fraction of this
 tumour is T cells"** — a distinction no single benchmark score expresses.
 
+> ⚠ SUPERSEDED (OPEN_DEFECTS D22, 2026-09-30): the genuine-package re-measurements quoted below ran on GBmap's log `X` layer while the leaderboard ran on `raw/X`, so these figures are cross-matrix and are withdrawn. Current values: MANUSCRIPT §4.7 and `results/*_remeasured.json` (DWLS: no estimate for 73 of 122 samples on raw/X; Bisque and EPIC reproduce their leaderboard rows).
+
 The honest caveat on our side: BayesPrism runs here as a Python reimplementation (the genuine R
 package scores **0.8154**, still mid-table), and our cohort is glioma only.
 
@@ -181,6 +183,8 @@ budget in both anatomic stages — so the comparison was initially unresolvable.
 with a 4-hour budget. It completed in **3,873 s (1.08 h)**, above the pipeline budget and
 well inside the new one.
 
+> ⚠ SUPERSEDED (OPEN_DEFECTS D22, 2026-09-30): the genuine-package re-measurements quoted below ran on GBmap's log `X` layer while the leaderboard ran on `raw/X`, so these figures are cross-matrix and are withdrawn. Current values: MANUSCRIPT §4.7 and `results/*_remeasured.json` (DWLS: no estimate for 73 of 122 samples on raw/X; Bisque and EPIC reproduce their leaderboard rows).
+
 | | ACS | 95% CI | pairs | null_p | genes | donors |
 |---|---|---|---|---|---|---|
 | **genuine `R:DWLS`** | **0.7846** | [0.657, 0.906] | 57 | 0.0001 | 657 | 88 train |
@@ -197,11 +201,15 @@ in order, identical cell-type ordering, and the same normalisation and scale.
 > reimplementation, and stays last" — **reversed** once the inputs were made equivalent. See
 > `docs/OPEN_DEFECTS.md` D10.
 
+> ⚠ SUPERSEDED (OPEN_DEFECTS D22, 2026-09-30): the genuine-package re-measurements quoted below ran on GBmap's log `X` layer while the leaderboard ran on `raw/X`, so these figures are cross-matrix and are withdrawn. Current values: MANUSCRIPT §4.7 and `results/*_remeasured.json` (DWLS: no estimate for 73 of 122 samples on raw/X; Bisque and EPIC reproduce their leaderboard rows).
+
 **The genuine package scores HIGHER than the reimplementation**, by 0.046, which is three
 weighted constraint–tumour pairs out of 57. At 0.7846 DWLS is no longer last among the real
 methods: it passes both Bayesian models (0.7692). So part of this study's disagreement with
 Avila Cobos *was* an artefact of substituted software, and the part that remains is smaller
 than reported.
+
+> ⚠ SUPERSEDED (OPEN_DEFECTS D22, 2026-09-30): the genuine-package re-measurements quoted below ran on GBmap's log `X` layer while the leaderboard ran on `raw/X`, so these figures are cross-matrix and are withdrawn. Current values: MANUSCRIPT §4.7 and `results/*_remeasured.json` (DWLS: no estimate for 73 of 122 samples on raw/X; Bisque and EPIC reproduce their leaderboard rows).
 
 So **the substituted-software explanation accounts for part of the disagreement, and the
 comparison can now be made.** Avila Cobos et al. rank DWLS best among single-cell-reference
@@ -375,6 +383,8 @@ were all fixed in the script before it ran, because otherwise this is trivially 
 | CIBERSORT (= our `svr`) | 0.9846 | **2** |
 | SCDC | 0.9538 | 8 |
 | DWLS | 0.7385 | **14** (last) |
+
+> ⚠ SUPERSEDED — these are the 2026-09-10 leaderboard values on GBmap's log `X` layer (OPEN_DEFECTS D16), not re-measurements and not the current raw/X leaderboard (`results/matrix_arm_comparison.json` carries both arms).
 
 | evaluated, not top tier | our ACS |
 |---|---|

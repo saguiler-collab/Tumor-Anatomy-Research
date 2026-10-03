@@ -1,0 +1,10 @@
+# Deleted files
+
+Every file removed from this project, with proof it held nothing unique: either its sha256 equalled that of the kept original (or of the original's decompressed stream), or every byte of it equalled the start of the kept original's decompressed stream (a truncated copy). Re-create any of them exactly with `gunzip -k` or a copy of the original. Written by `scripts/dedupe_verified.py`.
+
+| when | deleted | bytes | sha256 (deleted = original content) | kept original | why unnecessary |
+|---|---|---|---|---|---|
+| 2026-10-01 20:17 | `TCGA_LGG/project/TCGA.LGG.sampleMap_HumanMethylation450` | 1,617,109,015 | `ec85fd7482a37988d0dbfba0562b0639a4a00a0727ea97f9398b30e91bf5cdce` | `TCGA_LGG/TCGA.LGG.sampleMap_HumanMethylation450.gz` (gzip of it) | decompressed copy of the LGG HM450 matrix; the .gz equals the Xena server file byte for byte |
+| 2026-10-01 20:17 | `pipeline_packages /extra_data/GSE84465_GBM_All_data.csv` | 179,418,083 | `1a6ec60b5d66e9d36fd28ca01efe84d87c3b9f018f978da39c7a586822540f62` | `data/raw/darmanis_2017/GSE84465_GBM_All_data.csv.gz` (gzip of it) | decompressed copy of the Darmanis counts; the pipeline reads data/raw/darmanis_2017/*.csv.gz |
+| 2026-10-01 20:18 | `pipeline_packages / repos/SCDC/neftel_data/GSM3828672_Smartseq2_GBM_IDHwt_processed_TPM.tsv` | 984,516,062 | `62c62ac648c5dce1bd6d7e9889d326dfa081fcffde5370fab0409fe3851bba34` | `pipeline_packages / repos/SCDC/neftel_data/IDHwtGBM.processed.SS2.logTPM.txt` | the Smart-seq2 matrix under its GEO file name; build_neftel_reference.py reads the SCP-named copy |
+| 2026-10-01 20:23 | `GSE182109/Processed_matrix.mtx.gz.download/matrix.mtx` | 7214662031 | (not hashed: proven an exact byte-prefix instead) | `GSE182109/Processed_matrix.mtx.gz.download/Processed_matrix.mtx.gz` (its first 7214662031 decompressed bytes) | a TRUNCATED decompression -- it ended mid-line at cell 98,613 of 201,986 (7.21 of 16.56 GB); every byte equalled the start of the kept .gz's decompressed stream, so it held nothing unique. Earlier notes calling it a complete decompressed copy were wrong. Re-create: `gzip -dc Processed_matrix.mtx.gz \| head -c 7214662031` |

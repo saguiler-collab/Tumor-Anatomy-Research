@@ -219,10 +219,50 @@ def main() -> int:
                  "Test": "refit on lymphoid-owned markers only (596 genes)",
                  "Result": "T > B in 0.0% of samples; mass moves to NK",
                  "Verdict": "REJECTED"})
+    _nk = J("nk_reannotation.json").get("cohorts", {})
+    if _nk.get("gbm") and _nk.get("lgg"):
+        _v = lambda c, k: _nk[c]["variants"][k]["svr"]["frac_B_over_T"]
+        rows.append({"Proposed explanation": "The NK_cell column absorbs T-cell signal through "
+                                             "shared CD3 markers",
+                     "Test": "re-annotate the frozen reference -- NK removed; T and NK merged -- "
+                             "and refit NNLS and SVR, gene space fixed, baseline reproduced exactly",
+                     "Result": (f"SVR B > T in {_v('gbm', 'nk_removed'):.0%} / {_v('lgg', 'nk_removed'):.0%} "
+                                f"(NK removed) and {_v('gbm', 't_nk_merged'):.0%} / {_v('lgg', 't_nk_merged'):.0%} "
+                                f"(merged), GBM / LGG; mass goes to B, not T"),
+                     "Verdict": "REJECTED"})
+    _tl, _rp, _af = J("b_profile_tissue_likeness.json"), J("ribosomal_test.json"), J("atlas_cell_fractions.json")
+    _fam = (_tl.get("signature_gene_families") or {}).get("gbm")
+    if _fam:
+        rows.append({"Proposed explanation": "Immunoglobulin transcripts in bulk are credited to the B column",
+                     "Test": "count immunoglobulin genes in the solved gene space and their share of each column",
+                     "Result": (f"{len(_fam['immunoglobulin_genes_in_space'])} Ig gene(s) "
+                                f"({', '.join(_fam['immunoglobulin_genes_in_space'])}); "
+                                f"{100 * _fam['immunoglobulin_mass_share']['B_cell']:.3f}% of the B column"),
+                     "Verdict": "EXCLUDED BY CONSTRUCTION"})
+    _rpc = (_rp.get("cohorts") or {})
+    if _rpc.get("gbm", {}).get("svr_rp_removed"):
+        _parts = []
+        for _c in ("gbm", "lgg"):
+            for _m in ("svr", "nnls"):
+                _b, _r = _rpc.get(_c, {}).get(f"{_m}_baseline"), _rpc.get(_c, {}).get(f"{_m}_rp_removed")
+                if _b and _r and _b.get("frac_B_over_T") is not None and _r.get("frac_B_over_T") is not None:
+                    _parts.append(f"{_c.upper()} {_m.upper()} {100 * _b['frac_B_over_T']:.0f}% -> {100 * _r['frac_B_over_T']:.0f}%")
+        rows.append({"Proposed explanation": "Ribosomal-protein genes admitted as B markers carry the inversion",
+                     "Test": "remove ^RP[SL]/^RPLP genes (standard rule) from the gene space and refit; "
+                             "matched B-marker and any-gene removal nulls",
+                     "Result": "B > T, baseline -> RP removed: " + "; ".join(_parts),
+                     "Verdict": "REJECTED"})
+    _bt = (_af.get("by_type") or {})
+    if _bt.get("B_cell") and _bt.get("T_cell"):
+        rows.append({"Proposed explanation": "Ambient myelin RNA makes the B profile tissue-like",
+                     "Test": "per-cell myelin-gene UMI fraction (MBP, PLP1, MOBP, MAG, MOG; declared first) in GBmap raw counts",
+                     "Result": (f"B {_bt['B_cell']['mean_myelin_fraction']:.6f} vs T {_bt['T_cell']['mean_myelin_fraction']:.6f}; "
+                                f"cells with any: B {100 * _bt['B_cell']['frac_cells_with_myelin']:.0f}%, T {100 * _bt['T_cell']['frac_cells_with_myelin']:.0f}%"),
+                     "Verdict": "REJECTED"})
     if rows:
         T["S5_rejected_mechanisms"] = (
             "Table S5. Candidate explanations for the lymphoid failure, each tested and each "
-            "rejected. Listed because five failed explanations with working controls constrain "
+            "rejected. Listed because failed explanations with working controls constrain "
             "the answer more than one untested story would.",
             pd.DataFrame(rows))
 
@@ -231,24 +271,119 @@ def main() -> int:
     if lbp.exists():
         lb = pd.read_csv(lbp).set_index("method")
         rows = []
+        # Re-measured on the leaderboard's own atlas layer (OPEN_DEFECTS D22). A method whose
+        # re-measurement failed, or which estimated only part of the cohort, is shown as such:
+        # a delta between a partial ACS and a complete one is not reported as a difference.
         for m in ("dwls", "bayesprism"):
             g = J(f"{m}_remeasured.json")
             if not g or m not in lb.index:
                 continue
-            a, b = float(lb.loc[m, "acs"]), float(g["acs"])
+            a = float(lb.loc[m, "acs"])
+            n_all, n_un = g.get("n_samples") or 0, g.get("n_samples_unestimated") or 0
+            if g.get("acs") is None:
+                gen, diff = "not measured (" + str(g.get("failed") or "")[:60] + ")", "--"
+            elif n_un:
+                gen, diff = f"{g['acs']:.4f} on {n_all - n_un} of {n_all} samples", "not comparable"
+            else:
+                gen, diff = f"{g['acs']:.4f}", f"{g['acs'] - a:+.4f}"
             rows.append({"Method": m,
                          "Reimplementation (ACS)": f"{a:.4f}",
-                         "Genuine R package (ACS)": f"{b:.4f}",
-                         "Difference": f"{b - a:+.4f}",
-                         "Runtime (s)": f"{g['elapsed_seconds']:.0f}",
-                         "Pipeline budget (s)": g["pipeline_budget_seconds"]})
+                         "Genuine R package (ACS, raw/X)": gen,
+                         "Difference": diff,
+                         "Atlas layer": g.get("matrix", "X (pre-D22)"),
+                         "Runtime (s)": f"{g.get('elapsed_seconds', 0):.0f}",
+                         "Pipeline budget (s)": g.get("pipeline_budget_seconds")})
         if rows:
             T["S6_genuine_vs_reimplementation"] = (
                 "Table S6. Two methods fell back to this project's reimplementation during the "
                 "confirmatory runs and were re-measured as the genuine R packages on the same "
-                "cohort and gene space. The reimplementations are biased in OPPOSITE directions, "
-                "so neither 'close enough' nor 'reimplementations flatter their packages' holds.",
+                "cohort, gene space, donor split and atlas layer (raw/X). Earlier re-measurements "
+                "ran on the log layer and are withdrawn (OPEN_DEFECTS D22). A package that failed, "
+                "or estimated only part of the cohort, is shown as such rather than differenced.",
                 pd.DataFrame(rows))
+
+    # ---- S7 public data sources (from the measured inventory) -------------------------
+    inv = config.PROJECT_ROOT / "docs" / "supplementary" / "data_inventory_full.csv"
+    if inv.exists():
+        d = pd.read_csv(inv).fillna("")
+        d = d[d["status"].isin(["used", "derived"])]
+        T["S7_data_sources"] = (
+            "Table S7. Every public dataset the study uses, with its accession and version. "
+            "Generated from docs/DATA_INVENTORY.md, where each local copy is hashed, re-checked "
+            "against its public server, traced to the code that reads it, and its citation "
+            "resolved against Crossref; datasets on disk but unused, and those considered but "
+            "not obtained, are listed there.",
+            pd.DataFrame({"ID": d["id"], "Dataset": d["dataset"],
+                          "Repository and accession": d["repository"] + "; " + d["accession"],
+                          "Version": d["version"], "Used for": d["used_for"],
+                          "Citation": d["citation"] + (", doi:" + d["doi"]).where(d["doi"] != "", "")}))
+
+    # ---- S8 ACS against a per-method AUC ---------------------------------------------
+    auc = J("anatomic_auc.json")
+    if auc and auc.get("controls", {}).get("acs_reproduced_for_every_method"):
+        cp = auc.get("c_purity", {})
+        tcga = (J("absolute_purity_yardstick.json").get("methods") or {})
+        # Never under its own name when degenerate (CLAUDE.md): MuSiC without cross-donor
+        # variance is NNLS, SCDC ENSEMBLE with one reference is SCDC, Bisque without overlapping
+        # subjects runs its no-overlap mode. The two arms differ: Ivy GAP uses the raw/X build
+        # (MuSiC has its variance there), TCGA the frozen signature (it does not).
+        _same = {"music": "nnls", "scdc_ensemble": "scdc"}
+        rows = []
+        for m, r in sorted(auc["methods"].items(), key=lambda kv: -kv[1]["acs"]):
+            lab = m + (" (control)" if r["is_control"] else "") \
+                + ("" if r["comparable"] else " (partial coverage)")
+            if r.get("degenerate"):
+                lab += f" [degenerate: = {_same[m]}]" if m in _same else " [degraded mode]"
+            c_txt = f"{cp[m]['c']:.3f}" if m in cp else "--"
+            if m in cp and (tcga.get(m) or {}).get("degenerate"):
+                c_txt += (f" (= {_same[m]}: degenerate on the frozen signature)" if m in _same
+                          else " (degraded mode on the frozen signature)")
+            rows.append({"Method": lab,
+                         "ACS (registered)": f"{r['acs']:.4f}",
+                         "AUC, anatomic (exploratory)": f"{r['auc_anat']:.4f}",
+                         "AUC permutation p": (f"{r['null_p']:.4f}" if r["null_p"] >= 1e-4
+                                               else "< 1e-4"),
+                         "Tied pairs": f"{r['tied_pair_share']:.3f}",
+                         "C vs ABSOLUTE purity (truth)": c_txt})
+        T["S8_acs_vs_auc"] = (
+            "Table S8. ACS and a per-method AUC on identical inputs, kept distinct. ACS scores each "
+            "constraint-tumour pair 1 or 0 on per-structure means (chance about 0.37); the anatomic "
+            "AUC is the within-tumour Mann-Whitney probability over the same pairs and samples "
+            "(chance 0.50; partial credit on the conjunction constraints C4 and C7). Both measure "
+            "agreement with anatomy. Only the last column measures accuracy: Harrell's concordance "
+            "of each method's TCGA-GBM tumour fraction with ABSOLUTE DNA purity.",
+            pd.DataFrame(rows))
+
+    # ---- S9 Extension E2: truth-free stability against DNA truth, per compartment ----------
+    idd, dnm = J("identifiability_diagnostics.json"), J("identifiability_denominators.json")
+    if idd.get("units") and all(c.get("pass") for c in idd.get("controls", {}).values()):
+        truth_of = {"Tumor": "ABSOLUTE purity", "Leukocytes": "methylation leukocyte fraction",
+                    "Lymphoid": "EpiDISH CD4T+CD8T+NK+B", "T_cell": "EpiDISH CD4T+CD8T",
+                    "B_cell": "EpiDISH B", "NK_cell": "EpiDISH NK"}
+        rows = []
+        for k, u in idd["units"].items():
+            m = (dnm.get("units") or {}).get(k) if u["compartment"] in ("Lymphoid", "T_cell", "B_cell", "NK_cell") else None
+            f = (lambda x, s=False: "--" if x is None or not np.isfinite(x) else (f"{x:+.3f}" if s else f"{x:.3f}"))
+            rows.append({"Compartment": u["compartment"], "Cohort": u["cohort"].upper(),
+                         "Tier": u["truth_tier"], "DNA truth": truth_of.get(u["compartment"], "none in TCGA"),
+                         "Stability (unmix, 7 settings)": f(u["d1_stability"]),
+                         "Agreement (registered methods)": f(u["d2_agreement"]),
+                         "unmix vs truth": f(u["truth_rho_unmix"], True),
+                         "Median method vs truth": f(u["truth_rho_median_methods"], True),
+                         "Samples with truth": u["n_truth"] or "--",
+                         "Stability, share of leukocytes": f(m["d1_stability"]) if m else "--",
+                         "unmix vs truth, share of leukocytes": f(m["truth_rho_unmix"], True) if m else "--",
+                         "Exact zeros in unmix (mean over settings)": f"{100 * u['unmix_zero_share']:.0f}%"})
+        T["S9_identifiability"] = (
+            "Table S9. Extension E2 (post-registration, exploratory): truth-free stability against "
+            "agreement with DNA truth, per compartment and cohort. Stability is the mean pairwise "
+            "Spearman correlation of DESeq2 unmix's per-sample estimates across seven settings of its "
+            "loss scale; agreement is the same across the registered methods (MuSiC and SCDC ENSEMBLE "
+            "dropped as duplicates). EpiDISH with its blood reference measures shares of the immune "
+            "compartment, so the last two numeric columns recompute the lymphoid units as shares of each "
+            "estimate's own leukocyte total (Addendum 1, check 7). Rules: "
+            "prespecified/identifiability_diagnostics.md.",
+            pd.DataFrame(rows))
 
     emit(T)
     return 0

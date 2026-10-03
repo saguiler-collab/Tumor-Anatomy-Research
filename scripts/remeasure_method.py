@@ -65,6 +65,94 @@ from ivygap.deconv import r_bridge                                # noqa: E402
 from ivygap.deconv.base import DeconvolutionInput                 # noqa: E402
 
 
+
+def run_s2(M: str, data, meta_anat: pd.DataFrame, args, equivalence: dict) -> int:
+    """Extension E2, Addendum 2 (S2): `unmix` at E2's seven loss settings on the anatomic inputs,
+    built once and checked by all eight equivalence conditions. Writes only under
+    results/identifiability/; the reported unmix anatomic artefacts are never touched."""
+    import itertools
+    import os
+
+    import numpy as np
+    from scipy import stats
+
+    from ivygap.deconv.base import finalize_estimates
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from identifiability_diagnostics import SETTINGS                  # noqa: PLC0415
+
+    out_dir = config.RESULTS_DIR / "identifiability"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    canon = pd.read_csv(config.RESULTS_DIR / "extension" / "ivygap_deseq2_unmix.csv", index_col=0)
+    canon.index = canon.index.astype(str)
+    reported = json.loads((config.RESULTS_DIR / "extension" / "deseq2_unmix_anatomic.json").read_text())["acs"]
+    frames, rows, control = {}, {}, None
+    try:
+        for label, shift, power in SETTINGS:
+            for k in ("IVYGAP_UNMIX_SHIFT", "IVYGAP_UNMIX_POWER"):
+                os.environ.pop(k, None)
+            if shift is not None:
+                os.environ["IVYGAP_UNMIX_SHIFT"] = str(shift)
+            if power is not None:
+                os.environ["IVYGAP_UNMIX_POWER"] = str(power)
+            t0 = time.perf_counter()
+            est = r_bridge.run_r_method(M, data, timeout=args.budget)
+            frame = finalize_estimates(est.to_numpy(), data, covered=None,
+                                       returns_cell_fractions=M in r_bridge.R_RETURNS_CELL_FRACTIONS)
+            frame.to_csv(out_dir / f"ivygap_unmix_{label}.csv")
+            res = acs_score(frame, meta_anat, method=f"unmix_{label}", n_permutations=10000, n_boot=2000)
+            s = res.summary()
+            frames[label] = frame
+            rows[label] = {"acs": round(float(s["acs"]), 4), "null_p": float(s["null_p"]),
+                           "ci": [round(float(s["ci_low"]), 4), round(float(s["ci_high"]), 4)],
+                           "n_pairs": int(s["n_constraint_tumor_pairs"]),
+                           "seconds": round(time.perf_counter() - t0, 1),
+                           "per_constraint": res.per_constraint[["constraint", "cell_type", "n_tumors_evaluable",
+                                                                 "n_satisfied", "fraction_satisfied"]].to_dict("records")}
+            print(f"  S2 {label:15s} ACS {rows[label]['acs']:.4f}  null p {rows[label]['null_p']:.4g}", flush=True)
+            if label == "predeclared":
+                f = frame.copy()
+                f.index = f.index.astype(str)
+                diff = float(np.nanmax(np.abs(f.loc[canon.index, canon.columns].to_numpy() - canon.to_numpy())))
+                control = {"acs_here": rows[label]["acs"], "acs_reported": reported,
+                           "max_abs_diff_estimates": diff,
+                           "pass": diff < 1e-9 and abs(rows[label]["acs"] - reported) < 1e-4}
+                print(f"  control: ACS {rows[label]['acs']} vs reported {reported}; max |diff| {diff:.2e}", flush=True)
+                if not control["pass"]:
+                    Path(args.out).write_text(json.dumps({"control": control, "aborted": True}, indent=2))
+                    print("ABORT -- the pre-declared setting did not reproduce the reported row")
+                    return 2
+    finally:
+        for k in ("IVYGAP_UNMIX_SHIFT", "IVYGAP_UNMIX_POWER"):
+            os.environ.pop(k, None)
+    distinct: list[str] = []
+    for lab in frames:
+        if not any(frames[lab].equals(frames[d]) for d in distinct):
+            distinct.append(lab)
+    stability = {}
+    for ct in ("Tumor", "Macrophage_Microglia", "Endothelial", "Oligodendrocyte", "T_cell", "B_cell", "NK_cell"):
+        X = pd.DataFrame({lab: frames[lab][ct] for lab in distinct}).dropna()
+        usable = [c for c in X.columns if X[c].nunique() > 1]
+        r = [stats.spearmanr(X[a], X[b]).statistic for a, b in itertools.combinations(usable, 2)]
+        stability[ct] = {"stability": float(np.mean(r)) if len(usable) >= 3 else float("nan"),
+                         "fits_used": len(usable), "zero_share": round(float((X == 0).to_numpy().mean()), 3)}
+    acs_vals = [v["acs"] for v in rows.values()]
+    span = round(max(acs_vals) - min(acs_vals), 4)
+    all_beat = all(v["null_p"] < 0.05 for v in rows.values())
+    reading = ("SUPPORTED" if span <= 0.05 and all_beat else
+               "NOT SUPPORTED" if span > 0.10 or not all_beat else "INCONCLUSIVE")
+    out = {"rule": "prespecified/identifiability_diagnostics.md, Addendum 2 (S2)", "method": M,
+           "input_equivalence": equivalence, "control": control, "settings": rows,
+           "distinct_fits": distinct, "acs_range": span, "every_setting_beats_null": all_beat,
+           "reading": reading, "stability_by_cell_type": stability}
+    Path(args.out).write_text(json.dumps(out, indent=2, default=float))
+    print(f"\n  S2: ACS range {span} over {len(rows)} settings ({len(distinct)} distinct fits); "
+          f"every setting beats its null: {all_beat}; reading {reading}")
+    for ct, v in stability.items():
+        print(f"    {ct:22s} stability {v['stability']:.3f} ({v['fits_used']} fits, zero share {v['zero_share']})")
+    print(f"wrote {args.out}")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -72,6 +160,22 @@ def main() -> int:
                     help="method to re-measure, e.g. dwls or bayesprism")
     ap.add_argument("--budget", type=int, default=14400, help="seconds for the R call")
     ap.add_argument("--out", default=None)
+    # OPEN_DEFECTS D22. `build_from_h5ad(matrix=...)` DEFAULTS TO "X", which in GBmap is
+    # log1p(counts x size_factor) -- not counts. D16 fixed that for `run_all.py` and this
+    # script was missed, so every re-measurement written before 2026-09-30 ran on the LOG
+    # layer while the leaderboard it was printed beside ran on `raw/X`. The deltas in
+    # MANUSCRIPT 4.7, reported as genuine-package-versus-reimplementation, were
+    # cross-MATRIX. Proof: bisque's re-measured 0.9231 is bit-for-bit its `acs_log` in
+    # `matrix_arm_comparison.json`, whose `acs_counts` is 0.7077.
+    #
+    # The default is READ FROM THE RUN'S OWN PROVENANCE rather than hard-coded, so if the
+    # leaderboard is ever rebuilt on a different layer this script follows it instead of
+    # silently disagreeing. Condition 8 below then BLOCKS on any mismatch.
+    ap.add_argument("--matrix", default=None, choices=[None, "X", "raw/X"],
+                    help="atlas layer. Default: whatever results/run_provenance.json says "
+                         "the leaderboard used. Pass one explicitly ONLY to study the "
+                         "matrix arm deliberately; the result is then not comparable to "
+                         "the leaderboard and condition 8 records that.")
     ap.add_argument("--cores", type=int, default=None,
                     help="workers for a method that parallelises with an R SOCKET cluster "
                          "(BayesPrism). 1 disables the cluster. Omit for the package default. "
@@ -79,6 +183,10 @@ def main() -> int:
                          "spawns workers that are killed, the master fails with "
                          "'unserialize(node$con)', and the bridge silently falls back to the "
                          "Python reimplementation.")
+    ap.add_argument("--e2-s2", action="store_true",
+                    help="Extension E2, Addendum 2 (S2): deseq2_unmix only. Run E2's seven loss "
+                         "settings on the inputs built once; writes only under "
+                         "results/identifiability/.")
     args = ap.parse_args()
     M = args.method
     # DO NOT OVERWRITE A SUCCESS WITH A FAILURE. On 2026-09-19 this script wrote a
@@ -110,8 +218,20 @@ def main() -> int:
         config.R_SOCKET_CLUSTER_CORES = int(args.cores)
         print(f"R socket-cluster workers forced to {args.cores} "
               f"(declared deviation, OPEN_DEFECTS D18)")
+    from ivygap.deconv.extension import is_extension as _is_ext
+    if args.e2_s2:
+        if M != "deseq2_unmix":
+            print("BLOCKED: --e2-s2 is defined for deseq2_unmix only")
+            return 2
+        if args.out is None:
+            args.out = "results/identifiability/ivygap_unmix_ablation.json"
+            Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     if args.out is None:
-        args.out = f"results/{M}_remeasured.json"
+        # Extension-panel methods are not re-measurements of anything; they get their own
+        # directory so they can never be mistaken for, or globbed in with, a registered row.
+        args.out = (f"results/extension/{M}_anatomic.json" if _is_ext(M)
+                    else f"results/{M}_remeasured.json")
+        Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     rc = _guard_existing(args.out)
     if rc is not None:
         return rc
@@ -129,6 +249,28 @@ def main() -> int:
               f"To resume: complete one full `python scripts/run_all.py`, which now "
               f"writes the gene list, then re-run this script.")
         return 2
+
+    # Resolve the atlas layer against the leaderboard's own record.
+    prov_path = config.RESULTS_DIR / "run_provenance.json"
+    if not prov_path.exists():
+        print(f"BLOCKED: {prov_path} does not exist, so the layer the leaderboard was "
+              f"built on is not recoverable. A re-measurement that cannot state its "
+              f"matrix is what produced D22. Run one full `scripts/run_all.py` first, or "
+              f"pass --matrix explicitly and accept that it is not comparable.")
+        return 2
+    run_prov = json.loads(prov_path.read_text())
+    leaderboard_matrix = run_prov.get("matrix")
+    if leaderboard_matrix not in ("X", "raw/X"):
+        print(f"BLOCKED: run_provenance.json records matrix={leaderboard_matrix!r}, which "
+              f"this script does not know how to match.")
+        return 2
+    matrix = args.matrix or leaderboard_matrix
+    if matrix != leaderboard_matrix:
+        print(f"WARNING: --matrix {matrix} differs from the leaderboard's "
+              f"{leaderboard_matrix}. This measurement is NOT comparable to the "
+              f"leaderboard and the report will say so.")
+    print(f"  atlas layer: {matrix}"
+          f"{' (the leaderboard\'s own)' if matrix == leaderboard_matrix else ' (DELIBERATE DEVIATION)'}")
 
     print("building the anatomic cohort and the cell-level reference...")
     expr, meta = load_cached()
@@ -155,7 +297,7 @@ def main() -> int:
     # equivalence conditions; two runs were killed and restarted because of it.
     ref, cells, cmeta = build_from_h5ad(
         config.REFERENCE_DIR / "gbmap_core.h5ad",
-        restrict_to_genes=expr.index, export=False)
+        restrict_to_genes=expr.index, matrix=matrix, export=False)
 
     # THE GENE SPACE MUST BE THE LEADERBOARD'S, OR THE NUMBER IS NOT COMPARABLE.
     #
@@ -290,7 +432,22 @@ def main() -> int:
             "apply_cell_size_correction": bool(data.apply_cell_size_correction),
         },
     }
-    hard = [equivalence["1_gene_space"]["matches_leaderboard"],
+    equivalence["8_matrix_layer"] = {
+        # D22. Seven conditions checked the gene space, the donor split, the sample ids,
+        # the cell-type order and the normalisation, and NONE of them could see which
+        # layer of the atlas the reference was built from -- so a log-versus-counts
+        # confound passed all seven and reached the manuscript. This is that condition.
+        "matrix": matrix,
+        "matrix_meaning": {
+            "X": "GBmap's `X` layer: log1p(counts x size_factor). NOT counts.",
+            "raw/X": "GBmap's `raw/X` layer: the genuine integer counts.",
+        }[matrix],
+        "leaderboard_matrix": leaderboard_matrix,
+        "source_of_leaderboard_matrix": str(prov_path.relative_to(config.PROJECT_ROOT)),
+        "matches_leaderboard": matrix == leaderboard_matrix,
+    }
+    hard = [equivalence["8_matrix_layer"]["matches_leaderboard"] or args.matrix is not None,
+            equivalence["1_gene_space"]["matches_leaderboard"],
             equivalence["2_train_donors"]["matches_recorded"],
             equivalence["3_held_out_donors"]["matches_recorded"],
             equivalence["3_held_out_donors"]["reference_excludes_held_out_donors"],
@@ -303,6 +460,8 @@ def main() -> int:
         print(json.dumps(equivalence, indent=2))
         return 2
     print(f"  equivalence: all {len(hard)} hard conditions PASS")
+    if args.e2_s2:
+        return run_s2(M, data, meta.loc[anat], args, equivalence)
 
     print(f"\nrunning the genuine {M} R package with a {args.budget}s budget "
           f"(the pipeline's is {r_bridge.timeout_for(M)}s)...")
@@ -310,7 +469,15 @@ def main() -> int:
     failed = None
     est = None
     try:
-        est = r_bridge.run_r_method(M, data, timeout=args.budget)
+        from ivygap.deconv.extension import (build_extension_methods as _bem,
+                                             is_extension as _ie, route_of as _ro)
+        if _ie(M) and _ro(M) == "python":
+            # A genuine Python package: call its own API, never the R bridge.
+            _pm = _bem([M])[0]
+            est = pd.DataFrame(_pm._solve_all(data), index=data.bulk.columns,
+                               columns=list(data.cell_types))
+        else:
+            est = r_bridge.run_r_method(M, data, timeout=args.budget)
     except Exception as exc:                                       # noqa: BLE001
         failed = f"{type(exc).__name__}: {str(exc)[:600]}"
     elapsed = time.perf_counter() - t0
@@ -318,17 +485,27 @@ def main() -> int:
 
     report = {
         "method": M,
-        "what_this_is": (f"A single-method re-measurement of the GENUINE {M} R package on "
-                         "the anatomic cohort, after it fell back to the Python "
-                         "reimplementation in the confirmatory run. Reported alongside "
-                         "that run, never substituted into it."),
+        "what_this_is": (
+            f"POST-REGISTRATION EXTENSION PANEL: the GENUINE {M} package on the anatomic "
+            f"cohort, added 2026-09-30, after registration and after the confirmatory run. "
+            f"Reported under its own name in its own panel; never part of the registered "
+            f"leaderboard or any registered statistic (ivygap/deconv/extension.py)."
+            if _is_ext(M) else
+            f"A single-method re-measurement of the GENUINE {M} R package on "
+            "the anatomic cohort, after it fell back to the Python "
+            "reimplementation in the confirmatory run. Reported alongside "
+            "that run, never substituted into it."),
+        "panel": "extension (post-registration)" if _is_ext(M) else "registered",
         "budget_seconds": args.budget,
         "pipeline_budget_seconds": r_bridge.timeout_for("dwls"),
         "elapsed_seconds": round(elapsed, 1),
         "n_samples": int(bulk.shape[1]), "n_genes": int(bulk.shape[0]),
         "gene_space": prov,
+        "matrix": matrix,
+        "comparable_to_leaderboard": matrix == leaderboard_matrix,
         "input_equivalence": equivalence,
         "central_cell_size_conversion_applied": M not in r_bridge.R_RETURNS_CELL_FRACTIONS,
+        "r_stdout_tail": r_bridge.LAST_R_STDOUT.get(M, "")[-3000:],
         "failed": failed,
     }
 
@@ -336,7 +513,11 @@ def main() -> int:
         # Cell-size correction and simplex projection, exactly as fit_predict applies
         # them, so this number is on the same footing as the leaderboard's.
         from ivygap.deconv.registry import build_methods
-        dwls = next(m for m in build_methods(prefer_r=False) if m.name == M)
+        from ivygap.deconv.extension import build_extension_methods, is_extension
+        # An EXTENSION method has no Python reimplementation; its RMethod wrapper carries
+        # the same shared post-processing (`fit_predict` semantics) as every other method.
+        dwls = next(m for m in (build_extension_methods([M]) if is_extension(M)
+                                else build_methods(prefer_r=False)) if m.name == M)
         import numpy as np
         # Use the SHARED post-processing, not a copy of it.
         #
@@ -354,13 +535,20 @@ def main() -> int:
                   f"conversion is SKIPPED -- applying it would be the second one")
         frame = finalize_estimates(est.to_numpy(), data, covered=None,
                                    returns_cell_fractions=returns_cells)
-        out_csv = Path(f"results/estimates/ivygap_{M}_genuine.csv")
+        # Extension estimates are kept OUT of results/estimates/: method_completeness.py and
+        # cdseq_matched_comparison.py glob `ivygap_*.csv` there, and an extension method must
+        # never be swept into a registered-panel analysis.
+        out_csv = Path(f"results/extension/ivygap_{M}.csv" if is_extension(M)
+                       else f"results/estimates/ivygap_{M}_genuine.csv")
         out_csv.parent.mkdir(parents=True, exist_ok=True)
         frame.to_csv(out_csv)
 
         res = acs_score(frame, meta.loc[anat], method=f"{M}_genuine",
                         n_permutations=10000, n_boot=2000)
         s = res.summary()
+        # Samples the method returned NO estimate for are not scored; say how many, so an ACS
+        # on a fraction of the cohort is never read as one on all of it.
+        report["n_samples_unestimated"] = int(frame.isna().all(axis=1).sum())
         report["acs"] = round(float(s["acs"]), 4)
         report["ci"] = [round(float(s["ci_low"]), 4), round(float(s["ci_high"]), 4)]
         report["null_p"] = float(s["null_p"])

@@ -303,7 +303,7 @@ def run(expression: pd.DataFrame, meta: pd.DataFrame, prefer_r: bool = True,
             "train_donors": train_donors, "test_donors": test_donors}
 
 
-def main(prefer_r: bool = True, synthetic: bool = False) -> int:
+def main(prefer_r: bool = True, synthetic: bool = False, matrix: str = "raw/X") -> int:
     """
     CLI entry point.
 
@@ -323,7 +323,8 @@ def main(prefer_r: bool = True, synthetic: bool = False) -> int:
                   "Download a GBM single-cell atlas to that path, or run with "
                   "--synthetic to validate the pipeline without it.")
             return 1
-        _, expression, meta = build_from_h5ad(path, export=False)
+        # D24: the layer is stated. run_all.py passes its own cells in and never reaches here.
+        _, expression, meta = build_from_h5ad(path, matrix=matrix, export=False)
         from ivygap.deconv import r_bridge
         r_bridge.set_cell_source("gbmap", expression, meta)
     run(expression, meta, prefer_r=prefer_r)
@@ -335,7 +336,9 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--synthetic", action="store_true",
                     help="run on a generated reference (fixture validation)")
+    ap.add_argument("--matrix", choices=["X", "raw/X"], default="raw/X",
+                    help="atlas layer; raw/X (genuine counts) unless reproducing a log-arm result")
     ap.add_argument("--no-r", action="store_true",
                     help="force the all-Python implementations")
     a = ap.parse_args()
-    raise SystemExit(main(prefer_r=not a.no_r, synthetic=a.synthetic))
+    raise SystemExit(main(prefer_r=not a.no_r, synthetic=a.synthetic, matrix=a.matrix))

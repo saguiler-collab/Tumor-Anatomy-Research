@@ -303,6 +303,8 @@ is the maximum", which is weak at five categories. Post hoc and labelled: PAN �
 
 ## 9 · Limitations — none of these belong in a footnote
 
+> ⚠ SUPERSEDED (OPEN_DEFECTS D22, 2026-09-30): the genuine-package re-measurements quoted below ran on GBmap's log `X` layer while the leaderboard ran on `raw/X`, so these figures are cross-matrix and are withdrawn. Current values: MANUSCRIPT §4.7 and `results/*_remeasured.json` (DWLS: no estimate for 73 of 122 samples on raw/X; Bisque and EPIC reproduce their leaderboard rows).
+
 1. ~~Only the Tumor column has DNA ground truth.~~ ~~What remains unresolved is **per-type**
    immune truth.~~ **BOTH RESOLVED.** The immune compartment has aggregate truth from
    methylation-derived leukocyte fraction (§7b), which produced a **retraction** — the pseudobulk

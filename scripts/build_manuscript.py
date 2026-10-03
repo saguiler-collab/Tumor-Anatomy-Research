@@ -43,6 +43,12 @@ def _max_disc(block: dict) -> tuple[str, float]:
     return (top, float(d[top]))
 
 
+def _gim_track(unit: str, cohort: str = "gbm") -> float | None:
+    """unmix's Spearman against GIMiCC's level-3 tissue fraction for an E2 unit (results/gimicc_secondary.json)."""
+    u = ((J("gimicc_secondary.json").get("Q3") or {}).get("units") or {}).get(f"{unit}|{cohort}") or {}
+    return u.get("gimicc_level3_truth_rho_unmix")
+
+
 def J(name: str) -> dict:
     p = config.RESULTS_DIR / name
     if not p.exists():
@@ -65,6 +71,12 @@ def main() -> int:
     efg, efl = J("equal_footing_ranking.json"), J("equal_footing_ranking_lgg.json")
     log, lol = J("lymphoid_ordering.json"), J("lymphoid_ordering_lgg.json")
     logh, lolh = J("lymphoid_ordering_h5ad.json"), J("lymphoid_ordering_lgg_h5ad.json")
+    # D23: the h5ad arm, Bisque's anchoring (truth-free and planted), and the per-sample control.
+    ba, bas, ltr = J("bisque_anchoring.json"), J("bisque_anchoring_synthetic.json"), \
+        J("lymphoid_tracking.json")
+
+    def _agree_names(d):
+        return sorted(m for m, v in (d.get("methods") or {}).items() if v.get("T_exceeds_B"))
     mc_g, mc_l = J("methylation_celltypes.json"), J("methylation_celltypes_lgg.json")
     sp = J("spillover_lgg.json")
     rf = cc.get("recovery_fraction", {})
@@ -124,6 +136,26 @@ def main() -> int:
       "absence, not inversion. \"Top methods invert\" is defensible (3 of the top 5 do, in "
       "both cohorts) but invites exactly that check. `No method recovers` makes no claim "
       "about any single method and is the stronger statement anyway.*\n")
+    A(f"*D23 caution (2026-10-01). `No Method Recovers` holds as **no method robustly recovers**: on the "
+      f"registered signature {log.get('n_agree_T_over_B')} of {log.get('n_methods')} (GBM) and "
+      f"{lol.get('n_agree_T_over_B')} of {lol.get('n_methods')} (LGG) order T above B; on the donor-level raw/X "
+      f"rebuild {logh.get('n_agree_T_over_B')} of {logh.get('n_methods')} and {lolh.get('n_agree_T_over_B')} of "
+      f"{lolh.get('n_methods')} do -- one by returning its reference's own composition, the others weakly or "
+      f"fragilely. If a reviewer presses, `No Method Robustly Recovers` is the exact form.*\n")
+    _gim_top = J("gimicc_truth_confirmation.json")
+    if _gim_top.get("Q1_reading") == "NOT CONFIRMED":
+        # prespecified/gimicc_truth_confirmation.md: "the manuscript says so before anything else"
+        _bad = [f"TCGA-{c.upper()}" for c in ("gbm", "lgg")
+                if not _gim_top["cohorts"][c]["Q1_all_methylation_samples"]["T_exceeds_B"]]
+        A(f"**TRUTH CAUTION (GIMiCC, 2026-10-03). A glioma-specific methylation method does not confirm the "
+          f"headline's truth: it places B at or above T in {', '.join(_bad)} (§4.4, `results/"
+          f"gimicc_truth_confirmation.json`). The headline must not be stated for {', '.join(_bad)} until this is "
+          f"resolved.**\n")
+    elif _gim_top.get("Q1_reading") == "INCONCLUSIVE":
+        A("*Truth check (GIMiCC, 2026-10-03): INCONCLUSIVE by its registered rule (§4.4). A glioma-specific "
+          "methylation method agrees with EpiDISH in GBM (T above B, every control passing) and disagrees in LGG "
+          "(B above T). The GBM truth is corroborated three ways; the LGG truth is contested -- state the "
+          "lymphoid headline for GBM, and for LGG only with that caveat.*\n")
     A("*Alternatives, if a reviewer wants a different angle foregrounded:* "
       "\"Bulk RNA deconvolution cannot report the lymphoid compartment of a glioma\" "
       "(capability angle) or \"Two independent ground truths show bulk RNA deconvolution "
@@ -171,10 +203,12 @@ def main() -> int:
       f"DNA-derived tumour purity, an orthogonal measurement sharing no input with the "
       f"anatomic arm (Spearman \u03c1 = 0.081, n = 12, p = 0.80); the pre-registered "
       f"threshold was met only against a synthetic yardstick constructed from the same "
-      f"single-cell atlas used for deconvolution. Against DNA methylation, "
-      f"{_agree} of {_nm} methods reproduced the T-cell-over-B-cell ordering that "
-      f"methylation resolves, in glioblastoma and again in an independent lower-grade "
-      f"glioma cohort, against a prediction registered before those data were analysed. "
+      f"single-cell atlas used for deconvolution. Against DNA methylation, no method "
+      f"reproduced the T-cell-over-B-cell ordering that methylation resolves robustly across "
+      f"reference builds: {_agree} of {_nm} did so on the registered signature, in glioblastoma "
+      f"and again in an independent lower-grade glioma cohort, and on a donor-level rebuild the "
+      f"one method to do so consistently returned its single-cell reference's own composition "
+      f"-- against a prediction registered before those data were analysed. "
       f"Concordance with established biology is therefore not evidence that a composition "
       f"estimate is quantitatively correct.\n")
     A("> WRITE: the abstract above is complete and artefact-derived; edit for voice, not "
@@ -204,7 +238,22 @@ def main() -> int:
       f"glioblastomas and **{pct(mc_l.get('prediction_T_exceeds_B', {}).get('fraction_of_samples'))}** of "
       f"lower-grade gliomas, at true ratios of **{log.get('truth_mean', {}).get('T_cell', 0) / max(log.get('truth_mean', {}).get('B_cell', 1), 1e-9):.2f}:1** and "
       f"**{lol.get('truth_mean', {}).get('T_cell', 0) / max(lol.get('truth_mean', {}).get('B_cell', 1), 1e-9):.2f}:1**. "
-      f"**No method reproduces this in either cohort.** **[STRONG]**")
+      f"Against the frozen signature **no method reproduces this in either cohort** "
+      f"({log.get('n_agree_T_over_B')} of {log.get('n_methods')}, {lol.get('n_agree_T_over_B')} of "
+      f"{lol.get('n_methods')}). Against the donor-level raw/X reference "
+      f"**{logh.get('n_agree_T_over_B')} of {logh.get('n_methods')}** (GBM: {', '.join(_agree_names(logh))}) and "
+      f"**{lolh.get('n_agree_T_over_B')} of {lolh.get('n_methods')}** (LGG: {', '.join(_agree_names(lolh))}) do -- "
+      f"and Bisque, the only one to do so robustly in both, returns its reference's own composition "
+      f"by construction (cohort-mean L1 to the reference "
+      f"{(ba.get('cohorts', {}).get('gbm', {}).get('methods', {}).get('bisque', {}) or {}).get('L1_to_reference_prior_all_types')} / "
+      f"{(ba.get('cohorts', {}).get('lgg', {}).get('methods', {}).get('bisque', {}) or {}).get('L1_to_reference_prior_all_types')}; "
+      f"on planted truth {(bas.get('far') or {}).get('L1_estimate_to_prior')} to the reference vs "
+      f"{(bas.get('far') or {}).get('L1_estimate_to_plant')} to the truth). **No method reproduces "
+      f"the ordering robustly across both references and both cohorts.** **[STRONG]** "
+      f"_Methylation is used as a cohort-level truth only: its per-sample lymphoid split failed a "
+      f"reference-free marker control (LGG rho "
+      f"{(ltr.get('positive_control_marker_index', {}).get('lgg') or {}).get('rho_vs_truth_TB')}), so the "
+      f"per-sample percentages describe methylation, not a validated per-sample truth._")
     # COUNT ONLY THE METHODS THE CLAIM IS ABOUT. An absence-mode method can show a high
     # "B>T fraction" over the handful of samples it scored, so summing across all methods
     # inflates the misassignment count with the very methods mode 1 already covers.
@@ -216,7 +265,9 @@ def main() -> int:
       f"**{emp(lol)} of {lol.get('n_methods')}** (LGG) return *exactly zero* T, B and NK cells in the "
       f"majority of samples. Of those that do report lymphocytes, **{bt_major(log)} of {sub(log)}** (GBM) "
       f"and **{bt_major(lol)} of {sub(lol)}** (LGG) place B above T, paired per-sample. "
-      f"**Zero of twelve** reproduce the true T>NK>B ordering in either cohort. **[STRONG]**")
+      f"Under the frozen signature **none** reproduces the full T>NK>B ordering in either cohort; "
+      f"under the raw/X reference {logh.get('n_reproduce_full_ordering')} (GBM) and "
+      f"{lolh.get('n_reproduce_full_ordering')} (LGG) do, Bisque among them. **[STRONG]**")
     A(f"5. **The mixing model itself is violated.** The best non-negative fit leaves a median "
       f"**{mf.get('cohorts', {}).get('GBM', {}).get('unexplained_median_pct'):.1f}%** (GBM) and "
       f"**{mf.get('cohorts', {}).get('LGG', {}).get('unexplained_median_pct'):.1f}%** (LGG) of marker-space "
@@ -493,6 +544,11 @@ def main() -> int:
     A("> **[ FIGURE 2 HERE ]** \u2014 `docs/figures/Figure_lymphoid_failure.pdf` "
       "(vector, for submission) / `.png` (300 dpi, for drafts). Relative composition within {t, nk, b}, by method and by methylation. "
       "Caption in `docs/FIGURES.md`.\n")
+    A("> **[ FIGURE 8 HERE ]** \u2014 `docs/figures/Figure_bisque_anchoring.pdf`. (A) Genuine "
+      "BisqueRNA on planted truth: with no overlapping subjects the cohort mean is the "
+      "reference's donor-mean composition, not the true one. (B) Distance of each method's TCGA "
+      "cohort mean from the reference's composition. Place directly after Figure 2: it explains "
+      "the one method that appears to escape the lymphoid inversion under the raw/X reference.\n")
     # THE TWO COHORTS ARE NOT EQUIVALENT AND THE TABLE MUST NOT IMPLY THEY ARE. The
     # pre-specification is explicit: "This is LGG, not GBM. The anomaly was measured in GBM."
     # So GBM is DISCOVERY and LGG is the PRE-REGISTERED REPLICATION. Presenting them as two
@@ -547,6 +603,133 @@ def main() -> int:
       "failure than reversing the T:B ratio, and that it was invisible while the comparison was "
       "made on cohort means. That correction is part of the result.\n")
 
+    # IS THE TRUTH ITSELF RIGHT? (exploratory; prespecified/gimicc_truth_confirmation.md, Addenda 1-4;
+    # prespecified/atlas_t_vs_b.md). Every branch below was written BEFORE any GIMiCC estimate or atlas
+    # split was seen, so the wording cannot follow the result. NOT CONFIRMED must also lead the paper
+    # (the D23 caution at the top carries it).
+    gim, gsec, atl = J("gimicc_truth_confirmation.json"), J("gimicc_secondary.json"), J("atlas_t_vs_b.json")
+    if gim:
+        gc = gim["cohorts"]
+        def _sh(c, key="Q1_all_methylation_samples"):
+            m = gc[c][key]["mean_within_lymphoid_share"]
+            return f"{m['T']:.3f} : {m['NK']:.3f} : {m['B']:.3f}"
+        ctl = (f"its tumour layer tracks ABSOLUTE purity (Spearman {gc['gbm']['control_tumor_vs_absolute']['spearman']} "
+               f"GBM, {gc['lgg']['control_tumor_vs_absolute']['spearman']} LGG), its immune total tracks the methylation "
+               f"leukocyte fraction ({gc['gbm']['control_immune_vs_leukocyte_fraction']['spearman_immune_plus_microglia']}, "
+               f"{gc['lgg']['control_immune_vs_leukocyte_fraction']['spearman_immune_plus_microglia']}), with shuffled CpG "
+               f"labels its tumour layer tracks purity at {gc['gbm']['negative_control_shuffled_cpgs']['tumor_vs_absolute_spearman']} "
+               f"(GBM) and {gc['lgg']['negative_control_shuffled_cpgs']['tumor_vs_absolute_spearman']} (LGG; the control requires "
+               f"|rho| < 0.20), and the direction holds in "
+               f"{gc['gbm']['probe_drop_robustness']['n_direction_held']} and {gc['lgg']['probe_drop_robustness']['n_direction_held']} "
+               f"of {gc['gbm']['probe_drop_robustness']['n_repeats']} repeats that drop a further 20% of its CpGs")
+        intro = ("**Is the truth itself right? (exploratory, post-registration).** The ordering above is "
+                 "EpiDISH's, from a blood reference into which brain and tumour DNA can only be forced. GIMiCC "
+                 "[52], a methylation method built for glioma, separates tumour, neuronal, glial and angiogenic "
+                 "DNA before it splits the lymphocytes (`prespecified/gimicc_truth_confirmation.md`).")
+        rd = gim["Q1_reading"]
+        if rd == "CONFIRMED":
+            A(f"{intro} It orders T above B in both cohorts: within-lymphoid T : NK : B {_sh('gbm')} (GBM, "
+              f"{gc['gbm']['Q1_all_methylation_samples']['n_samples_with_lymphoid']} samples) and {_sh('lgg')} (LGG, "
+              f"{gc['lgg']['Q1_all_methylation_samples']['n_samples_with_lymphoid']}), against EpiDISH's T > NK > B. "
+              f"The controls pass: {ctl}. **The cohort-level truth the headline rests on is confirmed by a second, "
+              f"glioma-specific methylation instrument.** GIMiCC's lymphoid layers were validated by its authors on "
+              f"mixtures of blood cells only, so this is corroboration, not a gold standard.\n")
+        elif rd == "NOT CONFIRMED":
+            bad = [f"TCGA-{c.upper()}" for c in ("gbm", "lgg") if not gc[c]["Q1_all_methylation_samples"]["T_exceeds_B"]]
+            A(f"{intro} **It does not confirm the truth: it places B at or above T in {', '.join(bad)}** "
+              f"(within-lymphoid T : NK : B {_sh('gbm')} GBM, {_sh('lgg')} LGG). Controls: {ctl}. Two methylation "
+              f"instruments disagree on the lymphoid ordering, so the headline's T > B is not a settled truth in "
+              f"{', '.join(bad)}. The direct cell counts below bear on glioma biology in general, not on these samples.\n")
+        else:
+            _names = {"control_tumor_vs_absolute": "tumour layer against ABSOLUTE",
+                      "control_immune_vs_leukocyte_fraction": "immune total against the leukocyte fraction",
+                      "negative_control_shuffled_cpgs": "the shuffled-CpG negative control",
+                      "structural_invariance": "structural invariance"}
+            failed = [f"{_names[k]} in {c.upper()}" for c in ("gbm", "lgg") for k in _names if not gc[c][k]["pass"]]
+            gd = J("gimicc_diagnostics.json").get("cohorts", {})
+            A(f"{intro} Its registered reading is **INCONCLUSIVE**: "
+              f"{'; '.join(failed) if failed else 'the direction is fragile under probe dropping'} failed. "
+              f"Measured: {ctl}. Within-lymphoid T : NK : B is {_sh('gbm')} in GBM -- **T above B, with every GBM "
+              f"control passing** -- and {_sh('lgg')} in LGG: **B above T**, against EpiDISH's T > NK > B in both.\n")
+            if gd:
+                sa, sl = (gd[c]["D-a_shuffled_lymphoid_split"]["shuffled"]["ordering"] for c in ("gbm", "lgg"))
+                A(f"Diagnostics declared before they were computed (exploratory) locate both results. Shuffling "
+                  f"CpG labels reverses each ordering ({sa} in GBM, {sl} in LGG), so both are carried by the lymphoid "
+                  f"CpGs themselves, not by global methylation. LGG's B excess is not tumour signal absorbed into B: "
+                  f"GIMiCC's B share falls as purity rises (Spearman "
+                  f"{gd['lgg']['D-e_B_share_vs_ABSOLUTE']['rho']:+.3f}, p {gd['lgg']['D-e_B_share_vs_ABSOLUTE']['p']:.3f}). "
+                  f"The LGG negative control fails by construction: GIMiCC's IDH-mutant purity libraries consist almost "
+                  f"entirely of tumour-hypermethylated CpGs, so a shuffled LGG sample reads its global methylation "
+                  f"(Spearman {gd['lgg']['D-c_shuffled_tumour_layer_vs_mean_beta']['rho']:.2f} with mean beta), which "
+                  f"tracks purity. **In LGG, two methylation instruments disagree on T versus B.**\n")
+        l3 = {c: gc[c]["Q1_level3_sensitivity"] for c in ("gbm", "lgg")}
+        lost = {c: gc[c]["level4_T_lost_while_level3_T_positive"] for c in ("gbm", "lgg")}
+        A(f"GIMiCC zeroes or drops level-4 T where its CD4/CD8 projection is undefined "
+          f"({lost['gbm']['n_zero_at_level4'] + lost['gbm']['n_nan_at_level4']} GBM and "
+          f"{lost['lgg']['n_zero_at_level4'] + lost['lgg']['n_nan_at_level4']} LGG samples); taking T straight from "
+          f"its lymphoid layer gives {l3['gbm']['ordering']} (GBM) and {l3['lgg']['ordering']} (LGG)"
+          + ("" if all(gc[c]["level3_direction_agrees_with_level4"] for c in ("gbm", "lgg")) else
+             " -- **a different T-versus-B direction from level 4 in at least one cohort, caused by those samples**")
+          + f". Per sample, the two methylation instruments barely agree: GIMiCC's and EpiDISH's T shares "
+          f"correlate at Spearman {gc['gbm']['agreement_with_epidish']['spearman_T_share']:.2f} (GBM) and "
+          f"{gc['lgg']['agreement_with_epidish']['spearman_T_share']:.2f} (LGG).\n")
+    if gsec:
+        q2, q3, q4 = gsec["Q2"], gsec["Q3"], gsec["Q4"]
+        b = q2["by_cohort_reference"]
+        A(f"Re-scored against GIMiCC's direction, the methods matching it number "
+          f"{b['gbm|frozen']['n_match_gimicc']} of {b['gbm|frozen']['n_methods']} and {b['lgg|frozen']['n_match_gimicc']} of "
+          f"{b['lgg|frozen']['n_methods']} on the frozen signature, {b['gbm|h5ad']['n_match_gimicc']} of "
+          f"{b['gbm|h5ad']['n_methods']} and {b['lgg|h5ad']['n_match_gimicc']} of {b['lgg|h5ad']['n_methods']} on the "
+          f"raw/X reference: the headline is **{'unchanged' if q2['reading'] == 'UNCHANGED' else q2['reading'].replace('REVERSED', 'reversed')}** "
+          f"under the second instrument -- a reading that inherits GIMiCC's own "
+          f"{gim['Q1_reading'] if gim else 'unread'} status.\n")
+        pc = q4["positive_control"]
+        A(f"D23's reference-free positive control, which EpiDISH's per-sample split failed, gives for GIMiCC's "
+          f"per-sample T/(T+B) Spearman {pc['gbm']['level3']['rho']:+.3f} (p {pc['gbm']['level3']['p']:.3g}, n "
+          f"{pc['gbm']['level3']['n']}, GBM) and {pc['lgg']['level3']['rho']:+.3f} (p {pc['lgg']['level3']['p']:.3g}, n "
+          f"{pc['lgg']['level3']['n']}, LGG): **{q4['reading']}**"
+          + (" -- GIMiCC supplies a per-sample lymphoid truth that EpiDISH could not, and the methods' per-sample "
+             "tracking of it is reported in `results/gimicc_secondary.json`."
+             if q4["positive_control_passes"] else
+             " -- so methylation remains a cohort-level truth only, under either instrument.") + "\n")
+        if "units" in q3:
+            ly = q3["lymphoid_truth_rho_level3_unmix_median"]
+            gdf = {c: (J("gimicc_diagnostics.json").get("cohorts", {}).get(c, {}).get("D-f_partial_on_leukocyte_fraction") or {})
+                   for c in ("gbm", "lgg")}
+            part = ("" if not all(gdf.values()) else
+                    f" for `unmix`, whose tracking survives controlling for the leukocyte fraction (partial "
+                    f"{gdf['gbm']['unmix']['rho']:+.2f} / {gdf['lgg']['unmix']['rho']:+.2f}), so it is more than the "
+                    f"leukocyte level; the methods' median does not track ({gdf['gbm']['methods_median_partial_rho']:+.2f} / "
+                    f"{gdf['lgg']['methods_median_partial_rho']:+.2f} partial)")
+            holds = q3["reading"].startswith("HOLDS")
+            A(f"Against GIMiCC's lymphoid tissue fraction (denominators matched by construction), E2's lymphoid "
+              f"estimate gives Spearman {ly['gbm'][0]:+.2f} / {ly['gbm'][1]:+.2f} (GBM, `unmix` / methods' median) and "
+              f"{ly['lgg'][0]:+.2f} / {ly['lgg'][1]:+.2f} (LGG). By the rule fixed beforehand, the claim that the "
+              f"lymphoid estimate does not track methylation **{'holds' if holds else 'does not hold'}** against a second "
+              f"methylation truth{part}.\n")
+    if atl:
+        po = atl["pooled"]
+        A(f"**Direct cell counts, with no methylation and no deconvolution.** In an independent single-cell atlas "
+          f"(Abdelfattah et al. [42], {atl['n_patients']} patients, not one of GBmap's source studies), the "
+          f"T/NK cluster split per cell by the split declared before (`prespecified/atlas_t_vs_b.md`) gives "
+          f"{po['T_strict']:,} T, {po['NK']:,} NK and {po['B']:,} B cells; T exceeds B in "
+          f"{atl['n_patients_T_strict_over_B']} of {atl['n_patients']} patients: **{atl['reading']}**."
+          + (lambda g: f" GBmap's own core atlas (all glioblastoma) holds {g['pooled']['T']:,} T against {g['pooled']['B']:,} B "
+                       f"cells, T above B in {g['n_donors_T_over_B']} of {g['n_donors_with_any_lymphoid']} donors with any "
+                       f"lymphocytes." if g else "")(J("gbmap_t_vs_b.json")) + f" Flow cytometry "
+          f"of brain tumours reports the same composition: \"the lymphocyte compartment was mostly composed of T "
+          f"cells with fewer NK cells and B cells\" [53].\n")
+        if gim and gim.get("Q1_reading") != "CONFIRMED":
+            A("**Reading.** In glioblastoma, the discovery cohort, the truth is corroborated three ways -- a "
+              "glioma-specific methylation instrument with every control passing, two single-cell atlases, and "
+              "flow cytometry -- and the headline stands on it. In LGG, the registered replication, the methylation "
+              "truth depends on the instrument: the deconvolution methods' B above T agrees with GIMiCC and "
+              "disagrees with EpiDISH, while the direct counts (two LGG patients in the atlas, and pooled flow "
+              "cytometry) favour T above B. Both methylation instruments place B above every direct count (GIMiCC several-fold), so "
+              "T > B is a fact about glioma tissue, and the methylation shares are not measurements of it at that "
+              "precision. **The LGG replication of the lymphoid finding rests on a contested truth; the GBM "
+              "discovery does not.**\n")
+
     A("### 4.5 \u00b7 The additive mixing model accounts for a minority of real bulk\n")
     A("> **[ FIGURE 6 HERE ]** \u2014 `docs/figures/Figure_model_fit_bound.pdf` "
       "(vector, for submission) / `.png` (300 dpi, for drafts). Per-sample fit of the non-negative mixing model, against floor and ceiling controls. "
@@ -589,8 +772,142 @@ def main() -> int:
       f"purity proxy), which is what makes the negative meaningful.")
     A("5. **Residual propagation through correlated columns** — rejected. Refitting on "
       "lymphoid-owned markers only gives T > B in **0.0%** of samples; the mass moves to NK.")
+    _nk = J("nk_reannotation.json").get("cohorts", {})
+    if _nk.get("gbm") and _nk.get("lgg"):
+        def _bt(c, kind, m):
+            return (_nk[c]["variants"].get(kind, {}).get(m) or {}).get("frac_B_over_T")
+        A(f"6. **The `NK_cell` column absorbs T-cell signal through shared CD3 markers** — "
+          f"rejected. The frozen reference was re-annotated and refit, with the gene space held "
+          f"fixed and the as-registered fit reproducing the registered estimates exactly. With "
+          f"the NK column **removed**, SVR places B above T in "
+          f"**{_bt('gbm', 'nk_removed', 'svr'):.0%}** (GBM) and **{_bt('lgg', 'nk_removed', 'svr'):.0%}** "
+          f"(LGG) of samples with lymphoid signal; with T and NK **merged**, in "
+          f"**{_bt('gbm', 't_nk_merged', 'svr'):.0%}** and **{_bt('lgg', 't_nk_merged', 'svr'):.0%}** "
+          f"(NNLS: {_bt('lgg', 'nk_removed', 'nnls'):.0%} and {_bt('lgg', 't_nk_merged', 'nnls'):.0%} in LGG). "
+          f"Whatever the roster does with NK, the mass goes to B, never to T. "
+          f"`results/nk_reannotation.json`.")
+    _tl2, _rp2, _af2, _bd2 = J("b_profile_tissue_likeness.json"), J("ribosomal_test.json"), \
+        J("atlas_cell_fractions.json"), J("b_column_diagnostics.json")
+    _f2 = (_tl2.get("signature_gene_families") or {}).get("gbm")
+    _nmech = 6
+    if _f2:
+        _nmech += 1
+        A(f"{_nmech}. **Immunoglobulin transcripts credited to B** — excluded by construction: the solved gene "
+          f"space holds {len(_f2['immunoglobulin_genes_in_space'])} immunoglobulin gene "
+          f"({', '.join(_f2['immunoglobulin_genes_in_space'])}), "
+          f"{100 * _f2['immunoglobulin_mass_share']['B_cell']:.3f}% of the B column.")
+    _g2 = (_rp2.get("cohorts") or {}).get("gbm", {})
+    if _g2.get("svr_rp_removed"):
+        _nmech += 1
+        _l2 = (_rp2.get("cohorts") or {}).get("lgg", {})
+        A(f"{_nmech}. **Ribosomal-protein genes admitted as B markers** — rejected. They carry "
+          f"{100 * _f2['ribosomal_mass_share']['B_cell']:.0f}% of the B column's mass in the solved space "
+          f"(T {100 * _f2['ribosomal_mass_share']['T_cell']:.0f}%) and most of its pull in a residual-driver "
+          f"analysis, yet removing them leaves B above T in {100 * _g2['svr_rp_removed']['frac_B_over_T']:.0f}% "
+          f"of GBM samples under SVR (baseline {100 * _g2['svr_baseline']['frac_B_over_T']:.0f}%)"
+          + (f" and {100 * _l2['svr_rp_removed']['frac_B_over_T']:.0f}% in LGG" if _l2.get("svr_rp_removed") else "")
+          + ". `results/ribosomal_test.json`.")
+    _b2 = (_af2.get("by_type") or {})
+    if _b2.get("B_cell"):
+        _nmech += 1
+        A(f"{_nmech}. **Ambient myelin RNA in the B profile** — rejected: GBmap's B cells carry *less* myelin "
+          f"signal than its T cells ({100 * _b2['B_cell']['frac_cells_with_myelin']:.0f}% vs "
+          f"{100 * _b2['T_cell']['frac_cells_with_myelin']:.0f}% of cells with any). `results/atlas_cell_fractions.json`.")
+    _rem = ((_bd2.get("cohorts") or {}).get("gbm") or {}).get("b_removed_svr")
+    _tlg = (_tl2.get("cohorts") or {}).get("gbm", {}).get("r_with_mean_bulk", {})
+    if _rem and _tlg:
+        A(f"\n**Measured properties of the B column — not shown to cause the inversion.** Its profile is "
+          f"the most bulk-tissue-like lymphoid profile (correlation with the mean GBM bulk "
+          f"{_tlg['B_cell']['all_genes']} vs T {_tlg['T_cell']['all_genes']}, NK {_tlg['NK_cell']['all_genes']}; "
+          f"the order holds without ribosomal genes); removing the column under SVR sends "
+          f"{100 * _rem['share_of_B_mass_to']['Tumor']:.0f}% of its estimate to Tumor and "
+          f"{100 * _rem['share_of_B_mass_to']['T_cell']:.0f}% to T in GBM; GBmap's B cells carry a median "
+          f"{100 * _b2.get('B_cell', {}).get('median_rp_fraction', 0):.0f}% of their molecules in ribosomal genes "
+          f"(T {100 * _b2.get('T_cell', {}).get('median_rp_fraction', 0):.0f}%).")
+        _remn = {c: ((_bd2.get("cohorts") or {}).get(c) or {}).get("b_removed_nnls") for c in ("gbm", "lgg")}
+        if all(_remn.values()):
+            _rsl = ((_bd2.get("cohorts") or {}).get("lgg") or {}).get("b_removed_svr")
+            A(f"The reabsorption is estimator-specific: under NNLS the removed B mass goes to T instead "
+              f"({100 * _remn['gbm']['share_of_B_mass_to']['T_cell']:.0f}% in GBM, "
+              f"{100 * _remn['lgg']['share_of_B_mass_to']['T_cell']:.0f}% in LGG, with Tumor falling)"
+              + (f", while under SVR in LGG {100 * _rsl['share_of_B_mass_to']['Tumor']:.0f}% goes to Tumor, as in "
+                 f"GBM" if _rsl else "")
+              + f"; so B behaves as an overflow for tumour signal under SVR and as a competitor of T under "
+              f"NNLS, in both cohorts. The "
+              f"SVR pattern motivated the hypothesis BayesPrism's sample-specific tumour model (key = "
+              f"\"Tumor\") tests (§4.10, prediction fixed before output).")
+        else:
+            A("Under SVR these fit B acting as an overflow for tumour signal the Tumor column does not fit "
+              "-- the hypothesis BayesPrism's sample-specific tumour model (key = \"Tumor\") tests "
+              "(§4.10, pre-declared).")
+    _ia, _iai = J("independent_atlas_test.json"), J("independent_atlas_test_ig_removed.json")
+    if _ia:
+        def _row(d, c, m):
+            v = ((d.get("cohorts") or {}).get(c) or {}).get("methods", {}).get(m) or {}
+            return v
+        _cells = []
+        for _c in ("gbm", "lgg"):
+            for _m in ("svr", "nnls"):
+                v = _row(_ia, _c, _m)
+                if not v:
+                    continue
+                vi = _row(_iai, _c, _m) if _iai else {}
+                gf = v.get("gbmap_frozen_for_comparison", {})
+                _cells.append(f"{_c.upper()} {_m.upper()}: GBmap {gf.get('ordering')} "
+                              f"(B>T {100 * (gf.get('frac_samples_B_over_T') or 0):.0f}%) -> independent atlas "
+                              f"{v.get('ordering')} (B>T {100 * (v.get('frac_samples_B_over_T') or 0):.0f}%)"
+                              + (f", Ig removed {vi.get('ordering')} (B>T {100 * (vi.get('frac_samples_B_over_T') or 0):.0f}%)" if vi else ""))
+        _tb_main = [_row(_ia, c, m).get("T_exceeds_B") for c in ("gbm", "lgg") for m in ("svr", "nnls") if _row(_ia, c, m)]
+        _tb_ig = [_row(_iai, c, m).get("T_exceeds_B") for c in ("gbm", "lgg") for m in ("svr", "nnls") if _iai and _row(_iai, c, m)]
+        _prov = _ia.get("provenance", {})
+        A(f"\n**An independent atlas (pre-specified).** The reference was rebuilt from Abdelfattah et al. "
+          f"2022 (GSE182109) -- not one of GBmap's 16 source studies -- with B cells from "
+          f"{(_prov.get('patients_per_type') or {}).get('B_cell')} patients rather than GBmap's concentrated few, "
+          f"clusters named by a marker rule fixed before any expression was seen "
+          f"(`prespecified/abdelfattah_cluster_mapping.md`). Its B column carries plasma cells, so "
+          f"immunoglobulin genes dominate it; an immunoglobulin-removed refit was declared before the result. "
+          + "; ".join(_cells) + ".")
+        _all_bt = (not any(_tb_main)) and (not _tb_ig or not any(_tb_ig))
+        _all_tb = all(_tb_main) and (not _tb_ig or all(_tb_ig))
+        if _all_bt:
+            A("Read as pre-specified: **B above T persists under an independent atlas**, so the inversion is "
+              "not specific to GBmap's annotation or donors -- it lies in how bulk tumour signal meets droplet-"
+              "derived lymphoid profiles. `results/independent_atlas_test*.json`.")
+        elif _all_tb:
+            A("Read as pre-specified: **T above B appears under the independent atlas** where GBmap gives B above T, "
+              "so the inversion belongs to GBmap's lymphoid profiles. `results/independent_atlas_test*.json`.")
+        else:
+            A("Read as pre-specified, the result is **mixed** across methods, cohorts or the immunoglobulin "
+              "sensitivity; each cell above is reported as measured and none is promoted. "
+              "`results/independent_atlas_test*.json`.")
+        if _iai:
+            _pairs = [(c, m, _row(_ia, c, m).get("ordering"), _row(_iai, c, m).get("ordering"))
+                      for c in ("gbm", "lgg") for m in ("svr", "nnls")
+                      if _row(_ia, c, m) and _row(_iai, c, m)]
+            _diff = [f"{c.upper()} {m.upper()} ({a} vs {b})" for c, m, a, b in _pairs if a != b]
+            if not _diff:
+                A(f"The immunoglobulin-removed refit, declared before the result was seen, gives the same "
+                  f"cohort-level ordering in all {len(_pairs)} cohort-method cells, so by the declared reading "
+                  f"immunoglobulin content does not drive it; removal costs resolution (fewer samples keep any "
+                  f"lymphoid signal), not direction.")
+            else:
+                A("The immunoglobulin-removed refit, declared before the result was seen, changes the ordering "
+                  "in " + "; ".join(_diff) + ". By the declared reading that difference is an immunoglobulin "
+                  "effect, and the immunoglobulin-removed cells are the ones that speak to B cells.")
+        _ss = J("independent_atlas_seed_sensitivity.json")
+        if _ss and not _ss.get("missing_runs"):
+            _cells = _ss.get("cells", {})
+            _dep = [k.replace("_", " ").upper() for k, v in _cells.items() if v["reading"] == "SEED-DEPENDENT"]
+            _st = [k.replace("_", " ").upper() for k, v in _cells.items() if v["reading"] == "SEED-STABLE"]
+            A(f"Rebuilt with three further cell-sampling seeds (a check declared after the main result, so it "
+              f"can only qualify it), {', '.join(_st)} keep their ordering in every build"
+              + (f"; {', '.join(_dep)} does not, and loses its reading" if _dep else "")
+              + ". `results/independent_atlas_seed_sensitivity.json`.")
+        A("\n> **[ FIGURE 10 HERE ]** \u2014 `docs/figures/Figure_lymphoid_mechanisms.pdf`. Reference-side tests of "
+          "the lymphoid inversion: reference variants, where B's estimate goes when B is removed, each lymphoid "
+          "profile's bulk-likeness, and GBmap versus the independent atlas. Caption in `docs/FIGURES.md`.\n")
     A("\n> WRITE: state that the failures are measured, replicated, bounded — and **not "
-      "explained**. Five failed explanations with controls is stronger evidence of rigour than "
+      "explained**. Failed explanations with working controls are stronger evidence of rigour than "
       "one convenient mechanism, and a reader will trust the rest of the paper more for it.\n")
 
     A("### 4.6 \u00b7 Reference parity, and what it changes\n")
@@ -630,83 +947,268 @@ def main() -> int:
     # writing surface, which claimed both methods were reimplementations full stop.
     import pandas as pd                                            # noqa: PLC0415
     lbp = config.RESULTS_DIR / "anatomic" / "acs_leaderboard.csv"
-    rm = {m: J(f"{m}_remeasured.json") for m in ("dwls", "bayesprism")}
-    if lbp.exists() and all(rm.values()):
+    rm = {m: J(f"{m}_remeasured.json") for m in ("bisque", "epic", "dwls", "bayesprism")}
+    if lbp.exists() and any(rm.values()):
         lb = pd.read_csv(lbp).set_index("method")
-        A("### 4.7 \u00b7 Genuine packages versus reimplementations\n")
-        A("_from `results/dwls_remeasured.json`, `results/bayesprism_remeasured.json`. Same "
-          "anatomic cohort, same 657-gene space (sha256 verified against the leaderboard's "
-          "own), same donor split by name; all 7 declared equivalence conditions pass._\n")
-        A("| method | this project's reimplementation | the genuine R package | delta | runtime "
-          "vs the 2,400 s pipeline budget |")
-        A("|---|---|---|---|---|")
+        impl = {r["method"]: r["implementation"] for r in J("anatomic/implementation_report.json") or []} \
+            if isinstance(J("anatomic/implementation_report.json"), list) else {}
+        A("### 4.7 · Genuine packages versus reimplementations\n")
+        A("_Re-measured 2026-09-30 on the leaderboard's own atlas layer (`raw/X`), gene space, "
+          "donor split and sample order -- eight input-equivalence conditions, the eighth being "
+          "the matrix layer. `results/{bisque,epic,dwls,bayesprism}_remeasured.json`._\n")
+        A("> **Correction (OPEN_DEFECTS D22).** Every earlier re-measurement ran on GBmap's "
+          "log-transformed `X` layer while the leaderboard ran on genuine counts, because the "
+          "script never passed the layer and the builder defaults to `X`. Bisque's earlier "
+          "0.9231 and EPIC's 0.9846 equal their log-arm leaderboard values to four decimals. "
+          "The deltas previously reported in this section were cross-matrix, not "
+          "cross-implementation, and are withdrawn; the superseded artefacts are kept in "
+          "`results/superseded_D22/`.\n")
+        A("| method | leaderboard row is | leaderboard ACS | genuine package, raw/X | samples estimated | constraint pairs | runtime |")
+        A("|---|---|---|---|---|---|---|")
         for m, g in rm.items():
-            a = float(lb.loc[m, "acs"]); b = float(g["acs"])
-            A(f"| `{m}` | {a:.4f} | **{b:.4f}** | **{b - a:+.4f}** | "
-              f"{g['elapsed_seconds']:.0f} s — {'OVER' if g['elapsed_seconds'] > 2400 else 'under'} |")
+            if not g:
+                continue
+            row = impl.get(m, "?")
+            a = float(lb.loc[m, "acs"]) if m in lb.index else float("nan")
+            if g.get("acs") is None:
+                why = str(g.get("failed") or "no result")
+                A(f"| `{m}` | {row} | {a:.4f} | **not measured** -- {why[:110]} | -- | -- | -- |")
+                continue
+            n_all = g.get("n_samples") or 0
+            n_un = g.get("n_samples_unestimated") or 0
+            A(f"| `{m}` | {row} | {a:.4f} | **{g['acs']:.4f}** [{g['ci'][0]:.4f}, {g['ci'][1]:.4f}] | "
+              f"{n_all - n_un} of {n_all} | {g.get('n_pairs')} | {g.get('elapsed_seconds', 0):,.0f} s |")
         A("")
-        # DERIVED, not typed. This paragraph carried "understated by 0.046" and
-        # "overstated by 0.062" — both correct on 2026-09-14 against the log-`X`
-        # reimplementation scores, and both stale after the raw/X rebuild. Worse, the
-        # BayesPrism direction inverted: its reimplementation now scores BELOW the package,
-        # so "overstated" became false. The rhetorical claim went with it — on the current
-        # numbers the two reimplementations are biased the SAME way, not opposite ways.
-        _d = {m: (float(lb.loc[m, "acs"]), J(f"{m}_remeasured.json").get("acs"))
-              for m in ("dwls", "bayesprism")
-              if m in lb.index and J(f"{m}_remeasured.json").get("acs") is not None}
-        if len(_d) == 2:
-            _same = len({r < g for r, g in _d.values()}) == 1
-            _parts = ", ".join(
-                f"`{m}` {'understated' if r < g else 'overstated'} it by {abs(g - r):.4f}"
-                for m, (r, g) in _d.items())
-            if _same:
-                A(f"**Both reimplementations are biased in the same direction, and neither is "
-                  f"close enough to ignore.** {_parts[0].upper() + _parts[1:]}. A blanket "
-                  f"\"the reimplementation is close enough\" is wrong on both counts. Note that "
-                  f"this direction is NOT stable across reference builds: on the log-`X` arm "
-                  f"the BayesPrism reimplementation scored *above* its package, so the sign of "
-                  f"this bias is a property of the run and not of the software.\n")
-            else:
-                A(f"**The reimplementations are not uniformly biased, and that is the point.** "
-                  f"{_parts[0].upper() + _parts[1:]}. A blanket \"the reimplementation is close "
-                  f"enough\" would be wrong in both directions, and a blanket "
-                  f"\"reimplementations flatter their packages\" would be wrong too.\n")
-        A(f"**DWLS's fallback was a coin flip, not a verdict.** It needed "
-          f"{J('dwls_remeasured.json').get('elapsed_seconds', 0):,.0f} s against a "
-          "2,400 s budget — the threshold sat almost exactly on the method's runtime, which is "
-          "the worst place for a threshold to be, because it decides the answer by machine "
-          "load rather than by the method. That is why the budget was raised and the method "
-          "re-measured, and the raised-budget result is reported alongside the original row "
-          "rather than substituted into it.\n")
-        A("**BayesPrism's fallback is intermittent, which is worse than a clean failure.** It "
-          "completed in 2,045 s — *under* budget — in this re-measurement, yet fell back in "
-          "every confirmatory run. The cause is memory, not time: its `parallel` socket cluster "
-          "spawns three worker processes, each with its own copy of the data, and on an 8.6 GB "
-          "machine they are killed (`Error in unserialize(node$con)`). **Whether the row labelled "
-          "`bayesprism` is BayesPrism therefore depends on how much RAM was free at the time**, "
-          "which is not a scientific variable. `docs/OPEN_DEFECTS.md` D18, D19.\n")
-        _dw = J("dwls_remeasured.json")
-        A(f"**The genuine DWLS figure replicated across two runs, and only one artefact "
-          f"survives.** It was measured on 2026-09-14 at **2,474 s** and again at "
-          f"**{_dw.get('elapsed_seconds', 0):,.0f} s**, in separate processes with different "
-          f"wall-clock, returning **ACS {_dw.get('acs')} and CI "
-          f"[{_dw.get('ci', [None, None])[0]}, {_dw.get('ci', [None, None])[1]}] both times — "
-          f"identical to four decimals including the bootstrap interval.** So the figure is a "
-          f"property of the package on this cohort, not of one run.\n")
-        A("> **Where that evidence lives, stated because it is not where a reader would "
-          "look.** The second run overwrote the first artefact, so no file on disk holds the "
-          "2,474 s measurement; it survives in git, in commit `4fe399a` of 2026-09-14, which "
-          "recorded `2,474 s` alongside the same ACS. Every `dwls_remeasured.json` in the "
-          "results tree and in all three archives reports the later run. An overwrite guard "
-          "was added to `scripts/remeasure_method.py` afterwards, which is why this cannot "
-          "happen again — but it happened here, and the replication claim rests on version "
-          "control rather than on an artefact.\n")
-        A("> WRITE: this belongs in the paper as a reproducibility finding, not buried in "
-          "limitations. Two of fifteen methods silently became different software depending on "
-          "machine state, the artefacts recorded *that* it happened but not *why*, and the "
-          "direction of the resulting error was not predictable. Any benchmark that does not "
-          "check this has the same exposure and would not know.\n")
+        _b, _e = rm.get("bisque") or {}, rm.get("epic") or {}
+        if _b.get("acs") is not None and _e.get("acs") is not None:
+            A("**Bisque and EPIC reproduce their leaderboard rows exactly.** Both rows already "
+              "were the genuine packages, so this is a determinism check passing -- the same "
+              "package on the same inputs returns the same number -- and it is *not* evidence "
+              "that a reimplementation agrees with a package.\n")
+        _dw = rm.get("dwls") or {}
+        if _dw.get("acs") is not None and (_dw.get("n_samples_unestimated") or 0) > 0:
+            A(f"**Genuine DWLS cannot be compared on this cohort.** On the counts layer the "
+              f"package's solver returned no estimate for **{_dw['n_samples_unestimated']} of "
+              f"{_dw.get('n_samples')}** samples, so its ACS of {_dw['acs']:.4f} rests on "
+              f"{_dw.get('n_pairs')} constraint pairs from {_dw.get('n_tumors')} tumours, against "
+              f"the reimplementation's full cohort. The failures are inside the package's quadratic "
+              f"program (*\"{_dw.get('first_error', '?')}\"*), and an independent re-run reproduced "
+              f"them exactly. On the log layer the same package estimated "
+              f"every sample. A method whose output depends on which layer of the same atlas it "
+              f"is given, to the point of failing on most samples, is a finding about the method; "
+              f"a delta between its partial ACS and a complete one is not.\n")
+        _bp = rm.get("bayesprism") or {}
+        if _bp.get("acs") is not None and not (_bp.get("n_samples_unestimated") or 0) and "bayesprism" in lb.index:
+            _d = _bp["acs"] - float(lb.loc["bayesprism", "acs"])
+            _in = _bp["ci"][0] <= float(lb.loc["bayesprism", "acs"]) <= _bp["ci"][1]
+            A(f"**Genuine BayesPrism is the one clean genuine-versus-reimplementation comparison.** On "
+              f"the counts layer, with every input equivalent and all {_bp.get('n_samples')} samples "
+              f"estimated, the package scores {_bp['acs']:.4f} [{_bp['ci'][0]:.4f}, {_bp['ci'][1]:.4f}] "
+              f"against the reimplementation's {float(lb.loc['bayesprism', 'acs']):.4f} -- a difference of "
+              f"{_d:+.4f}, {'inside' if _in else 'outside'} the package's interval. It needed "
+              f"{_bp.get('elapsed_seconds', 0) / 3600:.1f} h of R time on this machine with no budget, "
+              f"against the confirmatory run's 2,400 s; that budget, not the method, is why the "
+              f"leaderboard row is the reimplementation.\n")
+        if _bp.get("acs") is None:
+            A("**Genuine BayesPrism has not been re-measured on the counts layer.** The attempt "
+              "recorded above failed at the package-availability probe under machine load -- a "
+              "probe failure, not a method failure. Until it is re-run, no genuine-versus-"
+              "reimplementation statement is made for BayesPrism.\n")
+        A("**Whether a row is the published package can depend on machine state.** BayesPrism's "
+          "`parallel` socket cluster spawns worker processes, each with its own copy of the "
+          "data, and on an 8 GB machine they can be killed (`Error in unserialize(node$con)`); "
+          "DWLS's runtime sits close to its 2,400 s budget. Either can silently become the "
+          "reimplementation depending on free memory and load, which is not a scientific "
+          "variable. `docs/OPEN_DEFECTS.md` D18, D19, D22.\n")
+        A("> WRITE: a reproducibility finding, not a limitation footnote. Two of fifteen "
+          "methods could become different software depending on machine state, and the "
+          "re-measurement meant to settle it was itself confounded by an unpassed argument "
+          "until an eighth equivalence check was added. Any benchmark that does not record the "
+          "atlas layer has the same exposure.\n")
 
+    # ---------- 4.10 post-registration extension panel ----------
+    _ext = {}
+    for _f in sorted((config.RESULTS_DIR / "extension").glob("*_anatomic.json")):
+        _ext[_f.name.replace("_anatomic.json", "")] = json.loads(_f.read_text())
+    _tc = {}
+    for _c in ("gbm", "lgg"):
+        for _r in ("frozen", "h5ad"):
+            _pp = config.RESULTS_DIR / "extension" / f"tcga_{_c}_{_r}.json"
+            if _pp.exists():
+                _tc[(_c, _r)] = json.loads(_pp.read_text()).get("methods", {})
+    EXT: list[str] = []
+    if _ext or _tc:
+        E = EXT.append
+        E("### 4.10 \u00b7 Post-registration extension panel (exploratory)\n")
+        E("_Added 2026-09-30, after registration and after the confirmatory run, to widen the "
+          "panel toward the top-ranked reference-based methods of Nguyen et al. 2024 [3]. "
+          "Genuine published packages only, no fallback; run on the confirmatory run's exact "
+          "inputs. **None of these methods enters any registered statistic** -- not the "
+          "agreement test, not the control margin, not the registered T > B count. "
+          "`ivygap/deconv/extension.py`, `results/extension/`._\n")
+        from ivygap.deconv.extension import EXTENSION_SPECS as _SPECS        # noqa: PLC0415
+        E("| method | implementation | anatomic ACS [95% CI] | GBM purity rho | GBM B above T, frozen / raw/X | "
+          "LGG purity rho | LGG B above T, frozen / raw/X |")
+        E("|---|---|---|---|---|---|---|")
+        _names = sorted(set(_ext) | {m for d in _tc.values() for m in d})
+        def _why(msg):
+            msg = str(msg).strip().splitlines()[0]            # one line: tables break on newlines
+            msg = msg.split(":", 1)[-1].strip().replace("|", "/")
+            return ("needs single cells; the frozen signature has none" if "cell-level reference" in msg
+                    else msg[:60])
+        #: Methods that need cell-level data and therefore never run on the frozen signature (no cells).
+        #: RNA-Sieve records the failure itself; ReCIDE is driven by scripts/run_recide.py and
+        #: recide_tcga.py, which run the raw/X arm only, so it has no frozen record at all.
+        _CELL_ONLY = {"recide": "builds one signature per reference donor from cells"}
+        def _bt(m, c, r):
+            v = (_tc.get((c, r)) or {}).get(m)
+            if v is None:
+                return "n/a" if (r == "frozen" and m in _CELL_ONLY) else "pending"
+            if "failed" in v:
+                return "n/a" if "cell-level reference" in v["failed"] else "failed"
+            # Appendix D: never a B-above-T share without its denominator -- the share is over the
+            # samples with ANY lymphoid estimate, and on the raw/X arm that can be a handful.
+            _n_sig = (v.get("n_lymphoid") or 0) - (v.get("n_zero_lymphoid") or 0)
+            return f"{v['frac_samples_B_over_T']:.1%} (n = {_n_sig})"
+        def _rho(m, c):
+            v = (_tc.get((c, "frozen")) or {}).get(m) or {}
+            if "spearman_vs_purity" in v:
+                return f"{v['spearman_vs_purity']:+.3f}"
+            v = (_tc.get((c, "h5ad")) or {}).get(m) or {}
+            return f"{v['spearman_vs_purity']:+.3f} (raw/X)" if "spearman_vs_purity" in v else "pending"
+        for _m in _names:
+            _a = _ext.get(_m) or {}
+            if _a.get("acs") is not None:
+                _acs = f"{_a['acs']:.4f} [{_a['ci'][0]:.4f}, {_a['ci'][1]:.4f}]"
+            elif _a.get("failed"):
+                _acs = "failed; re-run queued (" + _why(_a["failed"])[:40] + ")"
+            else:
+                _acs = "pending"
+            _imp = (_a.get("implementation") or next((d.get(_m, {}).get("implementation")
+                    for d in _tc.values() if d.get(_m, {}).get("implementation")), None)
+                    or (_SPECS[_m].package if _m in _SPECS else "?"))
+            E(f"| `{_m}` | {_imp} | {_acs} | {_rho(_m, 'gbm')} | {_bt(_m, 'gbm', 'frozen')} / {_bt(_m, 'gbm', 'h5ad')} | "
+              f"{_rho(_m, 'lgg')} | {_bt(_m, 'lgg', 'frozen')} / {_bt(_m, 'lgg', 'h5ad')} |")
+        _na = [m for m in _names if any("cell-level reference" in str(((_tc.get((c, "frozen")) or {}).get(m) or {}).get("failed", ""))
+                                       for c in ("gbm", "lgg"))]
+        _na_all = _na + [m for m in _names if m in _CELL_ONLY and m not in _na]
+        if _na_all:
+            _why = {m: "models each cell type's single-cell variance" for m in _na}
+            _why.update({m: _CELL_ONLY[m] for m in _na_all if m in _CELL_ONLY})
+            E("")
+            E("_n/a: " + "; ".join(f"`{m}` {_why[m]}" for m in _na_all) + ". These need cell-level data "
+              "and cannot run on the frozen signature, which carries no cells; they are scored on the raw/X "
+              "arm only._")
+        E("")
+        E("_B above T is the share of samples with any lymphoid estimate in which B exceeds T; n counts those "
+          "samples. On the raw/X arm several methods return no lymphocytes for most samples, so their shares "
+          "rest on a few samples and are not comparable across methods._")
+        E("")
+        _inv = [m for m in _names for c in ("gbm", "lgg")
+                if ((_tc.get((c, "frozen")) or {}).get(m) or {}).get("T_exceeds_B") is False]
+        _ok = [m for m in _names for c in ("gbm", "lgg")
+               if ((_tc.get((c, "frozen")) or {}).get(m) or {}).get("T_exceeds_B") is True]
+        if _inv and not _ok:
+            E("**Every extension method measured so far places B above T on the frozen "
+              "reference, in every cohort it was run on** -- including the method with the "
+              "highest anatomic ACS of any in this study. The lymphoid failure is not a "
+              "property of the registered panel's composition.\n")
+        # Genuine BayesPrism on TCGA (user directive 2026-10-01: the real package, no budget).
+        _bp = {(c, v): json.loads(p.read_text())
+               for c in ("gbm", "lgg") for v in ("authors", "pipeline")
+               for p in [config.RESULTS_DIR / "extension" / f"bayesprism_tcga_{c}_{v}.json"] if p.exists()}
+        _bv = J("extension/bayesprism_verdict.json") if (config.RESULTS_DIR / "extension" /
+                                                         "bayesprism_verdict.json").exists() else {}
+        _reim = (J("absolute_purity_yardstick_h5ad.json").get("methods") or {}).get("bayesprism") or {}
+        if not _bp:
+            E("**Genuine BayesPrism on TCGA -- running.** In every registered TCGA arm the `bayesprism` "
+              "row is this project's reimplementation (the package exceeded its budget there, D18). The "
+              "real package is now running unbudgeted on the raw/X arm's exact inputs, in the package "
+              "authors' configuration (key = \"Tumor\", their gene cleanup) and in this project's driver, "
+              "GBM then LGG. The direction the authors' configuration should move the lymphoid B share, "
+              "and the rule for reading it, were fixed before either produced output "
+              "(`prespecified/bayesprism_authors_prediction.md`).\n")
+        else:
+            E("**Genuine BayesPrism on TCGA** (the real package, unbudgeted, on the raw/X arm's exact "
+              "inputs; the registered TCGA rows are the reimplementation"
+              + (f", purity rho {_reim.get('spearman_vs_purity'):+.3f} on this arm" if _reim.get("spearman_vs_purity") is not None else "")
+              + "):\n")
+            E("| cohort | configuration | purity rho | lymphoid ordering | B above T | samples with no lymphoid estimate |")
+            E("|---|---|---|---|---|---|")
+            for (c, v), r in sorted(_bp.items()):
+                if r.get("failed"):
+                    E(f"| {c.upper()} | {v} | failed: {str(r['failed']).splitlines()[0][:60]} | | | |")
+                    continue
+                E(f"| {c.upper()} | {v} | {r.get('spearman_vs_purity'):+.3f} | {r.get('lymphoid_ordering')} | "
+                  f"{(r.get('frac_samples_B_over_T') or 0):.1%} | {r.get('n_zero_lymphoid')} of "
+                  f"{r.get('n_lymphoid_matched')} |")
+            E("")
+            for c, vr in (_bv.get("cohorts") or {}).items():
+                if vr.get("verdict") in ("SUPPORTED", "NOT SUPPORTED"):
+                    E(f"Pre-declared prediction ({c.upper()}): the authors' configuration lowers the lymphoid B "
+                      f"share -- **{vr['verdict']}** (B share {vr['B_share_authors']:.3f} vs "
+                      f"{vr['B_share_pipeline']:.3f}; rule fixed before output, "
+                      f"`prespecified/bayesprism_authors_prediction.md`).")
+            _vs = {c: vr.get("verdict") for c, vr in (_bv.get("cohorts") or {}).items()}
+            if set(_vs.values()) == {"SUPPORTED", "NOT SUPPORTED"}:
+                _lg = (_bv.get("cohorts") or {}).get("lgg", {}).get("per_sample") or {}
+                E(f"The prediction does not replicate. In LGG the authors' configuration RAISES B's share "
+                  f"(higher in {_lg.get('n_higher_under_authors')} of "
+                  f"{_lg.get('n_samples_with_signal_in_both')} samples, median "
+                  f"{_lg.get('median_difference_authors_minus_pipeline'):+.3f}). Modelling each tumour's own "
+                  f"expression is therefore not a general account of B's excess. B stays above T under both "
+                  f"configurations in both cohorts.")
+            E("")
+        def _recide_lgg_rank() -> str:
+            """TCGA-LGG, OUTSIDE the rule (which adjudicates on GBM only): the same ranking, descriptive."""
+            _l = (J("extension/tcga_lgg_h5ad.json").get("methods") or {})
+            if (_l.get("recide") or {}).get("spearman_vs_purity") is None:
+                return ""
+            _r = {m: r["spearman_vs_purity"] for m, r in _l.items() if r.get("spearman_vs_purity") is not None}
+            _r.update({f"bayesprism_{v}": r["spearman_vs_purity"] for (c, v), r in _bp.items()
+                       if c == "lgg" and r.get("spearman_vs_purity") is not None})
+            _o = sorted(_r, key=lambda k: -_r[k])
+            return (f" In TCGA-LGG, outside the rule and descriptive only, it ranks {_o.index('recide') + 1} of "
+                    f"{len(_o)} (rho {_l['recide']['spearman_vs_purity']:.3f}).")
+        # ReCIDE adjudication (prespecified/recide_tcga.md): rank its GBM raw/X purity rho among every
+        # GBM raw/X row (extension methods + genuine BayesPrism); thirds decide the reading.
+        _h5 = (J("extension/tcga_gbm_h5ad.json").get("methods") or {})
+        _ra = J("extension/recide_anatomic.json")
+        if (_h5.get("recide") or {}).get("spearman_vs_purity") is not None and _ra.get("acs") is not None:
+            _rows = {m: r["spearman_vs_purity"] for m, r in _h5.items() if r.get("spearman_vs_purity") is not None}
+            _rows.update({f"bayesprism_{v}": r["spearman_vs_purity"] for (c, v), r in _bp.items()
+                          if c == "gbm" and r.get("spearman_vs_purity") is not None})
+            _ord = sorted(_rows, key=lambda k: -_rows[k])
+            _rk, _n = _ord.index("recide") + 1, len(_ord)
+            _where = ("top third" if _rk <= _n / 3 else "bottom third" if _rk > _n - _n / 3 else "middle")
+            _say = {"top third": "the reproducibility ranking is consistent with DNA here, and anatomy's verdict is not",
+                    "bottom third": "anatomy's low ranking agrees with DNA here, and the reproducibility ranking does not",
+                    "middle": "neither truth-free ranking is borne out"}[_where]
+            E(f"**Two truth-free rankings of ReCIDE, adjudicated by DNA (exploratory; rule fixed before the run, "
+              f"`prespecified/recide_tcga.md`).** ReCIDE has the lowest anatomic ACS of any real method here "
+              f"({_ra['acs']:.3f}). Li et al. 2026 [4], its developers, single it out with BayesPrism as robust "
+              f"on truth-free reproducibility. On TCGA-GBM's raw/X arm, ReCIDE's tumour content ranks "
+              f"{_rk} of {_n} against DNA purity (rho {_h5['recide']['spearman_vs_purity']:.3f}), in the "
+              f"{_where}: {_say}. The other method they singled out, genuine BayesPrism, ranks "
+              f"{' and '.join({1: 'first', 2: 'second', 3: 'third', 4: 'fourth', 5: 'fifth', 6: 'sixth', 7: 'seventh', 8: 'eighth'}.get(_ord.index(k) + 1, str(_ord.index(k) + 1)) for k in _ord if k.startswith('bayesprism_'))} "
+              f"of {_n} (its two configurations). "
+              f"This is one method and one cohort, so it is a single observation, not a test."
+              + _recide_lgg_rank() + "\n")
+        _ag = J("extension/agreement_extended.json")
+        if _ag.get("registered_reproduced") and _ag.get("registered_plus_extension"):
+            _x, _r0 = _ag["registered_plus_extension"], _ag["registered"]
+            _em = ", ".join(sorted(_ag.get("extension_methods") or {}))
+            E(f"**The agreement test with the extension methods added (exploratory).** The methods with both "
+              f"an anatomic ACS and a TCGA purity correlation ({_em}) raise the panel to n = {_x['n']}: "
+              f"rho = {_x['rho']:+.3f} (permutation p = {_x['p_permutation']:.2f}, 95% CI "
+              f"{_x['ci95'][0]:+.2f} to {_x['ci95'][1]:+.2f}), against the registered {_r0['rho']:+.3f} "
+              f"(n = {_r0['n']}, reproduced). Still below the registered bar of 0.60; and because these "
+              f"methods were added after the registered result was known, the number is reported, not "
+              f"tested. `results/extension/agreement_extended.json`.\n")
+        E("> WRITE: one paragraph. These methods widen the panel; they cannot widen the "
+          "registered agreement test, whose n is fixed by registration. A high ACS for a "
+          "post-registration method is reported, never used to rank -- the study's own "
+          "finding is that ACS does not predict accuracy.\n")
     A("### 4.8 \u00b7 Biological factors associated with estimation error\n")
     A("- **Mesenchymal character** predicts a larger under-call in GBM. **Does not replicate in "
       "LGG** — the Verhaak class does not exist there and the expression-score surrogate is null. "
@@ -730,6 +1232,353 @@ def main() -> int:
       "purity, one panel per method. These support Result 2; place them there if the "
       "journal allows, or as supplementary if the figure budget is tight.\n")
 
+    L.extend(EXT)
+
+    # ---------- 4.11 RECOVERED ANALYSES (completed before 2026-10-01, never reached the paper) ----------
+    alb, dar, ish = J("albiach_constraint_check.json"), J("darmanis_constraint_check.json"), J("ish_constraint_check.json")
+    imc, cds, bc = J("imc_anchored_test.json"), J("cdseq_anatomic.json"), J("benchmark_concordance.json")
+    if alb or dar or ish or imc or cds:
+        A("### 4.11 \u00b7 Independent checks of the yardstick and of ACS\n")
+        A("_Analyses completed during the study that had not reached the manuscript (recovered "
+          "2026-10-01). Each is exploratory; none moves the frozen constraint file or a "
+          "registered statistic._\n")
+        if alb or dar or ish:
+            A("**The registered constraints hold in measurements that involve no deconvolution.**")
+            if alb:
+                pc = {c["constraint"]: c for c in alb.get("per_constraint", [])}
+                sat = [k for k, c in pc.items() if c.get("verdict") == "SATISFIED"]
+                vio = [k for k, c in pc.items() if c.get("verdict") == "VIOLATED"]
+                A(f"- *Spatially resolved single-cell composition* (Mossa Albiach et al. 2023; one "
+                  f"patient, {alb.get('provenance', {}).get('n_samples', '?')} samples): "
+                  f"**{alb.get('n_satisfied')} of {alb.get('n_testable')}** testable constraints satisfied "
+                  f"({', '.join(sat)}" + (f"; C1 by {pc['C1'].get('fold')}-fold, p {pc['C1'].get('null_p_one_sided'):.0e}" if 'C1' in pc and pc['C1'].get('fold') else "")
+                  + f"). {', '.join(vio) or 'None'} violated -- tested on Albiach's necrotic core, which is "
+                  f"not Ivy GAP's peri-necrotic rim where macrophages accumulate, so the test sits on the "
+                  f"wrong side of that boundary. n = 1 patient: within-tumour replication only.")
+            if dar:
+                A(f"- *FACS-gated single-cell data* (Darmanis et al. 2017; {dar.get('n_patients')} patients, "
+                  f"{dar.get('n_cells'):,} cells): C1 (tumour higher in core than periphery) supported in "
+                  f"**{dar.get('n_gates_supporting_C1')} of {dar.get('n_gates_scored')}** sorting gates, "
+                  f"{dar.get('n_gates_supporting_at_p_lt_0.05')} at p < 0.05 -- the only cross-patient test "
+                  f"of a constraint.")
+            if ish:
+                strong = [m for m in ish.get("per_marker", []) if (m.get("n_sub_blocks_evaluable") or 0) >= 50]
+                small = [m for m in ish.get("per_marker", []) if 0 < (m.get("n_sub_blocks_evaluable") or 0) < 50]
+                A(f"- *Ivy GAP in situ hybridisation* ({ish.get('n_donors')} donors, {ish.get('n_sub_blocks')} "
+                  f"sub-blocks; markers declared before reading values): the well-sampled markers support "
+                  f"the constraints -- " + "; ".join(f"{m['marker']} for {m['constraint']} (p {m['null_p']:.4f}, "
+                  f"{m['n_sub_blocks_evaluable']} sub-blocks)" for m in strong if m.get("null_p") is not None)
+                  + f". {len(small)} marker tests rest on fewer than 50 sub-blocks and are reported in "
+                  f"`results/ish_constraint_check.json` without weight. C2 cannot be checked: the ISH panel "
+                  f"has no oligodendrocyte-lineage marker.")
+            A("")
+        if imc:
+            c0 = (imc.get("comparisons") or {}).get("MCP_GBM_vs_MCP_GBmap", {})
+            g, m = c0.get("MCP_GBM", {}), c0.get("MCP_GBmap", {})
+            eg = (imc.get("external_ground_truth") or {}).get("pearson_r_vs_IMC", {})
+            rob = J("imc_anchored_robustness.json").get("gbmap_at_matched_density", {})
+            A(f"**A pre-registered protein-level test: ACS reversed the ground-truth ordering.** "
+              f"Ajaib et al. 2023 scored one algorithm (MCPcounter) with different marker sets against "
+              f"imaging mass cytometry on matched tissue; GBM-specific markers tracked protein-measured "
+              f"immune content far better than GBmap-derived markers (r = {eg.get('MCP_GBM', {}).get('immune')} "
+              f"vs {eg.get('MCP_GBmap', {}).get('immune')}). The prediction registered before scoring "
+              f"(`prespecified/imc_anchored_prediction.md`) was that ACS would order them the same way. "
+              f"It did not: ACS **{g.get('acs')}** for the GBM-specific set against **{m.get('acs')}** for "
+              f"the GBmap set, on the same {g.get('n_pairs')} constraint pairs -- and at a matched marker "
+              f"density of 79 per type the GBmap set falls to {(rob.get('MCP_GBmap_n79') or {}).get('acs')}, "
+              f"so even the reversed ordering is unstable. A third, protein-level instrument therefore "
+              f"agrees with the DNA arms: anatomic concordance does not rank.\n")
+        auc = J("anatomic_auc.json")
+        if auc and auc.get("controls", {}).get("acs_reproduced_for_every_method"):
+            ra = auc["rank_agreement"]
+            va = auc["agreement_with_auc_in_place_of_acs"]
+            vr, vc, reg = va["vs_rho_purity"], va["vs_c_purity"], va["registered_for_comparison"]
+            ms = auc["methods"]
+            real = [r for r in ms.values() if not r["is_control"] and r["comparable"]]
+            _lb = pd.read_csv(config.ANATOMIC_DIR / "acs_leaderboard.csv")
+            _lb = _lb[(~_lb["is_control"].astype(bool)) & (_lb["comparable"].astype(bool))]
+            acs_null = float(_lb["null_mean"].median())
+            import statistics as _st                                 # noqa: PLC0415
+            auc_null = float(_st.median([r["null_mean"] for r in real]))
+            A(f"**ACS is not an AUC, and an AUC does not rescue it (exploratory).** ACS thresholds: each "
+              f"constraint-tumour pair scores 1 or 0 on per-structure means. Its graded counterpart -- the "
+              f"within-tumour Mann-Whitney AUC over the same pairs, samples and permutation null "
+              f"(`scripts/anatomic_auc.py`) -- ranks the {ra['n_comparable_methods']} comparable estimators "
+              f"almost identically (Spearman rho = {ra['acs_vs_auc_anat_spearman_comparable_methods']:.2f}) but "
+              f"on a different scale: chance is {auc_null:.2f} for the AUC and {acs_null:.2f} for ACS "
+              f"(median permutation-null means), and the AUC gives partial credit on the two conjunction "
+              f"constraints (C4, C7) where ACS gives none, so an ACS and an AUC of the same value do not "
+              f"mean the same thing. Both measure agreement with anatomy; neither sees ground truth. "
+              f"Substituted for ACS in the registered agreement test, the AUC predicts DNA-measured accuracy "
+              f"no better: rho = {vr['rho']:+.2f} against ABSOLUTE purity (p = {vr['p_value']:.2f}, "
+              f"n = {vr['n_methods']}; registered ACS rho = {reg['rho']:+.3f}), and {vc['rho']:+.3f} against "
+              f"purity re-expressed as a concordance on the same 0.5-chance scale. The null result is not an "
+              f"artefact of ACS's thresholding. `results/anatomic_auc.json`.\n")
+            A("> **[ FIGURE 9 HERE ]** \u2014 `docs/figures/Figure_acs_vs_auc.pdf`. (A) ACS against the "
+              "within-tumour AUC, with each statistic's chance level; (B) the AUC against concordance with "
+              "DNA-measured purity. Exploratory; caption in `docs/FIGURES.md`.\n")
+        if cds:
+            lab = cds.get("labellings", {})
+            gp, gm = lab.get("gbmap_profile_correlation", {}), lab.get("gbm_marker_enrichment", {})
+            A(f"**The constraints can be met without any single-cell reference.** CDSeq, a reference-free "
+              f"method, estimates components from the bulk alone; named by correlation with GBmap "
+              f"profiles it reaches ACS {gp.get('acs')} (permutation p < 1e-4, {gp.get('n_pairs')} pairs), "
+              f"named by independent GBM markers {gm.get('acs')} (p {gm.get('null_p', 0):.4f}, "
+              f"{gm.get('n_pairs')} pairs). Detection does not depend on the atlas.\n")
+        lsa, lsg, lsl = J("linseed_anatomic.json"), J("linseed_tcga_gbm.json"), J("linseed_tcga_lgg.json")
+        def _pfloor(pv: float, n_perm: int = 10_000) -> str:
+            """A permutation p at its floor 1/(n+1) is reported as p < 1e-4, as for CDSeq above."""
+            return "permutation p < 1e-4" if pv <= 1 / (n_perm + 1) + 1e-12 else f"p {pv:.4f}"
+        if lsa and lsg and lsl:
+            la, lg_, ll = lsa["labellings"], lsg["labellings"], lsl["labellings"]
+            pc, mk = "gbmap_profile_correlation", "gbm_marker_enrichment"
+            A(f"A second reference-free method of a different kind, Linseed [51] (simplex corners of mutually "
+              f"linear genes, where CDSeq is a topic model; k fixed at {lsa['pipeline']['k']} as for CDSeq, "
+              f"post-registration, `prespecified/linseed_config.md`), also meets the constraints, though less "
+              f"well: ACS {la[pc]['acs']} profile-named ({_pfloor(la[pc]['null_p'])}) and {la[mk]['acs']} "
+              f"marker-named ({_pfloor(la[mk]['null_p'])}). On TCGA bulk its tumour component tracks ABSOLUTE purity "
+              f"only weakly (Spearman {lg_[pc].get('tumour_spearman_vs_purity')} / {lg_[mk].get('tumour_spearman_vs_purity')} "
+              f"GBM, {ll[pc].get('tumour_spearman_vs_purity')} / {ll[mk].get('tumour_spearman_vs_purity')} LGG, "
+              f"profile / marker naming), and no labelling claims T, NK and B together, so it yields no "
+              f"lymphoid ordering. The anatomic and TCGA fits are separate deconvolutions; this is "
+              f"descriptive, not a within-fit test of the thesis.\n")
+        ia, ial = J("immune_arm.json"), J("immune_arm_lgg.json")
+        if ia and ial:
+            A(f"**Total immune content against an independent DNA measurement.** Against the "
+              f"methylation-derived leukocyte fraction of Thorsson et al. 2018 ({ia.get('n_samples')} GBM, "
+              f"{ial.get('n_samples')} LGG samples), the pre-registered prediction that methods over-call "
+              f"immune content failed in both cohorts: {ia['P1_over_call']['n_positive']} of "
+              f"{ia['P1_over_call']['n_methods']} methods over-call (sign test p = "
+              f"{ia['P1_over_call']['sign_test_p']}), and the median error is negative "
+              f"({ia['P1_over_call']['median_mean_error']:+.3f} GBM, {ial['P1_over_call']['median_mean_error']:+.3f} "
+              f"LGG). The comparison sets an mRNA share against a cell fraction, which biases toward "
+              f"under-calling, so this is reported as a null, not as an under-call finding. "
+              f"`prespecified/immune_failure_factors.md`.\n")
+        rn, rd = J("reference_sensitivity_gbmap_linear_vs_neftel.json"), J("reference_sensitivity_gbmap_linear_vs_darmanis.json")
+        if rn and rd:
+            A(f"**The ACS ordering is only partly stable to a change of reference.** Rebuilt from linear "
+              f"GBmap counts, the ACS ordering of {rn.get('n_methods')} methods correlates "
+              f"rho = {rn.get('spearman_between_orderings')} with the ordering under a reference built from the "
+              f"Neftel 2019 data alone and {rd.get('spearman_between_orderings')} under Darmanis 2017 alone: about "
+              f"half of the ranking survives. Both datasets are constituents of GBmap, so this bounds the "
+              f"effect of how the reference is assembled, not of a fully independent atlas. (The log-layer "
+              f"comparisons, rho = "
+              f"{J('reference_sensitivity_neftel.json').get('spearman_between_orderings')} and "
+              f"{J('reference_sensitivity_darmanis.json').get('spearman_between_orderings')}, are the D16-confounded "
+              f"pair and are not quoted.) An ordering that moves this much with the reference cannot "
+              f"select a method on its own.\n")
+        if bc:
+            av = (bc.get("comparisons") or {})
+            avk = next((k for k in av if "avila" in k.lower()), None)
+            pv = (av.get(avk) or {}).get("p_one_sided_top_tier_higher") if avk else None
+            A(f"**Published benchmarks.** The methods Avila Cobos et al. 2020 place in their top tier on "
+              f"real ground truth in other tissues do not score significantly higher on ACS than the rest"
+              + (f" (one-sided Mann-Whitney p = {pv})" if pv is not None else "") + " -- consistent with "
+              f"ACS separating working from broken methods without ranking working ones.\n")
+
+    # ---------- 4.12 TRUTH-FREE IDENTIFIABILITY (Extension E2; post-registration, exploratory) ----------
+    # Every number below is read from results/identifiability_diagnostics.json (the registered E2
+    # rules) or results/identifiability_robustness.json (Addendum 1, written before it was computed).
+    idd, idr = J("identifiability_diagnostics.json"), J("identifiability_robustness.json")
+    if idd.get("H1_primary") and all(c.get("pass") for c in idd.get("controls", {}).values()):
+        from ivygap.paper_style import display as _disp                          # noqa: PLC0415
+        U, h1, h1s = idd["units"], idd["H1_primary"], idd["H1s_secondary"]
+        s1 = idd.get("S1_scale_arm") or {}
+        _impl = {m: (r or {}).get("implementation", "")
+                 for m, r in (J("absolute_purity_yardstick.json").get("methods") or {}).items()}
+
+        def _pair(c, k, signed=False):
+            f = "{:+.2f}" if signed else "{:.2f}"
+            return " / ".join(f.format(U[f"{c}|{h}"][k]) for h in ("gbm", "lgg"))
+
+        def _mname(m):
+            # never print a reimplementation under the published package's name (CLAUDE.md)
+            return _disp(m) + (" (this project's reimplementation)" if _impl.get(m) == "python-reimplementation" else "")
+
+        A("### 4.12 \u00b7 Which cell types the bulk data determine: a truth-free check (exploratory)\n")
+        A("_Post-registration (2026-10-02), rules fixed before computing "
+          "(`prespecified/identifiability_diagnostics.md`). Motivated by the loss-scale ablation of \u00a74.10, "
+          "which had already shown the T-versus-B split moving with the loss while tumour content held -- "
+          "so it is exploratory throughout. It selects nothing and changes no registered statistic. "
+          "`docs/EXTENSION_IDENTIFIABILITY.md`._\n")
+        A("Two diagnostics need no ground truth. **Loss-scale stability** re-fits one genuine package, "
+          "DESeq2 `unmix` [45], under seven settings of the scale on which its loss is computed (shift 1 "
+          "to 10,000; power 1 or 2) and asks whether samples keep their order: the mean pairwise Spearman "
+          "correlation of per-sample estimates across settings. **Method agreement** asks the same across "
+          "the registered panel. Each was set against an instrument sharing nothing with the RNA: ABSOLUTE "
+          "purity [7] for tumour content, the methylation-derived leukocyte fraction [8] for all leukocytes, "
+          "and EpiDISH [12] for the lymphoid total. T, B and NK separately are secondary units, because "
+          "EpiDISH's per-sample split failed a reference-free positive control.\n")
+        A("| compartment | stability, GBM / LGG | method agreement, GBM / LGG | `unmix` vs DNA truth, "
+          "GBM / LGG | median registered method vs DNA truth, GBM / LGG | samples with truth, GBM / LGG |")
+        A("|---|---|---|---|---|---|")
+        for c, lab in (("Tumor", "Tumour (ABSOLUTE)"), ("Leukocytes", "All leukocytes (methylation)"),
+                       ("Lymphoid", "Lymphoid total (EpiDISH)"), ("T_cell", "T (secondary)"),
+                       ("B_cell", "B (secondary)"), ("NK_cell", "NK (secondary)")):
+            A(f"| {lab} | {_pair(c, 'd1_stability')} | {_pair(c, 'd2_agreement')} | "
+              f"{_pair(c, 'truth_rho_unmix', True)} | {_pair(c, 'truth_rho_median_methods', True)} | "
+              f"{U[f'{c}|gbm']['n_truth']} / {U[f'{c}|lgg']['n_truth']} |")
+        _nt = [u for u in U.values() if u["truth_tier"] == "none"]
+        A(f"| Myeloid, endothelial, oligodendrocyte (no DNA truth) | "
+          f"{min(u['d1_stability'] for u in _nt):.2f}-{max(u['d1_stability'] for u in _nt):.2f} | "
+          f"{min(u['d2_agreement'] for u in _nt):.2f}-{max(u['d2_agreement'] for u in _nt):.2f} | -- | -- | -- |\n")
+        A(f"**Stability ranked the compartments as their agreement with DNA did.** Across the six primary "
+          f"units, loss-scale stability and truth agreement correlate rho = {h1['D1']['rho']:.3f} (exact "
+          f"one-sided p = {h1['D1']['p_one_sided']:.4f} over all 720 orderings; pre-declared reading: "
+          f"**{h1['reading']}**). Method agreement points the same way, short of significance "
+          f"(rho = {h1['D2']['rho']:.3f}, p = {h1['D2']['p_one_sided']:.4f}). With T, B and NK added (12 units) "
+          f"both are significant (rho = {h1s['D1']['rho']:.3f}, p = {h1s['D1']['p_one_sided']:.4f}; "
+          f"rho = {h1s['D2']['rho']:.3f}, p = {h1s['D2']['p_one_sided']:.4f}). Tumour content and total "
+          f"leukocyte content are stable ({_pair('Tumor', 'd1_stability')}; {_pair('Leukocytes', 'd1_stability')}) "
+          f"and track their DNA truths. The lymphoid total is the least stable primary unit in both cohorts "
+          f"({_pair('Lymphoid', 'd1_stability')}), and `unmix`'s estimate of it does not track EpiDISH "
+          f"({_pair('Lymphoid', 'truth_rho_unmix', True)}); across the registered methods the median is "
+          f"{_pair('Lymphoid', 'truth_rho_median_methods', True)}. **The bulk data identify the immune "
+          f"compartment as a whole, not its lymphocyte types.**"
+          + (f" (Against GIMiCC's lymphoid tissue fraction, a second methylation truth with matched denominators, "
+             f"`unmix`'s lymphoid total does track: {_gim_track('Lymphoid'):+.2f} GBM, {_gim_track('Lymphoid', 'lgg'):+.2f} "
+             f"LGG, §4.4; the methods' median does not. The claim holds for the panel, not for every package.)"
+             if _gim_track('Lymphoid') is not None else "") + "\n")
+        from ivygap.anatomic.constraints import CONSTRAINTS as _CON, EXCLUSIONS as _EXC   # noqa: PLC0415
+        _as_unit = {"Macrophage_Microglia": "Myeloid"}            # E2's name for the same column
+        _cts = sorted({_as_unit.get(c.cell_type, c.cell_type) for c in _CON})
+        _say = {"Tumor": "tumour", "Myeloid": "macrophage/microglia", "Endothelial": "endothelial",
+                "Oligodendrocyte": "oligodendrocyte"}
+        _st = [U[f"{c}|{h}"]["d1_stability"] for c in _cts for h in ("gbm", "lgg") if f"{c}|{h}" in U]
+        if len(_st) == 2 * len(_cts):
+            A(f"**The anatomic constraints sit on the identified compartments.** Every cell type the registered "
+              f"constraints score ({', '.join(_say.get(c, c) for c in _cts)}) is stable under the loss-scale check "
+              f"({min(_st):.2f}-{max(_st):.2f} across both cohorts). T cells were excluded from the constraint file "
+              f"before any output was examined, because \"{(_EXC[0]['reason'][0].lower() + _EXC[0]['reason'][1:]).rstrip('.')}\". "
+              f"The lymphoid compartment is the one this check finds least stable. ACS cannot see the lymphoid "
+              f"failure: it scores no lymphoid contrast, and the compartments it does score are ones the bulk "
+              f"data determine.\n")
+        s2 = J("identifiability/ivygap_unmix_ablation.json")
+        if s2.get("control", {}).get("pass") and s2.get("settings"):
+            _acs = {k: v["acs"] for k, v in s2["settings"].items()}
+            # the registered criterion is the COHORT-level ordering (T_exceeds_B), not a per-sample share
+            _rows = {("predeclared" if r["shift"] is None and r["power"] is None else
+                      "predeclared_p2" if r["power"] == 2 else f"s{int(r['shift'])}"): r
+                     for r in (J("unmix_loss_ablation_gbm.json").get("rows") or [])}
+            _right = [k for k in s2["distinct_fits"] if k in _rows and _rows[k]["T_exceeds_B"]]
+            _wrong = [k for k in s2["distinct_fits"] if k in _rows and _rows[k]["frac_samples_B_over_T"] >= 0.9]
+            _ch = sorted({pc["constraint"] for k, v in s2["settings"].items() for pc in v["per_constraint"]
+                          if pc["n_satisfied"] != next(q["n_satisfied"] for q in s2["settings"]["predeclared"]["per_constraint"]
+                                                       if q["constraint"] == pc["constraint"])})
+            A(f"**Anatomy does not move toward the right lymphoid answer.** Re-run on the anatomic cohort under "
+              f"the same seven loss settings (Addendum 2, declared before computing; the pre-declared setting "
+              f"reproduces the reported row exactly), `unmix`'s ACS ranges "
+              f"{min(_acs.values()):.3f}-{max(_acs.values()):.3f}. Every setting beats its null, and the "
+              f"pre-declared reading is {s2['reading']} (range {s2['acs_range']:.3f}, between the bounds of 0.05 "
+              f"and 0.10). Only {' and '.join(_ch)} change. Descriptively, and not pre-declared: the fits that "
+              f"reproduce methylation's T-above-B ordering in TCGA-GBM score "
+              f"{', '.join(f'{_acs[k]:.3f}' for k in _right)}, and the most inverted fits score "
+              f"{', '.join(f'{_acs[k]:.3f}' for k in _wrong)}.\n")
+        lk = idr.get("check4_leukocyte_truth_by_method") or {}
+        if lk:
+            def _best(h):
+                deg = lk[h].get("degraded_mode") or {}
+                ok = {m: v for m, v in lk[h]["methods"].items() if m not in deg}
+                m = max(ok, key=ok.get)
+                return m, ok[m]
+            (bg, vg), (bl, vl) = _best("gbm"), _best("lgg")
+            A(f"`unmix`'s all-leukocyte estimate tracks the methylation leukocyte fraction at rho = "
+              f"{lk['gbm']['unmix']:.3f} (GBM) and {lk['lgg']['unmix']:.3f} (LGG), above every registered "
+              f"method in both cohorts (best: {_mname(bg)}, {vg:.3f}; {_mname(bl)}, {vl:.3f} -- a margin of "
+              f"{lk['lgg']['unmix'] - vl:.3f} in LGG, not tested).\n")
+        if idr.get("control_pass"):
+            c3, c5, c6 = idr["check3_bootstrap"], idr["check5_distinct_fits"], idr.get("check6_comparable_panel") or {}
+            q = c3["d1"]["h1_rho_2.5_50_97.5"]
+            A(f"**Robustness (post hoc; Addendum 1, written before it was computed).** The two lymphoid units "
+              f"are the two least stable in {100 * c3['d1']['share_lymphoid_two_lowest']:.0f}% of "
+              f"{c3['B']:,} bootstrap resamples of samples (95% interval of the stability-truth rho "
+              f"{q[0]:.2f} to {q[2]:.2f}). That contrast alone has null probability "
+              f"1/15 = {idr['check1_contrast_probability']:.3f}. The rest of the significance comes from the "
+              f"order of the four stable units, whose stability values lie within "
+              f"{max(U[f'{c}|{h}']['d1_stability'] for c in ('Tumor', 'Leukocytes') for h in ('gbm', 'lgg')) - min(U[f'{c}|{h}']['d1_stability'] for c in ('Tumor', 'Leukocytes') for h in ('gbm', 'lgg')):.3f} "
+              f"of each other. Swapping the two GBM truth values that differ by "
+              f"{idr['check2_near_tie_swap']['truth_gap']:.4f} gives p = {idr['check2_near_tie_swap']['p_one_sided']:.3f}. "
+              f"The bootstrap holds the six units fixed, so it speaks to sampling, not to how few units "
+              f"there are.\n")
+            A(f"Two flaws in the registered design surfaced after the run; each was checked under a rule "
+              f"written first. (i) In GBM the pre-declared shift is 1, so two of the seven settings are the "
+              f"same fit (byte-identical estimates). Over distinct fits the result is unchanged (rho = "
+              f"{c5['H1_D1']['rho']:.3f}, p = {c5['H1_D1']['p_one_sided']:.4f})."
+              + (f" (ii) The method-agreement panel kept Bisque and EPIC, which run in degraded modes here "
+                 f"and which the registered immune arm excludes. On that arm's {len(c6['methods']['gbm'])}-method "
+                 f"panel, method agreement tracks truth more closely (rho = {c6['H1_D2']['rho']:.3f}, p = "
+                 f"{c6['H1_D2']['p_one_sided']:.4f}), still short of significance." if c6 else "") + "\n")
+            dn = J("identifiability_denominators.json")
+            if dn.get("H1_matched"):
+                du = dn["units"]
+                A(f"A third flaw is in the truths themselves. EpiDISH with its blood reference returns shares of "
+                  f"the immune compartment, and the registered comparison set them against tissue fractions. On "
+                  f"matched denominators (each estimate's share of its own leukocyte total) the lymphoid estimate "
+                  f"still does not track EpiDISH ({du['Lymphoid|gbm']['truth_rho_unmix']:+.2f} / "
+                  f"{du['Lymphoid|lgg']['truth_rho_unmix']:+.2f}). It is less stable than before "
+                  f"({du['Lymphoid|gbm']['d1_stability']:.2f} / {du['Lymphoid|lgg']['d1_stability']:.2f}), and "
+                  f"the association strengthens (stability: rho = {dn['H1_matched']['D1']['rho']:.3f}, p = "
+                  f"{dn['H1_matched']['D1']['p_one_sided']:.4f}; method agreement: rho = "
+                  f"{dn['H1_matched']['D2']['rho']:.3f}, p = {dn['H1_matched']['D2']['p_one_sided']:.4f}). The "
+                  f"method-agreement figure rests on the samples where every method returns some leukocytes "
+                  f"({du['Lymphoid|lgg']['d2_samples_dropped_undefined']} of "
+                  f"{du['Lymphoid|lgg']['d2_samples_dropped_undefined'] + du['Lymphoid|lgg'].get('d2_samples', 0)} "
+                  f"LGG samples are dropped), so the "
+                  f"stability figure is the one to quote.\n")
+        agt = J("agreement_selection_test.json")
+        if agt.get("primary_panel") and agt.get("draws", 0) >= 1000:
+            ap_ = agt["primary_panel"]
+            # algorithmic siblings, from the code: cibersortx subclasses svr; the BayesPrism
+            # reimplementation iterates NNLS (ivygap/deconv/classical.py, reference_based.py)
+            _sib = [{"cibersortx", "svr"}, {"bayesprism", "nnls"}]
+            _top = [set(p_[0]) in _sib for h in ap_["chosen_pairs"] for p_ in ap_["chosen_pairs"][h].values()]
+            lu = ap_["units"]["Leukocytes|lgg"]
+            _cen = ap_["p2_inputs"]["Leukocytes|lgg"]["centrality"]
+            _rank = sorted(_cen, key=lambda m: -_cen[m]).index(lu["best_single_method"]) + 1
+            _rank = {1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth", 6: "sixth",
+                     7: "seventh", 8: "eighth"}.get(_rank, str(_rank))
+            A(f"**Does agreement between methods pick the accurate estimate?** DECEPTICON [46] selects, for "
+              f"each cell type, the two pairs of methods whose estimates correlate most, on the premise that "
+              f"\"the most effective analysis strategies for deconvolution demonstrate significant "
+              f"concordance\". Its validation used simulations, flow cytometry outside the brain and "
+              f"prognosis. We applied its published rule to the comparable registered methods (this project's "
+              f"code, not the DECEPTICON package; `prespecified/agreement_selection_test.md`). The "
+              f"agreement-selected estimate beat the median of {agt['draws']:,} randomly paired ensembles in "
+              f"{ap_['P1']['beats_null_median']} of {ap_['P1']['n_units']} primary units (reading: "
+              f"{ap_['P1']['reading']}). Across methods, agreement with the other methods tracked agreement "
+              f"with DNA only weakly (mean rho = {ap_['P2']['mean_rho']:.2f}, permutation p = "
+              f"{ap_['P2']['p_one_sided']:.3f}; reading: {ap_['P2']['reading']}). The most-correlated pair was a "
+              f"pair of algorithmic siblings in {sum(_top)} of {len(_top)} selections: nu-SVR with this "
+              f"project's CIBERSORTx-style subclass of it, and NNLS with the BayesPrism reimplementation that "
+              f"iterates it. Their agreement measures shared construction. In LGG the ensemble's leukocyte "
+              f"estimate reached {lu['decepticon_rho']:.2f}, no better than random pairs. The most accurate "
+              f"single method ({_mname(lu['best_single_method'])}, {lu['best_single_rho']:.2f}) ranked "
+              f"{_rank} of {len(_cen)} by agreement with the others.\n")
+        _dT = (J("identifiability_denominators.json").get("units") or {}).get("T_cell|gbm") or {}
+        A(f"**What it does not show.** Stability is evidence, not proof: T cells in GBM are stable "
+          f"({U['T_cell|gbm']['d1_stability']:.2f}"
+          + (f"; {_dT['d1_stability']:.2f} as a share of leukocytes" if _dT else "")
+          + f") and do not track EpiDISH ({U['T_cell|gbm']['truth_rho_unmix']:+.2f}"
+          + (f"; {_dT['truth_rho_unmix']:+.2f} on matched denominators" if _dT else "")
+          + f"). That is an estimate that is reproducibly uninformative, the "
+          f"case a reproducibility criterion [4] cannot detect. Part of that stability rests on ties: `unmix` "
+          f"returns exactly zero T in {100 * U['T_cell|gbm']['unmix_zero_share']:.0f}% of GBM samples "
+          f"(mean over settings). Stability flags which estimates not to trust; it does not certify the rest."
+          + (f" This counter-example depends on the methylation instrument: against GIMiCC's T tissue fraction the "
+             f"same estimate tracks ({_gim_track('T_cell'):+.2f} GBM, {_gim_track('T_cell', 'lgg'):+.2f} LGG; §4.4), and "
+             f"the two instruments barely agree with each other per sample." if _gim_track('T_cell') is not None else ""))
+        if s1.get("gbm") and s1.get("lgg"):
+            A(f"A secondary arm tested the data scale. The pre-declared expectation, from Avila Cobos et "
+              f"al. [1], was that NNLS on log-transformed data would track purity worse than linear NNLS. "
+              f"It failed in both cohorts: rho = {s1['gbm']['log1p_data_nnls']:.3f} against "
+              f"{s1['gbm']['linear_nnls']:.3f} (GBM) and {s1['lgg']['log1p_data_nnls']:.3f} against "
+              f"{s1['lgg']['linear_nnls']:.3f} (LGG), on identical inputs without the cell-size conversion. "
+              f"[1] measured level error on simulated mixtures; this arm measures rank agreement on real "
+              f"tumours. The two criteria differ, so this is reported as a contrast, not a refutation.\n")
+        A("> **[ FIGURE 11 HERE ]** \u2014 `docs/figures/Figure_identifiability.pdf`. Truth-free stability "
+          "(A, within one package; B, across the registered methods) against agreement with DNA truth, per "
+          "compartment and cohort.\n")
+
     A("## Appendix B \u00b7 Figure inventory\n")
     A("| # | file | placement | what it shows |")
     A("|---|---|---|---|")
@@ -740,6 +1589,10 @@ def main() -> int:
     A("| 5 | `Figure_purity_scatter_lgg` | Result 2 | estimate vs DNA purity, LGG |")
     A("| 6 | `Figure_model_fit_bound` | Result 4 | model fit against floor and ceiling |")
     A("| 7 | `Figure_tumour_recovery` | Result 2 | recovery by method and cohort |")
+    A("| 8 | `Figure_bisque_anchoring` | Result 3 (after Figure 2) | Bisque's cohort mean is its reference's composition: planted truth and TCGA |")
+    A("| 9 | `Figure_acs_vs_auc` | §4.11 (exploratory) | ACS vs a per-method AUC: one construct on two scales; neither tracks DNA-measured accuracy |")
+    A("| 10 | `Figure_lymphoid_mechanisms` | Result 3 mechanisms (after the independent-atlas paragraph) | reference-side tests of the lymphoid inversion: variants, re-absorption, bulk-likeness, independent atlas |")
+    A("| 11 | `Figure_identifiability` | §4.12 (exploratory) | truth-free stability (loss scale; across methods) against agreement with DNA truth, per compartment and cohort |")
     A("")
     A("*Every figure exists as PDF (vector, submission) and PNG (300 dpi, drafts) in "
       "`docs/figures/`. Captions are in `docs/FIGURES.md` and are the place for "
@@ -762,19 +1615,24 @@ def main() -> int:
     A("")
     A("## Appendix D \u00b7 What must not be claimed\n")
     A("- Do **not** claim the ranking reshuffle replicates. It does not (Result 5).")
-    A("- Do **not** claim a mechanism for the lymphoid failure. Five were tested and rejected, "
-      "and two structural properties of the reference are suspects that have NOT been shown to "
-      "cause it: the `NK_cell` column carries pan-T markers (CD3D/E/G, CD2, LCK) at 1.4\u20135.8x "
-      "the `T_cell` column's level, and `B_cell`'s profile is closest to "
-      "`Macrophage_Microglia` (r = 0.497). Both are measured in `docs/WHY_B_OVER_T.md`, which "
-      "also names the four experiments that would settle it. Report them as properties of the "
-      "reference, never as the explanation.")
+    A("- Do **not** claim a mechanism for the lymphoid failure. Nine were tested or excluded -- "
+      "including the leading structural suspect, that the `NK_cell` column (which carries pan-T "
+      "markers CD3D/E/G, CD2, LCK at 1.4\u20135.8x the `T_cell` column's level) absorbs T-cell "
+      "signal: removing or merging that column sends the mass to B, not T. One structural "
+      "property remains a suspect that has NOT been shown to cause it: `B_cell`'s profile is "
+      "closest to `Macrophage_Microglia` (r = 0.497). Report it as a property of the reference, "
+      "never as the explanation. `docs/WHY_B_OVER_T.md` §7.")
     A("- Do **not** claim per-sample model fit identifies untrustworthy samples. Tested; fails.")
     A("- Do **not** headline mesenchymal character. GBM-only.")
     A("- Do **not** call `cibersortx` here the hosted CIBERSORTx, or `dwls`/`bayesprism` the "
       "published R packages. All are labelled in the artefacts; keep the labels.")
     A("- Do **not** quote \"12 of 12 methods put B above T\" without the denominator. It is a "
       "mean over samples with any lymphoid signal.")
+    A("- Do **not** claim that stability certifies an estimate (§4.12). T cells in GBM are stable and do not track EpiDISH (and are not anti-correlated once the denominators are matched); stability says which estimates not to trust. Do **not** say they track no methylation truth: against GIMiCC they do (§4.4).")
+    A("- Do **not** state the lymphoid truth as settled in LGG. A glioma-specific methylation method (GIMiCC) puts B above T there, against EpiDISH; direct cell counts favour T above B on only two LGG patients (§4.4).")
+    A("- Do **not** claim the loss scale explains every method's B-above-T. It was shown inside one package (`unmix`, §4.10); for the others it is a hypothesis.")
+    A("- Do **not** claim to overturn Avila Cobos et al.'s linear-scale recommendation. The data-scale arm of §4.12 measured rank agreement on real tumours, not level error on simulated mixtures.")
+    A("- Do **not** present §4.12 as part of the registered study. It is post-registration, and the ablation that motivated it had already been seen.")
     A("")
     # ---- V. Discussion ------------------------------------------------------------
     A("## V. Discussion\n")
@@ -814,24 +1672,89 @@ def main() -> int:
       "evidence. It does not *rank* — and the ranking result is INCONCLUSIVE at n = 12, "
       "not refuted. Say inconclusive and mean it.\n")
     A("> **2 · The finding that carries the paper.** No method reproduces the "
-      "pre-registered T > B ordering, in either cohort, against an instrument that shares "
-      "nothing with the deconvolution arm. The prediction was registered 95 minutes before "
-      "the data existed and named its own falsifier. GBM is discovery; LGG is the "
-      "registered replication in a different tumour type at 3.4x the sample size.\n")
+      "pre-registered T > B ordering robustly -- across both reference builds and both "
+      "cohorts -- against an instrument that shares nothing with the deconvolution arm. Say "
+      "both references: none of twelve on the frozen signature; a few on the donor-level "
+      "reference, of which the one consistent success (Bisque) is its reference's composition "
+      "returned by the package's own declared assumption (Jew et al. 2020, Methods), shown on "
+      "planted truth. The prediction was registered 95 minutes before the data existed and "
+      "named its own falsifier. GBM is discovery; LGG is the registered replication in a "
+      "different tumour type at 3.4x the sample size.\n")
+    A("> **2c · A third instrument, at the protein level.** The pre-registered IMC test (§4.11) "
+      "adds imaging mass cytometry -- through published per-marker-set correlations, not "
+      "per-sample data -- to the two DNA instruments. It reaches the same verdict: ACS reversed "
+      "the protein-measured ordering of two marker sets for one algorithm. Say plainly that this "
+      "arm rests on another group's published correlations.\n")
+    A("> **2b · A failure ACS cannot see, by construction.** ACS scores within-tumour "
+      "contrasts, which depend only on how samples rank. Bisque without overlapping subjects "
+      "keeps the ranking (planted-truth rho 0.88-0.97) and replaces the level with the "
+      "reference's. That is a concrete, demonstrated instance of the thesis: anatomy detects "
+      "some failures and is structurally blind to others.\n")
+    _idd = J("identifiability_diagnostics.json")
+    if _idd.get("H1_primary"):
+        _U = _idd["units"]
+        A(f"> **2d \u00b7 A truth-free check that does see the lymphoid failure (exploratory, §4.12).** "
+          f"Re-fitting one genuine package under different loss scales leaves tumour and total "
+          f"leukocyte content in place and moves the lymphoid total, and the compartments that stay "
+          f"put are the ones DNA confirms (rho = {_idd['H1_primary']['D1']['rho']:.2f} across six "
+          f"units, p = {_idd['H1_primary']['D1']['p_one_sided']:.3f}). This sharpens the headline: "
+          f"the bulk data identify how much immune tissue there is, not which lymphocytes it holds. "
+          f"Say what it cannot do: T cells in GBM are stable "
+          f"({_U['T_cell|gbm']['d1_stability']:.2f}) and do not track EpiDISH "
+          f"({_U['T_cell|gbm']['truth_rho_unmix']:+.2f}), so the check flags what not to trust and "
+          f"certifies nothing"
+          + (f" -- though against GIMiCC the same estimate tracks ({_gim_track('T_cell'):+.2f}), so even this "
+             f"counter-example depends on which methylation truth is right" if _gim_track('T_cell') is not None else "")
+          + f". Six units, post-registration, one package for the stability arm.\n")
     A("> **3 · Where this sits in the field.** [4] reaches the same conclusion about "
       "pseudobulk benchmarks from a different direction and at 5,891 samples, which removes "
       "the obvious objection that our orthogonal arm is the broken one. But their criterion "
       "is *reproducibility* and ours is *correctness against an orthogonal instrument*: "
       "nothing in a reproducibility design can detect a method that is reproducibly wrong, "
       "which is exactly what we exhibit. `docs/RELATED_WORK.md` has the comparison table "
-      "and the one genuine disagreement (BayesPrism).\n")
+      "and the one genuine disagreement (BayesPrism). "
+      "The 2024\u20132026 benchmarks that do have truth meet the same boundary: the DREAM "
+      "challenge [47] finds coarse populations predicted well in purified-cell admixtures, with "
+      "CD4+ T-cell subsets detectable only above about 6%; omnideconv [48] reports, against IHC "
+      "in lung tumours, that \"all methods struggled to robustly estimate tumor-infiltrating "
+      "lymphocytes\". Orthogonal truth in brain tissue exists for healthy cortex [49]; the truths "
+      "here are DNA measurements in two glioma cohorts. §4.12 adds that the failure is visible "
+      "without truth.\n")
     A("> **4 · What it means practically.** A published immune fraction for a glioma cannot "
-      "be believed without an orthogonal measurement, and no internal check substitutes. "
+      "be believed without an orthogonal measurement, and no internal check substitutes: the "
+      "one that flags the lymphoid estimate (loss-scale stability, §4.12) says what not to "
+      "trust, not what to trust. "
       "Connect this back to the equity argument from the Introduction: the labs that most "
       "need deconvolution are the least able to validate it, and this study does not solve "
       "that — it measures how far the cheapest available check gets you.\n")
-    A("> **5 · What would settle the open question.** More comparable methods. The power "
-      "ceiling here is twelve, and no reanalysis widens it.\n")
+    _pw = J("agreement_power.json")
+    _g = {(r["n_methods"], r["true_spearman"]): r for r in (_pw.get("rows") or [])}
+    if (12, 0.6) in _g:
+        _need = _pw.get("smallest_panel_with_80pct_power", {})
+        _ns = sorted({k[0] for k in _g})
+        _at_bar = ", ".join(f"{100 * _g[(n, 0.6)]['p_criterion_met']:.0f}%" for n in _ns if (n, 0.6) in _g)
+        _lo = [n for n in _ns if (n, 0.7) in _g and _g[(n, 0.7)]["p_criterion_met"] < 0.8]
+        _hi = [n for n in _ns if (n, 0.7) in _g and _g[(n, 0.7)]["p_criterion_met"] >= 0.8]
+        if _lo and _hi:
+            _bracket = (f"between {max(_lo)} and {min(_hi)} methods ({100 * _g[(max(_lo), 0.7)]['p_criterion_met']:.0f}% "
+                        f"at {max(_lo)}, {100 * _g[(min(_hi), 0.7)]['p_criterion_met']:.0f}% at {min(_hi)})")
+        elif _hi:
+            _bracket = f"at most {min(_hi)} methods"
+        else:
+            _bracket = f"more than {max(_ns)} methods"
+        A(f"> **5 · What would settle the open question.** More comparable methods. With twelve, the "
+          f"registered test is underpowered: if anatomy tracked accuracy at a true rank correlation of "
+          f"0.70 the criterion would be met in {100 * _g[(12, 0.7)]['p_criterion_met']:.0f}% of studies "
+          f"like this one, and at 0.80 in {100 * _g[(12, 0.8)]['p_criterion_met']:.0f}%. A true correlation "
+          f"exactly at the bar is met about half the time at any panel size "
+          f"({_at_bar} "
+          f"for {', '.join(str(n) for n in _ns)} methods), because the criterion thresholds the "
+          f"estimate at the bar itself. 80% power at a true 0.70 needs {_bracket} "
+          f"(simulation, `scripts/agreement_power.py`: a sensitivity power analysis for effects fixed in "
+          f"advance, not observed power). No reanalysis widens the panel; only more methods do.\n")
+    else:
+        A("> **5 · What would settle the open question.** More comparable methods. The power "
+          "ceiling here is twelve, and no reanalysis widens it.\n")
 
     A("## Limitations\n")
     A("> WRITE: all ten from `docs/PAPER_OUTLINE.md` \u00a79, in the body. None in a "
@@ -842,6 +1765,40 @@ def main() -> int:
       "methylation is HM27, not HM450), and **one reference atlas** underlies every method, so "
       "\"biology breaks deconvolution\" cannot be fully separated from \"the biology is "
       "under-represented in GBmap\".\n")
+    _cm, _tl = J("clinical_missingness_audit.json"), J("b_profile_tissue_likeness.json")
+    _lim = []
+    if _cm:
+        _mg = _cm.get("mgmt", {})
+        _lim.append(f"**Survival could not be analysed.** Ivy GAP publishes survival times for "
+                    f"{_cm.get('n_time_recorded')} of {_cm.get('n_tumors')} tumours and no vital status, so "
+                    f"censoring is unknowable; the blanks are not random -- MGMT-methylated in "
+                    f"{_mg.get('methylated_among_blank')} blank vs {_mg.get('methylated_among_recorded')} recorded "
+                    f"(Fisher p = {_mg.get('fisher_p', 0):.4f}). The original prognostic aim is BLOCKED, not "
+                    f"failed.")
+    if _tl:
+        _bc = _tl.get("training_donor_concentration", {}).get("B_cell", {})
+        _lim.append(f"**The reference's B-cell profile rests on few patients.** {_bc.get('n_cells')} training "
+                    f"B cells come from {_bc.get('n_donors')} donors, and three donors supply "
+                    f"{100 * (_bc.get('top3_donor_share') or 0):.0f}% of them.")
+    _q4 = J("gimicc_secondary.json").get("Q4", {})
+    if _q4.get("positive_control_passes"):
+        _lim.append("**EpiDISH is a cohort-level truth for the lymphoid split; GIMiCC's split passed the per-sample "
+                    "control EpiDISH failed.** EpiDISH's per-sample T/(T+B) failed a reference-free marker control "
+                    "(`results/lymphoid_tracking.json`); GIMiCC's passed it in both cohorts (`results/"
+                    "gimicc_secondary.json`, Q4). GIMiCC's lymphoid layers were validated by its authors only on "
+                    "blood-cell mixtures, so its per-sample split is corroborated, not validated.")
+    else:
+        _lim.append("**Methylation is a cohort-level truth for the lymphoid split.** Its per-sample T/(T+B) "
+                    "failed a reference-free marker control (`results/lymphoid_tracking.json`)"
+                    + ("; so did GIMiCC's, a second, glioma-specific methylation method (`results/"
+                       "gimicc_secondary.json`, Q4)" if _q4 else "") +
+                    "; per-sample statements describe methylation, not a validated per-sample truth.")
+    _lim.append("**The extension panel was added after registration** (§4.10) and enters no registered "
+                "statistic; the IMC test (§4.11) rests on another group's published correlations, not "
+                "per-sample data.")
+    for _l in _lim:
+        A(f"- {_l}")
+    A("")
 
     A("## Acknowledgements\n")
     A("> WRITE. Name, in this order: anyone who supervised or advised; the Allen Institute "
@@ -850,19 +1807,36 @@ def main() -> int:
       "and they are entitled to the courtesy of being named; and any compute or funding "
       "support. If AI tooling was used in the analysis or the writing, disclose it here in "
       "the form the venue requires — CJSJ and Regeneron STS both ask.\n")
-    A("> **Data and code availability.** State that the constraint file was registered at "
-      "OSF `dm2t8` before scoring, that every result is frozen in a hash-verified archive, "
-      "and where the repository lives.\n")
+    _inv = config.PROJECT_ROOT / "docs" / "DATA_INVENTORY.md"
+    _stmt = ""
+    if _inv.exists():
+        _txt = _inv.read_text()
+        _h = "## Data availability statement (draft for the manuscript)"
+        if _h in _txt:
+            _stmt = _txt.split(_h, 1)[1].strip().split("\n\n")[0].strip()
+    if _stmt:
+        A("**Data availability.** " + _stmt + " Every listed copy was re-checked against its public "
+          "source and every dataset's citation against Crossref (`docs/DATA_INVENTORY.md`).\n")
+    A("> **Code availability.** State that the constraint file was registered at OSF `dm2t8` "
+      "before scoring, that every result is frozen in a hash-verified archive, and where the "
+      "repository lives.\n")
 
     A("## References\n")
     A("> The full numbered list, in order of first use, is in **`docs/REFERENCES.md`** — "
-      "35 entries in IEEE style with DOIs, matching the CJSJ format. Paste it here at "
+      "every entry in IEEE style with DOIs, matching the CJSJ format. Paste it here at "
       "submission, or `\\input` the file if the venue takes LaTeX.\n")
-    A("> **All 35 entries are verified.** Every citation is either read from a PDF held in "
-      "the repository or resolved against the Crossref API on 2026-09-28 from the "
-      "publisher's own deposited metadata. Two were wrong and are corrected: [27] Verhaak "
-      "had a truncated title, and [31] EcoTyper had the wrong author order, page range and "
-      "DOI. **[12] EpiDISH — load-bearing for the headline result — is confirmed exactly.**\n")
+    import re as _re                                                 # noqa: PLC0415
+    _refs = (config.PROJECT_ROOT / "docs" / "REFERENCES.md").read_text()
+    _rows = _re.findall(r"^\| \*\*\[(\d+)\]\*\* \| .+? \| (\w[\w ]*) \|$", _refs, _re.M)
+    _n_refs = len({n for n, _ in _rows})
+    _n_unres = len({n for n, st in _rows if st == "cited"})
+    A(f"> **All {_n_refs} entries are verified** ({_n_unres} unresolved). Every citation is either "
+      "read from a PDF held in the repository or resolved against the Crossref API from the "
+      "publisher's own deposited metadata. Three were wrong and are corrected: [27] Verhaak "
+      "had a truncated title, [31] EcoTyper had the wrong author order, page range and DOI, and "
+      "[10] GBmap -- the atlas every method solves against -- carried another paper's title and "
+      "DOI (D25, corrected 2026-10-01). **[12] EpiDISH — load-bearing for the headline result — is "
+      "confirmed exactly.**\n")
 
     # ------------------------------------------------------------------------------
     # SPLIT THE PAPER FROM THE SCAFFOLDING. Choi's paper runs Title -> Abstract ->

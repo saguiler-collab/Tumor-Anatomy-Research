@@ -11,8 +11,8 @@ Split out of `docs/MANUSCRIPT.md` so that file is the paper and nothing else. Ev
 
 1. **Anatomy detects, it does not rank.** Anatomic concordance separates real methods from negative controls, but its ranking does not predict accuracy against DNA-measured purity: Spearman **0.081** (n=12) and **0.3142** (n=14) when both arms use the same reference build. The registered bar (≥0.60) is met **only** against the pseudobulk yardstick that shares its atlas with the anatomy score (**0.6372**). **[STRONG]**
 2. **Deconvolution recovers a minority of true tumour-content variation.** Median **33.1%** in 147 glioblastomas and **23.3%** in 496 lower-grade gliomas (comparable methods only; **21.5%** / **17.2%** including degraded stand-ins). The purity association replicates: β **-0.13595** vs **-0.13386**, 12/12 methods, Holm p **0.00244**. **[STRONG]**
-3. **The lymphoid compartment is not recoverable at all.** DNA methylation places T cells above B cells in **94.8%** of glioblastomas and **93.2%** of lower-grade gliomas, at true ratios of **4.76:1** and **2.34:1**. **No method reproduces this in either cohort.** **[STRONG]**
-4. **The failure has two distinct forms.** **4 of 12** methods (GBM) and **4 of 12** (LGG) return *exactly zero* T, B and NK cells in the majority of samples. Of those that do report lymphocytes, **6 of 8** (GBM) and **8 of 8** (LGG) place B above T, paired per-sample. **Zero of twelve** reproduce the true T>NK>B ordering in either cohort. **[STRONG]**
+3. **The lymphoid compartment is not recoverable at all.** DNA methylation places T cells above B cells in **94.8%** of glioblastomas and **93.2%** of lower-grade gliomas, at true ratios of **4.76:1** and **2.34:1**. Against the frozen signature **no method reproduces this in either cohort** (0 of 12, 0 of 12). Against the donor-level raw/X reference **3 of 14** (GBM: bisque, cibersortx_smode, elastic_net) and **2 of 13** (LGG: bisque, elastic_net) do -- and Bisque, the only one to do so robustly in both, returns its reference's own composition by construction (cohort-mean L1 to the reference 0.0874 / 0.0807; on planted truth 0 to the reference vs 1.0915 to the truth). **No method reproduces the ordering robustly across both references and both cohorts.** **[STRONG]** _Methylation is used as a cohort-level truth only: its per-sample lymphoid split failed a reference-free marker control (LGG rho -0.1234), so the per-sample percentages describe methylation, not a validated per-sample truth._
+4. **The failure has two distinct forms.** **4 of 12** methods (GBM) and **4 of 12** (LGG) return *exactly zero* T, B and NK cells in the majority of samples. Of those that do report lymphocytes, **6 of 8** (GBM) and **8 of 8** (LGG) place B above T, paired per-sample. Under the frozen signature **none** reproduces the full T>NK>B ordering in either cohort; under the raw/X reference 2 (GBM) and 2 (LGG) do, Bisque among them. **[STRONG]**
 5. **The mixing model itself is violated.** The best non-negative fit leaves a median **63.8%** (GBM) and **76.4%** (LGG) of marker-space variance unexplained. Shuffling gene-to-cell-type assignment drops R² to ≈0 (so the reference does carry real structure) while the top-8 SVD ceiling is **0.9803** — the reference reaches only **39%** of the achievable. **[STRONG]**
 6. **And no ground-truth-free signal detects any of it.** Five candidate explanations and diagnostics were tested and rejected, each with a working control. **[STRONG]**
 
@@ -31,6 +31,10 @@ Split out of `docs/MANUSCRIPT.md` so that file is the paper and nothing else. Ev
 | 5 | `Figure_purity_scatter_lgg` | Result 2 | estimate vs DNA purity, LGG |
 | 6 | `Figure_model_fit_bound` | Result 4 | model fit against floor and ceiling |
 | 7 | `Figure_tumour_recovery` | Result 2 | recovery by method and cohort |
+| 8 | `Figure_bisque_anchoring` | Result 3 (after Figure 2) | Bisque's cohort mean is its reference's composition: planted truth and TCGA |
+| 9 | `Figure_acs_vs_auc` | §4.11 (exploratory) | ACS vs a per-method AUC: one construct on two scales; neither tracks DNA-measured accuracy |
+| 10 | `Figure_lymphoid_mechanisms` | Result 3 mechanisms (after the independent-atlas paragraph) | reference-side tests of the lymphoid inversion: variants, re-absorption, bulk-likeness, independent atlas |
+| 11 | `Figure_identifiability` | §4.12 (exploratory) | truth-free stability (loss scale; across methods) against agreement with DNA truth, per compartment and cohort |
 
 *Every figure exists as PDF (vector, submission) and PNG (300 dpi, drafts) in `docs/figures/`. Captions are in `docs/FIGURES.md` and are the place for interpretation — the plots themselves carry no argument, per journal convention and the CJSJ format reference.*
 
@@ -45,9 +49,14 @@ Split out of `docs/MANUSCRIPT.md` so that file is the paper and nothing else. Ev
 ## Appendix D · What must not be claimed
 
 - Do **not** claim the ranking reshuffle replicates. It does not (Result 5).
-- Do **not** claim a mechanism for the lymphoid failure. Five were tested and rejected, and two structural properties of the reference are suspects that have NOT been shown to cause it: the `NK_cell` column carries pan-T markers (CD3D/E/G, CD2, LCK) at 1.4–5.8x the `T_cell` column's level, and `B_cell`'s profile is closest to `Macrophage_Microglia` (r = 0.497). Both are measured in `docs/WHY_B_OVER_T.md`, which also names the four experiments that would settle it. Report them as properties of the reference, never as the explanation.
+- Do **not** claim a mechanism for the lymphoid failure. Nine were tested or excluded -- including the leading structural suspect, that the `NK_cell` column (which carries pan-T markers CD3D/E/G, CD2, LCK at 1.4–5.8x the `T_cell` column's level) absorbs T-cell signal: removing or merging that column sends the mass to B, not T. One structural property remains a suspect that has NOT been shown to cause it: `B_cell`'s profile is closest to `Macrophage_Microglia` (r = 0.497). Report it as a property of the reference, never as the explanation. `docs/WHY_B_OVER_T.md` §7.
 - Do **not** claim per-sample model fit identifies untrustworthy samples. Tested; fails.
 - Do **not** headline mesenchymal character. GBM-only.
 - Do **not** call `cibersortx` here the hosted CIBERSORTx, or `dwls`/`bayesprism` the published R packages. All are labelled in the artefacts; keep the labels.
 - Do **not** quote "12 of 12 methods put B above T" without the denominator. It is a mean over samples with any lymphoid signal.
+- Do **not** claim that stability certifies an estimate (§4.12). T cells in GBM are stable and do not track EpiDISH (and are not anti-correlated once the denominators are matched); stability says which estimates not to trust. Do **not** say they track no methylation truth: against GIMiCC they do (§4.4).
+- Do **not** state the lymphoid truth as settled in LGG. A glioma-specific methylation method (GIMiCC) puts B above T there, against EpiDISH; direct cell counts favour T above B on only two LGG patients (§4.4).
+- Do **not** claim the loss scale explains every method's B-above-T. It was shown inside one package (`unmix`, §4.10); for the others it is a hypothesis.
+- Do **not** claim to overturn Avila Cobos et al.'s linear-scale recommendation. The data-scale arm of §4.12 measured rank agreement on real tumours, not level error on simulated mixtures.
+- Do **not** present §4.12 as part of the registered study. It is post-registration, and the ablation that motivated it had already been seen.
 

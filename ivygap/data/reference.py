@@ -280,7 +280,7 @@ def build_from_h5ad(path: Path, name: str = "gbmap",
                     max_total_cells: int = MAX_TOTAL_CELLS,
                     gene_name_column: str | None = "feature_name",
                     restrict_to_genes=None,
-                    matrix: str = "X",
+                    matrix: str | None = None,
                     export: bool = True,
                     seed: int = config.RANDOM_SEED,
                     **kwargs) -> tuple[ReferenceBundle, pd.DataFrame, pd.DataFrame]:
@@ -297,6 +297,16 @@ def build_from_h5ad(path: Path, name: str = "gbmap",
     whole benchmark run without it, and there is no reason to force a scanpy stack on
     someone reproducing the fixture results.
     """
+    # OPEN_DEFECTS D24. There is no default layer. GBmap's `X` is log1p(counts x size factor)
+    # and `raw/X` is the genuine counts; a caller that did not choose got `X` silently, and that
+    # produced D16 (the reference), D22 (every re-measurement) and four legacy scripts found on
+    # 2026-10-01. Choosing is now mandatory: "raw/X" for anything solved against linear bulk,
+    # "X" only to reproduce an archived log-arm result, said so at the call.
+    if matrix is None:
+        raise TypeError(
+            "build_from_h5ad requires matrix=: 'raw/X' (genuine counts) for linear-scale "
+            "deconvolution, or 'X' (GBmap's log1p layer) only to reproduce archived log-arm "
+            "results. There is no default (OPEN_DEFECTS D16, D22, D24).")
     try:
         import h5py
         from anndata.io import read_elem, sparse_dataset

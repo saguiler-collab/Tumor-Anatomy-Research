@@ -1,0 +1,18 @@
+Method,ACS (registered),"AUC, anatomic (exploratory)",AUC permutation p,Tied pairs,C vs ABSOLUTE purity (truth)
+music,0.9692,0.9231,< 1e-4,0.005,0.654 (= nnls: degenerate on the frozen signature)
+svr,0.9538,0.8902,< 1e-4,0.000,0.779
+scdc,0.9385,0.9034,< 1e-4,0.000,0.600
+scdc_ensemble [degenerate: = scdc],0.9385,0.9034,< 1e-4,0.000,0.600 (= scdc: degenerate on the frozen signature)
+cibersortx,0.8615,0.8637,< 1e-4,0.000,0.780
+cibersortx_smode,0.8615,0.8504,< 1e-4,0.000,--
+elastic_net,0.8615,0.8519,< 1e-4,0.011,0.643
+nnls,0.8462,0.8402,< 1e-4,0.002,0.654
+bayesprism,0.8000,0.8209,< 1e-4,0.005,0.622
+epic,0.7692,0.7590,< 1e-4,0.000,0.634
+bayesian,0.7538,0.7872,< 1e-4,0.000,0.777
+bayesian_hierarchical,0.7385,0.7872,< 1e-4,0.000,--
+dwls,0.7231,0.7288,< 1e-4,0.006,0.759
+bisque [degraded mode],0.7077,0.7846,< 1e-4,0.018,0.508 (degraded mode on the frozen signature)
+quantiseq (partial coverage),0.6000,0.5963,0.0955,0.000,--
+control_random (control),0.4000,0.5331,0.2012,0.000,--
+control_shuffled_signature (control),0.3692,0.4134,0.9859,0.041,--

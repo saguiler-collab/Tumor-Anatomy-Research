@@ -54,10 +54,14 @@ packages run correctly here and both produce a *higher* ACS than the Python reim
 the leaderboard actually carries. For DWLS the cause is a plain timeout. For BayesPrism it is
 not, and that is stated rather than smoothed over.
 
+> ⚠ SUPERSEDED (OPEN_DEFECTS D22, 2026-09-30): the genuine-package re-measurements quoted below ran on GBmap's log `X` layer while the leaderboard ran on `raw/X`, so these figures are cross-matrix and are withdrawn. Current values: MANUSCRIPT §4.7 and `results/*_remeasured.json` (DWLS: no estimate for 73 of 122 samples on raw/X; Bisque and EPIC reproduce their leaderboard rows).
+
 | method | budget | genuine package took | outcome | ACS reimplementation | ACS genuine |
 |---|---|---|---|---|---|
 | **DWLS** | 2400 s | **2593 s** (+8%) | fell back | 0.7231 | **0.7846** |
 | **BayesPrism** | 2400 s | 2045 s with 3 workers; **4076 s** at `n.cores=1` | fell back — *cause not a clean timeout, see below* | 0.8000 | **0.8154** |
+
+> ⚠ SUPERSEDED (OPEN_DEFECTS D22, 2026-09-30): the genuine-package re-measurements quoted below ran on GBmap's log `X` layer while the leaderboard ran on `raw/X`, so these figures are cross-matrix and are withdrawn. Current values: MANUSCRIPT §4.7 and `results/*_remeasured.json` (DWLS: no estimate for 73 of 122 samples on raw/X; Bisque and EPIC reproduce their leaderboard rows).
 
 DWLS misses its budget by 193 seconds —
 about 8%. **On a faster
@@ -78,6 +82,8 @@ neighbour is OPEN_DEFECTS **D18** — BayesPrism's R socket cluster hangs on thi
 without the timeout firing — but that is an association, not a demonstrated mechanism, and
 D18's own history is a record of three confident diagnoses that were wrong. At `n.cores=1`
 it takes 4,076 s and *would* exceed the budget honestly.
+
+> ⚠ SUPERSEDED (OPEN_DEFECTS D22, 2026-09-30): the genuine-package re-measurements quoted below ran on GBmap's log `X` layer while the leaderboard ran on `raw/X`, so these figures are cross-matrix and are withdrawn. Current values: MANUSCRIPT §4.7 and `results/*_remeasured.json` (DWLS: no estimate for 73 of 122 samples on raw/X; Bisque and EPIC reproduce their leaderboard rows).
 
 Its score is **unchanged by core count** (0.8154 at three workers and at `n.cores=1`), so the
 declared `n.cores` deviation in `docs/METHODS.md` is result-neutral. Only the runtime moves,
@@ -147,6 +153,36 @@ Consequence: the validation that actually runs is `pytest tests/` (298 tests, ~4
 `scripts/independent_verification.py` and `scripts/check_doc_numbers.py --against-current`.
 
 ---
+
+## 6. The post-registration extension panel (added 2026-09-30 / 10-01)
+
+Five top-tier methods from Nguyen et al. 2024 and Li et al. 2026 were pursued after
+registration. Each runs as the **genuine published package**, with no fallback, in a labelled
+panel that enters no registered statistic (`ivygap/deconv/extension.py`). What it took, method
+by method — every workaround is a disclosed compatibility shim, never a reimplementation, and
+each package passed a planted-truth gate before touching real data:
+
+| method | route | what it needed | planted-truth gate |
+|---|---|---|---|
+| **FARDEEP** | CRAN 1.0.1 | nothing; `permn = 0` (p-values only — estimates verified identical); blocked over samples for 2 cores (verified identical) | — (package defaults; parallel = joint, max diff 0) |
+| **LinDeconSeq** | GitHub, pinned commit `20f1aec` | DESeq2 from Bioconductor; `deconSeq()` with this project's signature, since glioma has no pure bulk samples for `findMarkers()` | max err 0.023, r ≥ 0.998 |
+| **ARIC** | PyPI 1.0.1 | nothing | max err 0.013 |
+| **RNA-Sieve** | PyPI 0.1.4, installed without its stale pins | **shim:** flatten `x0` for SciPy ≥ 1.11 (what older SciPy did silently); **serial path** instead of 10 spawned workers (8 GB, 2 cores; same per-gene problems); exact counts recovered from per-cell CPM × library size | max err 0.011, r ≥ 0.999 |
+| **ReCIDE** | GitHub, vendored at commit `31bbd6b` (MIT) | **shim:** `summarize_each` (defunct in dplyr ≥ 1.2; its pinned dplyr 1.1.x no longer compiles on R 4.6); sparse input so Seurat 5 builds the v3 assays its code reads; **> 500 cells per donor**, so the capped reference (≤ 400/donor) cannot feed it — per its README, a donor subsample with all their cells | *in progress* |
+
+**Still blocked, for stated reasons:**
+
+| method | reason | kind |
+|---|---|---|
+| Scaden, DAISM-DNN | no TensorFlow build for Python 3.14; both train on simulated bulk (§3) | toolchain + design |
+| CDSeq | a multinomial read-count model; the Ivy GAP bulk is FPKM | input-type mismatch |
+| AutoGeneS | pins scipy 1.3 / matplotlib 3.0; primarily a GA gene-selection method needing the full gene space | toolchain + scope |
+| MIXTURE | published as an application repository of scripts (last updated 2020), not a package | packaging |
+| Linseed | reference-free: components are unlabelled, so placing it on a labelled roster needs a component-to-type mapping that would itself be a major deviation | design |
+
+**One reading note.** ReCIDE is the top method in Li et al. 2026 [4], which comes from ReCIDE's
+own laboratory. An independent evaluation of it is worth more than the original benchmark,
+and should be framed that way.
 
 ## What none of this changes
 

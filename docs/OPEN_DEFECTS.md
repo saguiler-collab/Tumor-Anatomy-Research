@@ -25,6 +25,10 @@ keeping, marked RESOLVED at the top.
 | **D13** EPIC runs with `refProfiles.var` unset, so its gene weighting is off; its output is mislabelled as a cell fraction | **MEASURED and CLOSED** 2026-09-17 — restoring variance weighting changes the estimates materially (mean 0.0829 on Tumor, max 0.3539) and changes ACS by **exactly 0.0000**. `otherCells` max 2.79e-03. Convergence 4 of 25 probed samples fail (PARTIAL). The variance-weighted run is the one that is EPIC, decided on the invariant before the scores were seen. `ROAD_TO_PAPER.md` 0.4 |
 | **D20** the frozen arms predate the `patient_id` fix, so they carry 12 methods against the h5ad arms' 13–14 | **OPEN, low — a provenance fact, not an error.** `bayesian_hierarchical` raised `KeyError: 'patient_id'` before the manifest was supplied; it runs cleanly now (GBM h5ad rho 0.7000, LGG h5ad 0.5483). Deliberately not re-run at the freeze, because that would shift the published medians for one extra method the h5ad arms already have. Kendall tau is unaffected — it uses only methods rankable under both. |
 | **D21** the orthogonal yardstick's rho was published with its sign inverted | **FIXED 2026-09-23.** `absolute_purity` is a correlation, not an error metric; the agreement stage negated it. -0.0810 published where the data give +0.0810. Conclusion (NULL RESULT) unchanged; the sign was not. |
+| **D22** every genuine-package re-measurement ran on GBmap's LOG layer while the leaderboard ran on counts | **FIXED 2026-09-30; re-runs IN PROGRESS.** `remeasure_method.py` never passed `matrix=`, so `build_from_h5ad` defaulted to `X` (log1p). All five artefacts predate the raw/X rebuild; bisque 0.9231 and epic 0.9846 equal their `acs_log` bit for bit. On raw/X both reproduce the leaderboard exactly (0.7077, 0.7692). MANUSCRIPT 4.7's deltas were cross-matrix. An eighth equivalence condition now blocks on any layer mismatch. |
+| **D23** the lymphoid headline ("0 of 12, in either cohort") is reference-specific, and the manuscript omits the arm that disagrees | **OPEN, high — a reporting defect; the measurements are correct.** **2026-10-03:** the truth itself was tested -- corroborated in GBM (GIMiCC, every control passing; two atlases; flow cytometry), contested in LGG (GIMiCC puts B above T; registered reading INCONCLUSIVE). Under the raw/X donor-level reference 3 of 14 (GBM) and 2 of 13 (LGG) order T above B. Measured 2026-09-30: Bisque's agreement is its reference's own donor-mean composition returned by construction (L1 0.087 / 0.081 over all 8 types; every other method 0.68-1.40); and methylation's PER-SAMPLE lymphoid split fails a reference-free positive control, so per-sample framing is unsupported. |
+| **D27** the ABSOLUTE join silently drops samples whose `sample` field is a Broad-internal ID | **OPEN, low -- measured; no conclusion changes.** 795 ABSOLUTE rows (191 GBM) carry IDs like `GBM-TCGA-06-5416-Tumor-SM-1QETM`, which `key4`/`k4s` cannot parse. The registered yardstick lost 1 GBM and 9 LGG RNA samples (154 of 155, 510 of 519). Registered statistics reproduce exactly; the restored samples were never deconvolved; the worst-case shift of the registered agreement is +0.081 -> +0.056 (bar 0.60). `scripts/absolute_join_audit.py`. |
+| **D24** `build_from_h5ad` silently defaulted to GBmap's log layer, and five callers still relied on it | **FIXED 2026-10-01.** The default is gone: a call that does not state `matrix=` raises. Callers fixed: `run_benchmark.main` (CLI), `reference_sensitivity`, `build_gbmap_assay_reference`, `remeasure_dwls` (superseded) now state `raw/X`; `reconstruct_gene_space` states `X` deliberately (it reproduces the archived log-era run). The registered run was **not** affected: `run_all.py` always passed its layer. Negative-control test added. |
 | **D19** a fallback to a Python reimplementation is recorded without its REASON | **OPEN, medium-low** — nothing is mislabelled, but `dwls` falling rank 3 → 12 cannot be read as "bad method" vs "timed out" from the artefact. All R packages are installed, so these are runtime failures, not absent software. |
 | **D18** BayesPrism's socket-cluster workers are killed for MEMORY, so the row labelled `bayesprism` was the Python reimplementation | **RESOLVED 2026-09-19** — cause found (`unserialize(node$con)`: three workers each holding a full data copy on 8.6 GB RAM; not a timeout, 155 s against 2,400 s). `n.cores = 1` removes the cluster and is **result-neutral**: ACS 0.8154 and CI [0.7096, 0.9153] identical to the three-worker run, 2.0× slower. Two earlier causes were proposed and withdrawn; both kept on the record. |
 | **D17** variant reference builds overwrote the primary reference's sampling record | **FIXED** 2026-09-15 — a figure script reads that path, so a sensitivity build's numbers could be published as the leaderboard's. Variant builds now get their own file. |
@@ -2343,3 +2347,335 @@ end-to-end test that recomputes Spearman from the shipped artefacts and fails if
 `agreement_report.json` disagrees in sign. That last test is anchored to the real `results/`
 tree rather than to `config.RESULTS_DIR`, which `conftest` redirects — written the first way
 it silently skipped, and a test that always skips is not a test.
+
+---
+
+## D22 · Every genuine-package re-measurement ran on GBmap's LOG layer, while the leaderboard it was printed beside ran on counts
+
+**Severity: high for MANUSCRIPT 4.7, nil for the registered results. FIXED 2026-09-30; the
+four re-runs are recorded below as they complete.**
+
+### The defect
+
+D16 found that `build_from_h5ad(matrix=...)` defaults to `"X"` -- in GBmap,
+`log1p(counts x size_factor)` -- and fixed the two callers that solve against linear bulk
+(`run_all.py`, `absolute_purity_yardstick.py`). It missed a third: `scripts/remeasure_method.py`,
+which re-measures a genuine R package after it fell back in the confirmatory run, called
+
+```python
+build_from_h5ad(config.REFERENCE_DIR / "gbmap_core.h5ad",
+                restrict_to_genes=expr.index, export=False)      # no matrix= -> "X"
+```
+
+The leaderboard was built on `raw/X` (`results/run_provenance.json`: `"matrix": "raw/X"`). Every
+re-measurement was therefore on a different layer of the atlas than the row it was compared to.
+
+### The proof is arithmetic
+
+| artefact | reported | `acs_log` | `acs_counts` | |
+|---|---|---|---|---|
+| `bisque_remeasured` | 0.9231 | **0.9231** | 0.7077 | identical to the log arm |
+| `epic_remeasured` | 0.9846 | **0.9846** | 0.7692 | identical to the log arm |
+| `dwls_remeasured` | 0.7846 | 0.7385 | 0.7231 | on log; delta not attributable |
+| `bayesprism_remeasured` | 0.8154 | 0.8769 | 0.8000 | on log; delta not attributable |
+
+(`results/matrix_arm_comparison.json`.) All five artefacts predate the 2026-09-22 rebuild.
+
+### Why seven guards did not catch it
+
+The script verifies seven input-equivalence conditions -- gene space and hash, training donors,
+held-out donors, no silent sample loss, sample ids and order, cell-type order, normalisation and
+cell-size factors. **None of them can see which layer the reference was built from.** A
+log-versus-counts confound produces the same shapes, the same genes, the same donors and
+plausible numbers, and passed all seven.
+
+### The fix
+
+* `--matrix`, defaulting to the layer recorded in `run_provenance.json` rather than to a literal,
+  so the script follows the leaderboard if it is ever rebuilt.
+* **Condition 8, `8_matrix_layer`**, which blocks on a mismatch unless `--matrix` is passed
+  deliberately, and records `comparable_to_leaderboard` in the report.
+* The five artefacts are preserved at `results/superseded_D22/` with a README, not deleted.
+
+### The re-runs on raw/X
+
+| method | leaderboard implementation | raw/X re-run | leaderboard row | reading |
+|---|---|---|---|---|
+| bisque | R:BisqueRNA | **0.7077** [0.5972, 0.8167] | 0.7077 | reproduces exactly |
+| epic | R:EPIC | **0.7692** [0.6567, 0.8788] | 0.7692 | reproduces exactly |
+| dwls | python-reimplementation (timed out) | **0.7000** [0.5588, 0.9130] on **26 pairs / 6 tumours** — **73 of 122 samples fail** in DWLS's quadratic program (*"constraints are inconsistent, no solution!"*); identical on an independent re-run | 0.7231 (all 122 samples) | **not comparable**: a partial ACS against a complete one |
+| bayesprism | python-reimplementation (timed out) | **0.8154** [0.6999, 0.9286] on all 122 samples / 57 pairs, **4.6 h** with no budget | 0.8000 | **+0.0154**, inside the interval: the reimplementation is close on ACS |
+
+**Read the first two correctly.** Bisque and EPIC were already the genuine packages on the
+leaderboard, so their raw/X re-runs reproducing it is a *determinism* check passing -- it is not
+evidence that a reimplementation agrees with a package. The old 0.9231 and 0.9846 were the same
+packages on the wrong layer. Only DWLS and BayesPrism, which fell back, can test implementation.
+
+### What it changes
+
+MANUSCRIPT 4.7 ("genuine packages versus reimplementations") reported cross-matrix deltas as
+cross-implementation ones. It must be rewritten from the raw/X re-runs. No registered statistic,
+leaderboard row, control margin or headline reads these artefacts.
+
+---
+
+## D23 · The lymphoid headline is reference-specific, and the manuscript omits the arm that disagrees
+
+**Severity: high -- a reporting defect. Every measurement involved is correct; what was wrong is
+which of them reached the paper. Found 2026-09-30.**
+
+### The omission
+
+The manuscript, Figure 2's caption, the appendices and `PAPER_OUTLINE.md` state that **no method
+reproduces the T > B ordering, in either cohort (0 of 12)**. Those counts come from the
+**frozen** signature. `docs/IMMUNE_ARM.md` already reported the **h5ad** arm (raw/X, donor-level
+reference -- the one D16 calls the *defensible* ranking):
+
+| | frozen | h5ad (raw/X) |
+|---|---|---|
+| GBM, order T above B (cohort mean) | 0 of 12 | **3 of 14** -- bisque, cibersortx_smode, elastic_net |
+| LGG, order T above B (cohort mean) | 0 of 12 | **2 of 13** -- bisque, elastic_net |
+
+A reviewer with the repository finds this in minutes. The paper must carry both arms.
+
+### What the 3 and 2 are -- measured 2026-09-30
+
+**Bisque returns its reference's composition, not the tissue's** (`scripts/bisque_anchoring.py`
+-> `results/bisque_anchoring.json`; truth-free). In no-overlap mode -- the only mode TCGA permits --
+`SemisupervisedTransformBulk` z-scores each gene across the cohort and re-centres it on the mean
+of pseudobulks built from the atlas's donors, so the cohort-mean fit lands on the reference's
+donor-mean composition by construction. Reproducing the exact cells the h5ad arm handed Bisque
+(project sampler, same caps and seed):
+
+| | L1 from the reference prior, all 8 types | lymphoid T / NK / B |
+|---|---|---|
+| reference donor-mean (the prior) | -- | 0.743 / 0.149 / 0.108 |
+| **bisque, GBM** | **0.087** | 0.696 / 0.161 / 0.143 |
+| **bisque, LGG** | **0.081** | 0.708 / 0.151 / 0.141 |
+| every other method | 0.678 - 1.401 | -- |
+| methylation, GBM / LGG | -- | 0.522 / 0.368 / 0.110 and 0.476 / 0.321 / 0.203 |
+
+Bisque reports glioblastoma as 27% tumour, the same as LGG and the same as the reference. Its
+correct lymphoid ordering is the reference's ordering, and it is 4.5x (GBM) and 6.7x (LGG)
+closer to the prior than to methylation.
+
+**CIBERSORTx S-mode and elastic net agree weakly.** S-mode orders T > B in GBM only, with B above
+T in 41% of samples; elastic net agrees in both cohorts but returns no lymphocytes in 30% (GBM)
+and 39% (LGG) of samples, and under the frozen signature places B at 0.94 and 0.98 of the
+lymphoid compartment -- the most reference-fragile result in the panel.
+
+### The mechanism, proven on planted truth
+
+`scripts/bisque_anchoring_synthetic.R` -> `results/bisque_anchoring_synthetic.json`. Genuine
+BisqueRNA, synthetic cells (4 types, 8 donors) and two 60-sample bulk cohorts mixed from the
+same profiles:
+
+| arm | planted cohort mean | Bisque's cohort mean | L1 to plant | L1 to reference prior | per-sample rho |
+|---|---|---|---|---|---|
+| **far** | 0.10 / 0.14 / 0.25 / 0.51 | 0.542 / 0.242 / 0.154 / 0.063 | **1.091** | **0.000** | 0.88 - 0.97 |
+| matched (control) | 0.56 / 0.23 / 0.16 / 0.05 | 0.542 / 0.242 / 0.154 / 0.063 | 0.053 | **0.000** | 0.93 - 0.98 |
+
+The cohort mean equals the reference's donor-mean composition **to four decimals, whatever the
+bulk holds**, while samples are still ranked almost perfectly. No-overlap Bisque replaces the
+level and keeps the ranking.
+
+This is the method's **declared assumption**, not a bug -- Jew et al. 2020 (*Nat Commun*
+11:1971), Methods, p. 10: *"If there are no single-cell samples that have bulk expression
+available, we assume that the observed mean of Yj is the true mean of our goal distribution for
+the transformed Xj."* What this study adds is the consequence: on TCGA glioma against a capped
+GBmap reference the assumption is false, and Bisque's agreement with methylation is the
+assumption restated.
+
+**And ACS cannot see it.** ACS scores within-tumour contrasts, which depend on how samples rank
+against one another -- exactly what no-overlap Bisque preserves. A level-replacement failure is
+invisible to anatomic concordance by construction. That is a precise, demonstrable instance of
+the paper's thesis that ACS detects some failures and not others.
+
+### Methylation's per-sample lymphoid split is not corroborated
+
+`scripts/lymphoid_tracking.py` -> `results/lymphoid_tracking.json`. A reference-free marker index
+(mean log2 CPM of CD3D CD3E CD3G CD5 CD6 TRAT1 minus CD19 MS4A1 CD79A CD79B CD22 BLK PAX5 FCRLA,
+panels fixed before the run) was correlated with methylation's per-sample T/(T+B):
+
+| cohort | n | rho | p |
+|---|---|---|---|
+| GBM | 66 | +0.138 | 0.27 |
+| LGG | 530 | **-0.123** | **0.004** |
+
+The pre-declared PTPRC-tertile stratification does not rescue it (no high-tertile agreement in
+either cohort), and in LGG methylation's T/(T+B) falls as leukocyte RNA rises (rho -0.185,
+p 1e-4) while the marker index rises with it (+0.510). **The positive control FAILED.** So:
+
+* per-sample tracking of methylation's lymphoid split, by any method, is **INCONCLUSIVE**;
+* statements of the form "T > B in 94.8% of samples" are true *of methylation* but must not be
+  presented as a validated per-sample truth;
+* the **cohort-level** T > B is independently corroborated -- GBmap itself holds T far above B
+  (pooled lymphoid T:B about 43:1) -- and is unaffected.
+
+### What the paper should now say
+
+1. Report both references. Under the frozen signature 0 of 12 order T above B in either cohort;
+   under the donor-level raw/X reference 3 of 14 and 2 of 13 do.
+2. Of those, Bisque's agreement is its reference's composition returned by construction (a
+   truth-free demonstration), so it is not evidence that Bisque measures the lymphoid
+   compartment; the remaining agreements are weak or reference-fragile.
+3. No method reproduces the ordering robustly across both references and both cohorts.
+4. Methylation is a cohort-level truth here, not a per-sample one.
+
+This is a stronger claim than "0 of 12", because it survives the reviewer who finds the h5ad arm.
+
+### Update 2026-10-03 -- the truth itself, tested three ways (WHY_B_OVER_T §7n)
+
+- **A second methylation instrument, GIMiCC [52]** (glioma-specific; `prespecified/gimicc_truth_confirmation.md`).
+  - **Registered reading: INCONCLUSIVE.** Its LGG negative control is uninformative by construction:
+    the IDH-mutant purity libraries are 98-99.7% hypermethylated CpGs.
+  - **GBM: T above B, with every control passing** (tumour 0.935, immune 0.959, shuffle -0.116).
+    Shuffling CpG labels reverses it.
+  - **LGG: B above T** (0.493 vs 0.405), robust and CpG-specific. It is not tumour overflow: the B share
+    falls with purity.
+- **Direct counts:**
+  - the Abdelfattah atlas, T above B in 18/18 patients (16 GBM, 2 LGG);
+  - GBmap core, all glioblastoma, T above B in 96/98 donors (54,257 T against 1,250 B);
+  - flow cytometry [53].
+- **Item 4 above now reads:**
+  - the GBM cohort-level truth is corroborated three ways;
+  - the LGG truth is contested between methylation instruments;
+  - methylation is a cohort-level truth only under either instrument: GIMiCC's per-sample split also
+    fails the marker control (GBM n.s.; LGG +0.10, p 0.035);
+  - both instruments put B above every direct count (GIMiCC several-fold; EpiDISH about 2x the atlas).
+- **Still open:** direct counts in IDH-mutant gliomas, e.g. Klemm et al. 2020 Table S2.
+
+---
+
+## D24 · The atlas builder's silent default layer, and the callers that still relied on it
+
+**Severity: latent -- no registered or reported number was affected -- but it is the mechanism
+behind D16 and D22, and an audit on 2026-10-01 found five more callers exposed to it. FIXED.**
+
+`build_from_h5ad(matrix="X")` was the signature: a caller that did not choose a layer read GBmap's
+`X`, which is `log1p(counts x size factor)`, and solved it as though it were linear. D16 kept the
+default "so archived results remain reproducible" and relied on prose to warn callers. That prose
+failed twice -- D16 itself, then D22 (every genuine-package re-measurement). An audit of every call
+site on 2026-10-01 found it still relied upon in:
+
+| caller | used by the registered run? | now |
+|---|---|---|
+| `ivygap/bench/run_benchmark.py` `main()` | **no** -- `run_all.py` builds the atlas with `matrix=args.matrix` and passes the cells in | `--matrix`, default `raw/X` |
+| `scripts/reference_sensitivity.py` (default arm) | no -- exploratory; D14/D16 reconciled it via the `gbmap_linear` arms | `raw/X`; pre-fix artefacts are log-built |
+| `scripts/build_gbmap_assay_reference.py` | no -- the tenx/smartseq2 references for D14 | `raw/X`; existing references are log-built |
+| `scripts/remeasure_dwls.py` | no -- superseded by `remeasure_method.py` | `raw/X`, marked superseded |
+| `scripts/reconstruct_gene_space.py` | no -- reproduces the archived log-era gene space (D10) | `X`, **stated deliberately** |
+
+**The fix is structural, not prose.** `matrix` has no default: omitting it raises `TypeError`
+naming D16/D22/D24. `tests/test_frozen_reference.py::test_build_from_h5ad_refuses_to_guess_the_layer`
+is the negative control, and every test fixture now states its layer (`X`, the only one the
+fixtures carry).
+
+
+## D25 · The reference atlas was cited to the wrong paper and the wrong collection
+
+**Severity: reporting -- no number changes -- but it misattributes the single most-used input of
+the study, the one every one of the 15 estimators solves against. Found 2026-10-01 by the data
+inventory (`scripts/build_data_inventory.py`). FIXED in the reference list; the inventory now
+guards it.**
+
+Two independent errors, both in documentation, both about GBmap:
+
+| where | said | the file itself says (`uns/citation` of `data/reference/gbmap_core.h5ad`) |
+|---|---|---|
+| `docs/REFERENCES.md` [10] | C. Ruiz-Moreno *et al.*, "Bidirectional tumor-host interdependence in glioblastoma", *Cancer Cell* 40:639 (2022), doi:10.1016/j.ccell.2022.05.009 | publication doi:10.1101/2022.08.27.505439 -- Ruiz-Moreno C *et al.*, "Harmonized single-cell landscape, intercellular crosstalk and tumor architecture of glioblastoma" (bioRxiv 2022); peer-reviewed as *Neuro-Oncology* 27:2281-2295 (2025), doi:10.1093/neuonc/noaf113 |
+| `docs/DATA_SOURCES.md` A3 | CELLxGENE collection `283d65eb-dd53-496d-adb7-7570c7caa443` | collection `999f2a15-3d7e-440b-96ae-2c806799c08c`, dataset version `861acfd8-25f0-418b-a445-aa96da232827` |
+
+**What the wrong ones are.** The DOI is real and resolves -- to Ravi VM *et al.*, "Spatially
+resolved multi-omics deciphers bidirectional tumor-host interdependence in glioblastoma" (Crossref,
+first author Ravi). Entry [10] carried GBmap's authors (one garbled: "E. Samir" for Samuelsson)
+over Ravi's shortened title and DOI. Its status column read `cited` -- by the list's own legend, quoted from a source
+rather than resolved against Crossref -- so the 2026-09-28 Crossref verification did not cover it. The collection id is the Human Brain Cell Atlas v1.0 (Siletti *et al.*), listed
+correctly in the same file's "Datasets identified but not yet used" section; it was copied into
+the GBmap row.
+
+**How it is now prevented.** The inventory compares every DOI's Crossref record with the first
+author and year it is cited under, and runs a negative control on every build: this exact
+conflation (Ruiz-Moreno over the Ravi DOI) must be rejected, and is. GBmap's identifiers are read
+from the h5ad's own metadata, and the CELLxGENE server reports the dataset version at
+8,127,057,404 bytes -- the local file's exact size.
+
+**Also found by the same audit, and fixed:** `scripts/albiach_constraint_check.py` read the Albiach
+atlas through a literal path that stopped resolving when the vendored tree was renamed
+(`pipeline packages ` -> `pipeline_packages `, `albiach data` -> `albiach_data`); it now goes
+through `config.VENDORED_REPOS_DIR`. Its archived result (`results/albiach_constraint_check.json`)
+was computed before the rename and is unaffected; a re-run would have failed with
+FileNotFoundError. `R/install_deps.R` searched only the old name and now searches both.
+
+**Further path hazards found by re-running old analyses (2026-10-01 17:25), all fixed:**
+- The Abdelfattah folder was renamed `GEO_GSE182109` -> `GSE182109` at 17:15, breaking
+  `scripts/build_abdelfattah_reference.py`'s literal path (the queued seed check would have
+  failed). `config.GSE182109_DIR` now accepts either name; the builder goes through it.
+- The superseded `scripts/fetch_ivygap_ish.py` still defaulted its output to
+  `results/ish_constraint_check.json`, the LIVE artefact of its replacement
+  `scripts/ish_constraint_check.py`. Running it as its own docstring said would have
+  replaced the live result with the retired method's. Its default is now
+  `results_superseded/fetch_ivygap_ish_api.json`.
+- Re-run reproducibility, each into scratch and compared leaf by leaf with
+  `scripts/compare_artefacts.py`: `darmanis_constraint_check` REPRODUCED (128 leaves),
+  `albiach_constraint_check` REPRODUCED (with the path fix), `ish_constraint_check` REPRODUCED.
+
+## D26 · FARDEEP's driver crashed on its default path (one worker), hidden by every run setting two
+
+**Severity: latent -- no reported number was affected -- found 2026-10-02 when a frozen-arm
+regeneration left `IVYGAP_FARDEEP_CORES` unset and FARDEEP failed in both cohorts. FIXED.**
+
+`R/run_fardeep.R` splits samples into blocks with `cut(seq_len(n), nb, labels = FALSE)`. With one
+worker (the default), `nb` is 1, and R's `cut()` rejects a single interval ("invalid number of
+intervals"), so the driver halted before fitting anything. Every earlier run exported
+`IVYGAP_FARDEEP_CORES=2` (`scratchpad/queue.sh`, `ext_tcga_frozen.sh`), so the default path had
+never executed. The only FARDEEP test read the call's arguments with a regex and could not see it.
+
+**Fix:** one block is the joint fit, built without `cut()`.
+
+**How it is now prevented:** `tests/test_fardeep_default_path.py` runs the genuine package with the
+variable unset. It checks three things:
+- planted proportions are recovered (r >= 0.90, error <= 0.10);
+- one and two workers give identical estimates (max difference exactly 0, which tests the driver's
+  own claim that blocking cannot change an estimate);
+- a reference with shuffled gene labels fails the same bar.
+
+Run against the pre-fix driver, the first test fails with the original error. FARDEEP's
+frozen-arm estimates are regenerated on the default path after the fix (`/tmp/fardeep_regen.log`).
+
+## D27 · The ABSOLUTE join silently drops samples whose `sample` field is a Broad-internal ID
+
+**Severity: low, measured. No conclusion changes. Found 2026-10-03** by
+`tests/test_gimicc_independent.py`. That test recomputes GIMiCC's tumour control through ABSOLUTE's
+own `array` column and matched more samples (146 against 142 in GBM; 519 against 510 in LGG) than the
+project's key functions did.
+
+**Cause.**
+- In `TCGA_mastercalls.abs_tables_JSedit.fixed.txt`, 795 of 10,642 rows with a purity call (191 GBM,
+  plus LGG, KIRC, OV, ...) carry a Broad-internal ID in `sample`: `GBM-TCGA-06-5416-Tumor-SM-1QETM`,
+  not `TCGA-06-5416-01A-...`.
+- `key4` and `k4s` split on hyphens and turn it into `GBM-TCGA-06-5416`, which matches nothing.
+- The `array` column holds the standard barcode (`TCGA-06-5416-01`) for every row.
+
+**Effect on the registered TCGA arm** (`scripts/absolute_join_audit.py` ->
+`results/absolute_join_audit.json`):
+- **Reproduction control: PASSED.** Every method's recorded purity rho is reproduced exactly from the
+  saved estimates under the registered join, both cohorts.
+- **Samples lost:** GBM 1 (`TCGA-06-5416-01A`; 154 of 155); LGG 9 (510 of 519).
+  - Two further GBM samples differ only by vial letter (RNA 01A against DNA 01B). The registered join
+    requires the vials to agree, which is a defensible convention, so they are a sensitivity only.
+- **The lost samples were never deconvolved:** the registered run fitted only the matched samples, so
+  their effect cannot be recomputed from saved estimates.
+- **Bound.** One sample of 155 moves a Spearman rho by at most about 3/155.
+  - Within that, the only realistic swap among the per-method purity rhos is CIBERSORTx and SVR
+    (0.708 / 0.718). It would move the registered agreement statistic from **+0.081 to +0.056**.
+  - MuSiC/NNLS and SCDC/ENSEMBLE are exact duplicates and cannot diverge.
+  - The registered bar is 0.60, so the conclusion is unchanged.
+  - LGG's statistics are exploratory; nine of 519 samples cannot change a reading there either.
+
+**Fixed where it is exploratory.** `scripts/gimicc_truth.py` keys purity by `array`. GIMiCC's controls
+moved by <= 0.013 and no reading changed (gimicc_truth_confirmation.md, note after Addendum 6).
+
+**Not changed in the registered pipeline.** Its statistics stay reproducible as registered. Any future
+ABSOLUTE join should key Broad-ID rows by `array`, as `absolute_join_audit.joins()` does.
+

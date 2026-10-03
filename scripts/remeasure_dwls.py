@@ -78,7 +78,10 @@ def main() -> int:
             if bool(meta.loc[s, "is_anatomic_study"])
             and meta.loc[s, "structure"] in config.PRIMARY_STRUCTURES]
 
-    ref, cells, cmeta = build_from_h5ad(config.REFERENCE_DIR / "gbmap_core.h5ad")
+    # SUPERSEDED by scripts/remeasure_method.py (which reads the leaderboard's layer from
+    # run_provenance.json and blocks on a mismatch, D22). Kept for the record; D24 makes the
+    # layer explicit here so this file can no longer read `X` without saying so.
+    ref, cells, cmeta = build_from_h5ad(config.REFERENCE_DIR / "gbmap_core.h5ad", matrix="raw/X")
     genes = [g for g in ref.profile.index if g in set(expr.index)]
     from ivygap.data.reference import frozen_gene_space
     genes, prov = frozen_gene_space(ref, expr.index)

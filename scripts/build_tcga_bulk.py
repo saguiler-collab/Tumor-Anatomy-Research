@@ -159,13 +159,17 @@ def main() -> int:
         cpm.to_csv(fh, float_format="%.4f")
 
     prov = {
-        "what_this_is": "TCGA-GBM bulk expression, linearised and CPM-normalised, for "
-                        "yardstick 2 (ABSOLUTE purity).",
+        # Was a GBM literal for both cohorts until 2026-10-01 (the LGG record says "TCGA-GBM").
+        "what_this_is": f"TCGA-{args.cohort.upper()} bulk expression, linearised and "
+                        f"CPM-normalised, for yardstick 2 (ABSOLUTE purity).",
         "source": str(STAR), "annotation": str(GTF),
         "source_is_read_only": "the predecessor project is never written to",
         "scale_correction": {
             "as_delivered": "log2(x + 1) despite the filename saying counts",
-            "evidence": f"min nonzero {float(nz.min()):.6f} = log2(1.5); after 2^v - 1, "
+            # The implied count is computed, not asserted: "= log2(1.5)" was a literal that is
+            # right for GBM (0.584963) and wrong for LGG (1.000000 = log2(2), one count).
+            "evidence": f"min nonzero {float(nz.min()):.6f} = log2(1 + "
+                        f"{2 ** float(nz.min()) - 1:g}); after 2^v - 1, "
                         f"{on_grid:.2%} of values below 200 sit on a {GRID} grid",
             "applied": "2**v - 1, before any normalisation",
             "why_it_matters": "using it as delivered would repeat OPEN_DEFECTS D16 in a study "

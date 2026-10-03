@@ -69,6 +69,24 @@ IVYGAP_TUMOR_DETAILS_PATH = RAW_DIR / "ivygap" / "tumor_details.csv"
 # reconciliation gate, and the only file carrying the donor_id <-> tumor_id join.
 IVYGAP_RNA_SEQ_DETAILS_PATH = RAW_DIR / "ivygap" / "rna_seq_samples_details.csv"
 
+# --- roots of the other public datasets ---------------------------------------
+# Every file under these is catalogued, measured and traced to the code that reads it
+# in docs/DATA_INVENTORY.md (scripts/build_data_inventory.py).
+TCGA_DOWNLOADS_DIR = PROJECT_ROOT / "TCGA_LGG"        # Xena / GDC files, both cohorts' HM450
+TCGA_HM450 = {"gbm": TCGA_DOWNLOADS_DIR / "TCGA.GBM.sampleMap_HumanMethylation450",      # Xena (D07)
+              "lgg": TCGA_DOWNLOADS_DIR / "TCGA.LGG.sampleMap_HumanMethylation450.gz"}  # Xena (D08)
+IMMUNE_FRACTION_DIR = PROJECT_ROOT / "Immune_Fraction"   # PanCanAtlas immune tables
+#: Abdelfattah 2022 processed files. The folder has been renamed once already
+#: ("GEO_GSE182109" -> "GSE182109", 2026-10-01 17:15), which broke a literal path; accept either.
+GSE182109_DIR = next((d for d in (PROJECT_ROOT / "GSE182109", PROJECT_ROOT / "GEO_GSE182109")
+                      if d.is_dir()), PROJECT_ROOT / "GSE182109")
+#: NOTE THE SPACES. The vendored tree is literally "pipeline_packages " / " repos". It
+#: was renamed from "pipeline packages " once, which silently broke a hard-coded path.
+VENDORED_DIR = PROJECT_ROOT / "pipeline_packages "
+VENDORED_REPOS_DIR = VENDORED_DIR / " repos"
+#: The predecessor TCGA-GBM project. Read-only from here.
+PREDECESSOR_ROOT = Path("/Users/tatopro9130/Downloads/cancer_judging_machine-master 22")
+
 # --- processed intermediates --------------------------------------------------
 BULK_EXPRESSION_PATH = PROCESSED_DIR / "ivygap_bulk_expression.tsv"   # genes x samples
 SAMPLE_MANIFEST_PATH = PROCESSED_DIR / "ivygap_sample_manifest.tsv"   # one row per RNA-seq sample

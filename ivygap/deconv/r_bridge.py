@@ -59,6 +59,16 @@ R_PACKAGES = {
     "epic": "EPIC",
     "quantiseq": "quantiseqr",
     "bayesprism": "BayesPrism",
+    # POST-REGISTRATION EXTENSION PANEL (2026-09-30). Not in the registered panel; wrapped by
+    # `ivygap.deconv.extension`, never by `registry.build_methods`. See that module.
+    "fardeep": "FARDEEP",
+    "lindeconseq": "LinDeconSeq",
+    # added 2026-10-02 (prespecified/deseq2_unmix_config.md): one of Nguyen 2024's top-10-in-all-
+    # scenarios methods this study had not run.
+    "deseq2_unmix": "DESeq2",
+    # added 2026-10-02 (prespecified/mixture_config.md): the last of Nguyen 2024's seven
+    # top-10-in-all-scenarios methods; installed from vendor/MIXTURE (pinned commit).
+    "mixture": "MIXTURE",
 }
 
 
@@ -83,6 +93,9 @@ def sc_export_paths(ref_name: str) -> tuple[Path, Path]:
 # The source lives in memory because a ReferenceBundle deliberately does not carry
 # cells — it carries summaries of them. Whoever built the reference registers it here.
 _CELL_SOURCE: dict[str, tuple] = {}
+
+#: Tail of each R driver's stdout from its most recent SUCCESSFUL run, keyed by method.
+LAST_R_STDOUT: dict[str, str] = {}
 
 
 def set_cell_source(ref_name: str, expression, meta) -> None:
@@ -351,7 +364,8 @@ LAST_GENE_SPACE: dict[str, dict] = {}
 R_RETURNS_CELL_FRACTIONS = frozenset({"bisque"})
 
 #: Methods that consume a reference PROFILE rather than individual cells.
-SIGNATURE_ONLY_METHODS = frozenset({"epic", "quantiseq"})
+SIGNATURE_ONLY_METHODS = frozenset({"epic", "quantiseq", "fardeep", "lindeconseq", "deseq2_unmix",
+                                    "mixture"})
 
 #: Methods that bring their OWN published signature and ignore the one they are handed.
 #:
@@ -376,6 +390,11 @@ R_METHOD_TIMEOUTS: dict[str, int] = {
     "dwls": 2400,
     # BayesPrism's Gibbs sampler scales with cells x genes x types.
     "bayesprism": 2400,
+    # MIXTURE (extension panel) tunes a nu-SVR by 10-fold CV per sample and iterates its feature
+    # elimination; on a shared 2-core machine GBM's 154 samples took >11 min, so the 1-h default
+    # could cut LGG's 510 off. Unbudgeted, per the user's 2026-10-01 directive ("no budget"),
+    # matching the 1e9 s budget the re-measurement scripts pass.
+    "mixture": 10**9,
 }
 DEFAULT_R_TIMEOUT = 3600
 
@@ -580,6 +599,17 @@ def run_r_method(method_name: str, data: DeconvolutionInput,
             raise RBridgeError(f"{script.name} exited 0 but wrote no output file")
 
         result = pd.read_csv(out_path, index_col=0)
+
+        # KEEP WHAT R SAID ON SUCCESS. A driver can succeed overall and still report that it
+        # failed on part of the input -- run_dwls.R prints "DWLS: N of M samples failed to
+        # solve ... First error: ..." -- and that line used to be discarded with proc.stdout,
+        # so a re-measurement returning NaN for 73 of 122 samples carried no reason at all
+        # (OPEN_DEFECTS D22, 2026-10-01). Kept in memory and written to diagnostics.
+        LAST_R_STDOUT[method_name] = proc.stdout[-8000:]
+        _log = config.DIAGNOSTICS_DIR / f"{method_name}_r_stdout.log"
+        _log.parent.mkdir(parents=True, exist_ok=True)
+        _log.write_text(proc.stdout[-20000:] + ("\n--- stderr ---\n" + proc.stderr[-8000:]
+                                                 if proc.stderr.strip() else ""))
 
         # SIDECARS. Some scripts write diagnostics beside their output -- EPIC's
         # `otherCells` fraction and its per-sample convergence codes are the ones that

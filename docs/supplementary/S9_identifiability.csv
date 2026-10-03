@@ -1,0 +1,19 @@
+Compartment,Cohort,Tier,DNA truth,"Stability (unmix, 7 settings)",Agreement (registered methods),unmix vs truth,Median method vs truth,Samples with truth,"Stability, share of leukocytes","unmix vs truth, share of leukocytes",Exact zeros in unmix (mean over settings)
+Tumor,GBM,primary,ABSOLUTE purity,0.960,0.466,+0.780,+0.413,154,--,--,0%
+Leukocytes,GBM,primary,methylation leukocyte fraction,0.954,0.561,+0.780,+0.493,129,--,--,0%
+Myeloid,GBM,none,none in TCGA,0.985,0.576,--,--,--,--,--,0%
+Lymphoid,GBM,primary,EpiDISH CD4T+CD8T+NK+B,0.713,0.277,-0.200,-0.141,56,0.552,-0.103,13%
+T_cell,GBM,secondary,EpiDISH CD4T+CD8T,0.893,0.108,-0.119,-0.083,56,0.804,-0.006,36%
+B_cell,GBM,secondary,EpiDISH B,0.520,0.258,+0.090,-0.126,56,0.446,+0.104,29%
+NK_cell,GBM,secondary,EpiDISH NK,0.703,0.089,-0.120,+0.004,56,0.681,-0.108,73%
+Endothelial,GBM,none,none in TCGA,0.947,0.503,--,--,--,--,--,0%
+Oligodendrocyte,GBM,none,none in TCGA,0.970,0.672,--,--,--,--,--,21%
+Tumor,LGG,primary,ABSOLUTE purity,0.946,0.380,+0.592,+0.183,510,--,--,0%
+Leukocytes,LGG,primary,methylation leukocyte fraction,0.927,0.354,+0.603,+0.079,510,--,--,0%
+Myeloid,LGG,none,none in TCGA,0.990,0.466,--,--,--,--,--,0%
+Lymphoid,LGG,primary,EpiDISH CD4T+CD8T+NK+B,0.494,0.184,-0.183,+0.188,510,0.341,-0.123,28%
+T_cell,LGG,secondary,EpiDISH CD4T+CD8T,0.749,0.037,-0.273,-0.027,510,0.725,-0.241,76%
+B_cell,LGG,secondary,EpiDISH B,0.468,0.199,-0.001,+0.084,510,0.376,+0.005,33%
+NK_cell,LGG,secondary,EpiDISH NK,0.742,0.059,-0.070,-0.031,510,0.728,-0.070,91%
+Endothelial,LGG,none,none in TCGA,0.936,0.484,--,--,--,--,--,0%
+Oligodendrocyte,LGG,none,none in TCGA,0.983,0.780,--,--,--,--,--,7%

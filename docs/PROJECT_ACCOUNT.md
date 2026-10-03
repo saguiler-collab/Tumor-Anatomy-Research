@@ -271,6 +271,23 @@ the NK population with CD3⁺ cells removed and re-run.
 | Purity as a failure factor | the one biological factor that **replicates**: β −0.136 vs −0.134, 12/12 methods, Holm p = 0.0024 |
 | Everything else | ploidy, genome doubling, subclonal fraction, IDH1 — null in both cohorts, reported at equal prominence |
 
+**Extension E2 — which cell types can be believed without ground truth (post-registration,
+exploratory; `docs/EXTENSION_IDENTIFIABILITY.md`).**
+- **Design.** One genuine package (DESeq2 `unmix`) is re-fitted under seven loss scales, and each
+  compartment's stability across those fits is set against its agreement with DNA truths.
+- **Result.** Stability ranks compartments the way DNA does: rho **0.886** (exact p 0.017), and
+  **0.943** with truth and estimate on matched denominators.
+  - Tumour and total leukocyte content are stable and accurate.
+  - The lymphoid compartment is the least stable, and its T/B/NK split tracks nothing against
+    EpiDISH. Against GIMiCC (2026-10-03), one package's (`unmix`) T and lymphoid totals track; the
+    panel's median does not.
+  - **The immune compartment is identified as a whole, not its lymphocyte types.**
+- **Disclosed and checked:** three flaws in the registered design, each under a rule written before
+  it was computed.
+- **Agreement between methods is weaker.** Tested here, DECEPTICON's agreement rule tracks accuracy only
+  weakly (mean rho 0.28). Its top pairs are algorithmic siblings in 9 of 10 selections.
+- **Limit.** Stability flags what not to trust; it certifies nothing.
+
 ---
 
 ## 10 · What went wrong, and how it was caught
@@ -323,8 +340,9 @@ Four layers, each independent of the one below:
    n = 9 (362,880 permutations)**. No difference exceeded 0.004. Both bootstrap intervals
    reproduce bit-for-bit from the recorded seed.
 
-All 35 references were resolved against Crossref. Results are frozen in a hash-verified
-archive.
+All 51 references are verified: read from a PDF on disk or resolved against Crossref. One,
+[10] (the GBmap citation), carried another paper's title and DOI until 2026-10-01 and is
+corrected (OPEN_DEFECTS D25). Results are frozen in a hash-verified archive.
 
 ---
 
@@ -349,6 +367,8 @@ enough to choose a working one.
 ---
 
 ## 13 · What is bounded, and what is open
+
+> ⚠ SUPERSEDED (OPEN_DEFECTS D22, 2026-09-30): the genuine-package re-measurements quoted below ran on GBmap's log `X` layer while the leaderboard ran on `raw/X`, so these figures are cross-matrix and are withdrawn. Current values: MANUSCRIPT §4.7 and `results/*_remeasured.json` (DWLS: no estimate for 73 of 122 samples on raw/X; Bisque and EPIC reproduce their leaderboard rows).
 
 **Bounded and stated:** one tumour type; twelve comparable methods as a power ceiling; ReCIDE
 absent, published during this study; no deep-learning methods, excluded because they train on

@@ -29,9 +29,22 @@ see the claim is really in it and phrase your own sentence around it.
    quote from a *Bioinformatics* benchmark — not a review, not a claim of mine.
 
 2. Glioblastoma specifically — its immune compartment, why it matters clinically.
-   → **NEEDS A SOURCE.** No paper in the current list is a glioma-immunology reference.
-   Either find one, or open on the general TME claim from [2] and narrow to glioma in ¶4
-   where [5] Puchalski carries you.
+   → **Candidates found 2026-10-01: [42] Abdelfattah 2022, [43] Mathewson 2021, [44] Hara
+   2021** (`docs/REFERENCES.md`). Metadata verified against Crossref; **not read here — verify
+   the passage before citing.** [43] is the most direct for T cells in glioma specifically;
+   [44] for immune cells shaping glioblastoma cell states.
+
+3. Tumour purity matters in glioblastoma and is hard to measure — the rationale for the DNA
+   purity yardstick. → **[41] Thomas 2025** (*Neuro-Oncology*; PDF on disk). Verbatim:
+   > *"Tumor purity, the proportion of malignant cells within a tumor, is an important
+   > covariate for understanding the disease, having direct clinical relevance or obscuring
+   > signal of the malignant portion in molecular analyses of bulk samples. However, current
+   > methods for estimating tumor purity are nonspecific and technically demanding."*
+
+   Independently useful in Methods: GBMPurity *"was trained using simulated pseudobulk tumors
+   of known purity from labeled single-cell data acquired from the GBmap resource"* — a
+   published glioblastoma tool built on the same atlas this study uses as its reference.
+   (Its hyphenation in the PDF reads "un- derstanding"; quote it as "understanding".)
 
 *Keep this paragraph to two or three sentences. It is the only part a clinical reader needs
 before the problem statement.*
@@ -195,8 +208,8 @@ first use and should be regenerated to match.
 
 ## The three gaps you must close yourself
 
-1. **A glioma-immunology reference for ¶1.2** — or drop the glioma-specific clinical claim and
-   open on the general TME statement from [2].
+1. **A glioma-immunology reference for ¶1.2** — candidates [42]–[44] now identified and
+   metadata-verified (2026-10-01); you still need to read the passage you cite.
 2. **Verify [5] Puchalski names the five anatomic structures** as you describe them. It is the
    source of your entire cohort and it is currently cited without having been read here.
 3. **Verify the "53 methods across 28 datasets" figure** in [3] Nguyen before quoting it. It

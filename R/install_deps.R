@@ -45,7 +45,9 @@ options(repos = c(CRAN = "https://cloud.r-project.org"), Ncpus = 4, timeout = 60
 #: install. If the sources are already on disk, use them: it is faster, reproducible,
 #: and it works with no network at all.
 LOCAL_SOURCE_ROOTS <- c(
-  "pipeline packages / repos/%s",          # vendored alongside the repo
+  "pipeline_packages / repos/%s",          # vendored alongside the repo (current name;
+  "../pipeline_packages / repos/%s",       #  the tree was renamed from "pipeline packages ")
+  "pipeline packages / repos/%s",
   "../pipeline packages / repos/%s",
   "~/Downloads/%s-master",
   "~/Downloads/%s"
@@ -61,6 +63,8 @@ find_local_source <- function(pkg) {
   cands <- character(0)
   for (hint in c(LOCAL_DIR_HINTS[[pkg]], pkg)) {
     cands <- c(cands,
+               path.expand(sprintf("pipeline_packages / repos/%s", hint)),
+               path.expand(sprintf("../pipeline_packages / repos/%s", hint)),
                path.expand(sprintf("pipeline packages / repos/%s", hint)),
                path.expand(sprintf("../pipeline packages / repos/%s", hint)),
                path.expand(sprintf("~/Downloads/%s", hint)))

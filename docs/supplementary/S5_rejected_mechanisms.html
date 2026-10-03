@@ -1,4 +1,4 @@
-<p><b>Table S5. Candidate explanations for the lymphoid failure, each tested and each rejected. Listed because five failed explanations with working controls constrain the answer more than one untested story would.</b></p>
+<p><b>Table S5. Candidate explanations for the lymphoid failure, each tested and each rejected. Listed because failed explanations with working controls constrain the answer more than one untested story would.</b></p>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: left;">
@@ -37,6 +37,30 @@
       <td>Misfit in Tumor/Astrocyte markers propagates to lymphoid coefficients</td>
       <td>refit on lymphoid-owned markers only (596 genes)</td>
       <td>T &gt; B in 0.0% of samples; mass moves to NK</td>
+      <td>REJECTED</td>
+    </tr>
+    <tr>
+      <td>The NK_cell column absorbs T-cell signal through shared CD3 markers</td>
+      <td>re-annotate the frozen reference -- NK removed; T and NK merged -- and refit NNLS and SVR, gene space fixed, baseline reproduced exactly</td>
+      <td>SVR B &gt; T in 100% / 100% (NK removed) and 100% / 100% (merged), GBM / LGG; mass goes to B, not T</td>
+      <td>REJECTED</td>
+    </tr>
+    <tr>
+      <td>Immunoglobulin transcripts in bulk are credited to the B column</td>
+      <td>count immunoglobulin genes in the solved gene space and their share of each column</td>
+      <td>1 Ig gene(s) (JCHAIN); 0.057% of the B column</td>
+      <td>EXCLUDED BY CONSTRUCTION</td>
+    </tr>
+    <tr>
+      <td>Ribosomal-protein genes admitted as B markers carry the inversion</td>
+      <td>remove ^RP[SL]/^RPLP genes (standard rule) from the gene space and refit; matched B-marker and any-gene removal nulls</td>
+      <td>B &gt; T, baseline -&gt; RP removed: GBM SVR 90% -&gt; 100%; GBM NNLS 100% -&gt; 100%; LGG SVR 96% -&gt; 100%; LGG NNLS 99% -&gt; 99%</td>
+      <td>REJECTED</td>
+    </tr>
+    <tr>
+      <td>Ambient myelin RNA makes the B profile tissue-like</td>
+      <td>per-cell myelin-gene UMI fraction (MBP, PLP1, MOBP, MAG, MOG; declared first) in GBmap raw counts</td>
+      <td>B 0.000136 vs T 0.000225; cells with any: B 24%, T 39%</td>
       <td>REJECTED</td>
     </tr>
   </tbody>

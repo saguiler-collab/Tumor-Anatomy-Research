@@ -76,8 +76,10 @@ def main() -> int:
             raise KeyError("the atlas has no `assay` column")
         return pred(obs_raw["assay"].astype(str)).to_numpy()
 
+    # D24: stated layer. The tenx/smartseq2 references this wrote before 2026-10-01 came from
+    # `X` (log1p) through the old default; they are recorded as such in OPEN_DEFECTS D14/D16.
     ref, cells, meta = build_from_h5ad(
-        config.REFERENCE_DIR / "gbmap_core.h5ad",
+        config.REFERENCE_DIR / "gbmap_core.h5ad", matrix="raw/X",
         restrict_to_genes=expr.index, export=False, cell_filter=cell_filter)
 
     n_don = meta.groupby("cell_type")["donor"].nunique().to_dict()

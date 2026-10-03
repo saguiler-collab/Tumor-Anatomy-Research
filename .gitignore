@@ -83,3 +83,11 @@ TCGA_LGG/TCGA-LGG.star_counts.tsv
 TCGA_LGG/TCGA-LGG.star_counts.tsv.gz
 ivygap/ivygap_downloads/gene_expression_matrix_2014-11-25/fpkm_table.csv
 ivygap/ivygap_downloads/gene_expression_matrix_2014-11-25/fpkm_table.csv.gz
+
+# Abdelfattah 2022 (GEO GSE182109) raw inputs, 4.2 GB: the processed matrix, the per-sample RAW
+# archive, cluster labels, barcodes and genes. Catalogued with hashes in docs/DATA_INVENTORY.md and
+# re-downloadable from GEO / Single Cell Portal. ANCHORED to the top-level folder (an unanchored name
+# has swept up the wrong files here before). The 926-byte GSM-to-sample map is this project's own
+# provenance file and stays tracked.
+/GSE182109/*
+!/GSE182109/gsm_to_sample.tsv

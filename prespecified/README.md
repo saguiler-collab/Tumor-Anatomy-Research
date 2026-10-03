@@ -14,6 +14,7 @@ before the quantity is used**, so the commit date is the evidence that the order
 | `imc_anchored_prediction.md` | the ordering ACS must reproduce if anatomic concordance tracks an orthogonal **protein** ground truth (imaging mass cytometry) | `CORRECTIONS_REGISTRATION.md` **C10** |
 | `biological_failure_factors.md` | the hypothesis, seven candidate factors with directions, model and falsification criterion for *when* bulk deconvolution fails in GBM | — (a new study, not a correction) |
 | `immune_failure_factors.md` | the immune arm: a methylation-derived leukocyte fraction as a second independent ground truth, with the denominator mismatch and four predictions fixed before computing | — |
+| `bayesprism_authors_prediction.md` | the direction the BayesPrism authors' configuration should move the lymphoid B share, and the exact rule for reading it, fixed before either configuration produced output | — (post-registration extension) |
 
 ## `mrna_content_gbmap_10x.csv`
 

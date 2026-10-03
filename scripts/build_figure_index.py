@@ -134,6 +134,113 @@ def main() -> int:
          f"statistic is invariant to a constant offset, so it measures tracking rather than "
          f"calibration. Methods marked † ran without an input their published algorithm "
          f"requires and are reported as not evaluable rather than omitted or scored."),
+
+        ("Figure_bisque_anchoring",
+         "Bisque's cohort-mean composition is its single-cell reference's composition.",
+         (lambda syn, real: (
+             f"(A) Genuine BisqueRNA run without overlapping subjects -- the only mode a TCGA "
+             f"cohort permits -- on synthetic data whose true cohort mean is set far from the "
+             f"reference's. The estimated cohort mean lies {syn.get('far', {}).get('L1_estimate_to_prior')} "
+             f"(L1) from the reference's donor-mean composition and "
+             f"{syn.get('far', {}).get('L1_estimate_to_plant')} from the truth, while samples are "
+             f"still ranked correctly (per-sample Spearman "
+             f"{min((syn.get('far', {}).get('per_sample_spearman') or {0: 0}).values()):.2f}-"
+             f"{max((syn.get('far', {}).get('per_sample_spearman') or {0: 0}).values()):.2f}); a matched "
+             f"control in which truth equals the reference is recovered. This is the package's "
+             f"declared assumption (Jew et al. 2020, Methods). (B) For every method, the L1 "
+             f"distance of its TCGA cohort-mean composition, over all eight cell types, from the "
+             f"same reference's donor-mean composition (raw/X reference; glioblastoma n = 154, "
+             f"lower-grade glioma n = 510). Bisque lies "
+             f"{(real.get('cohorts', {}).get('gbm', {}).get('methods', {}).get('bisque') or {}).get('L1_to_reference_prior_all_types')} and "
+             f"{(real.get('cohorts', {}).get('lgg', {}).get('methods', {}).get('bisque') or {}).get('L1_to_reference_prior_all_types')} "
+             f"from it; every other method lies "
+             f"{min(v['L1_to_reference_prior_all_types'] for c in ('gbm', 'lgg') for k, v in (real.get('cohorts', {}).get(c, {}).get('methods') or {}).items() if k != 'bisque'):.2f} "
+             f"or more."))(
+             J("bisque_anchoring_synthetic.json"), J("bisque_anchoring.json"))),
+
+        ("Figure_acs_vs_auc",
+         "ACS and an AUC measure the same thing on different scales, and neither tracks accuracy.",
+         (lambda d: (
+             f"(A) The registered Anatomic Concordance Score (ACS: each constraint-tumour pair "
+             f"scores 1 or 0 on per-structure means) against its graded counterpart, the "
+             f"within-tumour Mann-Whitney AUC over the same pairs, samples and permutation null "
+             f"(exploratory). They rank the {d['rank_agreement']['n_comparable_methods']} comparable "
+             f"methods almost identically (Spearman ρ = "
+             f"{d['rank_agreement']['acs_vs_auc_anat_spearman_comparable_methods']:.2f}) but sit on "
+             f"different scales: dashed lines mark each statistic's chance level (median "
+             f"permutation-null mean), and the AUC gives partial credit on the two conjunction "
+             f"constraints (C4, C7) where ACS gives none. Crosses are the two broken-input controls "
+             f"(AUC permutation p = "
+             f"{', '.join(f'{v:.2f}' for v in sorted(r['null_p'] for r in d['methods'].values() if r['is_control']))}). "
+             f"(B) The AUC against accuracy -- Harrell's concordance of each method's TCGA-GBM "
+             f"tumour fraction with ABSOLUTE DNA purity (n = "
+             f"{J('absolute_purity_yardstick.json').get('n_samples')} samples). Substituted for ACS in "
+             f"the registered agreement test it gives ρ = "
+             f"{d['agreement_with_auc_in_place_of_acs']['vs_rho_purity']['rho']:+.2f} (p = "
+             f"{d['agreement_with_auc_in_place_of_acs']['vs_rho_purity']['p_value']:.2f}, n = "
+             f"{d['agreement_with_auc_in_place_of_acs']['vs_rho_purity']['n_methods']} methods), "
+             f"against ρ = {d['agreement_with_auc_in_place_of_acs']['registered_for_comparison']['rho']:+.3f} "
+             f"for the registered ACS: the null result is not an artefact of thresholding. "
+             f"Identical points are labelled together, and † marks a method that is degenerate on the "
+             f"frozen TCGA signature (MuSiC without cross-donor variance is NNLS; Bisque runs its "
+             f"no-overlap mode; SCDC ENSEMBLE with one reference is SCDC), so its concordance there is "
+             f"not its own.")
+          if d.get("controls", {}).get("acs_reproduced_for_every_method") else "")(J("anatomic_auc.json"))),
+
+        ("Figure_lymphoid_mechanisms",
+         "Reference-side tests of the lymphoid inversion: none removes it.",
+         (lambda rp, bd, tl, ia: (
+             f"TCGA cohorts. (A) Share of samples with B above T under SVR for each reference variant -- as "
+             f"registered (glioblastoma {100 * rp['cohorts']['gbm']['svr_baseline']['frac_B_over_T']:.0f}%, "
+             f"lower-grade glioma {100 * rp['cohorts']['lgg']['svr_baseline']['frac_B_over_T']:.0f}%), with the NK "
+             f"column removed, with T and NK merged, and with ribosomal genes removed "
+             f"({100 * rp['cohorts']['gbm']['svr_rp_removed']['frac_B_over_T']:.0f}% and "
+             f"{100 * rp['cohorts']['lgg']['svr_rp_removed']['frac_B_over_T']:.0f}%). Every variant keeps B above T "
+             f"in nearly all samples; dashed lines mark the share DNA methylation implies. (B) Where the B "
+             f"column's estimate goes when the column is removed, under SVR: "
+             f"{100 * bd['cohorts']['gbm']['b_removed_svr']['share_of_B_mass_to']['Tumor']:.0f}% (glioblastoma) and "
+             f"{100 * bd['cohorts']['lgg']['b_removed_svr']['share_of_B_mass_to']['Tumor']:.0f}% (lower-grade glioma) "
+             f"is re-absorbed by Tumor. Under NNLS it goes to T instead "
+             f"({100 * bd['cohorts']['gbm']['b_removed_nnls']['share_of_B_mass_to']['T_cell']:.0f}% and "
+             f"{100 * bd['cohorts']['lgg']['b_removed_nnls']['share_of_B_mass_to']['T_cell']:.0f}%): the "
+             f"re-absorption is estimator-specific. (C) Correlation of each lymphoid profile with the mean bulk "
+             f"profile (log expression). GBmap's B profile is the most bulk-like (r = "
+             f"{tl['cohorts']['gbm']['r_with_mean_bulk']['B_cell']['all_genes']:.2f} in glioblastoma); the "
+             f"independent atlas's B profile is anti-correlated. (D) B above T under GBmap (frozen signature), "
+             f"under an independent atlas (Abdelfattah et al. 2022, GSE182109; not a GBmap source study), and "
+             f"under that atlas with immunoglobulin genes removed, for NNLS and SVR in both cohorts. The "
+             f"independent atlas recovers T above B only for NNLS in lower-grade glioma; immunoglobulin removal "
+             f"changes resolution, not direction.")
+          if rp and bd and tl and ia else "")(J("ribosomal_test.json"), J("b_column_diagnostics.json"),
+                                              J("b_profile_tissue_likeness.json"), J("independent_atlas_test.json"))),
+
+        ("Figure_identifiability",
+         "Truth-free stability against agreement with DNA truth (exploratory).",
+         (lambda d, r: (
+             f"Post-registration (Extension E2; rules in `prespecified/identifiability_diagnostics.md`, fixed "
+             f"before computing). Each point is one compartment in one TCGA cohort (circles glioblastoma, "
+             f"squares lower-grade glioma). Filled points are the primary units, with truths from DNA: ABSOLUTE "
+             f"purity for tumour content (n = {d['units']['Tumor|gbm']['n_truth']} and "
+             f"{d['units']['Tumor|lgg']['n_truth']}), the methylation leukocyte fraction for all leukocytes "
+             f"(n = {d['units']['Leukocytes|gbm']['n_truth']} and {d['units']['Leukocytes|lgg']['n_truth']}), "
+             f"and EpiDISH for the lymphoid total (n = {d['units']['Lymphoid|gbm']['n_truth']} and "
+             f"{d['units']['Lymphoid|lgg']['n_truth']}). Open points are T, B and NK (secondary). (A) Stability "
+             f"of DESeq2 `unmix`'s per-sample estimates across seven settings of its loss scale (mean pairwise "
+             f"Spearman) against `unmix`'s agreement with the truth: rho = {d['H1_primary']['D1']['rho']:.2f} "
+             f"across the six primary units (exact one-sided p = {d['H1_primary']['D1']['p_one_sided']:.3f}). "
+             f"In glioblastoma, two settings coincide, because the pre-declared shift is 1. Over distinct fits "
+             f"the result is unchanged (rho = {r['check5_distinct_fits']['H1_D1']['rho']:.2f}). (B) Agreement "
+             f"among the registered methods against their median agreement with the truth: rho = "
+             f"{d['H1_primary']['D2']['rho']:.2f} (p = {d['H1_primary']['D2']['p_one_sided']:.3f}). Tumour and "
+             f"leukocyte content are stable and accurate; the lymphoid total is the least stable and does not "
+             f"track methylation. Stability is not sufficient: T cells in glioblastoma are stable and do "
+             f"not track methylation. EpiDISH's blood reference measures shares of the immune "
+             f"compartment; with each estimate's lymphoid share of its own leukocytes in place of its tissue "
+             f"fraction, the association strengthens (rho = "
+             f"{J('identifiability_denominators.json').get('H1_matched', {}).get('D1', {}).get('rho', float('nan')):.2f}) "
+             f"and the lymphoid estimate still does not track methylation.")
+          if d.get("H1_primary") and r.get("control_pass") else "")(
+             J("identifiability_diagnostics.json"), J("identifiability_robustness.json"))),
     ]
 
     L = ["# Figures\n",

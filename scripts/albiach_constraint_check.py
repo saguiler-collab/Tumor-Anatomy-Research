@@ -7,7 +7,7 @@ WHAT THIS IS
 Mossa Albiach et al. (2023) published a glioblastoma resection dissected into 27 samples
 across 12 anatomically labelled locations, with per-cell type annotations: 135,482 cells,
 15 cell types, and a `Zone` label of High fluorescence / Low fluorescence / Periphery /
-Necrotic core. The file has been sitting in `pipeline packages/ repos/SCDC/albiach data/`
+Necrotic core. The file has been sitting in `pipeline_packages / repos/SCDC/albiach_data/`
 unused.
 
 It is the only asset available to this project that gives **measured cell-type composition
@@ -52,8 +52,13 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from ivygap.anatomic import constraints as K                       # noqa: E402
+from ivygap import config                                           # noqa: E402
 
-H5AD = ROOT / "pipeline packages / repos/SCDC/albiach data/d45b4ce6-9725-4d79-b97a-70a44158bdbf.h5ad"
+#: Through config, not a literal: the tree was renamed ("pipeline packages " ->
+#: "pipeline_packages ", "albiach data" -> "albiach_data") and the literal that stood
+#: here silently stopped resolving (found 2026-10-01 by the data inventory).
+H5AD = (config.VENDORED_REPOS_DIR / "SCDC" / "albiach_data"
+        / "d45b4ce6-9725-4d79-b97a-70a44158bdbf.h5ad")
 
 #: Albiach's 15 labels onto this project's 8-type roster. Declared from the label names
 #: alone. Types with no roster counterpart are EXCLUDED rather than forced into the nearest

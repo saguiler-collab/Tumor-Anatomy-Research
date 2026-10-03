@@ -51,6 +51,7 @@ def _isolate(tmp_path, monkeypatch):
 
 def _build(path, **kw):
     from ivygap.data.reference import build_from_h5ad
+    kw.setdefault("matrix", "X")          # D24: the layer is always stated; the fixture's is `X`
     return build_from_h5ad(path, name="gbmap", max_cells_per_donor_type=5,
                            max_total_cells=10_000, export=False, **kw)
 

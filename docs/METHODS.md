@@ -556,6 +556,8 @@ anyone would guess. Measured 2026-09-19; it is a memory limit, not a timeout (15
 **The deviation:** `config.R_SOCKET_CLUSTER_CORES = 1`, passed to the R script as `n_cores` in
 the run's config JSON, removes the cluster.
 
+> ⚠ SUPERSEDED (OPEN_DEFECTS D22, 2026-09-30): the genuine-package re-measurements quoted below ran on GBmap's log `X` layer while the leaderboard ran on `raw/X`, so these figures are cross-matrix and are withdrawn. Current values: MANUSCRIPT §4.7 and `results/*_remeasured.json` (DWLS: no estimate for 73 of 122 samples on raw/X; Bisque and EPIC reproduce their leaderboard rows).
+
 **Confirmed result-neutral, 2026-09-19.** Run both ways on the anatomic cohort: three workers
 gave ACS **0.8154**, CI [0.7096, 0.9153]; `n.cores = 1` gave **0.8154**, CI [0.7096, 0.9153] —
 identical to four decimals including the bootstrap interval, at 2.0× the wall-clock. The cluster
@@ -837,6 +839,132 @@ Ivy GAP has 10 H&E-annotated tumours and that is all it has.
 
 This bounds what "improving ACS" can mean. A method can satisfy more constraints; the
 evidence base it is judged on cannot grow.
+
+## ACS and the anatomic AUC — two statistics, kept apart (exploratory, added 2026-10-01)
+
+ACS is not an AUC, and the paper never reports one as the other. `scripts/anatomic_auc.py`
+computes both on identical inputs (`results/anatomic_auc.json`, Table S8, Figure 9).
+
+| | ACS (registered) | anatomic AUC (exploratory) | C vs ABSOLUTE (truth) |
+|---|---|---|---|
+| unit | one composition per (tumour, structure) -- means | every within-tumour pair of samples | every pair of TCGA-GBM samples |
+| per constraint-tumour pair | 1 / 0 | probability, ties 0.5 (also reported with ties 0) | -- |
+| C4 (maximum), C7 (chain) | all comparisons must hold | mean of the comparisons -- partial credit | -- |
+| chance | ~0.37 (median permutation-null mean) | 0.50 | 0.50 |
+| null | within-tumour permutation of structure labels, 10,000 | the same permutations | -- |
+| measures | agreement with anatomic expectation | agreement with anatomic expectation | accuracy against DNA |
+
+**Pairs never cross tumours.** Pooling samples across tumours would let a between-tumour
+difference pass for anatomy; `tests/test_anatomic_auc.py` builds that Simpson's-paradox case and
+requires the within-tumour statistic to report the inversion that pooling hides.
+
+**Exact relationship.** With one sample per (tumour, structure) and no ties, the per-tumour AUC
+of each pairwise constraint (C1, C2, C3, C5, C6) equals ACS's 0/1 score; C4 and C7 differ by
+design. The fast matrix path used for the 10,000-draw null equals the readable definition to
+machine precision on real estimates and on relabellings (tested).
+
+**Controls.** ACS recomputed from the estimate files must reproduce the registered leaderboard
+for every method, and the registered agreement (rho = 0.081, n = 12) must reproduce through the
+registered `agreement.test_agreement`; the script aborts otherwise. The broken-input controls are
+scored like any method.
+
+**What it is for.** A robustness check of the registered null result: the graded AUC in ACS's
+place gives the same answer (no association with DNA-measured accuracy). It selects nothing.
+`C vs ABSOLUTE` is a re-expression of the registered Spearman rho on the AUC's scale (rank
+agreement 0.97), not a new yardstick.
+
+## Truth-free identifiability diagnostics, Extension E2 (exploratory, added 2026-10-02)
+
+Rules: `prespecified/identifiability_diagnostics.md` (with Addendum 1) and
+`prespecified/agreement_selection_test.md`, each written before computing. Rationale and results:
+`docs/EXTENSION_IDENTIFIABILITY.md`.
+
+**Loss-scale stability.**
+- Genuine DESeq2 `unmix` (DESeq2 1.52.0), run on the registered frozen arm under seven settings: the
+  pre-declared shift, forced shift 1/10/100/1000/10000 at power 1, and the pre-declared shift at power 2.
+- The forced settings go through `IVYGAP_UNMIX_SHIFT` / `IVYGAP_UNMIX_POWER` in `R/run_deseq2_unmix.R`.
+  With both unset, every reported `unmix` row is unchanged.
+- Stability is the mean pairwise Spearman correlation of per-sample estimates across settings.
+- **Deviation:** in GBM the pre-declared shift is 1, so two settings are the same fit. The registered
+  value keeps both; a distinct-fit version is reported beside it.
+
+**Method agreement.** The same statistic across the registered methods, with MuSiC and SCDC
+ENSEMBLE dropped as duplicates. A comparable-panel version (the immune arm's 8 methods) is reported
+beside it.
+
+**Truths.** Every truth comparison is rank-based (Spearman), never on level:
+- ABSOLUTE purity for tumour content;
+- the Thorsson et al. methylation leukocyte fraction for all leukocytes;
+- EpiDISH (blood reference, RPC) for the lymphoid units.
+
+EpiDISH's blood reference returns shares of the immune compartment. The design-corrected comparison
+therefore uses each estimate's share of its own leukocyte total (Addendum 1, check 7).
+
+**DECEPTICON's selection rule (this project's code, not the DECEPTICON package).**
+- Applied to this study's panel, not DECEPTICON's ten strategies and templates.
+- Per cell type: rank method pairs by Pearson correlation of per-sample estimates, keep the top two
+  pairs, and weight 0.25 per selection.
+- Rule 5, read as written ("excludes the deconvolution result" when correlated methods share zeros):
+  a method constant for a cell type is excluded for it.
+- No normalisation step: every method here returns proportions.
+
+## A second methylation truth: GIMiCC (exploratory, added 2026-10-03)
+
+Rules: `prespecified/gimicc_truth_confirmation.md` with Addenda 1-4, each written before the
+estimates it governs were opened. Code: `R/run_gimicc.R`, `scripts/gimicc_truth.py` (runs, controls,
+Q1), `scripts/gimicc_secondary.py` (Q2-Q4). Tests: `tests/test_gimicc_truth.py`.
+
+**Software.**
+- Genuine GIMiCC 0.99.1 [52]: the user's copy, byte-identical to github.com/SalasLab/GIMiCC @ 26cb8a15.
+- Library: ExperimentHub EH9483.
+- Reproduction control: the authors' example (EH9482, `tumor.type = "GBM"`, `h = 5`) reproduces the
+  vignette's printed table, 54 of 54 values within print precision.
+
+**What GIMiCC computes** (read from `R/GIMiCC_Deconvo.R`):
+- Layer 0: tumour purity, from InfiniumPurify on a tumour-type-specific library of 1,000 CpGs.
+- Layers 1 to 5: Houseman constrained projection, each on its own CpG library.
+  - Layer 1 separates the non-tumour fraction into neuronal, glial, endothelial/stromal and immune.
+  - Each later layer splits one parent: immune into myeloid and lymphoid; lymphoid into T, NK and
+    B; T into CD4 and CD8; then naive, memory and Treg subsets.
+- Each layer is renormalised and multiplied by its parent, so the outputs are percentages of the tissue.
+- **No layer from 1 down has a tumour column.** The Layer 3A library (T / NK / B) carries Myeloid,
+  Glial, Neuronal and Endothelial/Stromal columns that can absorb non-lymphoid DNA, but
+  tumour-specific methylation has no column of its own.
+- The paper names this layer "3B" and the code `Library_Layer3A`; the code is followed here.
+
+**What the authors validated** [52]:
+- Immune layers: artificial mixtures of blood immune cells (GSE182379), against methylCIBERSORT and
+  methylResolver.
+- In TCGA: purity against the consensus purity estimate, and total immune content against ESTIMATE.
+- Not validated: the T : B split inside tumour tissue. The authors state that this would need
+  mixtures that include tumour and neuronal DNA.
+- GIMiCC is therefore a second, glioma-oriented methylation instrument, not a validated gold
+  standard for tumour lymphocytes.
+
+**Inputs.**
+- TCGA-GBM (155) and TCGA-LGG (530) 450K betas from Xena (D07/D08), restricted to GIMiCC's 4,022
+  library CpGs.
+- A CpG missing in any sample is dropped (complete cases, as for EpiDISH): 406 (GBM) and 450 (LGG)
+  CpGs, 10-21% per layer, Layer 3A 46 of 266.
+- Nothing is imputed.
+
+**Deviations.**
+1. Probe coverage, as above. Twenty repeats dropping a further random 20% test whether it matters.
+2. TCGA-LGG is run as "AST" because 1p/19q status is not available locally. Layer 0 is the only
+   part the tumour type changes, and every type is run as a sensitivity.
+3. GIMiCC's handling of an undefined layer:
+   - Where every projection in a layer is under 1e-5, the renormalisation divides 0 by 0.
+   - The sample's row is returned as NaN if the lost mass rounds to at least 0.5% of the tissue.
+     Otherwise the NaN is silently set to 0.
+   - So level-4 T (CD4 + CD8) can be lost or zeroed while Layer 3A's T is defined.
+   - Level 3 (T straight from Layer 3A) is reported beside the registered level-4 quantity.
+   - NaN rows are excluded and counted, never zero-filled.
+
+**Controls.**
+- Tumour layer against ABSOLUTE, Spearman >= 0.40.
+- Immune + Microglia against the Thorsson leukocyte fraction, >= 0.40.
+- Shuffled CpG labels must break the tumour control (|rho| < 0.20).
+- Within-lymphoid shares must be identical under every tumour type.
 
 ## Uncertainty calibration — a measured limitation
 

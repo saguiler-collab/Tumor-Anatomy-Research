@@ -121,6 +121,8 @@ confirmatory run the fallbacks occurred in **two** stages, not one.
 the leaderboard's — same 657-gene space by hash, same 88/22 donor split by name, same samples in
 the same order, same normalisation:
 
+> ⚠ SUPERSEDED (OPEN_DEFECTS D22, 2026-09-30): the genuine-package re-measurements quoted below ran on GBmap's log `X` layer while the leaderboard ran on `raw/X`, so these figures are cross-matrix and are withdrawn. Current values: MANUSCRIPT §4.7 and `results/*_remeasured.json` (DWLS: no estimate for 73 of 122 samples on raw/X; Bisque and EPIC reproduce their leaderboard rows).
+
 | method | genuine R package | the reimplementation on the leaderboard | elapsed vs budget |
 |---|---|---|---|
 | `R:DWLS` | **0.7846** [0.657, 0.906] | 0.7385 | 2,474 s vs 2,400 s |

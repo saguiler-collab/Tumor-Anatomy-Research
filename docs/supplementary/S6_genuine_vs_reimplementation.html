@@ -1,11 +1,12 @@
-<p><b>Table S6. Two methods fell back to this project's reimplementation during the confirmatory runs and were re-measured as the genuine R packages on the same cohort and gene space. The reimplementations are biased in OPPOSITE directions, so neither 'close enough' nor 'reimplementations flatter their packages' holds.</b></p>
+<p><b>Table S6. Two methods fell back to this project's reimplementation during the confirmatory runs and were re-measured as the genuine R packages on the same cohort, gene space, donor split and atlas layer (raw/X). Earlier re-measurements ran on the log layer and are withdrawn (OPEN_DEFECTS D22). A package that failed, or estimated only part of the cohort, is shown as such rather than differenced.</b></p>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: left;">
       <th>Method</th>
       <th>Reimplementation (ACS)</th>
-      <th>Genuine R package (ACS)</th>
+      <th>Genuine R package (ACS, raw/X)</th>
       <th>Difference</th>
+      <th>Atlas layer</th>
       <th>Runtime (s)</th>
       <th>Pipeline budget (s)</th>
     </tr>
@@ -14,9 +15,10 @@
     <tr>
       <td>dwls</td>
       <td>0.7231</td>
-      <td>0.7846</td>
-      <td>+0.0615</td>
-      <td>2593</td>
+      <td>0.7000 on 49 of 122 samples</td>
+      <td>not comparable</td>
+      <td>raw/X</td>
+      <td>2099</td>
       <td>2400</td>
     </tr>
     <tr>
@@ -24,7 +26,8 @@
       <td>0.8000</td>
       <td>0.8154</td>
       <td>+0.0154</td>
-      <td>2045</td>
+      <td>raw/X</td>
+      <td>16523</td>
       <td>2400</td>
     </tr>
   </tbody>

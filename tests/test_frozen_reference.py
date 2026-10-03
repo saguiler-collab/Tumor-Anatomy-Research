@@ -217,7 +217,7 @@ def test_h5ad_is_read_without_densifying_the_whole_matrix(tmp_path, monkeypatch)
     path = _tiny_h5ad(tmp_path)
 
     ref, expr, meta = build_from_h5ad(
-        path, name="t", max_cells_per_donor_type=5, max_total_cells=200,
+        path, matrix="X", name="t", max_cells_per_donor_type=5, max_total_cells=200,
         restrict_to_genes=[f"G{i}" for i in range(80)], export=False)
 
     samp = _json.loads((tmp_path / "reference_sampling_t.json").read_text())
@@ -240,7 +240,7 @@ def test_subsample_is_donor_balanced_and_seeded(tmp_path, monkeypatch):
     path = _tiny_h5ad(tmp_path)
 
     cap = 4
-    _, _, meta = build_from_h5ad(path, name="t", max_cells_per_donor_type=cap,
+    _, _, meta = build_from_h5ad(path, matrix="X", name="t", max_cells_per_donor_type=cap,
                                  max_total_cells=10_000, export=False)
     counts = meta.groupby(["donor", "cell_type"], observed=True).size()
     assert counts.max() <= cap, "the per-(donor, cell type) cap was not applied"
@@ -250,7 +250,7 @@ def test_subsample_is_donor_balanced_and_seeded(tmp_path, monkeypatch):
     assert samp["n_donors_kept"] > 1
 
     # deterministic: the same seed must select the same cells
-    _, _, meta2 = build_from_h5ad(path, name="t2", max_cells_per_donor_type=cap,
+    _, _, meta2 = build_from_h5ad(path, matrix="X", name="t2", max_cells_per_donor_type=cap,
                                   max_total_cells=10_000, export=False)
     assert list(meta.index) == list(meta2.index)
 
@@ -267,7 +267,7 @@ def test_atlas_reference_carries_cross_donor_variance(tmp_path, monkeypatch):
     _isolated_ref_dir(tmp_path, monkeypatch)
     path = _tiny_h5ad(tmp_path)
 
-    ref, _, _ = build_from_h5ad(path, name="t", max_cells_per_donor_type=6,
+    ref, _, _ = build_from_h5ad(path, matrix="X", name="t", max_cells_per_donor_type=6,
                                 max_total_cells=10_000, export=False)
     assert ref.has_cross_donor_variance, "MuSiC would still be degenerate"
     assert ref.donor_profiles and len(ref.donor_profiles) >= 3, \
@@ -286,7 +286,7 @@ def test_restrict_to_genes_rejects_a_disjoint_gene_space(tmp_path, monkeypatch):
     path = _tiny_h5ad(tmp_path)
 
     with pytest.raises(ValueError, match="shares no gene"):
-        build_from_h5ad(path, name="t", restrict_to_genes=["ENSG00000000001"],
+        build_from_h5ad(path, matrix="X", name="t", restrict_to_genes=["ENSG00000000001"],
                         export=False)
 
 
@@ -338,7 +338,7 @@ def test_atlas_reference_puts_marker_genes_in_the_right_column(tmp_path, monkeyp
     path = tmp_path / "planted.h5ad"
     anndata.AnnData(X=X, obs=obs, var=var).write_h5ad(path)
 
-    ref, _, meta = build_from_h5ad(path, name="planted", max_cells_per_donor_type=6,
+    ref, _, meta = build_from_h5ad(path, matrix="X", name="planted", max_cells_per_donor_type=6,
                                    max_total_cells=10_000, export=False)
 
     wrong = []
@@ -382,7 +382,7 @@ def test_atlas_reference_cells_keep_their_own_metadata(tmp_path, monkeypatch):
     anndata.AnnData(X=sparse.csr_matrix(np.vstack(mat)), obs=obs,
                     var=pd.DataFrame(index=genes)).write_h5ad(path)
 
-    _, expr, meta = build_from_h5ad(path, name="paired", max_cells_per_donor_type=50,
+    _, expr, meta = build_from_h5ad(path, matrix="X", name="paired", max_cells_per_donor_type=50,
                                     max_total_cells=10_000, export=False)
 
     endo = meta.index[meta["cell_type"] == "Endothelial"]
@@ -427,7 +427,7 @@ def test_cell_size_is_measured_before_normalisation(tmp_path, monkeypatch):
                     obs=pd.DataFrame(rows, index=[f"c{i}" for i in range(len(rows))]),
                     var=pd.DataFrame(index=genes)).write_h5ad(path)
 
-    ref, _, _ = build_from_h5ad(path, name="sizes", max_cells_per_donor_type=50,
+    ref, _, _ = build_from_h5ad(path, matrix="X", name="sizes", max_cells_per_donor_type=50,
                                 max_total_cells=10_000, export=False)
 
     sizes = ref.cell_size.dropna()
@@ -436,3 +436,14 @@ def test_cell_size_is_measured_before_normalisation(tmp_path, monkeypatch):
         f"a no-op and RNA proportions are being reported as cell proportions")
     assert sizes["Endothelial"] > sizes["Tumor"] * 5, (
         "the planted 20x library-size difference did not survive into the factors")
+
+
+def test_build_from_h5ad_refuses_to_guess_the_layer(tmp_path):
+    """D24 negative control: a caller that does not choose a layer gets an error, not `X`.
+
+    The silent default produced D16, D22 and four legacy scripts reading GBmap's log1p layer
+    as though it were counts. Failing loudly is the only control that cannot be forgotten.
+    """
+    from ivygap.data.reference import build_from_h5ad
+    with pytest.raises(TypeError, match="requires matrix="):
+        build_from_h5ad(tmp_path / "never_opened.h5ad", export=False)

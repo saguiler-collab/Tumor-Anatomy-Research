@@ -108,6 +108,8 @@ project wiki (<https://osf.io/vuh64>). 10 minutes, browser only.
 
 Both genuine packages measured on inputs verified equivalent to the leaderboard's:
 
+> ⚠ SUPERSEDED (OPEN_DEFECTS D22, 2026-09-30): the genuine-package re-measurements quoted below ran on GBmap's log `X` layer while the leaderboard ran on `raw/X`, so these figures are cross-matrix and are withdrawn. Current values: MANUSCRIPT §4.7 and `results/*_remeasured.json` (DWLS: no estimate for 73 of 122 samples on raw/X; Bisque and EPIC reproduce their leaderboard rows).
+
 | method | genuine R package | reimplementation (leaderboard row) | delta | elapsed | budget |
 |---|---|---|---|---|---|
 | `R:DWLS` | **0.7846** [0.657, 0.906] | 0.7385 | **+0.046** | 2,474 s | 2,400 s |

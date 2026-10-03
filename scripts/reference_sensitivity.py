@@ -197,8 +197,11 @@ def main() -> int:
 
     if args.baseline == "gbmap_atlas":
         print("\nloading the atlas for arm A (restricted to the bulk's genes) ...")
+        # D24: stated layer. Artefacts written before 2026-10-01 by this default path were
+        # built on `X` (log1p); D14/D16 reconciled them through the gbmap_linear arms.
         gb_full, _, _ = build_from_h5ad(config.REFERENCE_DIR / "gbmap_core.h5ad",
-                                        restrict_to_genes=expr.index, export=False)
+                                        restrict_to_genes=expr.index, matrix="raw/X",
+                                        export=False)
         gb = to_sub_roster(gb_full, SUB_ROSTER)
     else:
         print(f"\narm A from the stored reference {args.baseline} ...")

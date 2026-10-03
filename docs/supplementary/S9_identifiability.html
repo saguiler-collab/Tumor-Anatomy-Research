@@ -1,0 +1,273 @@
+<p><b>Table S9. Extension E2 (post-registration, exploratory): truth-free stability against agreement with DNA truth, per compartment and cohort. Stability is the mean pairwise Spearman correlation of DESeq2 unmix's per-sample estimates across seven settings of its loss scale; agreement is the same across the registered methods (MuSiC and SCDC ENSEMBLE dropped as duplicates). EpiDISH with its blood reference measures shares of the immune compartment, so the last two numeric columns recompute the lymphoid units as shares of each estimate's own leukocyte total (Addendum 1, check 7). Rules: prespecified/identifiability_diagnostics.md.</b></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: left;">
+      <th>Compartment</th>
+      <th>Cohort</th>
+      <th>Tier</th>
+      <th>DNA truth</th>
+      <th>Stability (unmix, 7 settings)</th>
+      <th>Agreement (registered methods)</th>
+      <th>unmix vs truth</th>
+      <th>Median method vs truth</th>
+      <th>Samples with truth</th>
+      <th>Stability, share of leukocytes</th>
+      <th>unmix vs truth, share of leukocytes</th>
+      <th>Exact zeros in unmix (mean over settings)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Tumor</td>
+      <td>GBM</td>
+      <td>primary</td>
+      <td>ABSOLUTE purity</td>
+      <td>0.960</td>
+      <td>0.466</td>
+      <td>+0.780</td>
+      <td>+0.413</td>
+      <td>154</td>
+      <td>--</td>
+      <td>--</td>
+      <td>0%</td>
+    </tr>
+    <tr>
+      <td>Leukocytes</td>
+      <td>GBM</td>
+      <td>primary</td>
+      <td>methylation leukocyte fraction</td>
+      <td>0.954</td>
+      <td>0.561</td>
+      <td>+0.780</td>
+      <td>+0.493</td>
+      <td>129</td>
+      <td>--</td>
+      <td>--</td>
+      <td>0%</td>
+    </tr>
+    <tr>
+      <td>Myeloid</td>
+      <td>GBM</td>
+      <td>none</td>
+      <td>none in TCGA</td>
+      <td>0.985</td>
+      <td>0.576</td>
+      <td>--</td>
+      <td>--</td>
+      <td>--</td>
+      <td>--</td>
+      <td>--</td>
+      <td>0%</td>
+    </tr>
+    <tr>
+      <td>Lymphoid</td>
+      <td>GBM</td>
+      <td>primary</td>
+      <td>EpiDISH CD4T+CD8T+NK+B</td>
+      <td>0.713</td>
+      <td>0.277</td>
+      <td>-0.200</td>
+      <td>-0.141</td>
+      <td>56</td>
+      <td>0.552</td>
+      <td>-0.103</td>
+      <td>13%</td>
+    </tr>
+    <tr>
+      <td>T_cell</td>
+      <td>GBM</td>
+      <td>secondary</td>
+      <td>EpiDISH CD4T+CD8T</td>
+      <td>0.893</td>
+      <td>0.108</td>
+      <td>-0.119</td>
+      <td>-0.083</td>
+      <td>56</td>
+      <td>0.804</td>
+      <td>-0.006</td>
+      <td>36%</td>
+    </tr>
+    <tr>
+      <td>B_cell</td>
+      <td>GBM</td>
+      <td>secondary</td>
+      <td>EpiDISH B</td>
+      <td>0.520</td>
+      <td>0.258</td>
+      <td>+0.090</td>
+      <td>-0.126</td>
+      <td>56</td>
+      <td>0.446</td>
+      <td>+0.104</td>
+      <td>29%</td>
+    </tr>
+    <tr>
+      <td>NK_cell</td>
+      <td>GBM</td>
+      <td>secondary</td>
+      <td>EpiDISH NK</td>
+      <td>0.703</td>
+      <td>0.089</td>
+      <td>-0.120</td>
+      <td>+0.004</td>
+      <td>56</td>
+      <td>0.681</td>
+      <td>-0.108</td>
+      <td>73%</td>
+    </tr>
+    <tr>
+      <td>Endothelial</td>
+      <td>GBM</td>
+      <td>none</td>
+      <td>none in TCGA</td>
+      <td>0.947</td>
+      <td>0.503</td>
+      <td>--</td>
+      <td>--</td>
+      <td>--</td>
+      <td>--</td>
+      <td>--</td>
+      <td>0%</td>
+    </tr>
+    <tr>
+      <td>Oligodendrocyte</td>
+      <td>GBM</td>
+      <td>none</td>
+      <td>none in TCGA</td>
+      <td>0.970</td>
+      <td>0.672</td>
+      <td>--</td>
+      <td>--</td>
+      <td>--</td>
+      <td>--</td>
+      <td>--</td>
+      <td>21%</td>
+    </tr>
+    <tr>
+      <td>Tumor</td>
+      <td>LGG</td>
+      <td>primary</td>
+      <td>ABSOLUTE purity</td>
+      <td>0.946</td>
+      <td>0.380</td>
+      <td>+0.592</td>
+      <td>+0.183</td>
+      <td>510</td>
+      <td>--</td>
+      <td>--</td>
+      <td>0%</td>
+    </tr>
+    <tr>
+      <td>Leukocytes</td>
+      <td>LGG</td>
+      <td>primary</td>
+      <td>methylation leukocyte fraction</td>
+      <td>0.927</td>
+      <td>0.354</td>
+      <td>+0.603</td>
+      <td>+0.079</td>
+      <td>510</td>
+      <td>--</td>
+      <td>--</td>
+      <td>0%</td>
+    </tr>
+    <tr>
+      <td>Myeloid</td>
+      <td>LGG</td>
+      <td>none</td>
+      <td>none in TCGA</td>
+      <td>0.990</td>
+      <td>0.466</td>
+      <td>--</td>
+      <td>--</td>
+      <td>--</td>
+      <td>--</td>
+      <td>--</td>
+      <td>0%</td>
+    </tr>
+    <tr>
+      <td>Lymphoid</td>
+      <td>LGG</td>
+      <td>primary</td>
+      <td>EpiDISH CD4T+CD8T+NK+B</td>
+      <td>0.494</td>
+      <td>0.184</td>
+      <td>-0.183</td>
+      <td>+0.188</td>
+      <td>510</td>
+      <td>0.341</td>
+      <td>-0.123</td>
+      <td>28%</td>
+    </tr>
+    <tr>
+      <td>T_cell</td>
+      <td>LGG</td>
+      <td>secondary</td>
+      <td>EpiDISH CD4T+CD8T</td>
+      <td>0.749</td>
+      <td>0.037</td>
+      <td>-0.273</td>
+      <td>-0.027</td>
+      <td>510</td>
+      <td>0.725</td>
+      <td>-0.241</td>
+      <td>76%</td>
+    </tr>
+    <tr>
+      <td>B_cell</td>
+      <td>LGG</td>
+      <td>secondary</td>
+      <td>EpiDISH B</td>
+      <td>0.468</td>
+      <td>0.199</td>
+      <td>-0.001</td>
+      <td>+0.084</td>
+      <td>510</td>
+      <td>0.376</td>
+      <td>+0.005</td>
+      <td>33%</td>
+    </tr>
+    <tr>
+      <td>NK_cell</td>
+      <td>LGG</td>
+      <td>secondary</td>
+      <td>EpiDISH NK</td>
+      <td>0.742</td>
+      <td>0.059</td>
+      <td>-0.070</td>
+      <td>-0.031</td>
+      <td>510</td>
+      <td>0.728</td>
+      <td>-0.070</td>
+      <td>91%</td>
+    </tr>
+    <tr>
+      <td>Endothelial</td>
+      <td>LGG</td>
+      <td>none</td>
+      <td>none in TCGA</td>
+      <td>0.936</td>
+      <td>0.484</td>
+      <td>--</td>
+      <td>--</td>
+      <td>--</td>
+      <td>--</td>
+      <td>--</td>
+      <td>0%</td>
+    </tr>
+    <tr>
+      <td>Oligodendrocyte</td>
+      <td>LGG</td>
+      <td>none</td>
+      <td>none in TCGA</td>
+      <td>0.983</td>
+      <td>0.780</td>
+      <td>--</td>
+      <td>--</td>
+      <td>--</td>
+      <td>--</td>
+      <td>--</td>
+      <td>7%</td>
+    </tr>
+  </tbody>
+</table>

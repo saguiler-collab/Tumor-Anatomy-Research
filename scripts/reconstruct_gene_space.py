@@ -95,8 +95,11 @@ def main() -> int:
     # gene set on demand by the R bridge, and writing it here both wastes ~49 minutes and
     # overwrites the export a later re-measurement would reuse.
     print("loading the atlas, restricted to the bulk's genes (the slow step) ...")
+    # D24: stated layer, and deliberately "X". This script reproduces the gene space of the
+    # ARCHIVED log-era run (D10), which was built on GBmap's log1p `X`; reconstructing it on
+    # raw/X would recover a different list and prove nothing about the archive.
     _, sc_expression, sc_meta = build_from_h5ad(
-        config.REFERENCE_DIR / "gbmap_core.h5ad",
+        config.REFERENCE_DIR / "gbmap_core.h5ad", matrix="X",
         restrict_to_genes=expr.index, export=False)
     print(f"  {sc_expression.shape[1]:,} cells x {sc_expression.shape[0]:,} genes "
           f"(bulk carries {len(expr.index):,})")

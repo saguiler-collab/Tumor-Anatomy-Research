@@ -1,0 +1,151 @@
+<p><b>Table S8. ACS and a per-method AUC on identical inputs, kept distinct. ACS scores each constraint-tumour pair 1 or 0 on per-structure means (chance about 0.37); the anatomic AUC is the within-tumour Mann-Whitney probability over the same pairs and samples (chance 0.50; partial credit on the conjunction constraints C4 and C7). Both measure agreement with anatomy. Only the last column measures accuracy: Harrell's concordance of each method's TCGA-GBM tumour fraction with ABSOLUTE DNA purity.</b></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: left;">
+      <th>Method</th>
+      <th>ACS (registered)</th>
+      <th>AUC, anatomic (exploratory)</th>
+      <th>AUC permutation p</th>
+      <th>Tied pairs</th>
+      <th>C vs ABSOLUTE purity (truth)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>music</td>
+      <td>0.9692</td>
+      <td>0.9231</td>
+      <td>&lt; 1e-4</td>
+      <td>0.005</td>
+      <td>0.654 (= nnls: degenerate on the frozen signature)</td>
+    </tr>
+    <tr>
+      <td>svr</td>
+      <td>0.9538</td>
+      <td>0.8902</td>
+      <td>&lt; 1e-4</td>
+      <td>0.000</td>
+      <td>0.779</td>
+    </tr>
+    <tr>
+      <td>scdc</td>
+      <td>0.9385</td>
+      <td>0.9034</td>
+      <td>&lt; 1e-4</td>
+      <td>0.000</td>
+      <td>0.600</td>
+    </tr>
+    <tr>
+      <td>scdc_ensemble [degenerate: = scdc]</td>
+      <td>0.9385</td>
+      <td>0.9034</td>
+      <td>&lt; 1e-4</td>
+      <td>0.000</td>
+      <td>0.600 (= scdc: degenerate on the frozen signature)</td>
+    </tr>
+    <tr>
+      <td>cibersortx</td>
+      <td>0.8615</td>
+      <td>0.8637</td>
+      <td>&lt; 1e-4</td>
+      <td>0.000</td>
+      <td>0.780</td>
+    </tr>
+    <tr>
+      <td>cibersortx_smode</td>
+      <td>0.8615</td>
+      <td>0.8504</td>
+      <td>&lt; 1e-4</td>
+      <td>0.000</td>
+      <td>--</td>
+    </tr>
+    <tr>
+      <td>elastic_net</td>
+      <td>0.8615</td>
+      <td>0.8519</td>
+      <td>&lt; 1e-4</td>
+      <td>0.011</td>
+      <td>0.643</td>
+    </tr>
+    <tr>
+      <td>nnls</td>
+      <td>0.8462</td>
+      <td>0.8402</td>
+      <td>&lt; 1e-4</td>
+      <td>0.002</td>
+      <td>0.654</td>
+    </tr>
+    <tr>
+      <td>bayesprism</td>
+      <td>0.8000</td>
+      <td>0.8209</td>
+      <td>&lt; 1e-4</td>
+      <td>0.005</td>
+      <td>0.622</td>
+    </tr>
+    <tr>
+      <td>epic</td>
+      <td>0.7692</td>
+      <td>0.7590</td>
+      <td>&lt; 1e-4</td>
+      <td>0.000</td>
+      <td>0.634</td>
+    </tr>
+    <tr>
+      <td>bayesian</td>
+      <td>0.7538</td>
+      <td>0.7872</td>
+      <td>&lt; 1e-4</td>
+      <td>0.000</td>
+      <td>0.777</td>
+    </tr>
+    <tr>
+      <td>bayesian_hierarchical</td>
+      <td>0.7385</td>
+      <td>0.7872</td>
+      <td>&lt; 1e-4</td>
+      <td>0.000</td>
+      <td>--</td>
+    </tr>
+    <tr>
+      <td>dwls</td>
+      <td>0.7231</td>
+      <td>0.7288</td>
+      <td>&lt; 1e-4</td>
+      <td>0.006</td>
+      <td>0.759</td>
+    </tr>
+    <tr>
+      <td>bisque [degraded mode]</td>
+      <td>0.7077</td>
+      <td>0.7846</td>
+      <td>&lt; 1e-4</td>
+      <td>0.018</td>
+      <td>0.508 (degraded mode on the frozen signature)</td>
+    </tr>
+    <tr>
+      <td>quantiseq (partial coverage)</td>
+      <td>0.6000</td>
+      <td>0.5963</td>
+      <td>0.0955</td>
+      <td>0.000</td>
+      <td>--</td>
+    </tr>
+    <tr>
+      <td>control_random (control)</td>
+      <td>0.4000</td>
+      <td>0.5331</td>
+      <td>0.2012</td>
+      <td>0.000</td>
+      <td>--</td>
+    </tr>
+    <tr>
+      <td>control_shuffled_signature (control)</td>
+      <td>0.3692</td>
+      <td>0.4134</td>
+      <td>0.9859</td>
+      <td>0.041</td>
+      <td>--</td>
+    </tr>
+  </tbody>
+</table>

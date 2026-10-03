@@ -12,6 +12,10 @@ and is **read-only from here**. It supplies the frozen signature matrix vendored
 
 ## Sources of truth
 
+0. **`docs/STS_WORKLOG.md` -- read FIRST every session.** The running log of the STS work:
+   machine state, standing directives, every finding, every file changed, what is next.
+   Update it after every major result.
+
 1. `Anatomy_Test.md` — the protocol.
 2. `ivygap/anatomic/constraints.py` — the pre-registered constraint file. Hashed.
 3. `docs/DATA_SOURCES.md` — what the archive actually contains, verified against the
@@ -24,6 +28,7 @@ and is **read-only from here**. It supplies the frozen signature matrix vendored
 
 Breaking one invalidates results rather than merely making them untidy.
 
+- **Anything external that is necessary, let the user know** Use actual published methods and data, implement them efficiently to produce results.
 - **Never use an outcome to select anything.** Not the method, not a hyperparameter, not
   a gene set. `run_survival.assert_selection_frozen` aborts if the recorded criterion
   mentions an outcome.

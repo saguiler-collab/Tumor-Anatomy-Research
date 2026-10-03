@@ -60,7 +60,7 @@ type, and every gene queried is reported whether or not it agrees. There is no
 "representative marker" selection step and no dropping of inconvenient genes.
 
     python scripts/fetch_ivygap_ish.py --list-markers
-    python scripts/fetch_ivygap_ish.py --out results/ish_constraint_check.json
+    python scripts/fetch_ivygap_ish.py   # superseded; writes results_superseded/ only
 """
 from __future__ import annotations
 
@@ -185,7 +185,10 @@ def check_ordering(values: dict[str, float], higher: str, lower: str):
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--out", default="results/ish_constraint_check.json")
+    # Was "results/ish_constraint_check.json" -- the CURRENT artefact's path, written by
+    # scripts/ish_constraint_check.py. Running this superseded script with its defaults would have
+    # silently replaced the live result with the retired method's (found 2026-10-01).
+    ap.add_argument("--out", default="results_superseded/fetch_ivygap_ish_api.json")
     ap.add_argument("--list-markers", action="store_true")
     ap.add_argument("--max-experiments", type=int, default=6,
                     help="ISH experiments per gene to average over")

@@ -1,5 +1,7 @@
 # Sources
 
+> **Superseded 2026-10-01 as the list of data and references.** Data: `docs/DATA_INVENTORY.md` (measured, generated, 30 datasets with accessions, hashes and re-checks against the public servers). References: `docs/REFERENCES.md` (44 entries, all resolved against Crossref or a PDF). This file is kept for its narrative; it predates the ABSOLUTE yardstick being used (it still calls it outstanding) and the GBmap citation correction (D25).
+
 Every reference this project actually depends on. Each DOI below was resolved against
 Crossref on 2026-09-10 and the returned author, year, journal and title checked against
 the entry — one error was found and corrected that way (an earlier note cited

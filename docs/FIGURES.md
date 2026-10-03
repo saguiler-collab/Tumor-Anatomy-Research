@@ -69,3 +69,39 @@
 
 <sub>`docs/figures/Figure_tumour_recovery.png` · `docs/figures/Figure_tumour_recovery.pdf`</sub>
 
+
+## Figure 8. Bisque's cohort-mean composition is its single-cell reference's composition.
+
+![Figure 8](figures/Figure_bisque_anchoring.png)
+
+**Figure 8.** *Bisque's cohort-mean composition is its single-cell reference's composition.* (A) Genuine BisqueRNA run without overlapping subjects -- the only mode a TCGA cohort permits -- on synthetic data whose true cohort mean is set far from the reference's. The estimated cohort mean lies 0 (L1) from the reference's donor-mean composition and 1.0915 from the truth, while samples are still ranked correctly (per-sample Spearman 0.88-0.97); a matched control in which truth equals the reference is recovered. This is the package's declared assumption (Jew et al. 2020, Methods). (B) For every method, the L1 distance of its TCGA cohort-mean composition, over all eight cell types, from the same reference's donor-mean composition (raw/X reference; glioblastoma n = 154, lower-grade glioma n = 510). Bisque lies 0.0874 and 0.0807 from it; every other method lies 0.68 or more.
+
+<sub>`docs/figures/Figure_bisque_anchoring.png` · `docs/figures/Figure_bisque_anchoring.pdf`</sub>
+
+
+## Figure 9. ACS and an AUC measure the same thing on different scales, and neither tracks accuracy.
+
+![Figure 9](figures/Figure_acs_vs_auc.png)
+
+**Figure 9.** *ACS and an AUC measure the same thing on different scales, and neither tracks accuracy.* (A) The registered Anatomic Concordance Score (ACS: each constraint-tumour pair scores 1 or 0 on per-structure means) against its graded counterpart, the within-tumour Mann-Whitney AUC over the same pairs, samples and permutation null (exploratory). They rank the 14 comparable methods almost identically (Spearman ρ = 0.94) but sit on different scales: dashed lines mark each statistic's chance level (median permutation-null mean), and the AUC gives partial credit on the two conjunction constraints (C4, C7) where ACS gives none. Crosses are the two broken-input controls (AUC permutation p = 0.20, 0.99). (B) The AUC against accuracy -- Harrell's concordance of each method's TCGA-GBM tumour fraction with ABSOLUTE DNA purity (n = 154 samples). Substituted for ACS in the registered agreement test it gives ρ = -0.06 (p = 0.85, n = 12 methods), against ρ = +0.081 for the registered ACS: the null result is not an artefact of thresholding. Identical points are labelled together, and † marks a method that is degenerate on the frozen TCGA signature (MuSiC without cross-donor variance is NNLS; Bisque runs its no-overlap mode; SCDC ENSEMBLE with one reference is SCDC), so its concordance there is not its own.
+
+<sub>`docs/figures/Figure_acs_vs_auc.png` · `docs/figures/Figure_acs_vs_auc.pdf`</sub>
+
+
+## Figure 10. Reference-side tests of the lymphoid inversion: none removes it.
+
+![Figure 10](figures/Figure_lymphoid_mechanisms.png)
+
+**Figure 10.** *Reference-side tests of the lymphoid inversion: none removes it.* TCGA cohorts. (A) Share of samples with B above T under SVR for each reference variant -- as registered (glioblastoma 90%, lower-grade glioma 96%), with the NK column removed, with T and NK merged, and with ribosomal genes removed (100% and 100%). Every variant keeps B above T in nearly all samples; dashed lines mark the share DNA methylation implies. (B) Where the B column's estimate goes when the column is removed, under SVR: 92% (glioblastoma) and 99% (lower-grade glioma) is re-absorbed by Tumor. Under NNLS it goes to T instead (182% and 109%): the re-absorption is estimator-specific. (C) Correlation of each lymphoid profile with the mean bulk profile (log expression). GBmap's B profile is the most bulk-like (r = 0.34 in glioblastoma); the independent atlas's B profile is anti-correlated. (D) B above T under GBmap (frozen signature), under an independent atlas (Abdelfattah et al. 2022, GSE182109; not a GBmap source study), and under that atlas with immunoglobulin genes removed, for NNLS and SVR in both cohorts. The independent atlas recovers T above B only for NNLS in lower-grade glioma; immunoglobulin removal changes resolution, not direction.
+
+<sub>`docs/figures/Figure_lymphoid_mechanisms.png` · `docs/figures/Figure_lymphoid_mechanisms.pdf`</sub>
+
+
+## Figure 11. Truth-free stability against agreement with DNA truth (exploratory).
+
+![Figure 11](figures/Figure_identifiability.png)
+
+**Figure 11.** *Truth-free stability against agreement with DNA truth (exploratory).* Post-registration (Extension E2; rules in `prespecified/identifiability_diagnostics.md`, fixed before computing). Each point is one compartment in one TCGA cohort (circles glioblastoma, squares lower-grade glioma). Filled points are the primary units, with truths from DNA: ABSOLUTE purity for tumour content (n = 154 and 510), the methylation leukocyte fraction for all leukocytes (n = 129 and 510), and EpiDISH for the lymphoid total (n = 56 and 510). Open points are T, B and NK (secondary). (A) Stability of DESeq2 `unmix`'s per-sample estimates across seven settings of its loss scale (mean pairwise Spearman) against `unmix`'s agreement with the truth: rho = 0.89 across the six primary units (exact one-sided p = 0.017). In glioblastoma, two settings coincide, because the pre-declared shift is 1. Over distinct fits the result is unchanged (rho = 0.89). (B) Agreement among the registered methods against their median agreement with the truth: rho = 0.66 (p = 0.087). Tumour and leukocyte content are stable and accurate; the lymphoid total is the least stable and does not track methylation. Stability is not sufficient: T cells in glioblastoma are stable and do not track methylation. EpiDISH's blood reference measures shares of the immune compartment; with each estimate's lymphoid share of its own leukocytes in place of its tissue fraction, the association strengthens (rho = 0.94) and the lymphoid estimate still does not track methylation.
+
+<sub>`docs/figures/Figure_identifiability.png` · `docs/figures/Figure_identifiability.pdf`</sub>
+
