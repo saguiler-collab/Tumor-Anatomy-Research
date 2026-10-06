@@ -1,154 +1,161 @@
 {
  "crossref": {
   "10.1016/j.ccell.2022.05.009": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Ravi",
    "title": "Spatially resolved multi-omics deciphers bidirectional tumor-host interdependence in glioblastoma",
    "venue": "Cancer Cell",
    "year": 2022
   },
   "10.1016/j.cell.2013.09.034": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Brennan",
    "title": "The Somatic Genomic Landscape of Glioblastoma",
    "venue": "Cell",
    "year": 2013
   },
   "10.1016/j.cell.2019.06.024": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Neftel",
    "title": "An Integrative Model of Cellular States, Plasticity, and Genetics for Glioblastoma",
    "venue": "Cell",
    "year": 2019
   },
+  "10.1016/j.cell.2020.05.007": {
+   "checked": "2026-10-06",
+   "first_author": "Klemm",
+   "title": "Interrogation of the Microenvironmental Landscape in Brain Tumors Reveals Disease-Specific Alterations of Immune Cells",
+   "venue": "Cell",
+   "year": 2020
+  },
   "10.1016/j.celrep.2017.10.030": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Darmanis",
    "title": "Single-Cell RNA-Seq Analysis of Infiltrating Neoplastic Cells at the Migrating Front of Human Glioblastoma",
    "venue": "Cell Reports",
    "year": 2017
   },
   "10.1016/j.cels.2018.03.002": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Ellrott",
    "title": "Scalable Open Science Approach for Mutation Calling of Tumor Exomes Using Multiple Genomic Pipelines",
    "venue": "Cell Systems",
    "year": 2018
   },
   "10.1016/j.immuni.2018.03.023": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Thorsson",
    "title": "The Immune Landscape of Cancer",
    "venue": "Immunity",
    "year": 2018
   },
   "10.1038/nature11405": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Hawrylycz",
    "title": "An anatomically comprehensive atlas of the adult human brain transcriptome",
    "venue": "Nature",
    "year": 2012
   },
   "10.1038/nbt.2203": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Carter",
    "title": "Absolute quantification of somatic DNA alterations in human cancer",
    "venue": "Nature Biotechnology",
    "year": 2012
   },
   "10.1038/s41467-022-28372-y": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Abdelfattah",
    "title": "Single-cell analysis of human glioma and immune cells identifies S100A4 as an immunotherapy target",
    "venue": "Nature Communications",
    "year": 2022
   },
   "10.1038/s41587-020-0546-8": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Goldman",
    "title": "Visualizing and interpreting cancer genomics data via the Xena platform",
    "venue": "Nature Biotechnology",
    "year": 2020
   },
   "10.1038/s43018-022-00356-3": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Chu",
    "title": "Cell type and gene expression deconvolution with BayesPrism enables Bayesian integrative analysis across bulk and single-cell RNA sequencing in oncology",
    "venue": "Nature Cancer",
    "year": 2022
   },
   "10.1056/NEJMp1607591": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Grossman",
    "title": "Toward a Shared Vision for Cancer Genomic Data",
    "venue": "New England Journal of Medicine",
    "year": 2016
   },
   "10.1093/nar/gkaa1087": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Frankish",
    "title": "GENCODE 2021",
    "venue": "Nucleic Acids Research",
    "year": 2020
   },
   "10.1093/neuonc/noad021": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Ajaib",
    "title": "GBMdeconvoluteR accurately infers proportions of neoplastic and immune cell populations from bulk glioblastoma transcriptomics data",
    "venue": "Neuro-Oncology",
    "year": 2023
   },
   "10.1093/neuonc/noaf113": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Ruiz-Moreno",
    "title": "Charting the single-cell and spatial landscape of IDH-wild-type glioblastoma with GBmap",
    "venue": "Neuro-Oncology",
    "year": 2025
   },
   "10.1101/2022.08.27.505439": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Ruiz-Moreno",
    "title": "Harmonized single-cell landscape, intercellular crosstalk and tumor architecture of glioblastoma",
    "venue": "",
    "year": 2022
   },
   "10.1101/2023.09.01.555882": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Mossi Albiach",
    "title": "Futile wound healing drives mesenchymal-like cell phenotypes in human glioblastoma",
    "venue": "",
    "year": 2023
   },
   "10.1126/science.aaf2666": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Puchalski",
    "title": "An anatomic transcriptional atlas of human glioblastoma",
    "venue": "Science",
    "year": 2018
   },
   "10.1126/science.add7046": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Siletti",
    "title": "Transcriptomic diversity of cell types across the adult human brain",
    "venue": "Science",
    "year": 2023
   },
   "10.1186/s12859-017-1511-5": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Teschendorff",
    "title": "A comparison of reference-based algorithms for correcting cell-type heterogeneity in Epigenome-Wide Association Studies",
    "venue": "BMC Bioinformatics",
    "year": 2017
   },
   "10.1186/s13059-016-1070-5": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Becht",
    "title": "Estimating the\u00a0population abundance of tissue-infiltrating immune and stromal cell populations using gene expression",
    "venue": "Genome Biology",
    "year": 2016
   },
   "10.1186/s40478-024-01874-0": {
-   "checked": "2026-10-03",
+   "checked": "2026-10-06",
    "first_author": "Pike",
    "title": "Glioma immune microenvironment composition calculator (GIMiCC): a method of estimating the proportions of eighteen cell types from DNA methylation microarray data",
    "venue": "Acta Neuropathologica Communications",
@@ -293,6 +300,9 @@
   "/Users/tatopro9130/Git-Hub-Repos/Tumor-Anatomy-Research/TCGA_LGG/mc3_gene_level_LGG_mc3_gene_level.txt|41744311|1789689841": "a254bcff3e15a42e63c2b39e4b1ab7288828011cf8282c799b02f2aa08cc38af",
   "/Users/tatopro9130/Git-Hub-Repos/Tumor-Anatomy-Research/TCGA_LGG/project/clinical.project-tcga-lgg.2026-09-17/clinical.tsv|4443151|1789686727": "a2e0028fd5af2fcce047698d5a28f227f17c234543dcd286df16f81d6b5da0e5",
   "/Users/tatopro9130/Git-Hub-Repos/Tumor-Anatomy-Research/TCGA_LGG/project/gdc_manifest.2026-09-17.191037.txt|5272248|1789686712": "6dab6669d4ec55a736e306ed8a0abd9811640dc9b6e22707379f449c50620323",
+  "/Users/tatopro9130/Git-Hub-Repos/Tumor-Anatomy-Research/celldecov_reference_papers/Klemm_et_al_2020/PIIS0092867420305699.pdf|21299796|1791317997": "df824704317a2f84ec9a49e9d8ebff648789cd59b95ce6800f93f58f612b6503",
+  "/Users/tatopro9130/Git-Hub-Repos/Tumor-Anatomy-Research/celldecov_reference_papers/Klemm_et_al_2020/mmc1.pdf|64425|1791318005": "85bc295ab23783005cbc80a39d87dc036ed5f8b5959011120b2ed1dc3f8d99ee",
+  "/Users/tatopro9130/Git-Hub-Repos/Tumor-Anatomy-Research/celldecov_reference_papers/Klemm_et_al_2020/mmc2.pdf|31256|1791317947": "d636cae87a4e0d6b6049c49d2a5801a011b7fd86d9c58e8eaeb45dccef226d72",
   "/Users/tatopro9130/Git-Hub-Repos/Tumor-Anatomy-Research/data/processed/gbm_methylation_epidish_probes.csv.gz|94341|1789747250": "442cab01e6bdedf17df6e9e23853f5286de1907560e9de2915b9c597dc8cd125",
   "/Users/tatopro9130/Git-Hub-Repos/Tumor-Anatomy-Research/data/processed/ivygap_bulk_expression.tsv|97270956|1789928087": "a8ad19045427d3652ad95d308ad886df6254ee373c48155088848257d351453f",
   "/Users/tatopro9130/Git-Hub-Repos/Tumor-Anatomy-Research/data/processed/ivygap_expected_counts.csv.gz|12341295|1789518844": "eb4cac2e10b6635877f29f1e99d1087e1e023b150d3660ccff0ad53a1b6cac1a",

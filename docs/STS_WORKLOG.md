@@ -800,6 +800,42 @@ failed. Every earlier run had exported 2 workers.
   - Its per-patient Table S2 is not open access through the API; it is an external item for the user.
   - References [52] GIMiCC and [53] Klemm were added and Crossref-verified; reference tests pass.
 
+### 2.28 Flow cytometry by IDH status: Klemm et al. 2020 inspected; LGG settled on direct measurement (2026-10-06)
+- **The user placed the paper and supplements** in `celldecov_reference_papers/Klemm_et_al_2020/`
+  (gitignored; files dated 16:18-16:19): `PIIS0092867420305699.pdf` (paper), `mmc1.pdf`, `mmc2.pdf`.
+  - **`mmc2` = Table S2** is the flow-cytometry gating definitions (T = CD3+ in four subsets; B =
+    CD19/CD20+ CD3-; NK = CD3- CD56+). It has **no per-patient values**, unlike what I had expected
+    on 2026-10-03.
+  - **`mmc1` = Table S1** is the cohort: 17 IDH-mutant gliomas, 40 IDH-wildtype, 37 BrM, 6 non-tumour.
+  - The values are in **Figure 1F** (cohort mean of each population, % of CD45+).
+- **Rule** `prespecified/klemm_t_vs_b.md`, born **16:26:00** from `stat`, after reading only the
+  tables and legends, before any panel was viewed.
+- **Method:**
+  - `pdftoppm` is absent, and nothing was installed. Page 3 was rendered with macOS `sips` only to
+    locate the panel.
+  - The values come from the **vector geometry**: `scripts/klemm_figure1f.py` interprets the page's
+    content stream, keys colours to the legend swatches, and calibrates on the panel's gridlines
+    (31.3125 pt per 25%).
+  - Paths come from `config.KLEMM_2020_PDF`.
+- **Controls PASSED:** melanoma-BrM CD8+ 33.011 against the printed 33.01; all-BrM lymphocytes
+  46.231 against the printed 46.23 (weighted 13/16/8); every bar sums to 100%.
+  - A wrong calibration fails these checks (`tests/test_klemm_t_vs_b.py`, 7 pass).
+- **Result (`results/klemm_t_vs_b.json`): SUPPORTS T > B.**
+  - **IDH-mutant (n 17):** T 7.28%, B 0.35%, NK 1.09% of CD45+; **21 : 1, T > NK > B**. Without DNT,
+    T is 4.87%.
+  - IDH-wildtype (n 40): 21.02 against 2.25 (9 : 1).
+  - Non-tumour (n 6): 5.33 against 0.39.
+- **Consequence, as pre-declared:**
+  - GIMiCC's LGG B > T is contradicted by direct measurement, and is reported as an instrument failure
+    in IDH-mutant tissue. GIMiCC's registered reading stays INCONCLUSIVE.
+  - The lymphoid headline holds in both cohorts on direct measurement.
+  - Updated: the manuscript (§4.4 paragraph, Reading, top caution, Appendix D), WHY_B_OVER_T §7n.4
+    and §7e, OPEN_DEFECTS D23, SUBMISSION_CHECKLIST.
+- **Verification:** full pytest **455 passed, 1 skipped** (7 min 31 s); both doc checkers CLEAN;
+  inventory 32 datasets, 0 problems. Not committed (the user did not ask this time).
+- **Noticed, not acted on:** 5 paper PDFs in `celldecov_reference_papers/` were committed before
+  that folder was gitignored (publisher PDFs in a public repository). That is for the user to decide.
+
 ## 3 · Corrections made this session (do not repeat)
 - **The §4.10 extension table printed B-above-T shares without denominators**, against Appendix D's
   own rule. On the raw/X arm most methods return no lymphocytes for most samples: FARDEEP's "100%"
@@ -960,8 +996,7 @@ docs, `ivygap/{data/reference.py, deconv/r_bridge.py, bench/run_benchmark.py}`, 
 - Manuscript rebuilt. Both doc checkers CLEAN; inventory 31 datasets, 0 problems; targeted tests pass.
 - Full pytest: see the end of this list.
 - **Next:**
-  1. If the user supplies Klemm 2020 Table S2 (`data/external/klemm2020/`), pre-register a T-vs-B count
-     by IDH status before opening it. This is the test that settles LGG.
+  1. ~~Klemm 2020~~ DONE 2026-10-06 (§2.28): LGG supported on direct measurement.
   2. E3 (gene-resampling stability) is still unregistered.
   3. The user decides on any abstract change (the LGG caveat; see MANUSCRIPT §4.4).
 - **COMMITTED AND PUSHED 2026-10-03 at the user's request ("commit and push and sync"):** `971aeb3`

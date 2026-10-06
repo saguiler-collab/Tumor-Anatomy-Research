@@ -19,8 +19,10 @@
 >   passing) and **disagrees in LGG** (B above T). Its registered reading is INCONCLUSIVE.
 > - Direct cell counts favour T above B: an independent atlas 18/18 patients (2 of them LGG); GBmap
 >   96/98 donors (all GBM); flow cytometry [53].
-> - **State the lymphoid headline for GBM. For LGG, state it only with the caveat that the truth is
->   contested.**
+> - ~~State the lymphoid headline for GBM; for LGG only with a caveat.~~ **Updated 2026-10-06:** flow
+>   cytometry of 17 IDH-mutant gliomas (Klemm [53], Figure 1F, measured and validated) puts T 21-fold
+>   above B. **State the headline in both cohorts.** Report that one of two methylation instruments
+>   (GIMiCC) disagrees in LGG.
 >
 > The registered statistics — ACS leaderboard, control margin, ρ = +0.6372 and +0.0810 — are
 > **unchanged**.

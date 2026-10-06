@@ -73,6 +73,10 @@ IVYGAP_RNA_SEQ_DETAILS_PATH = RAW_DIR / "ivygap" / "rna_seq_samples_details.csv"
 # Every file under these is catalogued, measured and traced to the code that reads it
 # in docs/DATA_INVENTORY.md (scripts/build_data_inventory.py).
 TCGA_DOWNLOADS_DIR = PROJECT_ROOT / "TCGA_LGG"        # Xena / GDC files, both cohorts' HM450
+#: Published papers and supplements the user placed locally (gitignored: publisher PDFs are not
+#: redistributed). Klemm et al. 2020 (Cell) supplies the flow-cytometry check of the lymphoid truth.
+REFERENCE_PAPERS_DIR = PROJECT_ROOT / "celldecov_reference_papers"
+KLEMM_2020_PDF = REFERENCE_PAPERS_DIR / "Klemm_et_al_2020" / "PIIS0092867420305699.pdf"
 TCGA_HM450 = {"gbm": TCGA_DOWNLOADS_DIR / "TCGA.GBM.sampleMap_HumanMethylation450",      # Xena (D07)
               "lgg": TCGA_DOWNLOADS_DIR / "TCGA.LGG.sampleMap_HumanMethylation450.gz"}  # Xena (D08)
 IMMUNE_FRACTION_DIR = PROJECT_ROOT / "Immune_Fraction"   # PanCanAtlas immune tables

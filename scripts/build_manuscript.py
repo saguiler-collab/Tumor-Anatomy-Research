@@ -152,7 +152,15 @@ def main() -> int:
           f"gimicc_truth_confirmation.json`). The headline must not be stated for {', '.join(_bad)} until this is "
           f"resolved.**\n")
     elif _gim_top.get("Q1_reading") == "INCONCLUSIVE":
-        A("*Truth check (GIMiCC, 2026-10-03): INCONCLUSIVE by its registered rule (§4.4). A glioma-specific "
+        _klt = (J("klemm_t_vs_b.json").get("IDH_mutant_glioma_n17") or {})
+        if _klt.get("reading") == "SUPPORTS T > B":
+            A(f"*Truth check (GIMiCC, 2026-10-03; flow cytometry, 2026-10-06): GIMiCC is INCONCLUSIVE by its "
+              f"registered rule -- it agrees with EpiDISH in GBM and puts B above T in LGG -- and direct flow "
+              f"cytometry of 17 IDH-mutant gliomas [53] puts T {_klt['T_to_B']:.0f}-fold above B, EpiDISH's direction "
+              f"(§4.4). State the lymphoid headline in both cohorts, and report that one of two methylation "
+              f"instruments disagrees in LGG.*\n")
+        else:
+            A("*Truth check (GIMiCC, 2026-10-03): INCONCLUSIVE by its registered rule (§4.4). A glioma-specific "
           "methylation method agrees with EpiDISH in GBM (T above B, every control passing) and disagrees in LGG "
           "(B above T). The GBM truth is corroborated three ways; the LGG truth is contested -- state the "
           "lymphoid headline for GBM, and for LGG only with that caveat.*\n")
@@ -719,7 +727,40 @@ def main() -> int:
                        f"lymphocytes." if g else "")(J("gbmap_t_vs_b.json")) + f" Flow cytometry "
           f"of brain tumours reports the same composition: \"the lymphocyte compartment was mostly composed of T "
           f"cells with fewer NK cells and B cells\" [53].\n")
-        if gim and gim.get("Q1_reading") != "CONFIRMED":
+        kl = J("klemm_t_vs_b.json")
+        if kl.get("controls", {}).get("all_pass"):
+            km, kw = kl["IDH_mutant_glioma_n17"], kl["IDH_wildtype_glioma_n40"]
+            A(f"**Flow cytometry by IDH status, measured.** Klemm et al. [53] report, per group, the mean of each "
+              f"immune population as a percentage of CD45+ cells (their Figure 1F). The figure is vector graphics, "
+              f"so each bar segment was measured from its exact coordinates against the panel's own gridlines "
+              f"(`prespecified/klemm_t_vs_b.md`, rule written before the panel was viewed); the measurement "
+              f"reproduces two numbers the paper prints in its text "
+              f"({kl['controls']['melanoma_CD8']['measured']:.2f} vs {kl['controls']['melanoma_CD8']['printed']} and "
+              f"{kl['controls']['brm_lymphocytes_weighted']['measured']:.2f} vs "
+              f"{kl['controls']['brm_lymphocytes_weighted']['printed']}). In **17 IDH-mutant gliomas**, T cells "
+              f"(CD4+, Treg, CD8+ and double-negative) are {km['T_pct_CD45']:.2f}% of CD45+ cells against "
+              f"{km['B_pct_CD45']:.2f}% for B cells -- {km['T_to_B']:.0f}:1, ordering {km['ordering'].replace('>', ' > ')} "
+              f"-- and in 40 IDH-wildtype gliomas {kw['T_pct_CD45']:.2f}% against {kw['B_pct_CD45']:.2f}% "
+              f"({kw['T_to_B']:.0f}:1): "
+              + (f"**{km['reading']}** in both.\n" if km["reading"] == kw["reading"] else
+                 f"**{km['reading']}** (IDH-mutant) and **{kw['reading']}** (IDH-wildtype).\n"))
+        _klr = (J("klemm_t_vs_b.json").get("IDH_mutant_glioma_n17") or {}).get("reading")
+        if gim and gim.get("Q1_reading") != "CONFIRMED" and _klr == "SUPPORTS T > B":
+            A("**Reading.** In glioblastoma, the discovery cohort, the truth is corroborated three ways -- a "
+              "glioma-specific methylation instrument with every control passing, two single-cell atlases, and "
+              "flow cytometry. In LGG, the registered replication, the two methylation instruments disagree -- the "
+              "deconvolution methods' B above T agrees with GIMiCC and disagrees with EpiDISH -- and **direct "
+              "measurement settles it: flow cytometry of 17 IDH-mutant gliomas puts T cells about twenty-fold above "
+              "B cells, EpiDISH's direction, as do both LGG patients in the atlas.** GIMiCC's B above T in LGG is "
+              "therefore an instrument failure in IDH-mutant tissue, and the deconvolution methods share it. Both "
+              "methylation instruments place B above every direct count (GIMiCC several-fold), so T > B is a fact "
+              "about glioma tissue, and the methylation shares are not measurements of it at that precision. "
+              "**The lymphoid truth holds in both cohorts on direct measurement; in LGG one of two methylation "
+              "instruments disagrees with it, and that disagreement is reported.**\n")
+        elif gim and gim.get("Q1_reading") != "CONFIRMED" and _klr == "CONTRADICTS T > B":
+            A("**Reading.** Direct flow cytometry of 17 IDH-mutant gliomas agrees with GIMiCC, not EpiDISH: B "
+              "above T. **The LGG lymphoid headline cannot be stated.** The GBM truth is corroborated three ways.\n")
+        elif gim and gim.get("Q1_reading") != "CONFIRMED":
             A("**Reading.** In glioblastoma, the discovery cohort, the truth is corroborated three ways -- a "
               "glioma-specific methylation instrument with every control passing, two single-cell atlases, and "
               "flow cytometry -- and the headline stands on it. In LGG, the registered replication, the methylation "
@@ -1629,7 +1670,10 @@ def main() -> int:
     A("- Do **not** quote \"12 of 12 methods put B above T\" without the denominator. It is a "
       "mean over samples with any lymphoid signal.")
     A("- Do **not** claim that stability certifies an estimate (§4.12). T cells in GBM are stable and do not track EpiDISH (and are not anti-correlated once the denominators are matched); stability says which estimates not to trust. Do **not** say they track no methylation truth: against GIMiCC they do (§4.4).")
-    A("- Do **not** state the lymphoid truth as settled in LGG. A glioma-specific methylation method (GIMiCC) puts B above T there, against EpiDISH; direct cell counts favour T above B on only two LGG patients (§4.4).")
+    if (J("klemm_t_vs_b.json").get("IDH_mutant_glioma_n17") or {}).get("reading") == "SUPPORTS T > B":
+        A("- Do **not** say that methylation settles the LGG lymphoid truth. The two methylation instruments disagree there (GIMiCC puts B above T); what supports T above B in LGG is direct flow cytometry of 17 IDH-mutant gliomas [53] and the atlas's two LGG patients (§4.4). Quote the flow-cytometry figure as a cohort mean read from a published figure, with its validation.")
+    else:
+        A("- Do **not** state the lymphoid truth as settled in LGG. A glioma-specific methylation method (GIMiCC) puts B above T there, against EpiDISH; direct cell counts favour T above B on only two LGG patients (§4.4).")
     A("- Do **not** claim the loss scale explains every method's B-above-T. It was shown inside one package (`unmix`, §4.10); for the others it is a hypothesis.")
     A("- Do **not** claim to overturn Avila Cobos et al.'s linear-scale recommendation. The data-scale arm of §4.12 measured rank agreement on real tumours, not level error on simulated mixtures.")
     A("- Do **not** present §4.12 as part of the registered study. It is post-registration, and the ablation that motivated it had already been seen.")

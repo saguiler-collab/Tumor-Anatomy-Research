@@ -544,12 +544,15 @@ angiogenic DNA before it splits the lymphocytes.
 - **GBM, the discovery cohort: the truth is corroborated three ways.** A glioma-specific methylation
   instrument with every control passing, two single-cell atlases, and flow cytometry. The headline
   "no method reproduces T > B" stands on it.
-- **LGG, the registered replication: the methylation truth depends on the instrument.**
+- **LGG, the registered replication: the methylation truth depends on the instrument, and direct
+  measurement settles it for T > B (§4 above).**
   - EpiDISH says T > B; GIMiCC says B > T, and 12 of 12 frozen-arm methods (11 of 13 raw/X) agree
     with GIMiCC.
   - The direct counts favour T > B, but rest on only 2 LGG patients in the atlas and on pooled flow
     data.
-  - **The LGG replication of the lymphoid finding rests on a contested truth.**
+  - Until 2026-10-06: **the LGG replication rested on a contested truth.** Since then, flow cytometry
+    of 17 IDH-mutant gliomas (21 : 1) supports it. One of two methylation instruments still
+    disagrees, and that is reported.
 - **Both methylation instruments put B above every direct count; GIMiCC several-fold.** B share of lymphocytes: GIMiCC
   0.28 / 0.49, EpiDISH 0.11 / 0.20, atlas 0.05, GBmap about 0.02.
   - T > B is a fact about glioma tissue on every direct count. The methylation shares are not
@@ -557,8 +560,41 @@ angiogenic DNA before it splits the lymphocytes.
 - GIMiCC's per-sample split also fails the reference-free RNA control, as EpiDISH's did (GBM n.s.).
   In LGG it agrees weakly where EpiDISH disagreed (+0.10, p 0.035, against -0.12). Methylation stays a
   cohort-level truth.
-- **What would settle LGG:** direct counts in IDH-mutant gliomas. Klemm et al. [53] Table S2
-  (per-patient flow cytometry with IDH status) is the external item that would do it.
+- **What would settle LGG:** direct counts in IDH-mutant gliomas (§4 below, 2026-10-06).
+
+**4. Flow cytometry by IDH status: LGG settled on direct measurement (2026-10-06).** The user supplied
+Klemm et al. [53] with its supplements. Table S2 turned out to be the gating definitions (T = CD3+;
+B = CD19/CD20+ CD3-) and Table S1 the cohort; neither has per-patient values. Figure 1F has the
+values: per group, the mean of each population as % of CD45+ cells.
+- **Rule first:** `prespecified/klemm_t_vs_b.md`, born 16:26:00, before any panel was viewed.
+- **How it was read:** the figure is vector graphics, so each bar segment was measured from its exact
+  coordinates (`scripts/klemm_figure1f.py`), calibrated on the panel's own gridlines (25% apart).
+- **Validated against the paper's printed numbers:**
+  - melanoma-BrM CD8+ T, 33.01% (measured 33.011);
+  - all-BrM lymphocytes, 46.23% (measured 46.231, weighting the three primaries by their n);
+  - every bar sums to 100%.
+  - A wrong calibration fails these checks (`tests/test_klemm_t_vs_b.py`).
+
+| % of CD45+ (cohort mean) | T (CD4+ + Treg + CD8+ + DNT) | B | NK | T : B | ordering |
+|---|---|---|---|---|---|
+| **IDH-mutant gliomas, n = 17** | **7.28** | **0.35** | 1.09 | **21 : 1** | T > NK > B |
+| IDH-wildtype gliomas, n = 40 | 21.02 | 2.25 | 1.93 | 9 : 1 | T > B > NK |
+| non-tumour, n = 6 | 5.33 | 0.39 | 0.19 | 14 : 1 | T > B > NK |
+
+- **Reading, as fixed: SUPPORTS T > B** in IDH-mutant (and IDH-wildtype) gliomas. Without
+  double-negative T cells, IDH-mutant T is still 4.87%, 14-fold B.
+- **IDH-mutant gliomas give EpiDISH's full ordering, T > NK > B.** The within-lymphoid shares are
+  0.835 / 0.125 / 0.040, against EpiDISH's LGG 0.476 / 0.321 / 0.203 and GIMiCC's 0.405 / 0.102 /
+  0.493.
+- **Consequence, as fixed:**
+  - GIMiCC's LGG B > T is contradicted by direct measurement in 17 IDH-mutant gliomas. It is reported
+    as an instrument failure in IDH-mutant tissue.
+  - The deconvolution methods' LGG B > T shares it.
+  - The registered GIMiCC reading stays INCONCLUSIVE.
+- **Limits:**
+  - These are cohort means read from a published figure, not per-patient values, in an external
+    cohort of mixed IDH-mutant histology (including oligodendrogliomas).
+  - Flow cytometry needs dissociation.
 
 ### 7e · What the paper should claim now (supersedes §6)
 
@@ -571,7 +607,8 @@ angiogenic DNA before it splits the lymphocytes.
 | ACS cannot detect a level-replacement failure (it scores contrasts) | **state plainly** — it is a direct instance of the thesis |
 | Methylation validates the cohort-level ordering only; per-sample tracking is INCONCLUSIVE | **state plainly** |
 | The GBM truth (T > B) is corroborated by a glioma-specific methylation method and by direct cell counts | **state plainly** (§7n): GIMiCC passes every GBM control; atlas 16/16 GBM patients; GBmap 54,257 T vs 1,250 B; flow cytometry [53] |
-| The LGG truth is settled | **must not be claimed** -- GIMiCC puts B above T in LGG (registered reading INCONCLUSIVE: its LGG negative control is uninformative by construction); direct counts favour T > B on 2 patients (§7n) |
+| The LGG truth (T > B) is supported by direct measurement | **state it, with the source** -- flow cytometry of 17 IDH-mutant gliomas, T 21-fold above B [53] (§7n.4), plus the atlas's 2 LGG patients |
+| Methylation settles the LGG truth | **must not be claimed** -- GIMiCC puts B above T in LGG (registered reading INCONCLUSIVE); EpiDISH and direct measurement put T above B (§7n) |
 | Methylation measures the lymphoid shares accurately | **must not be claimed** -- both instruments put B above every direct count, GIMiCC several-fold (§7n) |
 | Suspect 4a (NK carries T markers) explains the inversion | **rejected** — removing or merging the NK column sends the mass to B (§7g); state it as the sixth rejected mechanism |
 | Suspect 4b (B's profile is closest to macrophage) causes it | **must not be claimed** — untested |

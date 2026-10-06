@@ -453,6 +453,23 @@ REGISTRY: list[dict] = [
          consumers=[("scripts/ish_constraint_check.py", "gene_expression_details")],
          keywords=["ISH", "in-situ"]),
     # ---------------------------------------------------------------- bundled
+    dict(id="D32", group=3, status="used",
+         name="Flow-cytometry immune composition of brain tumours by IDH status (Klemm et al. 2020, Figure 1F)",
+         repository="Cell (Elsevier); article PDF and supplements placed locally by the user (gitignored)",
+         accession="doi:10.1016/j.cell.2020.05.007 -- Figure 1F (PDF page 3); Table S1 (mmc1.pdf, cohort); "
+                   "Table S2 (mmc2.pdf, gating definitions)",
+         url="https://doi.org/10.1016/j.cell.2020.05.007",
+         version="article PDF sha256 df824704317a2f84ec9a49e9d8ebff648789cd59b95ce6800f93f58f612b6503",
+         role="Direct check of the lymphoid truth by IDH status (prespecified/klemm_t_vs_b.md): cohort-mean "
+              "T, B and NK as % of CD45+ in 17 IDH-mutant and 40 IDH-wildtype gliomas, measured from the "
+              "figure's vector geometry and validated against two numbers printed in the paper.",
+         citation="Klemm F, et al. Cell 181:1643-1660 (2020)",
+         doi="10.1016/j.cell.2020.05.007", first_author="Klemm", year=2020,
+         files=[F(config.KLEMM_2020_PDF, "the article PDF (publisher copyright; not redistributed)", compare="none"),
+                F(config.KLEMM_2020_PDF.parent / "mmc1.pdf", "Table S1, the flow-cytometry cohort", compare="none"),
+                F(config.KLEMM_2020_PDF.parent / "mmc2.pdf", "Table S2, gating definitions", compare="none")],
+         consumers=[("scripts/klemm_figure1f.py", "KLEMM_2020_PDF")],
+         keywords=["Klemm", "flow cytometry"]),
     dict(id="D19", group=4, status="used",
          name="GBMDeconvoluteR marker sets (Ajaib immune, Ruiz-Moreno level-3 immune, Neftel "
               "four-state) and Ajaib's published imaging-mass-cytometry correlations",

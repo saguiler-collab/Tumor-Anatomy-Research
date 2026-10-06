@@ -55,7 +55,7 @@ Split out of `docs/MANUSCRIPT.md` so that file is the paper and nothing else. Ev
 - Do **not** call `cibersortx` here the hosted CIBERSORTx, or `dwls`/`bayesprism` the published R packages. All are labelled in the artefacts; keep the labels.
 - Do **not** quote "12 of 12 methods put B above T" without the denominator. It is a mean over samples with any lymphoid signal.
 - Do **not** claim that stability certifies an estimate (§4.12). T cells in GBM are stable and do not track EpiDISH (and are not anti-correlated once the denominators are matched); stability says which estimates not to trust. Do **not** say they track no methylation truth: against GIMiCC they do (§4.4).
-- Do **not** state the lymphoid truth as settled in LGG. A glioma-specific methylation method (GIMiCC) puts B above T there, against EpiDISH; direct cell counts favour T above B on only two LGG patients (§4.4).
+- Do **not** say that methylation settles the LGG lymphoid truth. The two methylation instruments disagree there (GIMiCC puts B above T); what supports T above B in LGG is direct flow cytometry of 17 IDH-mutant gliomas [53] and the atlas's two LGG patients (§4.4). Quote the flow-cytometry figure as a cohort mean read from a published figure, with its validation.
 - Do **not** claim the loss scale explains every method's B-above-T. It was shown inside one package (`unmix`, §4.10); for the others it is a hypothesis.
 - Do **not** claim to overturn Avila Cobos et al.'s linear-scale recommendation. The data-scale arm of §4.12 measured rank agreement on real tumours, not level error on simulated mixtures.
 - Do **not** present §4.12 as part of the registered study. It is post-registration, and the ablation that motivated it had already been seen.

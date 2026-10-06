@@ -1,6 +1,6 @@
 # Data inventory -- every public dataset this study touches
 
-*Generated 2026-10-03 by `scripts/build_data_inventory.py`. Do not edit by hand: every size, hash, consumer and citation check below is measured each run. `docs/supplementary/data_inventory_full.csv` is the same content in one row per dataset; Supplementary Table S7 is its compact form (`scripts/build_supplementary.py`).*
+*Generated 2026-10-06 by `scripts/build_data_inventory.py`. Do not edit by hand: every size, hash, consumer and citation check below is measured each run. `docs/supplementary/data_inventory_full.csv` is the same content in one row per dataset; Supplementary Table S7 is its compact form (`scripts/build_supplementary.py`).*
 
 **How to read the checks.** *read by* lists scripts that were opened and found to contain the token that reads the dataset. *source check* compares the local copy with the public server: identical byte size, or, where one side is stored decompressed, the sha256 of the decompressed content on both sides. *citation* is the DOI's Crossref record compared with the first author and year claimed here; the verifier is shown rejecting a known conflation before any citation is trusted.
 
@@ -28,6 +28,7 @@
 | D16 | Darmanis et al. 2017 glioblastoma single-cell RNA-seq (core vs periphery) | used | GEO GSE84465 | Two uses: the only cross-patient core-vs-periphery constraint check (C1, four gates), and a Darmanis-only reference in the reference-dependence arm (a GBmap constituent, so not independent) |
 | D17 | Mossi Albiach et al. 2023 spatially sampled glioblastoma single-cell atlas | used | collection 113a558a-e96e-4643-81db-140e95c58578; dataset d45b4ce6-9725-4d79-b97a-70a44158bdbf (donor SL040, schema 7.1.0) | Tests the registered constraints against counted (not inferred) composition per anatomic zone: 3 of 4 testable constraints hold |
 | D18 | Ivy GAP in-situ hybridisation (ISH) by anatomic structure | used | gene_expression_details.csv (/api/v2/gbm/ namespace) | A constraint check with no deconvolution anywhere in the chain: CD44 / BIRC5 ISH support C1 and C7 |
+| D32 | Flow-cytometry immune composition of brain tumours by IDH status (Klemm et al. 2020, Figure 1F) | used | doi:10.1016/j.cell.2020.05.007 -- Figure 1F (PDF page 3); Table S1 (mmc1.pdf, cohort); Table S2 (mmc2.pdf, gating definitions) | Direct check of the lymphoid truth by IDH status (prespecified/klemm_t_vs_b.md): cohort-mean T, B and NK as % of CD45+ in 17 IDH-mutant and 40 IDH-wildtype gliomas, measured from the figure's vector geometry and validated against two numbers printed in the paper |
 | D19 | GBMDeconvoluteR marker sets (Ajaib immune, Ruiz-Moreno level-3 immune, Neftel four-state) and Ajaib's published imaging-mass-cytometry correlations | used | Ajaib_et_al_2022_GBM_Immune_markers.rds, Moreno_et_al_2022_lvl3_immune_markers.rds, Neftel_et_al_2019_four_state_neoplastic_markers.rds | The pre-registered IMC protein test (an external instrument for ACS) and the mesenchymal-program score |
 | D20 | MCPcounter default marker genes | used | Signatures/genes.txt | The default-marker arm of the IMC test |
 | D21 | EpiDISH blood reference centDHSbloodDMC.m (333 CpGs x 7 blood cell types) | used | EpiDISH::centDHSbloodDMC.m | Turns D07/D08 into per-cell-type lymphoid fractions (RPC mode); a blood reference applied to brain tumour, so used for lymphoid sub-composition only |
@@ -227,7 +228,7 @@
 - **Used for:** IDH1 status as a candidate biological failure factor in LGG.
 - **Citation:** Ellrott K, et al. Cell Syst 6:271-281 (2018), doi:10.1016/j.cels.2018.03.002
   - Crossref 10.1016/j.cels.2018.03.002: verified (matches)
-- **Manuscript sections mentioning it** (keyword scan for 'IDH'; a mention, not proof of use): 4.3; 4.4
+- **Manuscript sections mentioning it** (keyword scan for 'IDH'; a mention, not proof of use): Title; 4.3; 4.4
 - **Read by:** `scripts/failure_factors.py`
 
 | local file | size | sha256 (first 12) | check |
@@ -387,6 +388,25 @@
 | local file | size | sha256 (first 12) | check |
 |---|---|---|---|
 | `data/raw/ivygap/gene_expression_details.csv` -- listed under D02 | 4.8 MB | `07c5702a2549` | -- |
+
+### D32 · Flow-cytometry immune composition of brain tumours by IDH status (Klemm et al. 2020, Figure 1F)
+
+- **Status:** used
+- **Repository:** Cell (Elsevier); article PDF and supplements placed locally by the user (gitignored)
+- **Accession:** doi:10.1016/j.cell.2020.05.007 -- Figure 1F (PDF page 3); Table S1 (mmc1.pdf, cohort); Table S2 (mmc2.pdf, gating definitions)
+- **Source:** <https://doi.org/10.1016/j.cell.2020.05.007>
+- **Version:** article PDF sha256 df824704317a2f84ec9a49e9d8ebff648789cd59b95ce6800f93f58f612b6503
+- **Used for:** Direct check of the lymphoid truth by IDH status (prespecified/klemm_t_vs_b.md): cohort-mean T, B and NK as % of CD45+ in 17 IDH-mutant and 40 IDH-wildtype gliomas, measured from the figure's vector geometry and validated against two numbers printed in the paper.
+- **Citation:** Klemm F, et al. Cell 181:1643-1660 (2020), doi:10.1016/j.cell.2020.05.007
+  - Crossref 10.1016/j.cell.2020.05.007: verified (matches)
+- **Manuscript sections mentioning it** (keyword scan for 'Klemm', 'flow cytometry'; a mention, not proof of use): Title; I. Introduction; 4.4; 4.12
+- **Read by:** `scripts/klemm_figure1f.py`
+
+| local file | size | sha256 (first 12) | check |
+|---|---|---|---|
+| `celldecov_reference_papers/Klemm_et_al_2020/PIIS0092867420305699.pdf` -- the article PDF (publisher copyright; not redistributed) | 20.3 MB | `df824704317a` | -- |
+| `celldecov_reference_papers/Klemm_et_al_2020/mmc1.pdf` -- Table S1, the flow-cytometry cohort | 62.9 KB | `85bc295ab237` | -- |
+| `celldecov_reference_papers/Klemm_et_al_2020/mmc2.pdf` -- Table S2, gating definitions | 30.5 KB | `d636cae87a4e` | -- |
 
 ## Marker sets and reference data bundled with software
 
