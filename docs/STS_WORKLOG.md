@@ -836,6 +836,29 @@ failed. Every earlier run had exported 2 workers.
 - **Noticed, not acted on:** 5 paper PDFs in `celldecov_reference_papers/` were committed before
   that folder was gitignored (publisher PDFs in a public repository). That is for the user to decide.
 
+### 2.29 Manuscript blueprint: the main results, and why each analysis was done (2026-10-06)
+- **The user asked:** commit and push; then "start working on a manuscript ... figure out the main
+  results and find a way to devise why you did what you did". Committed `753256f` (Klemm), with `main`
+  kept in step.
+- **`docs/MANUSCRIPT_BLUEPRINT.md`:** the paper in four sentences; **four main results** (R1 detects,
+  R2 does not rank, R3 lymphoid failure against a truth confirmed four ways, R4 identifiability),
+  with everything else mapped to supporting or supplementary.
+  - **The decision chain** has 18 rows: question, then step, then why this way, then the
+    timestamped rule file. Methods should be written from it.
+  - It also proposes the structure and figures (two new: a design schematic, and the truth by four
+    instruments) and lists the user's decisions.
+- **Errors caught in my own draft before handing it over:**
+  - I credited GIMiCC's D2 rho 1.00 to stability (stability is 0.771).
+  - "Every real method beats its null" (quanTIseq is not evaluable).
+  - "Returns no lymphocytes at all" (it is 55/56 and 443/510).
+  - A loose mechanism list.
+  - "The field moved" for methods that are not new.
+  - "Confirmed by DNA methylation" (GIMiCC disagrees in LGG).
+  - The protocol's date (committed 09-03, not 09-01).
+  - Both doc checkers are CLEAN on the corrected file.
+- **`docs/PROJECT_ACCOUNT.md` is now out of date** (it predates raw/X, the extension, E2 and the truth
+  tests); the blueprint says so at its top.
+
 ## 3 · Corrections made this session (do not repeat)
 - **The §4.10 extension table printed B-above-T shares without denominators**, against Appendix D's
   own rule. On the raw/X arm most methods return no lymphocytes for most samples: FARDEEP's "100%"
