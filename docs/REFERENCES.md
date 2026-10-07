@@ -190,6 +190,19 @@ journal, volume and article number match.
 | **[52]** | S. C. Pike, J. K. Wiencke, Z. Zhang, A. M. Molinaro, H. M. Hansen, D. C. Koestler, *et al.*, "Glioma immune microenvironment composition calculator (GIMiCC): a method of estimating the proportions of eighteen cell types from DNA methylation microarray data," *Acta Neuropathol. Commun.*, vol. 12, no. 1, p. 170, 2024, doi: 10.1186/s40478-024-01874-0. | Crossref |
 | **[53]** | F. Klemm, R. R. Maas, R. L. Bowman, M. Kornete, K. Soukup, S. Nassiri, *et al.*, "Interrogation of the microenvironmental landscape in brain tumors reveals disease-specific alterations of immune cells," *Cell*, vol. 181, no. 7, pp. 1643–1660.e17, 2020, doi: 10.1016/j.cell.2020.05.007. | Crossref |
 
+
+## CPTAC per-sample truth (added 2026-10-06)
+
+The independent cohort and the per-sample DNA truth of the secondary analysis
+(`prespecified/cptac_wgs_purity_secondary.md`): the CPTAC glioblastoma study, and the copy-number
+method behind GDC's whole-genome purity. All three were resolved against Crossref when added. The
+ascatNgs record deposits no page range, so none is given.
+
+| | reference | status |
+|---|---|---|
+| **[54]** | L.-B. Wang, A. Karpova, M. A. Gritsenko, J. E. Kyle, S. Cao, Y. Li, *et al.*, "Proteogenomic and metabolomic characterization of human glioblastoma," *Cancer Cell*, vol. 39, no. 4, pp. 509–528.e20, 2021, doi: 10.1016/j.ccell.2021.01.006. | Crossref |
+| **[55]** | P. Van Loo, S. H. Nordgard, O. C. Lingjærde, H. G. Russnes, I. H. Rye, W. Sun, *et al.*, "Allele-specific copy number analysis of tumors," *Proc. Natl. Acad. Sci. U.S.A.*, vol. 107, no. 39, pp. 16910–16915, 2010, doi: 10.1073/pnas.1009843107. | Crossref |
+| **[56]** | K. M. Raine, P. Van Loo, D. C. Wedge, D. Jones, A. Menzies, A. P. Butler, *et al.*, "ascatNgs: identifying somatically acquired copy-number alterations from whole-genome sequencing data," *Curr. Protoc. Bioinformatics*, vol. 56, no. 1, 2016, doi: 10.1002/cpbi.17. | Crossref |
 ---
 
 ## Where each source is load-bearing
@@ -259,6 +272,8 @@ itself.
 **Update 2026-10-03:** [50] (MIXTURE) and [51] (Linseed) added and resolved against Crossref; the list now has 51 entries.
 
 **Update 2026-10-03 (later):** [52] (GIMiCC, Pike et al. 2024) added and resolved against Crossref (all nine authors, journal, volume 12, issue 1, article 170, published 2024-10-28); Europe PMC agrees (PMID 39468647, PMC11514818), and the full text was read there. [53] (Klemm et al. 2020, flow cytometry of brain-tumour immune cells) added and resolved against Crossref; its statement on the lymphocyte compartment was read in the PMC author manuscript (PMC8558904). The list now has 53 entries.
+
+**Update 2026-10-06:** [54] (Wang et al. 2021, CPTAC glioblastoma), [55] (Van Loo et al. 2010, ASCAT) and [56] (Raine et al. 2016, ascatNgs) added and resolved against Crossref (title, first six authors, journal, volume, issue, pages where deposited, year). The list now has 56 entries.
 
 **Update 2026-10-01:** the list now has 44 entries; every one is read from a PDF on disk or
 resolved against Crossref (the nine former `cited` entries were resolved today), and [10] was

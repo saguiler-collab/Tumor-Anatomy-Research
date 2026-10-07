@@ -1,0 +1,35 @@
+{
+  "what_this_is": "genuine DWLS 0.1.0 (R) on the two Ivy GAP samples of dwls_conditioning_ivygap.csv, inputs divided by max(signature): the package's dampening constant j (findDampeningConstant) and its proportions (solveDampenedWLS). Recorded 2026-10-07.",
+  "column_map": {
+    "300173630": "bulk_fails_unscaled",
+    "300173636": "bulk_solves_unscaled"
+  },
+  "samples": {
+    "300173630": {
+      "j": 9,
+      "proportions": {
+        "Oligodendrocyte": 0.1171217626,
+        "Tumor": 0.6412078792,
+        "Endothelial": 0.0,
+        "Macrophage_Microglia": 0.1793180653,
+        "T_cell": 0.0,
+        "B_cell": 0.0,
+        "NK_cell": 0.0043703623,
+        "Astrocyte": 0.0579819306
+      }
+    },
+    "300173636": {
+      "j": 6,
+      "proportions": {
+        "Oligodendrocyte": 0.0295215783,
+        "Tumor": 0.7101058972,
+        "Endothelial": 0.0537664967,
+        "Macrophage_Microglia": 0.0941050992,
+        "T_cell": 0.0122405221,
+        "B_cell": 0.0,
+        "NK_cell": 0.0,
+        "Astrocyte": 0.1002604065
+      }
+    }
+  }
+}

@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import json
 
+import pandas as pd
+
 from ivygap import config
 
 OUT = config.PROJECT_ROOT / "docs" / "FIGURES.md"
@@ -241,6 +243,102 @@ def main() -> int:
              f"and the lymphoid estimate still does not track methylation.")
           if d.get("H1_primary") and r.get("control_pass") else "")(
              J("identifiability_diagnostics.json"), J("identifiability_robustness.json"))),
+
+        ("Figure_truth_instruments",
+         "The lymphoid truth by every instrument that measures it, beside the methods.",
+         (lambda kl, at, gb, g: (
+             f"Relative composition within {{T, NK, B}}; the B share of lymphocytes is printed beside each bar. "
+             f"**Direct measurement:** flow cytometry of 17 IDH-mutant and 40 IDH-wildtype gliomas (Klemm et al. "
+             f"[53], Figure 1F, measured from the figure's vector geometry and validated against two numbers the "
+             f"paper prints: {kl['controls']['melanoma_CD8']['measured']:.2f} vs "
+             f"{kl['controls']['melanoma_CD8']['printed']} and {kl['controls']['brm_lymphocytes_weighted']['measured']:.2f} "
+             f"vs {kl['controls']['brm_lymphocytes_weighted']['printed']}; `prespecified/klemm_t_vs_b.md`); an "
+             f"independent single-cell atlas (Abdelfattah et al. [42], {at['n_patients']} patients, T and NK "
+             f"separated per cell by a rule declared beforehand; `prespecified/atlas_t_vs_b.md`); GBmap's core atlas "
+             f"({gb['n_donors_with_any_lymphoid']} glioblastoma donors with lymphocytes). **DNA methylation:** EpiDISH "
+             f"(blood reference; the registered truth) and GIMiCC (glioma-specific; registered reading "
+             f"{g['Q1_reading']}). **Bulk-RNA deconvolution:** the mean composition over the registered methods, "
+             f"frozen signature and donor-level reference. Every direct measurement puts T far above B "
+             f"(IDH-mutant flow cytometry {kl['IDH_mutant_glioma_n17']['T_to_B']:.0f}:1); the methods place B above T.")
+          if kl.get("controls", {}).get("all_pass") and at and gb and g else "")(
+             J("klemm_t_vs_b.json"), J("atlas_t_vs_b.json"), J("gbmap_t_vs_b.json"),
+             J("gimicc_truth_confirmation.json"))),
+
+        ("Figure_accuracy_factors",
+         "Factors that decide whether deconvolution can be trusted, against real DNA truths.",
+         (lambda ya, ag, d: (
+             f"**(A)** Accuracy by compartment: Spearman between each method's estimate and the DNA truth, median "
+             f"across the registered methods (filled: ABSOLUTE purity, the methylation leukocyte fraction, EpiDISH "
+             f"on matched denominators; open: GIMiCC tissue fractions). Tumour and total-leukocyte content track "
+             f"their truths in glioblastoma; lymphoid subtypes do not, against either methylation instrument. "
+             f"**(B, C)** Tumour-content accuracy of each method under the registered frozen signature (open) and "
+             f"a donor-level reference built from raw counts (filled): the reference build moves a method's "
+             f"accuracy by up to 0.5 in either direction. **(D)** How well a ground-truth-free check predicts real "
+             f"accuracy: anatomic concordance ranks {ya['arm_2_absolute_purity']['all_methods']['n_methods']} methods "
+             f"at rho = {ya['arm_2_absolute_purity']['all_methods']['spearman']:.2f} "
+             f"(p = {ya['arm_2_absolute_purity']['all_methods']['p']:.2f}); agreement between methods ranks methods at "
+             f"a mean rho = {ag['primary_panel']['P2']['mean_rho']:.2f} and compartments at "
+             f"{d['H1_primary']['D2']['rho']:.2f}; loss-scale stability ranks compartments at rho = "
+             f"{d['H1_primary']['D1']['rho']:.2f} (exact p = {d['H1_primary']['D1']['p_one_sided']:.3f}). "
+             f"Interpretation and practical guidance: `docs/ACCURACY_FACTORS.md`.")
+          if ya and ag and d.get("H1_primary") else "")(
+             J("yardstick_agreement.json"), J("agreement_selection_test.json"), J("identifiability_diagnostics.json"))),
+
+        ("Figure_cptac_wgs",
+         "An independent cohort with a per-sample DNA truth: CPTAC glioblastoma against whole-genome purity.",
+         (lambda w: (lambda a, s21, s22, s26: (
+             f"Secondary analysis, registered after the primary CPTAC control failed and before any value shown "
+             f"here was seen (`prespecified/cptac_wgs_purity_secondary.md`). Truth: AscatNGS tumour purity from "
+             f"whole-genome sequencing (GDC), {w['truth']['n_with_value']} tumours, range "
+             f"{w['truth']['range'][0]:.2f}-{w['truth']['range'][1]:.2f}. "
+             f"**(A)** Tumour share of single nuclei (GDC clusters, named by the registered marker rule) against DNA "
+             f"purity: rho = {s21['rho']:.2f} (permutation p = {s21['perm_p']:.2f}, n = {s21['n']}); it fails the "
+             f"registered 0.40 bar, so every per-sample reading made against the nuclei stays INCONCLUSIVE. Open "
+             f"symbols, tumours whose bulk and DNA aliquots pooled several pieces while the nuclei came from one. "
+             f"**(B)** Methylation purity (GIMiCC) against DNA purity: on the CpGs complete in all 18 samples "
+             f"(769 of 4,022), rho = {s22['a_complete_case_769_cpgs']['rho']:.2f}; red crosses, the five samples "
+             f"missing a third or more of the library; on the {s22['b_coverage_ge_90pct']['n']} complete samples "
+             f"(3,775 CpGs), rho = {s22['b_coverage_ge_90pct']['rho']:.2f} (OPEN_DEFECTS D30). **(C)** Pathologist's "
+             f"percent tumour nuclei, descriptive: range {s26['range'][0]:.0%}-{s26['range'][1]:.0%}, rho = "
+             f"{s26['vs_wgs_purity']['rho']:.2f}. **(D)** Each bulk method's tumour estimate against DNA purity "
+             f"(n = 18); vertical lines, the medians ({a['frozen']['S2_3']['median_rho']:.2f} frozen signature, "
+             f"{a['h5ad']['S2_3']['median_rho']:.2f} donor-level reference; TCGA-GBM on the same methods "
+             f"{a['frozen']['S2_3']['tcga_gbm_median_same_methods']:.2f} and "
+             f"{a['h5ad']['S2_3']['tcga_gbm_median_same_methods']:.2f}); dotted, the 0.40 bar. **(E)** Each "
+             f"method's accuracy in CPTAC against its accuracy in TCGA-GBM (ABSOLUTE, n = 154): the ranking "
+             f"transfers on the frozen signature (rho = {a['frozen']['S2_4_ranking_transfer']['spearman']:.2f}, "
+             f"{a['frozen']['S2_4_ranking_transfer']['n_methods']} methods) but not on the donor-level reference "
+             f"(rho = {a['h5ad']['S2_4_ranking_transfer']['spearman']:.2f}); a dagger marks BayesPrism, which ran "
+             f"as the R package in CPTAC and as the Python reimplementation in TCGA. Methods that are degenerate "
+             f"copies of another share a point (\"MuSiC = NNLS\"). **(F)** Anatomic concordance against accuracy "
+             f"in CPTAC: rho = {a['frozen']['S2_5_acs_vs_wgs_accuracy']['spearman']:.2f} (frozen) and "
+             f"{a['h5ad']['S2_5_acs_vs_wgs_accuracy']['spearman']:.2f} (donor-level); the registered bar is 0.60.")
+          )(w["all_cases"], w["all_cases"]["S2_1_nuclei_truth_vs_wgs"]["registered"]["all_scored"],
+            w["all_cases"]["S2_2_methylation_instrument"], w["S2_6_pathology_descriptive"])
+          if w else "")(J("cptac_wgs_purity.json"))),
+
+        ("Figure_acs_constraints",
+         "What the anatomic score separates: each registered constraint, method by method.",
+         (lambda pc, lb, yh: (
+             f"**(A)** Share of evaluable Ivy GAP tumours in which each method satisfies each of the "
+             f"{pc['constraint'].nunique()} registered constraints (cells: satisfied / evaluable; darker is a larger "
+             f"share; `results/anatomic/acs_per_constraint.csv`). Methods are ordered by ACS; the red line separates "
+             f"the {int(((~lb['is_control']) & lb['comparable']).sum())} comparable real methods from the two deliberately "
+             f"broken controls and from quanTIseq, which models only immune cells and is scored on two constraints. "
+             f"The controls fail across constraints. Among working methods the fraction satisfied spreads by at most "
+             f"0.33 on C1-C5 and by 0.62-0.67 on C6 (myeloid: microvascular proliferation above cellular tumour) and "
+             f"C7 (the tumour gradient, weighted 2), each evaluable in 8-9 tumours: the score's resolution among "
+             f"working methods. **(B)** ACS, as registered. **(C)** Each method's tumour-content accuracy against DNA, "
+             f"on the donor-level reference the anatomic arm uses: TCGA-GBM against ABSOLUTE (squares, n = 154) and "
+             f"CPTAC against whole-genome purity (circles, n = 18; secondary analysis). Registered implementations: "
+             f"BayesPrism and DWLS appear as this project's reimplementations here; their genuine-package values are "
+             f"in `docs/EVALUATION_MATRIX.md` (`docs/METHOD_REPAIRS.md`). Descriptive; nothing is selected on it.")
+          if len(pc) and len(lb) else "")(
+             pd.read_csv(config.RESULTS_DIR / "anatomic" / "acs_per_constraint.csv")
+             if (config.RESULTS_DIR / "anatomic" / "acs_per_constraint.csv").exists() else pd.DataFrame(),
+             pd.read_csv(config.RESULTS_DIR / "anatomic" / "acs_leaderboard.csv")
+             if (config.RESULTS_DIR / "anatomic" / "acs_leaderboard.csv").exists() else pd.DataFrame(),
+             None)),
     ]
 
     L = ["# Figures\n",

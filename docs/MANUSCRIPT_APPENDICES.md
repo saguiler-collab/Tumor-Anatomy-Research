@@ -35,6 +35,10 @@ Split out of `docs/MANUSCRIPT.md` so that file is the paper and nothing else. Ev
 | 9 | `Figure_acs_vs_auc` | §4.11 (exploratory) | ACS vs a per-method AUC: one construct on two scales; neither tracks DNA-measured accuracy |
 | 10 | `Figure_lymphoid_mechanisms` | Result 3 mechanisms (after the independent-atlas paragraph) | reference-side tests of the lymphoid inversion: variants, re-absorption, bulk-likeness, independent atlas |
 | 11 | `Figure_identifiability` | §4.12 (exploratory) | truth-free stability (loss scale; across methods) against agreement with DNA truth, per compartment and cohort |
+| 12 | `Figure_truth_instruments` | §4.4 (the lymphoid truth) | within-lymphoid T / NK / B by each instrument that measures it, beside the methods |
+| 13 | `Figure_accuracy_factors` | Discussion (practical reading) | accuracy by compartment, by reference build, and of the truth-free checks |
+| 14 | `Figure_cptac_wgs` | §4.13 (secondary) | CPTAC: each per-sample truth and each method against whole-genome purity |
+| 15 | `Figure_acs_constraints` | §4.2 / §4.14 | each registered constraint, method by method, beside accuracy against DNA |
 
 *Every figure exists as PDF (vector, submission) and PNG (300 dpi, drafts) in `docs/figures/`. Captions are in `docs/FIGURES.md` and are the place for interpretation — the plots themselves carry no argument, per journal convention and the CJSJ format reference.*
 
@@ -48,6 +52,8 @@ Split out of `docs/MANUSCRIPT.md` so that file is the paper and nothing else. Ev
 
 ## Appendix D · What must not be claimed
 
+- Do **not** quote any primary CPTAC reading (C1-C4 of `cptac_per_sample_truth.md`). The primary is INCONCLUSIVE, and the nuclei failed the secondary check too. In particular, its donor-level C2 value is not evidence that anatomy ranks methods (§4.13).
+- Do **not** claim single-cell composition is an invalid truth in general. What failed is GDC's automated clusters, named by this project's marker rule, as a per-sample measure of tumour content in 15 tumours.
 - Do **not** claim the ranking reshuffle replicates. It does not (Result 5).
 - Do **not** claim a mechanism for the lymphoid failure. Nine were tested or excluded -- including the leading structural suspect, that the `NK_cell` column (which carries pan-T markers CD3D/E/G, CD2, LCK at 1.4–5.8x the `T_cell` column's level) absorbs T-cell signal: removing or merging that column sends the mass to B, not T. One structural property remains a suspect that has NOT been shown to cause it: `B_cell`'s profile is closest to `Macrophage_Microglia` (r = 0.497). Report it as a property of the reference, never as the explanation. `docs/WHY_B_OVER_T.md` §7.
 - Do **not** claim per-sample model fit identifies untrustworthy samples. Tested; fails.

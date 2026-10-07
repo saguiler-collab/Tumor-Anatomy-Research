@@ -105,3 +105,39 @@
 
 <sub>`docs/figures/Figure_identifiability.png` · `docs/figures/Figure_identifiability.pdf`</sub>
 
+
+## Figure 12. The lymphoid truth by every instrument that measures it, beside the methods.
+
+![Figure 12](figures/Figure_truth_instruments.png)
+
+**Figure 12.** *The lymphoid truth by every instrument that measures it, beside the methods.* Relative composition within {T, NK, B}; the B share of lymphocytes is printed beside each bar. **Direct measurement:** flow cytometry of 17 IDH-mutant and 40 IDH-wildtype gliomas (Klemm et al. [53], Figure 1F, measured from the figure's vector geometry and validated against two numbers the paper prints: 33.01 vs 33.01 and 46.23 vs 46.23; `prespecified/klemm_t_vs_b.md`); an independent single-cell atlas (Abdelfattah et al. [42], 18 patients, T and NK separated per cell by a rule declared beforehand; `prespecified/atlas_t_vs_b.md`); GBmap's core atlas (98 glioblastoma donors with lymphocytes). **DNA methylation:** EpiDISH (blood reference; the registered truth) and GIMiCC (glioma-specific; registered reading INCONCLUSIVE). **Bulk-RNA deconvolution:** the mean composition over the registered methods, frozen signature and donor-level reference. Every direct measurement puts T far above B (IDH-mutant flow cytometry 21:1); the methods place B above T.
+
+<sub>`docs/figures/Figure_truth_instruments.png` · `docs/figures/Figure_truth_instruments.pdf`</sub>
+
+
+## Figure 13. Factors that decide whether deconvolution can be trusted, against real DNA truths.
+
+![Figure 13](figures/Figure_accuracy_factors.png)
+
+**Figure 13.** *Factors that decide whether deconvolution can be trusted, against real DNA truths.* **(A)** Accuracy by compartment: Spearman between each method's estimate and the DNA truth, median across the registered methods (filled: ABSOLUTE purity, the methylation leukocyte fraction, EpiDISH on matched denominators; open: GIMiCC tissue fractions). Tumour and total-leukocyte content track their truths in glioblastoma; lymphoid subtypes do not, against either methylation instrument. **(B, C)** Tumour-content accuracy of each method under the registered frozen signature (open) and a donor-level reference built from raw counts (filled): the reference build moves a method's accuracy by up to 0.5 in either direction. **(D)** How well a ground-truth-free check predicts real accuracy: anatomic concordance ranks 12 methods at rho = 0.08 (p = 0.80); agreement between methods ranks methods at a mean rho = 0.28 and compartments at 0.66; loss-scale stability ranks compartments at rho = 0.89 (exact p = 0.017). Interpretation and practical guidance: `docs/ACCURACY_FACTORS.md`.
+
+<sub>`docs/figures/Figure_accuracy_factors.png` · `docs/figures/Figure_accuracy_factors.pdf`</sub>
+
+
+## Figure 14. An independent cohort with a per-sample DNA truth: CPTAC glioblastoma against whole-genome purity.
+
+![Figure 14](figures/Figure_cptac_wgs.png)
+
+**Figure 14.** *An independent cohort with a per-sample DNA truth: CPTAC glioblastoma against whole-genome purity.* Secondary analysis, registered after the primary CPTAC control failed and before any value shown here was seen (`prespecified/cptac_wgs_purity_secondary.md`). Truth: AscatNGS tumour purity from whole-genome sequencing (GDC), 18 tumours, range 0.44-0.92. **(A)** Tumour share of single nuclei (GDC clusters, named by the registered marker rule) against DNA purity: rho = 0.13 (permutation p = 0.65, n = 15); it fails the registered 0.40 bar, so every per-sample reading made against the nuclei stays INCONCLUSIVE. Open symbols, tumours whose bulk and DNA aliquots pooled several pieces while the nuclei came from one. **(B)** Methylation purity (GIMiCC) against DNA purity: on the CpGs complete in all 18 samples (769 of 4,022), rho = 0.15; red crosses, the five samples missing a third or more of the library; on the 13 complete samples (3,775 CpGs), rho = 0.92 (OPEN_DEFECTS D30). **(C)** Pathologist's percent tumour nuclei, descriptive: range 65%-90%, rho = 0.38. **(D)** Each bulk method's tumour estimate against DNA purity (n = 18); vertical lines, the medians (0.45 frozen signature, 0.43 donor-level reference; TCGA-GBM on the same methods 0.41 and 0.58); dotted, the 0.40 bar. **(E)** Each method's accuracy in CPTAC against its accuracy in TCGA-GBM (ABSOLUTE, n = 154): the ranking transfers on the frozen signature (rho = 0.68, 12 methods) but not on the donor-level reference (rho = 0.13); a dagger marks BayesPrism, which ran as the R package in CPTAC and as the Python reimplementation in TCGA. Methods that are degenerate copies of another share a point ("MuSiC = NNLS"). **(F)** Anatomic concordance against accuracy in CPTAC: rho = 0.12 (frozen) and -0.35 (donor-level); the registered bar is 0.60.
+
+<sub>`docs/figures/Figure_cptac_wgs.png` · `docs/figures/Figure_cptac_wgs.pdf`</sub>
+
+
+## Figure 15. What the anatomic score separates: each registered constraint, method by method.
+
+![Figure 15](figures/Figure_acs_constraints.png)
+
+**Figure 15.** *What the anatomic score separates: each registered constraint, method by method.* **(A)** Share of evaluable Ivy GAP tumours in which each method satisfies each of the 7 registered constraints (cells: satisfied / evaluable; darker is a larger share; `results/anatomic/acs_per_constraint.csv`). Methods are ordered by ACS; the red line separates the 14 comparable real methods from the two deliberately broken controls and from quanTIseq, which models only immune cells and is scored on two constraints. The controls fail across constraints. Among working methods the fraction satisfied spreads by at most 0.33 on C1-C5 and by 0.62-0.67 on C6 (myeloid: microvascular proliferation above cellular tumour) and C7 (the tumour gradient, weighted 2), each evaluable in 8-9 tumours: the score's resolution among working methods. **(B)** ACS, as registered. **(C)** Each method's tumour-content accuracy against DNA, on the donor-level reference the anatomic arm uses: TCGA-GBM against ABSOLUTE (squares, n = 154) and CPTAC against whole-genome purity (circles, n = 18; secondary analysis). Registered implementations: BayesPrism and DWLS appear as this project's reimplementations here; their genuine-package values are in `docs/EVALUATION_MATRIX.md` (`docs/METHOD_REPAIRS.md`). Descriptive; nothing is selected on it.
+
+<sub>`docs/figures/Figure_acs_constraints.png` · `docs/figures/Figure_acs_constraints.pdf`</sub>
+

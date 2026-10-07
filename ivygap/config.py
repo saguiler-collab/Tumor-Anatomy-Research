@@ -77,6 +77,10 @@ TCGA_DOWNLOADS_DIR = PROJECT_ROOT / "TCGA_LGG"        # Xena / GDC files, both c
 #: redistributed). Klemm et al. 2020 (Cell) supplies the flow-cytometry check of the lymphoid truth.
 REFERENCE_PAPERS_DIR = PROJECT_ROOT / "celldecov_reference_papers"
 KLEMM_2020_PDF = REFERENCE_PAPERS_DIR / "Klemm_et_al_2020" / "PIIS0092867420305699.pdf"
+#: CPTAC glioblastoma (Wang et al. 2021): bulk RNA-seq and single-nucleus RNA-seq from the SAME
+#: cryopulverised material, for 18 tumours -- the first per-sample, same-tissue truth here.
+#: Open access at the NCI GDC (project CPTAC-3); fetched by scripts/fetch_cptac_gbm.py.
+CPTAC_GBM_DIR = DATA_DIR / "external" / "cptac_gbm"
 TCGA_HM450 = {"gbm": TCGA_DOWNLOADS_DIR / "TCGA.GBM.sampleMap_HumanMethylation450",      # Xena (D07)
               "lgg": TCGA_DOWNLOADS_DIR / "TCGA.LGG.sampleMap_HumanMethylation450.gz"}  # Xena (D08)
 IMMUNE_FRACTION_DIR = PROJECT_ROOT / "Immune_Fraction"   # PanCanAtlas immune tables
@@ -293,6 +297,13 @@ RESCALE_COLUMNS_TO = 1e6
 R_SOCKET_CLUSTER_CORES: int | None = None
 
 RANDOM_SEED = 0
+
+# REPAIRED METHODS (docs/METHOD_REPAIRS.md; OPEN_DEFECTS D31, D32). Off by default so that the 2026-10-06
+# verification re-run reproduces the archived results with the code that made them. A repaired run sets
+# IVYGAP_REPAIRED=1 in its environment and writes under versioned paths; the registered artefacts are never
+# overwritten. The R bridges read the same variable.
+import os as _os                                                      # noqa: E402
+REPAIRED_METHODS = _os.environ.get("IVYGAP_REPAIRED", "0") == "1"
 
 # Gene-space construction
 MIN_GENES_SHARED = 500              # abort if bulk and signature overlap less than this

@@ -27,12 +27,20 @@ keeping, marked RESOLVED at the top.
 | **D21** the orthogonal yardstick's rho was published with its sign inverted | **FIXED 2026-09-23.** `absolute_purity` is a correlation, not an error metric; the agreement stage negated it. -0.0810 published where the data give +0.0810. Conclusion (NULL RESULT) unchanged; the sign was not. |
 | **D22** every genuine-package re-measurement ran on GBmap's LOG layer while the leaderboard ran on counts | **FIXED 2026-09-30; re-runs IN PROGRESS.** `remeasure_method.py` never passed `matrix=`, so `build_from_h5ad` defaulted to `X` (log1p). All five artefacts predate the raw/X rebuild; bisque 0.9231 and epic 0.9846 equal their `acs_log` bit for bit. On raw/X both reproduce the leaderboard exactly (0.7077, 0.7692). MANUSCRIPT 4.7's deltas were cross-matrix. An eighth equivalence condition now blocks on any layer mismatch. |
 | **D23** the lymphoid headline ("0 of 12, in either cohort") is reference-specific, and the manuscript omits the arm that disagrees | **OPEN, high — a reporting defect; the measurements are correct.** **2026-10-03:** the truth itself was tested -- corroborated in GBM (GIMiCC, every control passing; two atlases; flow cytometry), contested in LGG (GIMiCC puts B above T; registered reading INCONCLUSIVE). **2026-10-06:** flow cytometry of 17 IDH-mutant gliomas [53] puts T 21-fold above B -- LGG supported on direct measurement. Under the raw/X donor-level reference 3 of 14 (GBM) and 2 of 13 (LGG) order T above B. Measured 2026-09-30: Bisque's agreement is its reference's own donor-mean composition returned by construction (L1 0.087 / 0.081 over all 8 types; every other method 0.68-1.40); and methylation's PER-SAMPLE lymphoid split fails a reference-free positive control, so per-sample framing is unsupported. |
+| **D31** the genuine DWLS package fails on 73 of 122 Ivy GAP samples: its first step hands quadprog an unscaled problem | **FIXED behind `IVYGAP_REPAIRED` (2026-10-07); re-runs queued.** quadprog reports "constraints are inconsistent" on CPM-scale inputs for a feasible, well-conditioned problem (kappa 11.7). Dividing signature and bulk by one constant changes no DWLS solution: 73/122 failures become 0/122; identical to 3e-16 where both solve (`tests/test_dwls_conditioning.py`). |
+| **D32** this project's DWLS reimplementation caps weights relative to the LARGEST weight; the package caps relative to the SMALLEST | **FIXED behind `IVYGAP_REPAIRED` (2026-10-07); re-runs queued.** The inverted cap leaves weights unbounded, so near-zero genes decide the fit (GBM donor-level: 37% endothelial on average; LGG donor-level: 1 of 510 samples finite). The published algorithm, reimplemented, reproduces the package to 5e-11 given its dampening constant. |
+| **D33** quanTIseq was dropped from every TCGA arm before its immune estimates were saved | **FIXED in the repaired runner (2026-10-07).** The yardstick scores only the Tumor column; quanTIseq models no tumour (by design), so 'only 0 finite estimates' removed it and its leukocyte, T, B and NK estimates were never scored. `scripts/repaired_methods.py` scores every compartment a method models. |
+| **D34** two Python 'reimplementations' are stand-ins for different algorithms, and METHODS.md called them faithful | **OPEN, documented 2026-10-07 -- labelling, not arithmetic.** The SCDC stand-in reweights genes by Huber residuals; published SCDC weights them by cross-subject variance (as MuSiC does). The BayesPrism stand-in is a reference-shrinking heuristic, not its Gibbs sampler (its docstring says so). On the frozen signature, MuSiC, SCDC, SCDC ENSEMBLE, Bisque and BayesPrism cannot run as published (no cells), so every frozen-arm number for them is a stand-in's. Measured cost: BayesPrism stand-in 0.16 vs genuine 0.72 (GBM donor-level). |
+| **D35** which implementation fills two registered leaderboard rows depends on the wall clock | **OPEN, measured 2026-10-07 by the verification re-run; registered values stand, disclosed.** In the registered run, BayesPrism (2,405 s) and DWLS (2,416 s) overran their 2,400 s budgets by 5 and 16 s and fell back to the Python versions (ACS 0.800, 0.723). Re-run with identical code, both genuine packages finished: BayesPrism 0.815, DWLS 0.70 on 26 of 57 pairs (73 samples fail in quadprog, D31). Every other method reproduced exactly. |
+| **D30** the CPTAC DNA control ran GIMiCC on a fifth of its library: one complete-case rule across samples with bimodal probe coverage | **OPEN, handled -- it invalidated the primary CPTAC control.** Five of 18 methylation samples cover 54-67% of the 4,022 library CpGs, so dropping any CpG missing in any sample kept 769. GIMiCC purity on those agreed with whole-genome purity at rho 0.15; re-run on the 13 complete samples (3,775 CpGs) it agreed at 0.92 (cptac_wgs_purity_secondary.md, S2.2). The primary reading stays INCONCLUSIVE; the nuclei truth failed against DNA as well (S2.1). |
+| **D29** the declared NK marker panel labels non-immune brain nuclei NK (NCAM1/CD56) | **OPEN, handled -- affects the CPTAC truth only.** In CPTAC snRNA, NCAM1 alone (log1p-CPM 5.5-6.1; NKG7 about 0, CD45 about 0.2) made 898 non-leukocyte nuclei 'NK'. Sensitivity truth S1 (NK panel without NCAM1) is reported beside the registered truth (cptac_per_sample_truth.md, Addendum 2). The Abdelfattah atlas had no NK-labelled cluster. |
+| **D28** the declared T/NK split in the cluster-naming rule could never trigger | **FIXED 2026-10-06, latent -- no result changes.** The 0.5 margin was applied best-vs-runner-up first, so a cluster with T and NK close was discarded before the split. Now a T/NK-best cluster is judged against the best panel outside {T, NK}. The Abdelfattah atlas is unaffected (C3: |T - NK| = 3.64). Found by a planted-data test written for the CPTAC arm. |
 | **D27** the ABSOLUTE join silently drops samples whose `sample` field is a Broad-internal ID | **OPEN, low -- measured; no conclusion changes.** 795 ABSOLUTE rows (191 GBM) carry IDs like `GBM-TCGA-06-5416-Tumor-SM-1QETM`, which `key4`/`k4s` cannot parse. The registered yardstick lost 1 GBM and 9 LGG RNA samples (154 of 155, 510 of 519). Registered statistics reproduce exactly; the restored samples were never deconvolved; the worst-case shift of the registered agreement is +0.081 -> +0.056 (bar 0.60). `scripts/absolute_join_audit.py`. |
 | **D24** `build_from_h5ad` silently defaulted to GBmap's log layer, and five callers still relied on it | **FIXED 2026-10-01.** The default is gone: a call that does not state `matrix=` raises. Callers fixed: `run_benchmark.main` (CLI), `reference_sensitivity`, `build_gbmap_assay_reference`, `remeasure_dwls` (superseded) now state `raw/X`; `reconstruct_gene_space` states `X` deliberately (it reproduces the archived log-era run). The registered run was **not** affected: `run_all.py` always passed its layer. Negative-control test added. |
 | **D19** a fallback to a Python reimplementation is recorded without its REASON | **OPEN, medium-low** — nothing is mislabelled, but `dwls` falling rank 3 → 12 cannot be read as "bad method" vs "timed out" from the artefact. All R packages are installed, so these are runtime failures, not absent software. |
 | **D18** BayesPrism's socket-cluster workers are killed for MEMORY, so the row labelled `bayesprism` was the Python reimplementation | **RESOLVED 2026-09-19** — cause found (`unserialize(node$con)`: three workers each holding a full data copy on 8.6 GB RAM; not a timeout, 155 s against 2,400 s). `n.cores = 1` removes the cluster and is **result-neutral**: ACS 0.8154 and CI [0.7096, 0.9153] identical to the three-worker run, 2.0× slower. Two earlier causes were proposed and withdrawn; both kept on the record. |
 | **D17** variant reference builds overwrote the primary reference's sampling record | **FIXED** 2026-09-15 — a figure script reads that path, so a sensitivity build's numbers could be published as the leaderboard's. Variant builds now get their own file. |
-| **D16** the GBmap reference is built from LOG-transformed data treated as linear | **OPEN, highest — and it still governs the ACS arm.** `run_all.py --matrix` defaults to `X` (log), so the ACS leaderboard, the primary outcome and every archived result were computed on it. Only the TCGA purity `--reference h5ad` arms were switched to `raw/X`, which means the two arms of the agreement test now differ in matrix as well — recorded in ENDPOINT §2f. Closing it requires `run_all.py --matrix raw/X`. |
+| **D16** the GBmap reference is built from LOG-transformed data treated as linear | **RESOLVED for the registered leaderboard (verified 2026-10-07):** `run_all.py --matrix raw/X` re-run reproduced every timing-independent leaderboard row exactly (D35 covers the two that are not), so the registered leaderboard is the raw/X build. The text that follows is the defect as first recorded: **OPEN, highest — and it still governs the ACS arm.** `run_all.py --matrix` defaults to `X` (log), so the ACS leaderboard, the primary outcome and every archived result were computed on it. Only the TCGA purity `--reference h5ad` arms were switched to `raw/X`, which means the two arms of the agreement test now differ in matrix as well — recorded in ENDPOINT §2f. Closing it requires `run_all.py --matrix raw/X`. |
 | **D15** the accuracy arm scores mRNA-share estimates against CELL-fraction truth | **OPEN, high** — follows from D12; affects every MAE/RMSE/bias. Both truths are now emitted; which to score against is answered by the two-problem framing |
 | **D14** the ACS ordering does not survive a change of reference atlas, and GBmap is the outlier | **OPEN, highest** — bears on the headline, not on one method. 2x2 showed platform is not the driver (0.817 vs 0.221). But **D16 supplies a confound the 2x2 does not break**: every agreeing arm is log-vs-log and every disagreeing arm is log-vs-linear. The observation stands; the attribution to "the atlas" is IN QUESTION. |
 
@@ -2684,4 +2692,208 @@ moved by <= 0.013 and no reading changed (gimicc_truth_confirmation.md, note aft
 
 **Not changed in the registered pipeline.** Its statistics stay reproducible as registered. Any future
 ABSOLUTE join should key Broad-ID rows by `array`, as `absolute_join_audit.joins()` does.
+
+## D28 · The declared T/NK split in the cluster-naming rule could never trigger
+
+**Severity: latent. No result changes. Found and fixed 2026-10-06** by `tests/test_cptac_per_sample.py`,
+written for the CPTAC arm before any CPTAC data was opened.
+
+**What went wrong.**
+- `prespecified/abdelfattah_cluster_mapping.md` (2026-10-01) declares that a cluster in which T and NK
+  fall together is split per cell by the sign of (T panel - NK panel).
+- `build_abdelfattah_reference.py` applied the 0.5 margin between the best panel and the runner-up
+  first. When T and NK are within 0.5 of each other, the runner-up *is* the other lymphoid panel, so
+  such a cluster was always discarded as ambiguous and the split was unreachable.
+
+**Fix.** A cluster whose best panel is T or NK is judged by max(T, NK) against the best panel outside
+{T, NK}. Within the pair, |T - NK| < 0.5 splits the cluster per cell. This is now in both the builder
+and `scripts/cptac_per_sample.py` (`prespecified/cptac_per_sample_truth.md`, Addendum 1).
+
+**Effect: none on any reported result.** Recomputed from the panel scores in the atlas's provenance:
+- C3, the only T/NK cluster, has T 4.88 against NK 1.24 (|T - NK| = 3.64), so it maps to T under
+  either logic.
+- No other cluster's best panel is T or NK.
+- `atlas_t_vs_b.py` applies its own per-cell split to C3 regardless.
+
+## D30 · The CPTAC DNA control ran GIMiCC on a fifth of its library
+
+**Severity: invalidated one registered control. It is handled by a secondary analysis, and the primary
+reading is unchanged (INCONCLUSIVE). Found 2026-10-06** by inspecting the failed control before
+writing the secondary rule.
+
+**What went wrong.**
+- Control 1 of `prespecified/cptac_per_sample_truth.md` compares the nuclei tumour share with GIMiCC's
+  purity from the same cases' methylation.
+- `R/run_gimicc.R` never imputes. It drops every CpG missing in **any** sample (complete cases).
+- In TCGA the same rule cost about a tenth of the library. It kept 3,616 of 4,022 CpGs in GBM (155
+  samples) and 3,572 in LGG (530 samples), per `results/gimicc/runs/*_AST_h4.log`.
+- CPTAC's coverage is bimodal:
+  - Five samples cover 54-67% of the 4,022 library CpGs: C3N-01814, C3N-00662, C3N-02784, C3N-01815
+    and C3N-02188.
+  - The other 13 cover >= 95.7%.
+- One rule across all 18 samples therefore kept 769 CpGs. The low-coverage samples got implausible
+  purities: C3N-02784 0.05 against 0.65 whole-genome; C3N-01815 0.86 against 0.44.
+
+**How it was established** (`prespecified/cptac_wgs_purity_secondary.md`, S2.2, registered before any
+purity value was seen):
+
+| GIMiCC run | samples | CpGs | Spearman with whole-genome purity |
+|---|---|---|---|
+| all samples (the primary control's instrument) | 18 | 769 | 0.15 |
+| samples covering >= 90% of the library | 13 | 3,775 | **0.92** (p < 0.001) |
+
+- Any coverage threshold from 68% to 95% selects the same 13 samples, as checked on the input.
+
+**What it does and does not change.**
+- The primary control's instrument was broken, but the primary reading does not move. The nuclei truth
+  also fails against whole-genome purity (S2.1, rho 0.13), and against the working methylation
+  purity (0.13, post hoc). The control would have failed with a working instrument.
+- **Lesson for any methylation run on a mixed batch:** check per-sample probe coverage first. Exclude
+  low-coverage samples, rather than letting them shrink the probe set for everyone.
+
+**Not changed.** `run_gimicc.R` keeps its complete-case rule: imputation is forbidden. The coverage
+screen is applied before it is called, as in `scripts/cptac_wgs_purity.py --stage gimicc`.
+
+## D31 · The genuine DWLS package fails on most Ivy GAP samples for a numerical reason
+
+**Severity: it removed the genuine package from the anatomy arm. Found and fixed 2026-10-07; the fix is
+behind `IVYGAP_REPAIRED` until the 2026-10-06 verification re-run finishes.**
+
+**What went wrong.**
+- DWLS 0.1.0's first step, `solveOLSInternal`, passes `t(S) %*% S` and `t(S) %*% B` to
+  `quadprog::solve.QP` unscaled.
+- On counts-per-million inputs those entries reach about 1e8 to 1e12. quadprog's absolute tolerances then
+  report "constraints are inconsistent, no solution!". The problem is in fact feasible (x >= 0) and well
+  conditioned (kappa(S) = 11.7).
+- The package's own dampened step already divides by `norm(D)`; its first step does not.
+- The recorded genuine run (`results/dwls_remeasured.json`) failed on 73 of 122 samples. Its ACS covered
+  26 of 57 pairs, so it was not comparable.
+
+**Evidence (real inputs: the raw/X Ivy GAP signature and the 122 anatomic samples).**
+
+| first step | failing samples |
+|---|---|
+| as run | 73 of 122, the same count the recorded run reported |
+| signature and bulk divided by max(signature) | 0 of 122 |
+
+- Where both solve, the full DWLS solutions agree to 3e-16.
+- The full algorithm completes on the previously failing samples.
+
+**Fix.** `R/run_dwls.R` divides the signature and every bulk column by `max(signature)` when
+`IVYGAP_REPAIRED=1`. This changes no DWLS solution:
+- the least-squares minimiser is invariant to a common scale;
+- the dampening search rescales weights by their minimum, and `lm` coefficients are invariant;
+- the proportions are normalised at the end.
+
+**Test.** `tests/test_dwls_conditioning.py`: on a real failing sample, it reproduces the failure,
+confirms the fix, and checks that nothing else moves.
+
+## D32 · This project's DWLS reimplementation inverts the dampening
+
+**Severity: high for every DWLS number from the reimplementation. That covers all four TCGA arms and
+the registered anatomy arm, whose genuine run timed out or failed. Found and fixed 2026-10-07, behind
+`IVYGAP_REPAIRED`.**
+
+**What went wrong**, against the package source (DWLS 0.1.0, `solveDampenedWLSj`,
+`findDampeningConstant`):
+
+| | the package | the reimplementation |
+|---|---|---|
+| weight cap | `ws / min(ws)`, capped at 2^(j-1): every weight within a bounded range of the smallest | `min(w, max(w) / 2^power)`: relative to the largest, so the range is unbounded |
+| update | the new solution averaged with four copies of the old | the new solution taken directly |
+| stopping | one-norm change < 0.01, or 1000 iterations | max change < 1e-5, or 100 iterations |
+| choosing j | lowest mean variance of unconstrained weighted fits over 100 random half-subsets | similar, on 5 subsets (its docstring wrongly calls the package's criterion "multinomial likelihood") |
+
+- With the inverted cap, a gene whose current fit is about 0 gets a weight near 1/EPS^2 and decides the
+  solution alone.
+- Donor-level references have sparse marker profiles, so this bites there:
+  - GBM: mean estimated endothelium 37%, and tumour against ABSOLUTE 0.16 (0.69 on the frozen signature);
+  - LGG: 1 of 510 samples finite.
+
+**Fix.** `DWLSDeconvolution._solve_published` (used when `config.REPAIRED_METHODS`) reproduces the
+package: same cap, same averaged update, same stopping rule, same criterion for j. Only the random subsets
+differ, because they come from numpy rather than R's `set.seed(1..100)`.
+
+**Validation, on 8 real Ivy GAP samples against the genuine package:**
+- given the package's j, the proportions agree to 5e-11;
+- choosing j itself, it picks the package's j in 3 of 8 samples and an adjacent j in 4 (proportions
+  within 0.03). The eighth differs by up to 0.10.
+- The package's own answer depends on its random subsets in the same way.
+- Pinned in `tests/test_dwls_conditioning.py`, with the legacy dampening as the negative control.
+
+## D33 · quanTIseq was dropped from every TCGA arm before its immune estimates were saved
+
+**Severity: a method silently missing from four rankings. Found 2026-10-07 by the evaluation matrix.**
+
+- `absolute_purity_yardstick.py` scores only the Tumor column and skips a method with fewer than 50 finite
+  tumour estimates.
+- quanTIseq models immune cells only (TIL10), so its Tumor column is NaN by design. Every arm recorded
+  "only 0 finite estimates", and its leukocyte, T, B and NK estimates were never written.
+- The anatomy arm handled the same method correctly ("partial coverage", 15 of 57 pairs, not ranked).
+- **Fix:** `scripts/repaired_methods.py` scores every compartment a method models, and reports a
+  compartment it does not model as such.
+
+## D34 · Two Python "reimplementations" are stand-ins for different algorithms
+
+**Severity: a labelling defect with measured consequences. The registered artefacts already mark every
+one as "python-reimplementation", never as the package. Found 2026-10-07 while repairing DWLS (D32).**
+
+- **SCDC.** `SCDCDeconvolution` describes itself as "SCDC, single-reference mode". It solves weighted NNLS
+  with Huber-style weights computed from each gene's residual. Published SCDC (Dong et al. 2021) weights
+  genes by their variance across subjects in the single-cell reference, as MuSiC does. Those weights cannot
+  be computed without cells, which is exactly the frozen signature's situation.
+- **BayesPrism.** `BayesPrismDeconvolution` is "a Bayesian reference-updating solver, standing in for
+  BayesPrism" (its own docstring). It is a shrinkage heuristic, not the published Gibbs sampler. The cost is
+  measured:
+
+  | arm | stand-in | genuine package |
+  |---|---|---|
+  | GBM donor-level, tumour | 0.16 | 0.72 |
+  | LGG donor-level, tumour | -0.03 | 0.59 |
+
+- **On the frozen signature**, MuSiC, SCDC, SCDC ENSEMBLE, Bisque and BayesPrism cannot run as published,
+  because the signature carries no cells. Every frozen-arm number for them comes from a stand-in, and
+  MuSiC's is arithmetically NNLS.
+- **`docs/METHODS.md` said "Faithful reimplementations".** Corrected on 2026-10-07 to say which are faithful,
+  which are stand-ins, and which are inapplicable on which arm.
+
+**What it touches.** The registered agreement test's frozen arm (rho 0.081) pairs the genuine packages'
+ACS with stand-ins' accuracy for these methods. Its donor-level arm (0.314) uses the genuine MuSiC, SCDC
+and Bisque, but the stand-in BayesPrism. The post hoc sensitivity in `docs/EVALUATION_MATRIX.md` replaces
+each with its repaired or genuine value: 0.081 → -0.17 and 0.314 → 0.20 so far. No registered reading
+changes.
+
+## D35 · Which implementation fills two registered leaderboard rows depends on the wall clock
+
+**Severity: a reproducibility defect in the registered anatomy arm, confined to two rows. Found
+2026-10-07 by the verification re-run (`scripts/verify_rerun.py`, step `registered_pipeline`).**
+
+**What happened.**
+
+| | registered run (2026-09-21) | re-run, identical code (2026-10-07) |
+|---|---|---|
+| BayesPrism | 2,405 s against a 2,400 s budget, so it fell back to the Python stand-in: ACS 0.800 | genuine package finished: ACS **0.815** (the value measured separately on 2026-09-14 and 09-19) |
+| DWLS | 2,416 s against 2,400 s, fell back to the legacy Python version: ACS 0.723 | genuine package finished: ACS **0.70**, but on only 26 of 57 pairs, because 73 of 122 samples failed in quadprog (D31) |
+| every other method, both controls | -- | **identical**: ACS, CI, null distribution |
+
+- DWLS likely finished this time because its signature build was cached.
+- **It moves a reported number, too.** The synthetic-yardstick arm of the registered agreement test (arm 1)
+  depends on the pseudobulk benchmark, which includes both methods. It reads rho 0.637 on 14 methods in
+  the registered run, and 0.828 on 13 in the re-run, where genuine DWLS left samples unestimated. Both
+  clear the 0.60 bar, so the reading stands, but the magnitude depends on which implementation happened to
+  run.
+- The re-run also rewrote three tracked outputs outside `results/`: `RESULTS.md`, the `release/` bundle
+  (17 files) and a new 85 MB `results_archive/2026-10-07T0556/`. All three are restored to the committed,
+  registered versions. Tonight's copies are in the same verification folder (`tracked_files_as_rerun/`
+  and `results_archive_2026-10-07T0556/`), recorded in `MOVED.json`.
+- **Registered values stand.** `results/` keeps the 2026-09-21 artefacts, which the documents report.
+  The re-run's outputs are in `results/verification/rerun_outputs/registered_pipeline_20261007/`, with a
+  `MOVED.json` that records both versions' hashes.
+- **What it settles.** The verification re-run used `--matrix raw/X` and reproduced every
+  timing-independent row exactly. The registered leaderboard is therefore the raw/X build (D16's summary
+  is updated).
+- **Fix direction.** Decide the implementation by a declared rule, not by a clock. The repaired runs
+  (`docs/METHOD_REPAIRS.md`) already run the genuine packages unbudgeted and record any fallback reason.
+- **The harness now keeps registered artefacts in place.** Any differing re-run output is moved aside
+  and the registered one restored, with the difference kept in `state.json` (`keep_registered`, tested).
 

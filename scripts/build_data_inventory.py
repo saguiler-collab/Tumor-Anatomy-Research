@@ -470,6 +470,31 @@ REGISTRY: list[dict] = [
                 F(config.KLEMM_2020_PDF.parent / "mmc2.pdf", "Table S2, gating definitions", compare="none")],
          consumers=[("scripts/klemm_figure1f.py", "KLEMM_2020_PDF")],
          keywords=["Klemm", "flow cytometry"]),
+    dict(id="D33", group=1, status="used",
+         name="CPTAC glioblastoma: bulk RNA-seq and single-nucleus RNA-seq from the same cryopulverised tissue "
+              "(18 tumours), plus methylation",
+         repository="NCI Genomic Data Commons, project CPTAC-3 (open access)",
+         accession="GDC CPTAC-3, primary site Brain; the 18 cases with snRNA-seq (list in "
+                   "data/external/cptac_gbm/MANIFEST.json): CellRanger filtered counts (17), GDC Seurat tables (17), "
+                   "STAR counts (18), methylation beta values (18); per case, the tumor_purity and tumor_ploidy of "
+                   "the one open AscatNGS whole-genome 'Allele-specific Copy Number Segment' record (18), and the "
+                   "percent_tumor_nuclei of the analysed samples' slides (24 slides)",
+         url="https://portal.gdc.cancer.gov/projects/CPTAC-3",
+         version="70 files, md5-verified at download (2026-10-06) against GDC's records; AscatNGS and slide fields "
+                 "read from the GDC API on 2026-10-06 (data release in wgs_ascat_purity.provenance.json)",
+         role="The first per-sample, same-tissue truth in the study (prespecified/cptac_per_sample_truth.md): "
+              "each method's bulk estimate against single-nucleus composition from the same material. Its "
+              "whole-genome purity is the per-sample DNA truth of the secondary analysis "
+              "(prespecified/cptac_wgs_purity_secondary.md).",
+         citation="Wang LB, et al. Cancer Cell 39:509-528 (2021)",
+         doi="10.1016/j.ccell.2021.01.006", first_author="Wang", year=2021,
+         files=[F(config.CPTAC_GBM_DIR / "MANIFEST.json", "download manifest: file ids, md5s, cases", compare="none"),
+                F(config.CPTAC_GBM_DIR / "wgs_ascat_purity.tsv", "AscatNGS purity and ploidy per case, with file ids",
+                  compare="none"),
+                F(config.CPTAC_GBM_DIR / "pathology_tumor_nuclei.tsv", "slide percent tumour nuclei", compare="none")],
+         consumers=[("scripts/fetch_cptac_gbm.py", "CPTAC-3"), ("scripts/cptac_per_sample.py", "CPTAC_GBM_DIR"),
+                    ("scripts/cptac_wgs_purity.py", "tumor_purity")],
+         keywords=["CPTAC", "single-nucleus"]),
     dict(id="D19", group=4, status="used",
          name="GBMDeconvoluteR marker sets (Ajaib immune, Ruiz-Moreno level-3 immune, Neftel "
               "four-state) and Ajaib's published imaging-mass-cytometry correlations",

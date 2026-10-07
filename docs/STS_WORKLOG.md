@@ -2,7 +2,7 @@
 
 Started 2026-09-30 when the project moved from CJSJ to **Regeneron STS**. Maintained so that
 nothing is lost when the conversation is compacted. **Update it after every major result.**
-Last updated: 2026-10-01 12:15 EDT.
+Last updated: 2026-10-07 08:45 EDT (§2.33, §5).
 
 ---
 
@@ -88,6 +88,19 @@ Known competitors for the machine: Microsoft Edge (user closed it 2026-10-01), *
    - **Agreement between methods (DECEPTICON's criterion) is a weaker signal:** it tracks accuracy
      on average (0.28), but its top pairs are algorithmic siblings (9/10), so it can select shared
      construction over correctness.
+
+**Re-assessed 2026-10-06 22:55, after CPTAC (§2.32). Secondary, registered after the primary CPTAC
+control failed, and before any of its values were seen:**
+7. **R2 replicates in an independent cohort with a per-sample whole-genome DNA truth.**
+   - The methods work there: median tumour accuracy 0.45 / 0.43, against TCGA's 0.41 / 0.58.
+   - On the frozen signature their ranking transfers from TCGA (0.68).
+   - ACS again does not identify the accurate ones (0.12).
+8. **For practitioners, the yardstick matters.**
+   - Single-nucleus composition, as processed here, is not a per-sample truth for tumour content
+     (0.13 against DNA).
+   - Methylation with complete probe coverage is (0.92). The same method on a probe set shrunk by five
+     low-coverage samples is not (0.15; D30).
+   - The primary CPTAC analysis is INCONCLUSIVE and must be reported as such.
 
 **What can still change, and what cannot.** Still running: BayesPrism authors' configuration
 (pre-declared prediction about B), ReCIDE, the LGG SVR diagnostics, the extension agreement at
@@ -859,6 +872,288 @@ failed. Every earlier run had exported 2 workers.
 - **`docs/PROJECT_ACCOUNT.md` is now out of date** (it predates raw/X, the extension, E2 and the truth
   tests); the blueprint says so at its top.
 
+### 2.30 Full verification re-run; accuracy-factor figures; a per-sample truth dataset found (2026-10-06 evening)
+- **The user asked:** re-run the entire project to verify how correct it is; update the graphs so it
+  shows whether the methods give actual results.
+  - Purpose restated by the user: find the factors that make deconvolution accurate enough for people
+    who cannot afford scRNA-seq or other expensive tests.
+  - They also asked to be told what external data would further verify it.
+  - (Earlier the same evening the user raised authorship: "it doesn't feel right to publish research
+    you did entirely". I set out the honest options -- make it theirs with me as tutor, publish as
+    disclosed AI-assisted work, check the STS rules. They have not decided.)
+- **`scripts/verify_rerun.py`, the harness:**
+  - It snapshots `results/` to `results_snapshot_20261006/` (77 MB, gitignored) before anything runs.
+  - It then re-runs 61 steps in tiers (37 fast, 17 medium, 7 heavy) and compares every output with
+    the snapshot: JSON leaf by leaf, CSV numerically. The verdicts are REPRODUCED, NUMERICAL NOISE,
+    DIFFERS, NEW or NOT WRITTEN.
+  - Steps that print their verdict are judged on their own words.
+  - It reports to `docs/VERIFICATION_RERUN.md` and lists manuscript artefacts that no step produces
+    (provenance gaps).
+  - `tests/test_verify_rerun.py` (5): a planted change must be DIFFERS, jitter must be NOISE.
+- **Lanes:**
+  - Fast pass from 19:31.
+  - `scratchpad/verify_rest_lane.sh`, then medium, then heavy (the registered pipeline, all four TCGA
+    arms, the extension panel, CDSeq), then the fast pass again on the fresh fits.
+  - Each tier **waits for AC power**. The Mac was on battery, 92%.
+  - Status `/tmp/verify.status`; logs `/tmp/verify_*.log` and `results/verification/logs/`.
+- **First results: every fast step so far REPRODUCED.** The independent recomputation, with no
+  project code, AGREES; the registered orthogonal agreement statistic reproduces.
+- **New figures** (`build_paper_figures.py`):
+  - `Figure_truth_instruments`: direct measurement puts B at 1-9% of lymphocytes, methylation at
+    11-49%, deconvolution at 51-71%.
+  - `Figure_accuracy_factors`:
+    - A: accuracy by compartment, with EpiDISH on matched denominators;
+    - B-C: the reference build moves a method's accuracy by up to 0.5 either way;
+    - D: which ground-truth-free check predicts real accuracy (ACS 0.08; agreement 0.28 and 0.66;
+      stability 0.89).
+- **`docs/ACCURACY_FACTORS.md`:** the six measured factors, strongest first, and a practical recipe for
+  labs without direct measurement. Numbers checked against the artefacts; four errors fixed before
+  hand-over (leukocytes 0.49 not 0.50; BayesPrism is not signature-only; best range 0.71-0.74;
+  mesenchymal not testable in LGG).
+- **External dataset found and verified: CPTAC glioblastoma** (Wang et al., Cancer Cell 2021).
+  - 18 tumours with single-nucleus RNA-seq from the same cryopulverised material as their bulk
+    RNA-seq.
+  - Open at GDC (CPTAC-3): snRNA filtered counts for 17 cases (1.33 GB), bulk STAR counts for 18
+    (0.08 GB), methylation betas for 18 (0.39 GB).
+  - The first per-sample, same-tissue truth available to this project.
+  - Proposed to the user; not downloaded.
+- **Fast pass DONE 19:53 (exit 0): 39/39 steps.** 36 outputs REPRODUCED exactly; the independent
+  recomputation AGREES; the GIMiCC input rebuild and RESULTS.md consistency PASSED. **Zero differences,
+  zero failures.**
+- **Provenance gaps it exposed, and their closure:** 11 manuscript artefacts had no step.
+  - 9 have producers, now added as steps: EpiDISH re-runs, Bisque planted-truth (R), the
+    alternative-reference arms, the S2 ablation, ReCIDE, LGG equal-footing, the missingness audit.
+  - The S2 and ReCIDE steps write beside the original and are compared with it (`new=>old`), because
+    their producers refuse to overwrite.
+  - **2 were one-off commands** (`spillover_lgg.json`, `zero_lymphoid_vs_purity.json`). They were
+    recovered verbatim from the transcript (lines 18322 and 19476) as `scripts/spillover_test.py` and
+    `scripts/zero_lymphoid_vs_purity.py`, with paths from config, and both **REPRODUCED** exactly.
+  - The gap list is now empty.
+- Harness totals: 39 fast, 21 medium, 11 heavy. **Medium and heavy wait for AC power** (the lane
+  logged "WAITING FOR AC POWER before medium" at 19:53).
+
+### 2.31 CPTAC: a per-sample, same-tissue truth (user: "resume", 2026-10-06 20:41; the Mac on AC power)
+- **Data:** `scripts/fetch_cptac_gbm.py`, from GDC CPTAC-3, open access; 70 files md5-verified, 1.8 GB,
+  `data/external/cptac_gbm/`.
+  - 18 cases: 17 snRNA filtered matrices, 17 GDC Seurat tables, 18 STAR counts, 18 methylation betas.
+  - Inventory D33; citation Crossref-verified.
+- **Rule** `prespecified/cptac_per_sample_truth.md`, born 20:45:29, before any CPTAC file was opened.
+  - Truth: GDC's clusters, named by the Abdelfattah marker rule unchanged; samples with < 70% of
+    nuclei mapped are excluded.
+  - Controls: truth tumour share vs GIMiCC DNA purity >= 0.40; median mapping >= 70%; permutation
+    nulls.
+  - Questions: C1 compartments per sample; C2 does ACS rank methods by per-sample accuracy; C3
+    reference effect; C4 lymphoid; C5 methylation per sample.
+- **Addendum 1 (20:49:58), D28:** the declared T/NK split was unreachable; implemented as declared. The
+  Abdelfattah atlas is unaffected. Found by a planted-data test.
+- **Addendum 2 (20:58:55), D29, from inspecting the truth before any accuracy:**
+  - The NK panel's NCAM1 labels CD45-negative brain nuclei NK (C3N-03186: 794 nuclei with NKG7 about
+    0 and PTPRC about 0.2).
+  - Sensitivity truth S1 drops NCAM1 from the NK panel. It removes exactly those (794 and 104 to 0);
+    genuine NK clusters are unchanged.
+  - The registered truth stays primary, rebuilt byte-identical.
+  - M1 (myeloid absorbed into tumour clusters) is at most 5.0%: no flag.
+- **Truth quality:** median 85% of nuclei mapped; C3N-02188 (59%) and C3N-02783 (61%) excluded, leaving
+  15 scored.
+  - Some tumours show no myeloid nuclei, and three show T at 13-21% of nuclei; reported as observed.
+- **Runs:** bulk, 59,427 genes x 18. Frozen-signature panel: 12 ok; cibersortx_smode failed (it needs
+  cells), as in the TCGA frozen arm.
+  - Then the donor-level reference, then the analysis (`scratchpad/cptac_lane2.sh`, `/tmp/cptac.status`).
+  - *Correction (22:50):* the frozen arm ran **13** methods, not 12. cibersortx_smode failed (it needs
+    cells); quantiseq was skipped (0 of 18 samples finite) under both references. The donor-level arm ran
+    14 methods. Source: `results/cptac/methods_{frozen,h5ad}.json`.
+
+### 2.32 CPTAC results: the primary is INCONCLUSIVE; a whole-genome secondary (S2) separates the instruments (2026-10-06 21:10-22:50)
+- **The primary result** (`results/cptac_per_sample_truth.json`):
+  - The permutation test was vectorised: the same permutations drawn in the same order, with p values
+    verified identical to the loop version.
+  - **Control 1 FAILED:** snRNA tumour share against GIMiCC purity, rho 0.014 (perm p 0.96, n 15); S1
+    -0.029. Control 2 passed (median mapped 0.853).
+  - **Every primary reading is therefore INCONCLUSIVE.** For the record only (not readings):
+    - C1 medians: Tumor 0.24 / 0.35 and Oligodendrocyte 0.64 / 0.58 (frozen / donor-level).
+    - C2: 0.32 / 0.696.
+    - C4: pooled nuclei T 0.80, NK 0.19, B 0.013. B nuclei occur in only 2 cases, so C4 is
+      UNRESOLVED.
+- **Diagnosis of the control's instrument** (post hoc, looked at before S2 was written):
+  - GIMiCC's complete-case rule kept 769 of 4,022 library CpGs.
+  - Coverage is bimodal: five samples cover 54-67% of the library (C3N-01814, -00662, -02784, -01815,
+    -02188), and 13 cover >= 95.7%.
+  - Logged as OPEN_DEFECTS D30.
+- **A per-sample DNA truth found in GDC:** each case's open AscatNGS whole-genome record carries
+  `tumor_purity` and `tumor_ploidy`. All 18 cases have one, and its aliquots are the bulk RNA's
+  samples.
+- **Rule** `prespecified/cptac_wgs_purity_secondary.md`, born **22:34:47** (stamped from stat).
+  - SECONDARY, written before any purity, ploidy or pathology value was seen.
+  - It reuses the bars 0.40 and 0.60, so no new bar is introduced.
+- **Script** `scripts/cptac_wgs_purity.py` (fetch, gimicc, analyse).
+  - Outputs: `results/cptac_wgs_purity.json` and `results/cptac/wgs_purity_per_sample.csv`.
+  - Data: `data/external/cptac_gbm/wgs_ascat_purity.tsv` and `pathology_tumor_nuclei.tsv`, with a
+    provenance JSON.
+- **Truth:** WGS purity for 18/18 cases, range 0.44-0.92 (median 0.66). No value >= 0.99. Ploidy
+  1.6-4.5.
+- **S2.1 FAIL:** nuclei tumour share against WGS purity, rho **0.13** (p 0.65, n 15). S1 gives 0.12, and
+  the 10 single-piece cases 0.20.
+  - C1-C3 therefore stay INCONCLUSIVE. The C2 donor-level 0.696 is **not** counted.
+  - Post hoc, the nuclei against working methylation purity: 0.13 (n 11). The nuclei fail against both
+    DNA instruments.
+- **S2.2 (the methylation instrument):**
+  - (a) the 769-CpG run against WGS: 0.15.
+  - (b) re-run on the 13 complete samples (3,775 CpGs): **0.92** (p < 0.001).
+  - By the rule, the failed control is attributed to methylation coverage. The control would have
+    failed anyway, because the nuclei fail too.
+  - Checked on the input: every threshold from 68% to 95% selects the same 13 samples.
+- **S2.3 TRACKS:** bulk tumour estimate against WGS purity, median rho **0.45** (frozen, 13 methods) and
+  **0.43** (donor-level, 14 methods).
+  - TCGA-GBM, same methods: 0.41 and 0.58.
+  - Median recovery slope: 0.22 and 0.36.
+  - Best methods: frozen DWLS 0.85, Bayesian hierarchical 0.67, Bayesian 0.66, CIBERSORTx 0.59, SVR
+    0.59; donor-level DWLS 0.74, BayesPrism 0.67, Bayesian 0.63.
+- **S2.4, the ranking against DNA:**
+  - Frozen **TRANSFERS** from TCGA: rho **0.68** (p 0.016, 12 methods). The top four in TCGA (Bayesian,
+    SVR, CIBERSORTx, DWLS) are four of the top five here.
+  - Donor-level does **not** transfer: 0.13 (14 methods).
+    - Post hoc, without BayesPrism, which ran in Python in TCGA and in R here: 0.41 (13 methods).
+    - DWLS donor-level moved from 0.16 (TCGA) to 0.74 with the same implementation.
+- **S2.5:** ACS against WGS accuracy is **0.12** (frozen, 12 methods; p 0.72) and -0.35 (donor-level).
+  Anatomy does not rank methods by accuracy. This replicates the registered null (0.081) in an
+  independent cohort with an independent DNA truth.
+- **S2.6 pathology** (descriptive): percent tumour nuclei range 65-90%, as expected from CPTAC's
+  selection on tumour content.
+  - Against WGS 0.38 (p 0.12, n 18); against the nuclei 0.19.
+- **Figure** `docs/figures/Figure_cptac_wgs` (A-F).
+  - The pre-written `fig_cptac_per_sample()` is **not rendered**, because its readings are
+    INCONCLUSIVE. It is kept as written, with a docstring note.
+- **Verification harness:**
+  - New status REPRODUCED + NEW FIELDS, for when every original value is reproduced and the re-run only
+    adds fields. It has a test, including the negative cases.
+  - `independent_atlas_test.json` (the only DIFFERS so far) is exactly that.
+    - Every value the original recorded agrees: 220 leaves, with timestamps and paths ignored by rule.
+    - The re-run adds 8 provenance fields (`seed`, `ig_removed`, Ig counts), which the script gained
+      after the original was written on 2026-10-01.
+  - The CPTAC analyses are added as fast steps.
+- **Meaning for the user's question** ("do these methods give actual results?"):
+  - **Yes for tumour content, in an independent cohort, against whole-genome DNA.** Recovery is at the
+    TCGA level, and on the frozen signature the methods that win in TCGA win again.
+  - **The single-nucleus counts, as processed here, are not a per-sample truth for tumour content.**
+    Methylation with complete inputs is (0.92).
+  - **Anatomy again does not pick the accurate method.**
+
+### 2.33 Accuracy first: every method against every truth, and the broken methods repaired (2026-10-06 23:10 to 2026-10-07)
+**User:** "Right now im more focused on making this accurate than bringing newer research. How can we fix the
+broken methods and ensure the LGG and Glioblastoma data ... is effectively applied ... separate them further
+via ACS values."
+- **Evaluation matrix** (`scripts/evaluation_matrix.py` → `docs/EVALUATION_MATRIX.md`): every method ×
+  {ACS, ABSOLUTE, LF, EpiDISH lymphoid/T/B/NK, T>B, CPTAC WGS} × GBM/LGG × frozen/donor-level.
+  - It reuses the published joins (`identifiability_diagnostics.truths/truth_rho`).
+  - Recomputed tumour rho = registered in **51 of 51** method-arms.
+  - 20 empty cells, each with its reason.
+- **D31, genuine DWLS:** quadprog fails in DWLS's unscaled first step.
+  - Reproduced exactly on the real Ivy GAP inputs: 73/122 failures, the recorded count.
+  - One common rescaling: 0/122, identical to 3e-16 where both solve; the full algorithm completes.
+  - `R/run_dwls.R`; `tests/test_dwls_conditioning.py` (1 s).
+- **D32, our DWLS reimplementation** caps weights relative to the LARGEST weight; the package (source read)
+  caps relative to the SMALLEST.
+  - The published algorithm is now reimplemented: it equals the package to 5e-11 given its dampening
+    constant j, on 8 real samples. It picks the same j in 3/8 and an adjacent j in 4/8 (package
+    randomness).
+- **D33, quanTIseq** is not broken: the TCGA yardstick scores only Tumor, which quanTIseq does not model,
+  so its immune estimates were never saved.
+- **Bayesian hierarchical** on the frozen signature (D20): GBM tumour **0.750**, now the best on that arm.
+- **BayesPrism, the genuine package, already measured** (extension, 2026-10-01/02):
+  - tumour 0.16 → **0.72** (GBM) and -0.03 → **0.59** (LGG);
+  - leukocytes 0.34 → 0.71 and -0.18 → 0.58;
+  - lymphoid still ≤ 0;
+  - ACS 0.800 → 0.815 (all 57 pairs).
+- **ACS per constraint:**
+  - C2-C4 are near-saturated. Among working methods, the ordering rests on C6 (macrophage MVP > CT,
+    spread 0.67) and C7 (tumour gradient, spread 0.62), each on 8-9 tumours.
+  - The DNA-accurate Bayesian pair passes C7 in 3/8 tumours, while MuSiC, SVR and SCDC pass it in 8/8.
+  - So ACS's resolution among working methods is two constraints. Not retuned: the constraints are
+    registered.
+- **Every repair is behind `IVYGAP_REPAIRED=1`** (`config.REPAIRED_METHODS`), so the verification re-run
+  reproduces the archived results.
+  - Checked: the verification's genuine-DWLS process started 23:32:10, before the first repair edit
+    (23:49:45).
+  - Repaired outputs go to `results/repaired/` (`scripts/repaired_methods.py`). It aborts unless its
+    sample × gene counts equal the registered arm's.
+- **Runs:**
+  - **GBM frozen DONE (00:33):**
+    - DWLS (published dampening): tumour 0.69 → **0.77**, leukocytes 0.67 → 0.76.
+    - Bayesian hierarchical: 0.75 / 0.51.
+    - quanTIseq (genuine): leukocytes 0.11, lymphoid 0.22; NK 75% of lymphocytes.
+    - **No repaired method gets T > B**, so R3 is not an implementation artefact.
+  - `scratchpad/repair_lane.sh` (status `/tmp/repair_lane.status`) runs LGG frozen next. After
+    "END verify heavy" it runs the donor-level arms, the genuine DWLS on Ivy GAP, then the matrix.
+- **LGG frozen:** DWLS 0.52 → **0.59** (leukocytes 0.61); Bayesian hierarchical 0.54. quanTIseq running.
+- **CPTAC frozen** (`repaired_methods.py --cohort cptac`, scored against whole-genome purity):
+  - DWLS 0.851 → 0.854;
+  - Bayesian hierarchical 0.6656, identical to registered, which confirms the preparation;
+  - quanTIseq not scorable (no tumour column; CPTAC has no valid per-sample immune truth).
+- **GIMiCC added to the matrix**, with instrument agreement (post hoc): the method ranking under ABSOLUTE
+  against GIMiCC is 0.80-0.87 for tumour, and LF against GIMiCC is 0.82-0.99 for leukocytes, in all four
+  arms.
+- **D7 check in the matrix:** degenerate per-sample solves are rare. The exception is the BayesPrism
+  stand-in on LGG frozen: 45/510 rows all in one type.
+- **D34:** the SCDC and BayesPrism Python versions are stand-ins for different algorithms. METHODS.md had
+  called them "faithful"; corrected, with a table of which version is which.
+- **R2 after the repairs (post hoc sensitivity, `repaired_agreement` in the matrix):** frozen 0.081 →
+  -0.17; donor-level 0.314 → 0.20. Anatomy still does not rank. The DWLS donor-level repair is pending.
+- **Manuscript §4.14** fills itself from `evaluation_matrix.json`, with reimplementations labelled.
+  Figure 15 is `Figure_acs_constraints`. The blueprint is updated (R2, R3, row 22).
+- **LGG frozen DONE (01:28):**
+  - DWLS 0.52 → 0.59, leukocytes 0.61;
+  - Bayesian hierarchical 0.54 (leukocytes -0.09);
+  - quanTIseq leukocytes 0.46, lymphoid 0.16, NK ~74% of lymphocytes;
+  - 0 of 6 repaired method-arms put T above B.
+- **LANES REORDERED (01:30), `scratchpad/reorder_lanes.sh`, status in `/tmp/repair_lane.status`:**
+  1. The verification's heavy tier finishes its current step (registered_pipeline), then pauses. A paused
+     step is never recorded, and `verify_rerun.py` skips recorded steps, so nothing is lost.
+  2. Repairs run one atlas at a time: GBM donor-level, genuine DWLS on Ivy GAP, CPTAC donor-level, LGG
+     donor-level. Then the matrix and the manuscript are rebuilt.
+  3. The verification resumes ("RESUME verify heavy" in `/tmp/verify.status`), then fast pass 3, then
+     `--report`.
+  - Why: the user's current priority is the repaired methods, and the heavy tier's remaining steps
+    (TCGA arms, extension, CDSeq, reference sensitivity, ReCIDE) are about 20-30 h.
+- **VERIFICATION, registered pipeline re-run (01:57; 9,906 s; `run_all.py --matrix raw/X`):**
+  - **Every method and both controls reproduce exactly** (ACS, CI, null) except BayesPrism and DWLS.
+  - Those two overran their 2,400 s budgets by 5 and 16 s in the registered run, and fell back to Python.
+    This time both genuine packages finished: BayesPrism 0.815; DWLS 0.70 on 26/57 pairs, 73 samples
+    failing in quadprog (D31).
+  - Logged as **D35** (timing-dependent rows). **D16's summary is resolved:** the registered leaderboard
+    is the raw/X build.
+  - **Registered artefacts restored** in `results/`, byte-identical to the snapshot. The re-run's 33
+    outputs are in `results/verification/rerun_outputs/registered_pipeline_20261007/` (with `MOVED.json`
+    of hashes).
+  - The harness now does this itself for any DIFFERS output (`keep_registered`, tested), and the
+    remaining heavy steps will use it.
+  - The doc checker is CLEAN after the restore.
+- **GBM donor-level repairs DONE (03:03):**
+  - **genuine DWLS (rescaled, unbudgeted), all 154 samples: tumour 0.16 → 0.63, leukocytes 0.72**; T > B no;
+  - Bayesian hierarchical reproduces 0.70;
+  - quanTIseq identical to frozen (it uses its own TIL10 signature).
+  - R2 re-check, donor-level: 0.314 → **0.11**.
+- **Finishing plan (07:25, user: "Finish this"), `scratchpad/finish_lane.sh`** (replaced `reorder_lanes.sh`
+  once its Ivy GAP DWLS step was running):
+  1. CPTAC donor-level, genuine DWLS.
+  2. LGG donor-level, the repaired DWLS reimplementation (genuine would take about 8 h).
+  3. Matrix and manuscript.
+  4. The verification resumes.
+  - quanTIseq and Bayesian hierarchical are not re-run on the donor-level arms: they are
+    reference-independent or already registered.
+- **Restored tracked files the re-run had rewritten** (`RESULTS.md`, `release/` ×17), and moved its 85 MB
+  `results_archive/2026-10-07T0556/` out of git, into the verification folder. D35 gained the arm-1
+  magnitude swing: 0.637 on 14 methods → 0.828 on 13 when genuine DWLS ran.
+- **Ivy GAP anatomy, genuine DWLS (rescaled), DONE 07:39 (3.09 h):** all 122 samples estimated; ACS **0.723**
+  [0.59, 0.87] on 57/57 pairs. That equals the registered Python value to 3 decimals, from different
+  estimates. Accuracy rose fourfold while the anatomy score did not move.
+- **LGG donor-level DONE 08:28** (repaired Python DWLS, in parallel): 1/510 → 510/510 finite; tumour
+  **0.45**, leukocytes 0.56; T > B no.
+- CPTAC donor-level (genuine DWLS) was paused 08:17-08:28 for memory, then resumed.
+- **Full pytest: 471 passed, 1 skipped.** An earlier run had 2 setup errors: my matrix test reloaded
+  `identifiability_diagnostics`, which re-bound its paths for later tests. Fixed by patching paths
+  without reloading; both test orders pass.
+- **Docs:** `docs/METHOD_REPAIRS.md`; OPEN_DEFECTS D31-D35.
+
 ## 3 · Corrections made this session (do not repeat)
 - **The §4.10 extension table printed B-above-T shares without denominators**, against Appendix D's
   own rule. On the raw/X arm most methods return no lymphocytes for most samples: FARDEEP's "100%"
@@ -1012,7 +1307,49 @@ METHOD_LIMITATIONS (§6), SUBMISSION_CHECKLIST, FIGURES, supplementary S5/S6}`, 
 docs, `ivygap/{data/reference.py, deconv/r_bridge.py, bench/run_benchmark.py}`, several scripts/tests.
 
 ## 5 · Next, in order
-**(2026-10-03 13:51) Current state, read this first:**
+**(2026-10-07 08:45) Current state, read this first:**
+- **All method repairs DONE** (§2.33; `docs/METHOD_REPAIRS.md`, `docs/EVALUATION_MATRIX.md`).
+  - Every previously broken or missing method-arm has estimates.
+  - The R2 re-check is frozen -0.17 and donor-level 0.11 (registered 0.081 and 0.314): anatomy still does
+    not rank methods.
+  - No repaired method-arm puts T above B (0 of 10).
+- **Full pytest: 471 passed, 1 skipped.** Both doc checkers CLEAN.
+- **The verification's heavy tier RESUMED 08:37** (`scratchpad/finish_lane2.sh`) at `tcga_gbm_frozen`.
+  - About 20-30 h remain, then fast pass 3 and `--report`.
+  - Registered artefacts stay in place (`keep_registered`).
+- **Committed and pushed at the user's request ("once it is complete you should commit and push").**
+  - The commit follows this entry; main is fast-forwarded as before.
+  - Commit the verification's final report when it is written.
+- **Open user decisions:**
+  - make the repairs the default once the verification ends (`IVYGAP_REPAIRED`);
+  - abstract wording;
+  - the 5 publisher PDFs;
+  - the authorship approach.
+
+**(2026-10-06 23:00) Earlier state:**
+- **Verification re-run** (`scripts/verify_rerun.py`; lane `scratchpad/verify_rest_lane.sh`, pid 5888, status
+  in `/tmp/verify.status`, logs in `/tmp/verify_*.log`):
+  - fast 39/39 agree;
+  - medium 17/21, all REPRODUCED, or REPRODUCED + NEW FIELDS (2, provenance fields only);
+  - heavy (11 refits) next, then fast pass 3 with `--force`, then `--report`.
+- **CPTAC done (§2.32):** primary INCONCLUSIVE; secondary S2 complete.
+  - Outputs: `Figure_cptac_wgs`, manuscript §4.13, OPEN_DEFECTS D30, references [54]-[56], ACCURACY_FACTORS
+    factor 7.
+- **Checks:** both doc checkers CLEAN; 65 targeted tests pass; inventory 33 datasets, 0 problems. The full
+  `pytest tests/ -q` is owed after the heavy tier, to avoid competing for the two cores.
+- **Not committed since `1fc4c40`.** Commit only when the user asks.
+- **Optional external item:** Wang et al.'s own per-nucleus cell-type labels, manually annotated on
+  their merged Seurat object (paper, STAR Methods "snRNA-seq cell type annotation").
+  - They are not in GDC, whose `seurat.analysis.tsv` files are automated per-sample clusters.
+  - The paper points to the CPTAC Data Portal study S057 and Table S2 for processed data.
+  - It would test whether curated labels rescue the nuclei as a truth.
+- **Next:**
+  1. Watch the heavy tier; explain any DIFFERS.
+  2. E3 (gene-resampling stability) is still unregistered.
+  3. User decisions: commit; abstract wording; where CPTAC goes (inside R2 recommended); the 5 publisher
+     PDFs; authorship approach.
+
+**(2026-10-03 13:51) Earlier state:**
 - GIMiCC truth check DONE. Registered reading INCONCLUSIVE; GBM corroborated, LGG contested (§2.26).
 - Atlas and GBmap direct counts DONE (§2.27).
 - Linseed DONE in all three arms. ReCIDE LGG rank DONE.

@@ -159,7 +159,14 @@ def main() -> int:
         sc = {t: float(lcpm[rows][:, [col[g] for g in p if g in col]].mean()) for t, p in PANELS.items()}
         best = sorted(sc.items(), key=lambda kv: -kv[1])
         scores[cid] = {t: round(x, 3) for t, x in sc.items()}
-        good = best[0][0] != "_excluded" and best[0][1] - best[1][1] >= MARGIN
+        if best[0][0] in ("T_cell", "NK_cell"):
+            # OPEN_DEFECTS D28: a T/NK cluster is judged against the best panel OUTSIDE {T, NK}; with
+            # the plain runner-up margin the declared T/NK split below could never trigger. No cluster
+            # of this atlas changes (C3: |T - NK| = 3.64; no other cluster is T- or NK-best).
+            other = max(v for k, v in sc.items() if k not in ("T_cell", "NK_cell"))
+            good = max(sc["T_cell"], sc["NK_cell"]) - other >= MARGIN
+        else:
+            good = best[0][0] != "_excluded" and best[0][1] - best[1][1] >= MARGIN
         mapping[cid] = best[0][0] if good else None
         print(f"  {cid:<4} n={rows.sum():>6}  best {best[0][0]:<20} {best[0][1]:.2f}  runner-up {best[1][0]:<20} "
               f"{best[1][1]:.2f}  -> {mapping[cid]}", flush=True)

@@ -1,5 +1,12 @@
 {
  "crossref": {
+  "10.1016/j.ccell.2021.01.006": {
+   "checked": "2026-10-06",
+   "first_author": "Wang",
+   "title": "Proteogenomic and metabolomic characterization of human glioblastoma",
+   "venue": "Cancer Cell",
+   "year": 2021
+  },
   "10.1016/j.ccell.2022.05.009": {
    "checked": "2026-10-06",
    "first_author": "Ravi",
@@ -303,6 +310,9 @@
   "/Users/tatopro9130/Git-Hub-Repos/Tumor-Anatomy-Research/celldecov_reference_papers/Klemm_et_al_2020/PIIS0092867420305699.pdf|21299796|1791317997": "df824704317a2f84ec9a49e9d8ebff648789cd59b95ce6800f93f58f612b6503",
   "/Users/tatopro9130/Git-Hub-Repos/Tumor-Anatomy-Research/celldecov_reference_papers/Klemm_et_al_2020/mmc1.pdf|64425|1791318005": "85bc295ab23783005cbc80a39d87dc036ed5f8b5959011120b2ed1dc3f8d99ee",
   "/Users/tatopro9130/Git-Hub-Repos/Tumor-Anatomy-Research/celldecov_reference_papers/Klemm_et_al_2020/mmc2.pdf|31256|1791317947": "d636cae87a4e0d6b6049c49d2a5801a011b7fd86d9c58e8eaeb45dccef226d72",
+  "/Users/tatopro9130/Git-Hub-Repos/Tumor-Anatomy-Research/data/external/cptac_gbm/MANIFEST.json|44027|1791334372": "0d8d7af524cf9e5a1c0871a221c1dcd4f9bb896ff1fa9e38a6e39056d6804413",
+  "/Users/tatopro9130/Git-Hub-Repos/Tumor-Anatomy-Research/data/external/cptac_gbm/pathology_tumor_nuclei.tsv|1609|1791340637": "16352e981e87f1484b8184536aa7a001602d0099f9c51d4ff11b54786f7f9b82",
+  "/Users/tatopro9130/Git-Hub-Repos/Tumor-Anatomy-Research/data/external/cptac_gbm/wgs_ascat_purity.tsv|4975|1791340636": "0e17f08d75a47b5442fdc89f8ff6d0063e837396f16b15df2df5e8a79b196929",
   "/Users/tatopro9130/Git-Hub-Repos/Tumor-Anatomy-Research/data/processed/gbm_methylation_epidish_probes.csv.gz|94341|1789747250": "442cab01e6bdedf17df6e9e23853f5286de1907560e9de2915b9c597dc8cd125",
   "/Users/tatopro9130/Git-Hub-Repos/Tumor-Anatomy-Research/data/processed/ivygap_bulk_expression.tsv|97270956|1789928087": "a8ad19045427d3652ad95d308ad886df6254ee373c48155088848257d351453f",
   "/Users/tatopro9130/Git-Hub-Repos/Tumor-Anatomy-Research/data/processed/ivygap_expected_counts.csv.gz|12341295|1789518844": "eb4cac2e10b6635877f29f1e99d1087e1e023b150d3660ccff0ad53a1b6cac1a",

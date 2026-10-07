@@ -159,6 +159,32 @@ if (length(shared) < MIN_SIGNATURE_GENES) {
 }
 signature <- signature[shared, , drop = FALSE]
 
+# NUMERICAL CONDITIONING (OPEN_DEFECTS D31, 2026-10-06).
+#
+# DWLS's first step, solveOLSInternal, hands t(S) %*% S and t(S) %*% B to quadprog::solve.QP
+# UNSCALED. On counts-per-million inputs those entries reach ~1e8-1e12, and quadprog's
+# absolute tolerances then report "constraints are inconsistent, no solution!" for a
+# problem that is perfectly feasible (x >= 0) and well conditioned (kappa(S) = 11.7 on the
+# Ivy GAP raw/X signature). The package's own dampened step already divides by norm(D)
+# for exactly this reason; its first step does not.
+#
+# Dividing the signature and every bulk column by ONE constant changes no DWLS solution:
+# the OLS minimiser, the dampening-constant search (weights are rescaled by their minimum;
+# lm coefficients are invariant to a common scale) and the dampened WLS are all invariant
+# to it, and the returned proportions are normalised. Measured on the real Ivy GAP inputs:
+# the first step failed on 73 of 122 samples as run and on 0 of 122 rescaled; where both
+# solve, full solutions agree to 3e-16 (tests/test_dwls_conditioning.py).
+#
+# Applied when IVYGAP_REPAIRED=1 (ivygap/config.py REPAIRED_METHODS); off by default until the 2026-10-06
+# verification re-run has reproduced the archived results with the code that made them.
+if (identical(Sys.getenv("IVYGAP_REPAIRED", "0"), "1")) {
+  dwls_scale <- max(signature)
+  signature <- signature / dwls_scale
+  bulk_mat <- bulk_mat / dwls_scale
+  cat(sprintf("DWLS: signature and bulk divided by %.6g (the signature maximum) before solving (repaired run)\n",
+              dwls_scale))
+}
+
 # PER-SAMPLE ISOLATION.
 #
 # solveDampenedWLS succeeds on most mixtures and fails on some — the signature and the

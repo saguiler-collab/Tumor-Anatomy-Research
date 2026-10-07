@@ -744,6 +744,8 @@ class RMethod(DeconvolutionMethod):
             else:
                 self.fallback_reason_ = _summarise_r_failure(exc)
             out = np.asarray(self.fallback._solve_all(data), dtype="float64")
+            # a repaired reimplementation says so in its label (config.REPAIRED_METHODS)
+            self.implementation_ += getattr(self.fallback, "variant_suffix_", "")
             self.degenerate_ = bool(getattr(self.fallback, "degenerate_", False))
             self.degeneracy_reason_ = getattr(self.fallback, "degeneracy_reason_", None)
             return out

@@ -249,10 +249,79 @@ class DWLSDeconvolution(DeconvolutionMethod):
                 best_power, best_var = power, var
         return best_power
 
+    # ------------------------------------------------------------------------------------------
+    # THE PUBLISHED ALGORITHM (OPEN_DEFECTS D32), used when config.REPAIRED_METHODS.
+    #
+    # The methods above depart from the DWLS package (0.1.0) in the one place that defines it.
+    # The package caps each weight RELATIVE TO THE SMALLEST weight -- ws / min(ws), capped at
+    # 2^(j-1) -- so every gene's weight stays within a bounded dynamic range. `_weights` above
+    # caps relative to the LARGEST weight (max(W) / 2^power), which leaves the range unbounded:
+    # a gene whose current fit is ~0 gets a weight near 1/EPS^2 and decides the solution alone.
+    # On donor-level references, whose marker profiles are sparse, that produced 37% endothelial
+    # cells in glioblastoma on average. The package also averages each new solution with four
+    # copies of the previous one, stops when the one-norm change falls below 0.01 (or after 1000
+    # iterations), and chooses j by the mean variance of unconstrained weighted fits over 100
+    # random half-subsets of genes. All of that is reproduced below; only the subsets differ
+    # (numpy's generator, not R's set.seed(1..100)), so j can differ in rare samples.
+    # ------------------------------------------------------------------------------------------
+    @staticmethod
+    def _published_scaled_weights(S: np.ndarray, sol: np.ndarray) -> np.ndarray:
+        with np.errstate(divide="ignore", invalid="ignore"):
+            ws = 1.0 / (S @ sol) ** 2            # inf where the fit is exactly zero, as in R
+            return ws / np.min(ws)
+
+    def _published_dampening_constant(self, S: np.ndarray, b: np.ndarray, gold: np.ndarray,
+                                      rng: np.random.Generator) -> int | None:
+        ws_scaled = self._published_scaled_weights(S, gold)
+        finite = ws_scaled[np.isfinite(ws_scaled)]
+        if finite.size == 0:
+            return None
+        top = max(1, int(np.ceil(np.log2(finite.max())))) if finite.max() > 1 else 1
+        n = S.shape[0]
+        subsets = [rng.choice(n, size=int(n * 0.5), replace=False) for _ in range(100)]
+        best_j, best = None, np.inf
+        for j in range(1, top + 1):
+            sw = np.sqrt(np.minimum(ws_scaled, 2.0 ** (j - 1)))
+            sols = []
+            for idx in subsets:
+                A, y = S[idx] * sw[idx, None], b[idx] * sw[idx]
+                if np.linalg.matrix_rank(A) < A.shape[1]:
+                    sols = None                    # R's lm returns NA here, and which.min skips this j
+                    break
+                coef = np.linalg.lstsq(A, y, rcond=None)[0]
+                sols.append(coef * gold.sum() / coef.sum())
+            if sols is None:
+                continue
+            v = float(np.mean(np.std(np.vstack(sols), axis=0, ddof=1) ** 2))
+            if v < best:
+                best, best_j = v, j
+        return best_j
+
+    def _solve_published(self, S: np.ndarray, b: np.ndarray, rng: np.random.Generator,
+                         j: int | None = None) -> np.ndarray:
+        sol, _ = nnls(S, b)                        # solveOLSInternal: least squares with x >= 0
+        if not np.isfinite(sol).all() or sol.sum() <= 0:
+            return np.full(S.shape[1], np.nan)
+        if j is None:
+            j = self._published_dampening_constant(S, b, sol, rng)
+        if j is None:
+            return np.full(S.shape[1], np.nan)
+        change, it = 1.0, 0
+        while change > 0.01 and it < 1000:
+            sw = np.sqrt(np.minimum(self._published_scaled_weights(S, sol), 2.0 ** (j - 1)))
+            new, _ = nnls(S * sw[:, None], b * sw)  # solveDampenedWLSj: weighted, x >= 0
+            avg = (new + 4.0 * sol) / 5.0          # rowMeans(cbind(new, 4 copies of the old))
+            change = float(np.sum(np.abs(avg - sol)))   # norm(as.matrix(.)): the one-norm
+            sol, it = avg, it + 1
+        return sol / sol.sum()
+
     def _solve_all(self, data: DeconvolutionInput) -> np.ndarray:
         S, B = self._as_arrays(data)
         rng = np.random.default_rng(config.RANDOM_SEED)
         out = []
+        if config.REPAIRED_METHODS:
+            self.variant_suffix_ = " (published dampening)"
+            return np.vstack([self._solve_published(S, B[:, j], rng) for j in range(B.shape[1])])
         for j in range(B.shape[1]):
             b = B[:, j]
             out.append(self._solve_dampened(S, b, self._choose_power(S, b, rng)))

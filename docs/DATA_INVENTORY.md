@@ -29,6 +29,7 @@
 | D17 | Mossi Albiach et al. 2023 spatially sampled glioblastoma single-cell atlas | used | collection 113a558a-e96e-4643-81db-140e95c58578; dataset d45b4ce6-9725-4d79-b97a-70a44158bdbf (donor SL040, schema 7.1.0) | Tests the registered constraints against counted (not inferred) composition per anatomic zone: 3 of 4 testable constraints hold |
 | D18 | Ivy GAP in-situ hybridisation (ISH) by anatomic structure | used | gene_expression_details.csv (/api/v2/gbm/ namespace) | A constraint check with no deconvolution anywhere in the chain: CD44 / BIRC5 ISH support C1 and C7 |
 | D32 | Flow-cytometry immune composition of brain tumours by IDH status (Klemm et al. 2020, Figure 1F) | used | doi:10.1016/j.cell.2020.05.007 -- Figure 1F (PDF page 3); Table S1 (mmc1.pdf, cohort); Table S2 (mmc2.pdf, gating definitions) | Direct check of the lymphoid truth by IDH status (prespecified/klemm_t_vs_b.md): cohort-mean T, B and NK as % of CD45+ in 17 IDH-mutant and 40 IDH-wildtype gliomas, measured from the figure's vector geometry and validated against two numbers printed in the paper |
+| D33 | CPTAC glioblastoma: bulk RNA-seq and single-nucleus RNA-seq from the same cryopulverised tissue (18 tumours), plus methylation | used | GDC CPTAC-3, primary site Brain; the 18 cases with snRNA-seq (list in data/external/cptac_gbm/MANIFEST.json): CellRanger filtered counts (17), GDC Seurat tables (17), STAR counts (18), methylation beta values (18); per case, the tumor_purity and tumor_ploidy of the one open AscatNGS whole-genome 'Allele-specific Copy Number Segment' record (18), and the percent_tumor_nuclei of the analysed samples' slides (24 slides) | The first per-sample, same-tissue truth in the study (prespecified/cptac_per_sample_truth.md): each method's bulk estimate against single-nucleus composition from the same material |
 | D19 | GBMDeconvoluteR marker sets (Ajaib immune, Ruiz-Moreno level-3 immune, Neftel four-state) and Ajaib's published imaging-mass-cytometry correlations | used | Ajaib_et_al_2022_GBM_Immune_markers.rds, Moreno_et_al_2022_lvl3_immune_markers.rds, Neftel_et_al_2019_four_state_neoplastic_markers.rds | The pre-registered IMC protein test (an external instrument for ACS) and the mesenchymal-program score |
 | D20 | MCPcounter default marker genes | used | Signatures/genes.txt | The default-marker arm of the IMC test |
 | D21 | EpiDISH blood reference centDHSbloodDMC.m (333 CpGs x 7 blood cell types) | used | EpiDISH::centDHSbloodDMC.m | Turns D07/D08 into per-cell-type lymphoid fractions (RPC mode); a blood reference applied to brain tumour, so used for lymphoid sub-composition only |
@@ -269,6 +270,24 @@
 |---|---|---|---|
 | `/Users/tatopro9130/Downloads/cancer_judging_machine-master 22/public/04 Subtypes and Pathways/source/gbm_tcga_pub2013_clinical_sample.txt` -- read-only, in the predecessor project | 69.1 KB | `bae781e3a27e` | -- |
 | `/Users/tatopro9130/Downloads/cancer_judging_machine-master 22/public/04 Subtypes and Pathways/source/gbm_tcga_pub2013_clinical_patient.txt` -- read-only, in the predecessor project | 48.9 KB | `82cae4a74413` | -- |
+
+### D33 · CPTAC glioblastoma: bulk RNA-seq and single-nucleus RNA-seq from the same cryopulverised tissue (18 tumours), plus methylation
+
+- **Status:** used
+- **Repository:** NCI Genomic Data Commons, project CPTAC-3 (open access)
+- **Accession:** GDC CPTAC-3, primary site Brain; the 18 cases with snRNA-seq (list in data/external/cptac_gbm/MANIFEST.json): CellRanger filtered counts (17), GDC Seurat tables (17), STAR counts (18), methylation beta values (18); per case, the tumor_purity and tumor_ploidy of the one open AscatNGS whole-genome 'Allele-specific Copy Number Segment' record (18), and the percent_tumor_nuclei of the analysed samples' slides (24 slides)
+- **Source:** <https://portal.gdc.cancer.gov/projects/CPTAC-3>
+- **Version:** 70 files, md5-verified at download (2026-10-06) against GDC's records; AscatNGS and slide fields read from the GDC API on 2026-10-06 (data release in wgs_ascat_purity.provenance.json)
+- **Used for:** The first per-sample, same-tissue truth in the study (prespecified/cptac_per_sample_truth.md): each method's bulk estimate against single-nucleus composition from the same material. Its whole-genome purity is the per-sample DNA truth of the secondary analysis (prespecified/cptac_wgs_purity_secondary.md).
+- **Citation:** Wang LB, et al. Cancer Cell 39:509-528 (2021), doi:10.1016/j.ccell.2021.01.006
+  - Crossref 10.1016/j.ccell.2021.01.006: verified (matches)
+- **Read by:** `scripts/fetch_cptac_gbm.py`; `scripts/cptac_per_sample.py`; `scripts/cptac_wgs_purity.py`
+
+| local file | size | sha256 (first 12) | check |
+|---|---|---|---|
+| `data/external/cptac_gbm/MANIFEST.json` -- download manifest: file ids, md5s, cases | 43.0 KB | `0d8d7af524cf` | -- |
+| `data/external/cptac_gbm/wgs_ascat_purity.tsv` -- AscatNGS purity and ploidy per case, with file ids | 4.9 KB | `0e17f08d75a4` | -- |
+| `data/external/cptac_gbm/pathology_tumor_nuclei.tsv` -- slide percent tumour nuclei | 1.6 KB | `16352e981e87` | -- |
 
 ## Single-cell references
 

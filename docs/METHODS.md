@@ -140,7 +140,7 @@ detect. The bias runs conservative.
 
 ## The four published tools
 
-Faithful reimplementations in `deconv/reference_based.py`; the genuine R packages run
+Python versions in `deconv/reference_based.py` (**not all faithful**: see the table below and OPEN_DEFECTS D32, D34); the genuine R packages run
 via `deconv/r_bridge.py` when three conditions hold: `Rscript` on PATH, the package
 installed, and a **cell-level** single-cell export on disk.
 
@@ -272,6 +272,16 @@ run produced a leaderboard with no record of which methods had fallen back to a 
 reimplementation and which were degenerate. `run_anatomic` now writes the disclosure
 itself, into whichever output directory that run owns, containing per method:
 `implementation`, `fallback_reason`, `degenerate`, `degeneracy_reason`.
+
+**How faithful each Python version is** (2026-10-07; OPEN_DEFECTS D32, D34):
+
+| Python version | relation to the published method | where it ran in place of the package |
+|---|---|---|
+| DWLS | **faithful only under `IVYGAP_REPAIRED=1`** (published dampening; equals the package to 5e-11 given its dampening constant). The legacy version inverts the weight cap (D32) | every TCGA arm; the registered anatomy arm |
+| MuSiC | arithmetically NNLS when the reference carries no cross-subject variance (the frozen signature) | frozen arms |
+| SCDC | **a stand-in**: Huber residual weights, not SCDC's cross-subject-variance weights | frozen arms |
+| Bisque | its documented no-overlap mode, approximated; declared degraded everywhere | frozen arms |
+| BayesPrism | **a stand-in**: a reference-shrinking heuristic, not the Gibbs sampler (tumour accuracy 0.16 against the genuine package's 0.72, GBM donor-level) | every TCGA arm; the registered anatomy arm |
 
 Two invariants depend on this file existing:
 

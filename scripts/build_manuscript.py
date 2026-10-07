@@ -1620,6 +1620,147 @@ def main() -> int:
           "(A, within one package; B, across the registered methods) against agreement with DNA truth, per "
           "compartment and cohort.\n")
 
+    _cw = J("cptac_wgs_purity.json")
+    _cp = J("cptac_per_sample_truth.json").get("registered_truth") or {}
+    if _cw and _cp:
+        _ca = _cw["all_cases"]
+        _n1 = _ca["S2_1_nuclei_truth_vs_wgs"]["registered"]["all_scored"]
+        _g2 = _ca["S2_2_methylation_instrument"]
+        _f3, _h3 = _ca["frozen"]["S2_3"], _ca["h5ad"]["S2_3"]
+        _f4, _h4 = _ca["frozen"]["S2_4_ranking_transfer"], _ca["h5ad"]["S2_4_ranking_transfer"]
+        _h4m = _ca["h5ad"].get("S2_4_matched_implementation (post hoc, descriptive)") or {}
+        _f5, _h5 = _ca["frozen"]["S2_5_acs_vs_wgs_accuracy"], _ca["h5ad"]["S2_5_acs_vs_wgs_accuracy"]
+        _c1 = _cp["control_truth_vs_dna_purity"]
+        _p6 = _cw.get("S2_6_pathology_descriptive") or {}
+        _fm = _ca["frozen"]["methods"]
+        _top = sorted((m for m in _fm if _fm[m]["rho"] is not None), key=lambda m: -_fm[m]["rho"])[:5]
+        from ivygap.paper_style import display as _cdisp                         # noqa: PLC0415
+
+        def _cname(m):
+            # never print a reimplementation under the published package's name (CLAUDE.md)
+            return _cdisp(m) + (" (this project's reimplementation)"
+                                if _fm[m].get("implementation") == "python-reimplementation" else "")
+        A("### 4.13 \u00b7 An independent cohort with a per-sample DNA truth (CPTAC glioblastoma)\n")
+        A("_Two rules, both post-registration. The primary (`prespecified/cptac_per_sample_truth.md`, 2026-10-06 "
+          "20:45:29) was fixed before any CPTAC file was opened. The secondary "
+          "(`prespecified/cptac_wgs_purity_secondary.md`, 22:34:47) was written after the primary had been read "
+          "and before any of its own values were seen. Each reading below names its rule. Data: Wang et al. [54], "
+          "GDC project CPTAC-3, open access._\n")
+        A(f"**The primary analysis is INCONCLUSIVE.** It scored each method's bulk estimate against single-nucleus "
+          f"composition from the same cryopulverised tissue, in {_cp['n_cases_scored']} tumours (two excluded for "
+          f"mapping fewer than 70% of their nuclei). Its control required the nuclei's tumour share to agree with an "
+          f"independent DNA purity (GIMiCC [52] on the same cases' methylation; bar 0.40). It did not: rho = "
+          f"{_c1['spearman']:.2f} (permutation p = {_c1['perm_p']:.2f}). By the rule, no per-sample accuracy "
+          f"reading against the nuclei can be made, and none is reported.\n")
+        A(f"**Why the control failed: a secondary truth from whole-genome sequencing.** GDC's harmonised pipeline "
+          f"estimates tumour purity from each case's whole genome (ASCAT [55] as ascatNgs [56]), on the same "
+          f"aliquots as the bulk RNA. All {_cw['truth']['n_with_value']} tumours have a value "
+          f"(range {_cw['truth']['range'][0]:.2f}-{_cw['truth']['range'][1]:.2f}). Against it:\n")
+        A(f"- The nuclei's tumour share does not track DNA: rho = {_n1['rho']:.2f} (p = {_n1['perm_p']:.2f}, "
+          f"n = {_n1['n']}). The secondary rule's first reading fails, so the primary stays INCONCLUSIVE.")
+        A(f"- The methylation instrument was broken by its input (OPEN_DEFECTS D30). Five samples lack a third or "
+          f"more of GIMiCC's library CpGs, and the complete-case rule shrank the library to 769 CpGs for every "
+          f"sample: rho = {_g2['a_complete_case_769_cpgs']['rho']:.2f} against whole-genome purity. On the "
+          f"{_g2['b_coverage_ge_90pct']['n']} complete samples (3,775 CpGs) the same method agrees at rho = "
+          f"{_g2['b_coverage_ge_90pct']['rho']:.2f}.")
+        if _p6:
+            A(f"- The pathologist's percent tumour nuclei, descriptive only (range {_p6['range'][0]:.0%}-"
+              f"{_p6['range'][1]:.0%}, narrowed by CPTAC's selection on tumour content): rho = "
+              f"{_p6['vs_wgs_purity']['rho']:.2f}.")
+        A("")
+        A(f"**The methods recover tumour content in the new cohort.** Each method's bulk tumour estimate against "
+          f"whole-genome purity, n = 18: median rho = {_f3['median_rho']:.2f} on the frozen signature "
+          f"({_f3['n_methods']} methods) and {_h3['median_rho']:.2f} on the donor-level reference "
+          f"({_h3['n_methods']}). Both pass the 0.40 bar. TCGA-GBM, on the same methods against ABSOLUTE, gives "
+          f"{_f3['tcga_gbm_median_same_methods']:.2f} and {_h3['tcga_gbm_median_same_methods']:.2f}. The estimates "
+          f"compress the true range as they did in TCGA (median slope {_f3['median_recovery_slope']:.2f} and "
+          f"{_h3['median_recovery_slope']:.2f}; \u00a74.3). The most accurate on the frozen signature: "
+          + ", ".join(f"{_cname(m)} {_fm[m]['rho']:.2f}" for m in _top) + ".\n")
+        A(f"**On the frozen signature, the methods that win in TCGA win again.** Each method's accuracy in CPTAC "
+          f"against its accuracy in TCGA-GBM: rho = {_f4['spearman']:.2f} (p = {_f4['p']:.3f}, {_f4['n_methods']} "
+          f"methods; reading: {_f4['reading']}). On the donor-level reference it does not: rho = "
+          f"{_h4['spearman']:.2f} ({_h4['n_methods']} methods)"
+          + (f", or {_h4m['spearman']:.2f} without BayesPrism, which ran as the R package here and as this "
+             f"project's reimplementation in TCGA" if _h4m else "") + ".\n")
+        A(f"**Anatomy again does not identify the accurate method.** ACS against each method's CPTAC accuracy: "
+          f"rho = {_f5['spearman']:.2f} (p = {_f5['p']:.2f}, {_f5['n_methods']} methods, frozen signature; the "
+          f"counterpart of \u00a74.2's registered arm) and {_h5['spearman']:.2f} on the donor-level reference. Neither "
+          f"meets the registered 0.60.\n")
+        A("> WRITE: one paragraph. The accurate methods are reproducibly identifiable against DNA in a second cohort, "
+          "and anatomy still does not identify them: this is \u00a74.2's answer on an independent truth. Then the "
+          "practical point: the expensive per-sample measurement (single nuclei, as processed here) was not a valid "
+          "truth for tumour content, while a DNA purity was. Say what was not tested: the authors' own curated "
+          "cell annotation.\n")
+        A("> **[ FIGURE 14 HERE ]** \u2014 `docs/figures/Figure_cptac_wgs.pdf`. Each per-sample truth against "
+          "whole-genome purity (A-C); each method against it (D), against its TCGA accuracy (E), and against "
+          "anatomy (F).\n")
+
+    _em = J("evaluation_matrix.json")
+    if _em.get("arms"):
+        _ia = _em.get("instrument_agreement", {})
+        _rp = _em.get("repaired", {})
+        A("### 4.14 \u00b7 Every method against every truth, and the broken implementations repaired\n")
+        A("_Post-registration (2026-10-07). Registered results are unchanged; repaired results are reported beside "
+          "them (`docs/METHOD_REPAIRS.md`, `docs/EVALUATION_MATRIX.md`; OPEN_DEFECTS D31-D33)._\n")
+        A(f"**Every method was scored against every truth** in both cohorts and both reference builds: ABSOLUTE, "
+          f"the methylation leukocyte fraction, EpiDISH, GIMiCC, the T-over-B direction set by flow cytometry and "
+          f"two atlases, CPTAC's whole-genome purity, and anatomy. The tumour correlations, recomputed through the "
+          f"published sample joins, equal the registered ones in {_em['n_join_checks'] - _em['n_join_disagreements']} "
+          f"of {_em['n_join_checks']} method-arms.\n")
+        if _ia:
+            _t = [v["tumour"]["spearman"] for v in _ia.values() if "tumour" in v]
+            _l = [v["leukocytes"]["spearman"] for v in _ia.values() if "leukocytes" in v]
+            A(f"**Accuracy is a reproducible property of a method.** Two independent DNA instruments order the "
+              f"methods almost identically: by tumour accuracy (ABSOLUTE against GIMiCC's purity), Spearman "
+              f"{min(_t):.2f}-{max(_t):.2f}; by leukocyte accuracy (the methylation leukocyte fraction against "
+              f"GIMiCC's immune total), {min(_l):.2f}-{max(_l):.2f}. This holds in all {len(_ia)} arms, in both tumour "
+              f"types (post hoc, descriptive).\n")
+        from ivygap.paper_style import display as _edisp                        # noqa: PLC0415
+        _arm = lambda a: {"gbm|frozen": "GBM, frozen signature", "gbm|h5ad": "GBM, donor-level reference",
+                          "lgg|frozen": "LGG, frozen signature", "lgg|h5ad": "LGG, donor-level reference"}.get(a, a)
+
+        def _rname(m, impl):
+            # never print a reimplementation under the published package's name (CLAUDE.md)
+            return _edisp(m) + (" (this project's reimplementation, published dampening)"
+                                if "python-reimplementation" in str(impl) else "")
+        _rows = []
+        for arm, ms in (_rp.get("tcga") or {}).items():
+            for m, r in ms.items():
+                reg = _em["arms"].get(arm, {}).get(m, {})
+                if "failed" in r or (r.get("Tumor|ABSOLUTE") or {}).get("rho") is None:
+                    continue
+                a = (reg.get("Tumor|ABSOLUTE") or {}).get("rho") if reg.get("status") == "ok" else None
+                b = r["Tumor|ABSOLUTE"]["rho"]
+                if a is not None and abs(a - b) < 0.005:
+                    continue                                   # reproduced, not repaired
+                nm = (f"{_edisp(m)}, the genuine package against this project's reimplementation"
+                      if str(r.get("implementation")).startswith("R:") and reg.get("implementation") == "python-reimplementation"
+                      else _rname(m, r.get("implementation")))
+                _rows.append(f"{nm} ({_arm(arm)}): {'not scored' if a is None else f'{a:.2f}'} \u2192 {b:.2f}")
+        for arm, g in (_rp.get("genuine_bayesprism_tcga") or {}).items():
+            reg = _em["arms"].get(arm, {}).get("bayesprism", {})
+            _rows.append(f"BayesPrism, the genuine package against this project's reimplementation ({_arm(arm)}): "
+                         f"{reg['Tumor|ABSOLUTE']['rho']:.2f} \u2192 {g['Tumor|ABSOLUTE']['rho']:.2f}")
+        if _rows:
+            A("**Repairing the broken implementations raises tumour accuracy** (registered \u2192 repaired, Spearman "
+              "with ABSOLUTE): " + "; ".join(_rows) + ".\n")
+        _tb = [(m, r["T>B"].get("T_exceeds_B")) for ms in (_rp.get("tcga") or {}).values() for m, r in ms.items()
+               if isinstance(r.get("T>B"), dict) and "T_exceeds_B" in r["T>B"]]
+        if _tb:
+            A(f"**No repair recovers the lymphoid ordering.** Of {len(_tb)} repaired method-arms, "
+              f"{sum(bool(x) for _, x in _tb)} put T above B. The lymphoid failure of \u00a74.4 is not an artefact "
+              f"of a broken implementation.\n")
+        _ra = _rp.get("acs") or {}
+        if _ra:
+            A("**Anatomy, genuine packages:** " + "; ".join(
+                f"{m} {a['acs']:.3f} on {a['n_pairs']} of 57 pairs (registered {(_em['acs'].get(m) or {}).get('acs')})"
+                for m, a in _ra.items()) + ". Among working methods the anatomic ordering rests on two constraints "
+              "(C6, C7), each evaluable in 8-9 tumours (Figure 15).\n")
+        A("> WRITE: one paragraph. Implementation is as large a factor as the method: a reimplementation defect "
+          "made BayesPrism look useless and DWLS look worse than it is. Repairing them changes the accuracy "
+          "numbers and leaves every registered reading where it was: anatomy still does not rank, and no method "
+          "recovers the lymphoid ordering.\n")
+
     A("## Appendix B \u00b7 Figure inventory\n")
     A("| # | file | placement | what it shows |")
     A("|---|---|---|---|")
@@ -1634,6 +1775,10 @@ def main() -> int:
     A("| 9 | `Figure_acs_vs_auc` | §4.11 (exploratory) | ACS vs a per-method AUC: one construct on two scales; neither tracks DNA-measured accuracy |")
     A("| 10 | `Figure_lymphoid_mechanisms` | Result 3 mechanisms (after the independent-atlas paragraph) | reference-side tests of the lymphoid inversion: variants, re-absorption, bulk-likeness, independent atlas |")
     A("| 11 | `Figure_identifiability` | §4.12 (exploratory) | truth-free stability (loss scale; across methods) against agreement with DNA truth, per compartment and cohort |")
+    A("| 12 | `Figure_truth_instruments` | §4.4 (the lymphoid truth) | within-lymphoid T / NK / B by each instrument that measures it, beside the methods |")
+    A("| 13 | `Figure_accuracy_factors` | Discussion (practical reading) | accuracy by compartment, by reference build, and of the truth-free checks |")
+    A("| 14 | `Figure_cptac_wgs` | §4.13 (secondary) | CPTAC: each per-sample truth and each method against whole-genome purity |")
+    A("| 15 | `Figure_acs_constraints` | §4.2 / §4.14 | each registered constraint, method by method, beside accuracy against DNA |")
     A("")
     A("*Every figure exists as PDF (vector, submission) and PNG (300 dpi, drafts) in "
       "`docs/figures/`. Captions are in `docs/FIGURES.md` and are the place for "
@@ -1655,6 +1800,11 @@ def main() -> int:
       "switched method marked. Show both cohorts so the non-replication is visible, not buried.")
     A("")
     A("## Appendix D \u00b7 What must not be claimed\n")
+    A("- Do **not** quote any primary CPTAC reading (C1-C4 of `cptac_per_sample_truth.md`). The primary is "
+      "INCONCLUSIVE, and the nuclei failed the secondary check too. In particular, its donor-level C2 value "
+      "is not evidence that anatomy ranks methods (§4.13).")
+    A("- Do **not** claim single-cell composition is an invalid truth in general. What failed is GDC's automated "
+      "clusters, named by this project's marker rule, as a per-sample measure of tumour content in 15 tumours.")
     A("- Do **not** claim the ranking reshuffle replicates. It does not (Result 5).")
     A("- Do **not** claim a mechanism for the lymphoid failure. Nine were tested or excluded -- "
       "including the leading structural suspect, that the `NK_cell` column (which carries pan-T "

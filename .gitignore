@@ -91,3 +91,6 @@ ivygap/ivygap_downloads/gene_expression_matrix_2014-11-25/fpkm_table.csv.gz
 # provenance file and stays tracked.
 /GSE182109/*
 !/GSE182109/gsm_to_sample.tsv
+
+# Verification re-run snapshots (scripts/verify_rerun.py): a full copy of results/, local only.
+/results_snapshot_*/

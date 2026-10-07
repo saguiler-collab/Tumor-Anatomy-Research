@@ -1,6 +1,6 @@
 # Manuscript blueprint: the main results, and why each analysis was done
 
-Written 2026-10-06, against commit `753256f`. A plan for writing the paper, not paper prose.
+Written 2026-10-06, against commit `753256f`; updated 22:55 with the CPTAC replication (R2, rows 19-21), and 2026-10-07 with the method repairs (R2, R3, row 22). A plan for writing the paper, not paper prose.
 - The generated draft, with every number read from an artefact, is `docs/MANUSCRIPT.md`
   (`scripts/build_manuscript.py`). This file decides what that draft should argue, in what order, and
   why each step was taken.
@@ -66,7 +66,24 @@ becomes supporting evidence inside one of them, or supplementary.
   - Every yardstick sharing nothing with ACS fails. That is a pattern, not one bad run.
 - **Say "inconclusive" and mean it:** with 12 methods, a true rho of 0.70 meets the bar in only 65% of
   studies; 80% power needs 30-50 methods (`scripts/agreement_power.py`).
-- **Figure:** `Figure_detects_not_ranks` (right panel); purity scatters as supplementary.
+- **Replicated in an independent cohort with a per-sample whole-genome truth** (added 2026-10-06;
+  secondary, `prespecified/cptac_wgs_purity_secondary.md`):
+  - In CPTAC glioblastoma (18 tumours, AscatNGS purity from whole-genome sequencing), ACS against
+    each method's accuracy is **rho 0.12** (p 0.72, 12 methods, frozen signature) and -0.35 on the
+    donor-level reference.
+  - In the same cohort the methods themselves work: median accuracy 0.45 / 0.43, against TCGA's 0.41 /
+    0.58. On the frozen signature the accuracy ranking transfers from TCGA (rho 0.68, p 0.016).
+  - So the accurate methods are reproducibly identifiable against DNA, and anatomy still does not
+    identify them. This is the strongest form of R2 available.
+- **Accuracy IS separable; anatomy just does not separate it** (added 2026-10-07; post hoc,
+  descriptive; `docs/EVALUATION_MATRIX.md`).
+  - Two independent DNA instruments order the methods almost identically: by tumour accuracy,
+    ABSOLUTE against GIMiCC, 0.80-0.87; by leukocyte accuracy, LF against GIMiCC, 0.82-0.99.
+  - This holds in all four GBM/LGG arms.
+  - Among working methods, the anatomic ordering rests on two constraints (C6, C7), each on 8-9
+    tumours (`Figure_acs_constraints`).
+- **Figure:** `Figure_detects_not_ranks` (right panel); `Figure_cptac_wgs` (E, F) for the replication;
+  `Figure_acs_constraints` for what the score separates; purity scatters as supplementary.
 
 ### R3 · Getting the anatomy right does not mean getting the biology right *(registered prediction; robustness exploratory)*
 This is the finding the paper is built on.
@@ -97,9 +114,16 @@ This is the finding the paper is built on.
     against it.
   - Report that disagreement as a finding in its own right: methylation-derived lymphoid "truths" are
     instrument-dependent, and both place B above every direct count.
-- **Figures:** `Figure_lymphoid_failure` and `Figure_bisque_anchoring`. **New, recommended:** "The
-  lymphoid truth by four instruments", within-lymphoid T / NK / B shares from each instrument beside
-  the methods' estimates. It does not exist yet.
+- **Figures:** `Figure_lymphoid_failure`, `Figure_bisque_anchoring` and `Figure_truth_instruments` (the
+  lymphoid truth by each instrument beside the methods' estimates; built 2026-10-06).
+- **The failure survives repaired implementations** (added 2026-10-07; `docs/METHOD_REPAIRS.md`).
+  - Genuine BayesPrism (tumour accuracy 0.72 / 0.59, against the reimplementation's 0.16 / -0.03).
+  - DWLS reimplemented faithfully (tumour 0.77 GBM, 0.59 LGG).
+  - The previously missing Bayesian hierarchical, and quanTIseq scored on its immune output.
+  - Not one puts T above B. The lymphoid failure is not an implementation artefact.
+- **The per-sample lymphoid truth is still missing.** CPTAC's single nuclei contain B cells in only 2
+  of 15 tumours, and its nuclei failed as a per-sample truth even for tumour content (rho 0.13 against
+  whole-genome purity). R3 stays a cohort-level result.
 
 ### R4 · Why: the bulk data identify the immune compartment, not its lymphocyte types *(exploratory)*
 - **Claim:** the lymphoid split is not determined by bulk RNA under this reference, so each method's
@@ -136,6 +160,7 @@ This is the finding the paper is built on.
 | Reference-free arm (CDSeq, Linseed: they meet the constraints without a single-cell reference in the deconvolution) | supporting R1 (detection does not depend on the atlas) |
 | ACS vs a per-method AUC; the IMC protein test; constraint validation against Albiach, Darmanis and ISH | supplementary |
 | DECEPTICON's agreement rule tested against DNA (weak, rho 0.28) | Discussion: agreement between methods is not accuracy either |
+| CPTAC: which per-sample truth measures tumour content. Whole-genome purity against single-nucleus composition (0.13), methylation with complete probes (0.92; 0.15 when five samples shrink the shared probe set, D30) and pathology (0.38) | Discussion, practical guidance: validate against DNA, not single-cell composition; `Figure_cptac_wgs` A-C. The primary CPTAC analysis is INCONCLUSIVE and must be reported as such |
 | Spatial mesenchymal programme | drop, or supplementary |
 
 ---
@@ -165,6 +190,10 @@ reasoning came first: a rule file written, and timestamped, before the analysis 
 | 16 | Does agreement *between methods* pick the accurate one? | DECEPTICON's rule tested against DNA | It is the field's other truth-free criterion | `agreement_selection_test.md`, 2026-10-02 09:32 |
 | 17 | The headline rests on EpiDISH with a *blood* reference. Is the truth right? | Three independent tests: GIMiCC (glioma-specific methylation), direct single-cell counts (two atlases), flow cytometry | A reviewer's first objection. Direct measurement shares no assumption with methylation deconvolution. | `gimicc_truth_confirmation.md` (+6 addenda), `atlas_t_vs_b.md`, 2026-10-03; `klemm_t_vs_b.md`, 2026-10-06 |
 | 18 | How do we know the numbers are right? | Every check ships with a negative control; independent recomputation; document checkers; timestamps from `stat` | Errors were caught only this way: a sign flip (D21), a sample-key mismatch, Broad-ID joins (D27) | OPEN_DEFECTS; `independent_verification.py`; tests |
+| 19 | Every truth so far is cohort-level, or one number per sample. Do the methods give actual per-sample results? | CPTAC glioblastoma: bulk RNA and single nuclei from the same cryopulverised tissue | The only public glioma set with both from the same material; the decisive test is per sample | `cptac_per_sample_truth.md`, 2026-10-06 20:45:29, before any CPTAC file was opened |
+| 20 | Its DNA control failed (rho 0.01). Which instrument broke? | Whole-genome copy-number purity (GDC AscatNGS) as a secondary truth, written before any of its values were seen | It measures tumour content on the bulk RNA's own aliquots, and shares nothing with the nuclei or the methylation. It separated the failures: methylation was broken by probe coverage (D30), and the nuclei do not track DNA | `cptac_wgs_purity_secondary.md`, 2026-10-06 22:34:47 |
+| 21 | Does the field's ranking of methods survive a new cohort? | Each method's CPTAC accuracy against its TCGA accuracy | If it does, practitioners can choose from a published benchmark; if not, every lab must validate locally | same rule, S2.4 |
+| 22 | Are any of the failures our own implementations' fault? | Every method scored against every truth; each broken implementation diagnosed against the published source and repaired behind a switch, with registered results kept | A reimplementation defect (DWLS's inverted dampening) or a numerical one (DWLS's unscaled solver) can masquerade as a method's failure. The verification re-run had to stay on the original code, so the repairs are opt-in | `docs/METHOD_REPAIRS.md`; OPEN_DEFECTS D31-D33; 2026-10-07 |
 
 **The Methods section should be written from this table.** Each design choice is stated with its
 reason. The Introduction's argument is rows 1-3 and 8. The Discussion's limitations are rows 9, 13
@@ -183,7 +212,7 @@ and 17.
 | Results R3 | Lymphoid failure; two modes; the truth by four instruments | Fig 4: `Figure_lymphoid_failure` + **new** truth panel; `Figure_bisque_anchoring` |
 | Results R4 | Identifiability; mechanisms excluded | Fig 5: `Figure_identifiability` |
 | Discussion | What is new; the practical reading; where it sits (reproducibility vs correctness); what would settle the ranking question | -- |
-| Limitations | One tumour type; n = 12; one atlas; cohort-level truths; post-registration extensions labelled | -- |
+| Limitations | One tumour type; n = 12; one atlas; lymphoid truths cohort-level (tumour content now also per sample, in CPTAC); post-registration extensions and the CPTAC secondary labelled | -- |
 | Supplementary | Everything in the supporting table above; defects log; verification | S-figures and S-tables |
 
 ---
@@ -199,7 +228,9 @@ and 17.
    DNA methylation resolves and that direct flow-cytometric and single-cell counts confirm".
 3. **Venue and length.** The plan above assumes a full paper. Tell me the page or word limit, and
    which results become supplementary follows from it.
-4. **The two new figures** (the design schematic; the truth by four instruments). I can build both
-   from the artefacts.
-5. **The five paper PDFs** committed to `celldecov_reference_papers/` before it was gitignored:
+4. **The design schematic** (Fig 1) is the one figure still to build. The truth-by-instrument figure
+   exists (`Figure_truth_instruments`), and so does the CPTAC replication (`Figure_cptac_wgs`).
+5. **Where the CPTAC replication goes:** inside R2 (recommended: it is the only independent-cohort
+   test of the registered question), or as a fifth result on practical validation.
+6. **The five paper PDFs** committed to `celldecov_reference_papers/` before it was gitignored:
    publisher PDFs in a public repository.

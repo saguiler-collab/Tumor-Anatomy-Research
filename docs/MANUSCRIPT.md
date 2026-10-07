@@ -355,6 +355,44 @@ A secondary arm tested the data scale. The pre-declared expectation, from Avila 
 
 > **[ FIGURE 11 HERE ]** — `docs/figures/Figure_identifiability.pdf`. Truth-free stability (A, within one package; B, across the registered methods) against agreement with DNA truth, per compartment and cohort.
 
+### 4.13 · An independent cohort with a per-sample DNA truth (CPTAC glioblastoma)
+
+_Two rules, both post-registration. The primary (`prespecified/cptac_per_sample_truth.md`, 2026-10-06 20:45:29) was fixed before any CPTAC file was opened. The secondary (`prespecified/cptac_wgs_purity_secondary.md`, 22:34:47) was written after the primary had been read and before any of its own values were seen. Each reading below names its rule. Data: Wang et al. [54], GDC project CPTAC-3, open access._
+
+**The primary analysis is INCONCLUSIVE.** It scored each method's bulk estimate against single-nucleus composition from the same cryopulverised tissue, in 15 tumours (two excluded for mapping fewer than 70% of their nuclei). Its control required the nuclei's tumour share to agree with an independent DNA purity (GIMiCC [52] on the same cases' methylation; bar 0.40). It did not: rho = 0.01 (permutation p = 0.96). By the rule, no per-sample accuracy reading against the nuclei can be made, and none is reported.
+
+**Why the control failed: a secondary truth from whole-genome sequencing.** GDC's harmonised pipeline estimates tumour purity from each case's whole genome (ASCAT [55] as ascatNgs [56]), on the same aliquots as the bulk RNA. All 18 tumours have a value (range 0.44-0.92). Against it:
+
+- The nuclei's tumour share does not track DNA: rho = 0.13 (p = 0.65, n = 15). The secondary rule's first reading fails, so the primary stays INCONCLUSIVE.
+- The methylation instrument was broken by its input (OPEN_DEFECTS D30). Five samples lack a third or more of GIMiCC's library CpGs, and the complete-case rule shrank the library to 769 CpGs for every sample: rho = 0.15 against whole-genome purity. On the 13 complete samples (3,775 CpGs) the same method agrees at rho = 0.92.
+- The pathologist's percent tumour nuclei, descriptive only (range 65%-90%, narrowed by CPTAC's selection on tumour content): rho = 0.38.
+
+**The methods recover tumour content in the new cohort.** Each method's bulk tumour estimate against whole-genome purity, n = 18: median rho = 0.45 on the frozen signature (13 methods) and 0.43 on the donor-level reference (14). Both pass the 0.40 bar. TCGA-GBM, on the same methods against ABSOLUTE, gives 0.41 and 0.58. The estimates compress the true range as they did in TCGA (median slope 0.22 and 0.36; §4.3). The most accurate on the frozen signature: DWLS (this project's reimplementation) 0.85, Bayesian hierarchical 0.67, Bayesian 0.66, CIBERSORTx 0.59, nu-SVR 0.59.
+
+**On the frozen signature, the methods that win in TCGA win again.** Each method's accuracy in CPTAC against its accuracy in TCGA-GBM: rho = 0.68 (p = 0.016, 12 methods; reading: transfers). On the donor-level reference it does not: rho = 0.13 (14 methods), or 0.41 without BayesPrism, which ran as the R package here and as this project's reimplementation in TCGA.
+
+**Anatomy again does not identify the accurate method.** ACS against each method's CPTAC accuracy: rho = 0.12 (p = 0.72, 12 methods, frozen signature; the counterpart of §4.2's registered arm) and -0.35 on the donor-level reference. Neither meets the registered 0.60.
+
+> WRITE: one paragraph. The accurate methods are reproducibly identifiable against DNA in a second cohort, and anatomy still does not identify them: this is §4.2's answer on an independent truth. Then the practical point: the expensive per-sample measurement (single nuclei, as processed here) was not a valid truth for tumour content, while a DNA purity was. Say what was not tested: the authors' own curated cell annotation.
+
+> **[ FIGURE 14 HERE ]** — `docs/figures/Figure_cptac_wgs.pdf`. Each per-sample truth against whole-genome purity (A-C); each method against it (D), against its TCGA accuracy (E), and against anatomy (F).
+
+### 4.14 · Every method against every truth, and the broken implementations repaired
+
+_Post-registration (2026-10-07). Registered results are unchanged; repaired results are reported beside them (`docs/METHOD_REPAIRS.md`, `docs/EVALUATION_MATRIX.md`; OPEN_DEFECTS D31-D33)._
+
+**Every method was scored against every truth** in both cohorts and both reference builds: ABSOLUTE, the methylation leukocyte fraction, EpiDISH, GIMiCC, the T-over-B direction set by flow cytometry and two atlases, CPTAC's whole-genome purity, and anatomy. The tumour correlations, recomputed through the published sample joins, equal the registered ones in 51 of 51 method-arms.
+
+**Accuracy is a reproducible property of a method.** Two independent DNA instruments order the methods almost identically: by tumour accuracy (ABSOLUTE against GIMiCC's purity), Spearman 0.80-0.87; by leukocyte accuracy (the methylation leukocyte fraction against GIMiCC's immune total), 0.82-0.99. This holds in all 4 arms, in both tumour types (post hoc, descriptive).
+
+**Repairing the broken implementations raises tumour accuracy** (registered → repaired, Spearman with ABSOLUTE): Bayesian hierarchical (GBM, frozen signature): not scored → 0.75; DWLS (this project's reimplementation, published dampening) (GBM, frozen signature): 0.69 → 0.77; DWLS, the genuine package against this project's reimplementation (GBM, donor-level reference): 0.16 → 0.63; Bayesian hierarchical (LGG, frozen signature): not scored → 0.54; DWLS (this project's reimplementation, published dampening) (LGG, frozen signature): 0.52 → 0.59; DWLS (this project's reimplementation, published dampening) (LGG, donor-level reference): not scored → 0.45; BayesPrism, the genuine package against this project's reimplementation (GBM, donor-level reference): 0.16 → 0.72; BayesPrism, the genuine package against this project's reimplementation (LGG, donor-level reference): -0.03 → 0.59.
+
+**No repair recovers the lymphoid ordering.** Of 10 repaired method-arms, 0 put T above B. The lymphoid failure of §4.4 is not an artefact of a broken implementation.
+
+**Anatomy, genuine packages:** bayesprism 0.815 on 57 of 57 pairs (registered 0.8); dwls 0.723 on 57 of 57 pairs (registered 0.7231). Among working methods the anatomic ordering rests on two constraints (C6, C7), each evaluable in 8-9 tumours (Figure 15).
+
+> WRITE: one paragraph. Implementation is as large a factor as the method: a reimplementation defect made BayesPrism look useless and DWLS look worse than it is. Repairing them changes the accuracy numbers and leaves every registered reading where it was: anatomy still does not rank, and no method recovers the lymphoid ordering.
+
 ## V. Discussion
 
 > WRITE: six beats. Facts and citations below; the prose is yours.
@@ -408,5 +446,5 @@ The two that a reviewer will find first: the **GBM per-type arm is n = 56** (mos
 
 > The full numbered list, in order of first use, is in **`docs/REFERENCES.md`** — every entry in IEEE style with DOIs, matching the CJSJ format. Paste it here at submission, or `\input` the file if the venue takes LaTeX.
 
-> **All 53 entries are verified** (0 unresolved). Every citation is either read from a PDF held in the repository or resolved against the Crossref API from the publisher's own deposited metadata. Three were wrong and are corrected: [27] Verhaak had a truncated title, [31] EcoTyper had the wrong author order, page range and DOI, and [10] GBmap -- the atlas every method solves against -- carried another paper's title and DOI (D25, corrected 2026-10-01). **[12] EpiDISH — load-bearing for the headline result — is confirmed exactly.**
+> **All 56 entries are verified** (0 unresolved). Every citation is either read from a PDF held in the repository or resolved against the Crossref API from the publisher's own deposited metadata. Three were wrong and are corrected: [27] Verhaak had a truncated title, [31] EcoTyper had the wrong author order, page range and DOI, and [10] GBmap -- the atlas every method solves against -- carried another paper's title and DOI (D25, corrected 2026-10-01). **[12] EpiDISH — load-bearing for the headline result — is confirmed exactly.**
 
