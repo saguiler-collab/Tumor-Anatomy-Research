@@ -90,3 +90,18 @@ def test_a_differing_output_is_moved_aside_and_the_registered_one_restored(tmp_p
     assert vr.keep_registered(st, rec, snap) == ["x.json"]
     assert json.loads((res / "x.json").read_text()) == {"rho": 0.081}                 # registered back in place
     assert json.loads((tmp_path / "verification" / "rerun_outputs" / "step" / "x.json").read_text()) == {"rho": 0.5}
+
+
+def test_csv_with_added_rows_is_named_but_a_changed_or_lost_row_still_differs(tmp_path):
+    a = pd.DataFrame({"sample_id": ["s1", "s2"], "method": ["nnls", "nnls"], "Tumor": [0.5, 0.7]})
+    added = pd.DataFrame({"sample": ["s1", "s2", "s1"], "method": ["nnls", "nnls", "bh"], "Tumor": [0.5, 0.7, 0.9]})
+    a.to_csv(tmp_path / "a.csv", index=False)
+    added.to_csv(tmp_path / "b.csv", index=False)
+    r = vr.compare_csv(tmp_path / "a.csv", tmp_path / "b.csv")
+    assert r["status"] == "REPRODUCED + NEW ROWS" and r["new_rows"] == 1 and "bh" in r["new_row_keys"]
+    changed = added.copy(); changed.loc[0, "Tumor"] = 0.51
+    changed.to_csv(tmp_path / "c.csv", index=False)
+    assert vr.compare_csv(tmp_path / "a.csv", tmp_path / "c.csv")["status"] == "DIFFERS"
+    lost = added.iloc[1:]
+    lost.to_csv(tmp_path / "d.csv", index=False)
+    assert vr.compare_csv(tmp_path / "a.csv", tmp_path / "d.csv")["status"] == "DIFFERS"

@@ -133,11 +133,20 @@
 <sub>`docs/figures/Figure_cptac_wgs.png` · `docs/figures/Figure_cptac_wgs.pdf`</sub>
 
 
-## Figure 15. What the anatomic score separates: each registered constraint, method by method.
+## Figure 15. Study design: anatomy as a registered test, then every method against truths that share nothing with it.
 
-![Figure 15](figures/Figure_acs_constraints.png)
+![Figure 15](figures/Figure_design.png)
 
-**Figure 15.** *What the anatomic score separates: each registered constraint, method by method.* **(A)** Share of evaluable Ivy GAP tumours in which each method satisfies each of the 7 registered constraints (cells: satisfied / evaluable; darker is a larger share; `results/anatomic/acs_per_constraint.csv`). Methods are ordered by ACS; the red line separates the 14 comparable real methods from the two deliberately broken controls and from quanTIseq, which models only immune cells and is scored on two constraints. The controls fail across constraints. Among working methods the fraction satisfied spreads by at most 0.33 on C1-C5 and by 0.62-0.67 on C6 (myeloid: microvascular proliferation above cellular tumour) and C7 (the tumour gradient, weighted 2), each evaluable in 8-9 tumours: the score's resolution among working methods. **(B)** ACS, as registered. **(C)** Each method's tumour-content accuracy against DNA, on the donor-level reference the anatomic arm uses: TCGA-GBM against ABSOLUTE (squares, n = 154) and CPTAC against whole-genome purity (circles, n = 18; secondary analysis). Registered implementations: BayesPrism and DWLS appear as this project's reimplementations here; their genuine-package values are in `docs/EVALUATION_MATRIX.md` (`docs/METHOD_REPAIRS.md`). Descriptive; nothing is selected on it.
+**Figure 15.** *Study design: anatomy as a registered test, then every method against truths that share nothing with it.* Bulk RNA from 122 histology-labelled Ivy GAP samples (10 glioblastomas) is deconvolved by the registered methods, the genuine extension packages and two deliberately broken controls. Test 1 scores each method against seven ordinal, within-tumour anatomic constraints, hashed and registered before scoring, with a within-tumour permutation null (ACS). Test 2 scores the same methods against truths that share no data or reference with Test 1: DNA copy number (ABSOLUTE; CPTAC whole-genome purity), DNA methylation (leukocyte fraction, EpiDISH, GIMiCC) and direct counts (flow cytometry, two single-cell atlases). The three answer boxes carry the registered results, read from artefacts; Q3 gives both reference builds, as OPEN_DEFECTS D23 requires.
+
+<sub>`docs/figures/Figure_design.png` · `docs/figures/Figure_design.pdf`</sub>
+
+
+## Figure 16. What the anatomic score separates: each registered constraint, method by method.
+
+![Figure 16](figures/Figure_acs_constraints.png)
+
+**Figure 16.** *What the anatomic score separates: each registered constraint, method by method.* **(A)** Share of evaluable Ivy GAP tumours in which each method satisfies each of the 7 registered constraints (cells: satisfied / evaluable; darker is a larger share; `results/anatomic/acs_per_constraint.csv`). Methods are ordered by ACS; the red line separates the 14 comparable real methods from the two deliberately broken controls and from quanTIseq, which models only immune cells and is scored on two constraints. The controls fail across constraints. Among working methods the fraction satisfied spreads by at most 0.33 on C1-C5 and by 0.62-0.67 on C6 (myeloid: microvascular proliferation above cellular tumour) and C7 (the tumour gradient, weighted 2), each evaluable in 8-9 tumours: the score's resolution among working methods. **(B)** ACS, as registered. **(C)** Each method's tumour-content accuracy against DNA, on the donor-level reference the anatomic arm uses: TCGA-GBM against ABSOLUTE (squares, n = 154) and CPTAC against whole-genome purity (circles, n = 18; secondary analysis). Registered implementations: BayesPrism and DWLS appear as this project's reimplementations here; their genuine-package values are in `docs/EVALUATION_MATRIX.md` (`docs/METHOD_REPAIRS.md`). Descriptive; nothing is selected on it.
 
 <sub>`docs/figures/Figure_acs_constraints.png` · `docs/figures/Figure_acs_constraints.pdf`</sub>
 

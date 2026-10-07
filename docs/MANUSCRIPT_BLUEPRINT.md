@@ -90,7 +90,8 @@ This is the finding the paper is built on.
 - **Claim:** no method robustly recovers the lymphoid compartment of a glioma. The truth they miss is
   confirmed by every independent instrument that measures it directly.
 - **The prediction:** "DNA methylation will show T cells > B cells", with its falsifier, was committed
-  2026-09-17 23:37:27. The LGG methylation measurement was produced 95 minutes later.
+  2026-09-17 23:37:27. The LGG methylation measurement was produced 94 minutes later (2026-09-18 01:11:52;
+  corrected 2026-10-07 from "95", which rounded up).
 - **The methods:**
   - **0 of 12 order T above B on the registered signature, in GBM and in LGG.**
   - On the donor-level raw/X rebuild, 3 of 14 and 2 of 13 do. The one consistent success (Bisque)
@@ -148,6 +149,11 @@ This is the finding the paper is built on.
     and an independent atlas gives a mixed result. No single cause.
 - **Figure:** `Figure_identifiability`; `Figure_lymphoid_mechanisms` as supplementary.
 - **Caveat to state:** stability says what *not* to trust. It certifies nothing.
+- **And it depends on the perturbation** (E3, registered 2026-10-07 before it was run).
+  - Gene-resampling stability gives rho +0.71 (p 0.068, INCONCLUSIVE).
+  - It rates the lymphoid total stable (0.89 GBM), where the loss scale
+    flagged it.
+  - So state R4 for the loss-scale perturbation specifically.
 
 ### Supporting and supplementary (moved out of the main line)
 
@@ -216,6 +222,38 @@ and 17.
 | Supplementary | Everything in the supporting table above; defects log; verification | S-figures and S-tables |
 
 ---
+
+## 4b · Limitations, current (2026-10-07). The manuscript's Limitations section is written from this list
+
+`docs/PAPER_OUTLINE.md` §9 is older and partly superseded. Where they differ, this list is current. Each item
+names the record that measures it.
+
+1. **One tumour type, one reference family.** Glioma only. Every method solves against GBmap, partly
+   offset by an independent atlas for the lymphoid tests (Abdelfattah) and two references from GBmap (frozen
+   signature; donor-level from raw counts).
+2. **The ranking test is underpowered.** 12 registered methods, 17 with the extension panel. 80% power at a
+   true rho of 0.70 needs 30-50 methods (`agreement_power.json`). The result is "not met", not "refuted".
+3. **The lymphoid truths are cohort-level.** No per-sample lymphoid truth exists here: CPTAC's nuclei
+   contain B cells in 2 of 15 tumours.
+4. **The GBM per-type methylation arm is n = 56.** Most TCGA-GBM methylation is HM27. LGG (n = 510) is
+   the primary per-type evidence.
+5. **Methylation lymphoid truths are instrument-dependent.** GIMiCC places B above T in LGG, against flow
+   cytometry and two atlases (§4.4; WHY_B_OVER_T §7n).
+6. **ABSOLUTE purity is itself an estimate.** It agrees with whole-genome purity and complete-coverage
+   methylation (CPTAC: 0.92 between the two DNA instruments), but it is not a count.
+7. **The anatomic arm is 10 tumours.** Among working methods, ACS separates only on two constraints (C6,
+   C7), each evaluable in 8-9 tumours (`Figure_acs_constraints`).
+8. **Implementations.**
+   - Several Python versions are stand-ins for different algorithms (OPEN_DEFECTS D34). Results from the
+     repaired versions are post-registration (`docs/METHOD_REPAIRS.md`).
+   - Two registered leaderboard rows depend on a wall-clock budget (D35).
+9. **The truth-free stability check depends on the perturbation.** E3's gene resampling was INCONCLUSIVE
+   and rated the lymphoid total stable. State R4 for the loss scale, on 6 units, exploratory.
+10. **The CPTAC result is secondary.** It was registered after the primary control failed. The cohort is
+    18 tumours, and the nuclei come from GDC's automated clusters; the authors' curated labels were not
+    tested.
+11. **The spatial (mesenchymal) layer is nine tumours,** and its pre-specified test is null. Supplementary
+    at most.
 
 ## 5 · Decisions that are yours
 

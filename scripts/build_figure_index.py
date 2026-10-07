@@ -317,6 +317,17 @@ def main() -> int:
             w["all_cases"]["S2_2_methylation_instrument"], w["S2_6_pathology_descriptive"])
           if w else "")(J("cptac_wgs_purity.json"))),
 
+        ("Figure_design",
+         "Study design: anatomy as a registered test, then every method against truths that share nothing with it.",
+         "Bulk RNA from 122 histology-labelled Ivy GAP samples (10 glioblastomas) is deconvolved by the registered "
+         "methods, the genuine extension packages and two deliberately broken controls. Test 1 scores each method "
+         "against seven ordinal, within-tumour anatomic constraints, hashed and registered before scoring, with a "
+         "within-tumour permutation null (ACS). Test 2 scores the same methods against truths that share no data or "
+         "reference with Test 1: DNA copy number (ABSOLUTE; CPTAC whole-genome purity), DNA methylation (leukocyte "
+         "fraction, EpiDISH, GIMiCC) and direct counts (flow cytometry, two single-cell atlases). The three answer "
+         "boxes carry the registered results, read from artefacts; Q3 gives both reference builds, as OPEN_DEFECTS "
+         "D23 requires."),
+
         ("Figure_acs_constraints",
          "What the anatomic score separates: each registered constraint, method by method.",
          (lambda pc, lb, yh: (

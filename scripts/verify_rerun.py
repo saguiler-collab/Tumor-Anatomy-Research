@@ -125,6 +125,8 @@ STEPS = [
       note="RESULTS.md agrees with the artefacts"),
     S("cptac_per_sample_analyse", "fast", ["PY", sc("cptac_per_sample.py"), "--stage", "analyse"],
       ["cptac_per_sample_truth.json"], note="added 2026-10-06 after the snapshot: NEW on the first pass"),
+    S("identifiability_e3", "fast", ["PY", sc("identifiability_e3.py")], ["identifiability_e3.json"],
+      note="added 2026-10-07 after the snapshot (NEW); recomputes E3's statistics from its saved subset fits"),
     S("evaluation_matrix", "fast", ["PY", sc("evaluation_matrix.py")], ["evaluation_matrix.json"],
       note="added 2026-10-07 after the snapshot: NEW on the first pass; exits 1 if a join drifts"),
     S("cptac_wgs_purity_analyse", "fast", ["PY", sc("cptac_wgs_purity.py"), "--stage", "analyse"],
@@ -190,6 +192,17 @@ STEPS = [
       note="ReCIDE on Ivy GAP (no time budget, as its default now is)"),
 ]
 BY_ID = {s["id"]: s for s in STEPS}
+
+#: Heavy re-fits of supplementary analyses, not re-run in the 2026-10-07 verification by the user's decision ("core steps
+#: only"): their downstream analyses reproduced from the saved fits in the fast and medium tiers, and re-running them
+#: mostly repeats the BayesPrism/DWLS 2,400 s timeouts (OPEN_DEFECTS D35). Run them with --include-supplementary.
+SUPPLEMENTARY = {
+    "cdseq_anatomic": "reference-free arm (supports R1)",
+    "reference_sensitivity_neftel": "reference sensitivity (D14)",
+    "reference_sensitivity_darmanis": "reference sensitivity (D14)",
+    "unmix_s2_anatomy": "E2's secondary S2 arm",
+    "recide_anatomic": "extension panel, anatomy arm",
+}
 TIERS = ["fast", "medium", "heavy", "days"]
 
 
@@ -207,6 +220,22 @@ def compare_json(old: Path, new: Path) -> dict:
     return {"status": status, "leaves": n, "n_differences": len(diffs), "examples": diffs[:12]}
 
 
+def _recompare_moved(sid: str, out: str, o: dict) -> dict:
+    """A DIFFERS whose re-run copy was moved aside (keep_registered) is compared again with the current rules,
+    so a rule added later (REPRODUCED + NEW ROWS) applies to records written before it existed."""
+    if o.get("status") != "DIFFERS" or not out.endswith(".csv"):
+        return o
+    moved = VDIR / "rerun_outputs" / sid / out
+    try:
+        snap = snapshot_dir() / out
+    except SystemExit:
+        return o
+    if not (moved.exists() and snap.exists()):
+        return o
+    r = compare_csv(snap, moved)
+    return r if r["status"] != "DIFFERS" else o
+
+
 def _reclassify(o: dict) -> dict:
     """A DIFFERS recorded before REPRODUCED + NEW FIELDS existed, judged by the same rule from its record:
     only when every difference was listed and every one is a field the re-run adds."""
@@ -217,10 +246,40 @@ def _reclassify(o: dict) -> dict:
     return o
 
 
+def _keyed_rows(a: pd.DataFrame, b: pd.DataFrame) -> dict | None:
+    """When a re-run CSV ADDS rows (a method that now runs) or renames a key column, compare the registered rows
+    by key: the non-numeric columns, aligned by position. Returns a verdict only if every registered row is present
+    and identical (relative 1e-9); otherwise None, and the caller reports DIFFERS."""
+    na, nb = a.select_dtypes("number").columns, b.select_dtypes("number").columns
+    ka, kb = [c for c in a.columns if c not in na], [c for c in b.columns if c not in nb]
+    if list(na) != list(nb) or not ka or len(ka) != len(kb):
+        return None
+    renamed = {y: x for x, y in zip(ka, kb) if x != y}
+    b = b.rename(columns=renamed)
+    if a.duplicated(ka).any() or b.duplicated(ka).any():
+        return None
+    m = a.merge(b, on=ka, how="left", suffixes=("_a", "_b"), indicator=True)
+    if (m["_merge"] != "both").any():
+        return None
+    x = m[[f"{c}_a" for c in na]].to_numpy(float)
+    y = m[[f"{c}_b" for c in na]].to_numpy(float)
+    if (np.isnan(x) != np.isnan(y)).any():
+        return None
+    d = np.where(np.isnan(x), 0.0, np.abs(x - y)) / np.maximum(1.0, np.abs(np.nan_to_num(x)))
+    if d.size and float(d.max()) > 1e-9:
+        return None
+    extra = b.merge(a[ka], on=ka, how="left", indicator=True)
+    extra = extra[extra["_merge"] == "left_only"]
+    return {"status": "REPRODUCED + NEW ROWS", "registered_rows": int(len(a)), "new_rows": int(len(extra)),
+            "new_row_keys": sorted({str(v) for c in ka for v in extra[c].unique()} - {str(v) for c in ka for v in a[c].unique()})[:20],
+            "renamed_key_columns": {v: k for k, v in renamed.items()}}
+
+
 def compare_csv(old: Path, new: Path) -> dict:
     a, b = pd.read_csv(old), pd.read_csv(new)
     if list(a.columns) != list(b.columns) or len(a) != len(b):
-        return {"status": "DIFFERS", "why": f"shape/columns differ: {a.shape} vs {b.shape}"}
+        keyed = _keyed_rows(a, b)
+        return keyed or {"status": "DIFFERS", "why": f"shape/columns differ: {a.shape} vs {b.shape}"}
     num = a.select_dtypes("number").columns
     txt = [c for c in a.columns if c not in num]
     if txt and not a[txt].astype(str).equals(b[txt].astype(str)):
@@ -318,7 +377,7 @@ def run_step(st: dict, snap: Path) -> dict:
     return rec
 
 
-def run_tier(tier: str, force: bool, only: list[str] | None) -> None:
+def run_tier(tier: str, force: bool, only: list[str] | None, include_supplementary: bool = False) -> None:
     snap = snapshot_dir()
     state = load_state()
     for st in STEPS:
@@ -326,6 +385,8 @@ def run_tier(tier: str, force: bool, only: list[str] | None) -> None:
             continue
         if st["id"] in state and not force:
             print(f"skip {st['id']} (done)"); continue
+        if st["id"] in SUPPLEMENTARY and not include_supplementary:
+            print(f"skip {st['id']} (supplementary; --include-supplementary to run)"); continue
         print(f"run  {st['id']} ...", flush=True)
         state[st["id"]] = run_step(st, snap)
         STATE.write_text(json.dumps(state, indent=2))
@@ -344,16 +405,69 @@ def provenance_gaps() -> list[str]:
     return [a for a in read if a not in produced]
 
 
+#: For each explained step, the pattern every one of its differences must match (checked in the report against the
+#: full difference list recomputed from the moved-aside re-run copies, not just the stored examples).
+EXPLAINED_PATTERNS = {
+    "registered_pipeline": r"bayesprism|dwls|\[8\]|\[14\]|median_real_acs|control_verdict|primary_result\.|"
+                           r"methods_excluded_for_partial_coverage",
+    "tcga_gbm_frozen": r"bayesian_hierarchical|equal_footing|reference = 'frozen'",
+    "tcga_lgg_frozen": r"bayesian_hierarchical|equal_footing|reference = 'frozen'",
+    "anatomy_vs_biology": r"registered_status",
+}
+#: Where a step's re-run copies were moved by hand rather than by keep_registered.
+MOVED_DIRS = {"registered_pipeline": "registered_pipeline_20261007"}
+
 #: A difference with a diagnosed cause, stated where the difference is listed. Each names the defect record.
 EXPLAINED = {
     "registered_pipeline": (
-        "every difference is confined to `bayesprism` and `dwls`. In the registered run (2026-09-21) both overran "
-        "the genuine packages' 2,400 s budget by 5 and 16 s and fell back to the Python versions; in this re-run, "
-        "with identical code, both genuine packages finished (BayesPrism ACS 0.815; DWLS 0.70 on 26 of 57 pairs). "
-        "Every other method and both controls reproduced exactly. The registered artefacts were restored in place; "
-        "the re-run's outputs are in `results/verification/rerun_outputs/registered_pipeline_20261007/` "
-        "(OPEN_DEFECTS D35)."),
+        "the per-method differences are confined to `bayesprism` and `dwls`: in the registered run (2026-09-21) both "
+        "overran the genuine packages' 2,400 s budget by 5 and 16 s and fell back to the Python versions; in this "
+        "re-run, with identical code, both genuine packages finished (BayesPrism ACS 0.815; DWLS 0.70 on 26 of 57 "
+        "pairs, so it is excluded as partially covered). Every other method and both controls reproduce exactly. "
+        "Through those two rows the run's own summary statistics move: the ACS-versus-ABSOLUTE agreement on this "
+        "run's panel becomes +0.165 on 11 methods (the archived file carries the pre-D21 sign, -0.081, on 12; the "
+        "registered value is +0.081 from `yardstick_agreement.py`), the synthetic arm 0.637 -> 0.828, and the median "
+        "real ACS 0.854 -> 0.862. No reading changes. Registered artefacts were restored; the re-run's are in "
+        "`results/verification/rerun_outputs/registered_pipeline_20261007/` (OPEN_DEFECTS D35, D21)."),
+    "tcga_gbm_frozen": (
+        "the only differences are additions. `bayesian_hierarchical` now runs: the registered frozen arm predates the "
+        "`patient_id` fix and recorded `KeyError: 'patient_id'` (OPEN_DEFECTS D20); it now scores tumour rho 0.750. "
+        "There are also two new provenance fields (`equal_footing`; `reference` = 'frozen'), and the estimates file names its key column `sample` "
+        "instead of `sample_id`. Every registered method's statistics and all 1,848 registered estimate rows "
+        "reproduce exactly (largest difference 0.0, checked 2026-10-07)."),
+    "tcga_lgg_frozen": (
+        "the same as tcga_gbm_frozen: `bayesian_hierarchical` now runs (it recorded `KeyError: 'patient_id'` in the "
+        "registered frozen arm, OPEN_DEFECTS D20) and scores tumour rho 0.541; two provenance fields are new "
+        "(`equal_footing`; `reference` = 'frozen'); the key column is `sample`. Every registered method's statistics and all 6,120 registered estimate "
+        "rows reproduce exactly (largest difference 0.0, checked 2026-10-07)."),
+    "anatomy_vs_biology": (
+        "a deliberate text correction: the `registered_status` sentence now says the prediction was committed 94 "
+        "minutes (2026-09-17 23:37:27 to 2026-09-18 01:11:52) before the LGG methylation existed, where it said 95, a "
+        "rounding up (corrected 2026-10-07 in the 'verify ts' pass). No number the analysis computes changes."),
 }
+
+
+def explanation_check(sid: str, outputs: list[str]) -> str:
+    """Recompute every difference of a step's DIFFERS JSON outputs and confirm each matches EXPLAINED_PATTERNS."""
+    import re  # noqa: PLC0415
+    from compare_artefacts import compare  # noqa: PLC0415
+    pat = EXPLAINED_PATTERNS.get(sid)
+    if not pat:
+        return "no pattern declared"
+    base = VDIR / "rerun_outputs" / MOVED_DIRS.get(sid, sid)
+    n_all, outside = 0, []
+    for o in outputs:
+        if not o.endswith(".json"):
+            continue
+        new_p, old_p = base / o, snapshot_dir() / o
+        if not (new_p.exists() and old_p.exists()):
+            return f"cannot check: re-run copy of {o} not found"
+        d = compare(json.loads(old_p.read_text()), json.loads(new_p.read_text()), 1e-9, DEFAULT_IGNORE)
+        n_all += len(d)
+        outside += [x for x in d if not re.search(pat, x, re.I)]
+    if outside:
+        return f"UNEXPLAINED: {len(outside)} of {n_all} differences fall outside the stated cause, e.g. {outside[0][:160]}"
+    return f"checked: all {n_all} differences match the stated cause"
 
 
 def report() -> int:
@@ -363,7 +477,7 @@ def report() -> int:
         rec = state.get(st["id"])
         if rec is None:
             rows.append((st, None)); continue
-        rec = {**rec, "outputs": {k: _reclassify(v) for k, v in rec["outputs"].items()}}
+        rec = {**rec, "outputs": {k: _reclassify(_recompare_moved(st["id"], k, v)) for k, v in rec["outputs"].items()}}
         for o in rec["outputs"].values():
             counts[o["status"]] = counts.get(o["status"], 0) + 1
         if "verdict" in rec:
@@ -382,6 +496,8 @@ def report() -> int:
          "- NUMERICAL NOISE: only numbers differ, all by at most 1e-6.",
          "- REPRODUCED + NEW FIELDS: every value the original recorded is reproduced; the re-run also writes "
          "fields the code gained after the original was written (listed below the table).",
+         "- REPRODUCED + NEW ROWS: every registered row is present and identical; the re-run adds rows (a method "
+         "that now runs) or renames a key column.",
          "- DIFFERS: anything else; the differences are listed below the table.",
          "- NEW: the file did not exist before the re-run.",
          "- NOT WRITTEN: the step should have written the file and did not.", "",
@@ -389,7 +505,9 @@ def report() -> int:
          "| step | tier | exit | time | outputs / verdict |", "|---|---|---|---|---|"]
     for st, rec in rows:
         if rec is None:
-            L.append(f"| `{st['id']}` | {st['tier']} | -- | -- | not yet run |"); continue
+            why = (f"not re-run: supplementary ({SUPPLEMENTARY[st['id']]}), by decision 2026-10-07"
+                   if st["id"] in SUPPLEMENTARY else "not yet run")
+            L.append(f"| `{st['id']}` | {st['tier']} | -- | -- | {why} |"); continue
         outs = "; ".join(f"`{k}` {v['status']}" for k, v in rec["outputs"].items())
         if "verdict" in rec:
             outs = (outs + "; " if outs else "") + f"**{rec['verdict']}**"
@@ -398,7 +516,8 @@ def report() -> int:
     if diffs:
         L += ["", "## What differs", ""]
         for sid in sorted({st["id"] for st, _, _ in diffs} & set(EXPLAINED)):
-            L += [f"> **Step `{sid}`, explained:** {EXPLAINED[sid]}", ""]
+            outs = [k for st, k, _ in diffs if st["id"] == sid]
+            L += [f"> **Step `{sid}`, explained:** {EXPLAINED[sid]} *[{explanation_check(sid, outs)}]*", ""]
         for st, k, v in diffs:
             L.append(f"**`{k}`** (step `{st['id']}`):")
             for e in v.get("examples", [])[:8]:
@@ -436,6 +555,8 @@ def main() -> int:
     ap.add_argument("--tier", choices=TIERS)
     ap.add_argument("--only", nargs="+")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--include-supplementary", action="store_true",
+                    help="also re-run the supplementary heavy re-fits (SUPPLEMENTARY), skipped by default")
     ap.add_argument("--report", action="store_true")
     ap.add_argument("--list", action="store_true")
     a = ap.parse_args()
@@ -446,7 +567,7 @@ def main() -> int:
     if a.snapshot:
         take_snapshot(a.snapshot)
     if a.tier:
-        run_tier(a.tier, a.force, a.only)
+        run_tier(a.tier, a.force, a.only, a.include_supplementary)
     if a.report or a.tier:
         report()
     return 0

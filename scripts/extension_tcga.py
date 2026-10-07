@@ -38,7 +38,10 @@ from ivygap.deconv.extension import EXTENSION_SPECS, build_extension_methods  # 
 OUT = config.RESULTS_DIR / "extension"
 
 
-def run(cohort: str, reference: str, methods: list[str], return_estimates: bool = False) -> dict:
+def run(cohort: str, reference: str, methods: list[str], return_estimates: bool = False,
+        genes_keep: list[str] | None = None) -> dict:
+    """`genes_keep`, when given, restricts the marker genes to that subset (Extension E3's gene resampling,
+    prespecified/identifiability_e3_gene_resampling.md); the default uses every marker gene, as always."""
     base = "" if cohort == "gbm" else f"_{cohort}"
     tag = base + ("_h5ad" if reference == "h5ad" else "")
     with gzip.open(config.PROCESSED_DIR / f"tcga_{cohort}_bulk_cpm.csv.gz", "rt") as fh:
@@ -64,6 +67,9 @@ def run(cohort: str, reference: str, methods: list[str], return_estimates: bool 
     picked = select_signature_genes(ref.subset_genes(shared_genes),
                                     n_per_type=config.SIGNATURE_GENES_PER_TYPE)
     genes = [g for g in picked if g in bulk.index]
+    if genes_keep is not None:
+        keep = set(genes_keep)
+        genes = [g for g in genes if g in keep]
     sub = bulk.loc[genes, cols]
     sub = sub / sub.sum(axis=0) * 1e6
     manifest = pd.DataFrame({"patient_id": ["-".join(str(c).split("-")[:3]) for c in sub.columns]},

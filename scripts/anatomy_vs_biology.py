@@ -51,7 +51,7 @@ def build() -> dict:
             "ACS-versus-purity rank correlation.",
         "registered_status":
             "The T > B prediction IS pre-registered (prespecified/immune_failure_factors.md, "
-            "committed 2026-09-17T23:37, 95 minutes before the LGG methylation measurement "
+            "committed 2026-09-17T23:37:27, 94 minutes before the LGG methylation measurement (2026-09-18T01:11:52) "
             "existed). Relating it to the ACS ranking is NOT pre-registered; it is a direct "
             "reading of the registered question against two existing artefacts.",
         "selects_nothing":

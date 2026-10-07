@@ -904,6 +904,68 @@ def fig_cptac_wgs():
     save(fig, "Figure_cptac_wgs")
 
 
+def fig_design():
+    """Figure 1: the study design. Anatomy turned from an output into an input (registered constraints), scored beside
+    broken controls; every method then judged against truths that share nothing with the anatomy. The numbers in the
+    answer boxes are read from artefacts."""
+    from matplotlib.patches import FancyArrowPatch, FancyBboxPatch                # noqa: PLC0415
+    lb_f = config.RESULTS_DIR / "anatomic" / "acs_leaderboard.csv"
+    ya, cw, em = J("yardstick_agreement.json"), J("cptac_wgs_purity.json"), J("evaluation_matrix.json")
+    lo, lo2 = J("lymphoid_ordering.json"), J("lymphoid_ordering_lgg.json")
+    lh, lh2 = J("lymphoid_ordering_h5ad.json"), J("lymphoid_ordering_lgg_h5ad.json")
+    if not (lb_f.exists() and ya and lo):
+        return
+    lb = pd.read_csv(lb_f).set_index("method")
+    real, ctl = lb[(~lb.is_control) & lb.comparable], lb[lb.is_control]
+    fig, ax = plt.subplots(figsize=(15.5, 7.2))
+    ax.set_xlim(0, 100); ax.set_ylim(2, 57); ax.axis("off")
+
+    def box(x, y, w, h, title, body, fc="#f4f6fa", ec=PS.GREY, tcol=PS.INK):
+        ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.4,rounding_size=1.2", fc=fc, ec=ec, lw=1.1))
+        ax.text(x + 1.2, y + h - 1.6, title, fontsize=10.5, fontweight="bold", va="top", color=tcol)
+        ax.text(x + 1.2, y + h - 5.0, body, fontsize=8.6, va="top", color=PS.INK, linespacing=1.45)
+
+    def arrow(x1, y1, x2, y2):
+        ax.add_patch(FancyArrowPatch((x1, y1), (x2, y2), arrowstyle="-|>", mutation_scale=14, lw=1.2, color=PS.GREY))
+
+    box(1, 34, 21, 22, "Inputs",
+        "Bulk RNA-seq, 122 region-labelled\nsamples from 10 glioblastomas\n(Ivy GAP: LE, IT, CT, MVP, PAN)\n\n"
+        "Single-cell reference: GBmap\n(frozen signature; donor-level\nreference rebuilt from raw counts)")
+    box(1, 4, 21, 26, "Independent truths",
+        "DNA copy number: ABSOLUTE purity\n(TCGA-GBM 154, LGG 510)\nWhole-genome purity (CPTAC, 18)\n"
+        "Methylation: leukocyte fraction,\nEpiDISH, GIMiCC\nDirect counts: flow cytometry,\ntwo single-cell atlases")
+    box(27, 34, 22, 22, "Deconvolution",
+        f"{int((~lb.is_control).sum())} registered methods\n({len(real)} scored on every constraint)\n"
+        "+ 9 genuine extension packages\n+ 2 deliberately broken controls\n"
+        "(random proportions;\nshuffled signature)\n\nEach as the published package\nwhere it can run")
+    box(54, 34, 21, 22, "Test 1: anatomy (registered)",
+        "7 ordinal, within-tumour\nconstraints, hashed before scoring\ne.g. Tumour: CT > LE;\nEndothelium: MVP is the maximum\n\n"
+        "ACS, with a within-tumour\npermutation null", fc="#eef3fb", ec=C_GBM)
+    box(54, 4, 21, 26, "Test 2: accuracy",
+        "Tumour, immune and lymphoid\nestimates against the truths\n(Spearman across samples;\ncohort-level T vs B)\n\n"
+        "No truth shares data or\nreference with Test 1", fc="#eef3fb", ec=C_GBM)
+    s25 = cw.get("all_cases", {}).get("frozen", {}).get("S2_5_acs_vs_wgs_accuracy", {}).get("spearman")
+    box(79, 40, 20, 16, "Q1 Does anatomy detect\nbroken methods?  YES",
+        f"\nreal {real.acs.min():.2f}-{real.acs.max():.2f}\ncontrols {ctl.acs.min():.2f}-{ctl.acs.max():.2f}\nnulls p < 1e-4 (real only)",
+        fc="#f2f7f2", ec=PS.GREEN, tcol=PS.GREEN)
+    box(79, 22, 20, 16, "Q2 Does it identify the\naccurate method?  NO",
+        f"\nrho {ya['arm_2_absolute_purity']['all_methods']['spearman']:+.2f} (TCGA, bar 0.60)\n"
+        + (f"rho {s25:+.2f} (CPTAC, whole genome)" if s25 is not None else ""),
+        fc="#fbf1f0", ec=PS.RED, tcol=PS.RED)
+    reg_tb = lo["n_agree_T_over_B"] + lo2["n_agree_T_over_B"]
+    h5_tb = (lh.get("n_agree_T_over_B", 0) + lh2.get("n_agree_T_over_B", 0)) if lh and lh2 else None
+    box(79, 4, 20, 16, "Q3 Does any method get\nthe biology right?  NO",
+        f"\nT above B, method-cohort pairs:\nfrozen {reg_tb} of {len(lo['methods']) + len(lo2['methods'])}; "
+        + (f"donor-level {h5_tb} of {len(lh['methods']) + len(lh2['methods'])}\n(none robustly)" if h5_tb is not None else "")
+        + "\nflow cytometry: T 9-21x B",
+        fc="#fbf1f0", ec=PS.RED, tcol=PS.RED)
+    arrow(22, 45, 27, 45); arrow(49, 45, 54, 45); arrow(38, 34, 60, 30.6); arrow(22, 17, 54, 17)
+    arrow(75, 48, 79, 48); arrow(75, 30, 79, 30); arrow(75, 12, 79, 12)
+    fig.suptitle("Study design: anatomy as a registered test, then every method against truths that share nothing with it",
+                 fontsize=12.5, y=0.96)
+    save(fig, "Figure_design")
+
+
 def fig_acs_constraints():
     """What the anatomic score separates: each method's share of tumours satisfying each registered constraint
     (results/anatomic/acs_per_constraint.csv), ordered by ACS, beside its tumour-content accuracy against DNA

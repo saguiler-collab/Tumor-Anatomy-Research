@@ -170,6 +170,20 @@ This is the paragraph the whole paper turns on. Build it carefully.
    pathologist's label, neither of which requires single-cell data.
    → **your argument.** State it as the study's premise.
 
+4. *(Added 2026-10-07.)* Anatomy has already served as supporting evidence for deconvolution, but only
+   qualitatively.
+   - BayesPrism's authors deconvolved Ivy GAP and reported endothelium enriched in microvascular
+     proliferation → **[19] Chu et al. 2022**.
+   - Varn et al. characterised Ivy GAP regions by deconvolution and immunofluorescence → **[57] Varn et
+     al. 2022**, *Cell* 185:2184.
+   - Neither treats anatomic agreement as a test that could fail, nor checks it against an independent
+     truth. That is the gap this study fills.
+   - Robustness studies so far use simulated mixtures → **[58] Xu et al. 2025**.
+   - Single-cell and single-nucleus proportions carry known dissociation biases → **[59] Slyper et al.
+     2020**, the context for the CPTAC finding (§4.13).
+   - All four were found by the 2026-10-07 literature check (`docs/CLAIMS_LEDGER.md`) and resolved on
+     Crossref. **Read [19] and [57] for the exact wording before quoting them.**
+
 ---
 
 ## ¶6 — What this study did, and the two-clause question

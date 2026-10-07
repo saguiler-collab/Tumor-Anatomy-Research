@@ -413,10 +413,48 @@ def write_doc(o: dict) -> None:
     DOC.write_text("\n".join(L) + "\n")
 
 
+def write_supplementary_csv(o: dict) -> Path:
+    """Supplementary table: one row per method x arm, every truth's rho and n, registered beside repaired."""
+    rows = []
+    rp = o.get("repaired", {})
+    for arm, cells in o["arms"].items():
+        for m, c in cells.items():
+            r = {"arm": arm, "method": m, "implementation": c.get("implementation"), "degenerate": c.get("degenerate"),
+                 "status": c.get("status")}
+            if arm == "gbm|h5ad" and m in o["acs"]:
+                r["acs_ivygap"] = o["acs"][m]["acs"]
+            for k, v in c.items():
+                if "|" in k and isinstance(v, dict) and "rho" in v:
+                    r[f"rho {k}"], r[f"n {k}"] = v["rho"], v.get("n")
+            tb = c.get("T>B")
+            if tb:
+                r["T_exceeds_B"], r["samples_no_lymphoid"] = tb.get("T_exceeds_B"), tb.get("samples_with_no_lymphoid_signal")
+            if arm.startswith("gbm"):
+                w = o["cptac_wgs"].get(arm.split("|")[1], {}).get(m)
+                if w:
+                    r["rho Tumor|CPTAC_WGS"] = w["rho"]
+            rep = (rp.get("tcga", {}).get(arm) or {}).get(m)
+            if rep and "failed" not in rep:
+                r["repaired_implementation"] = rep.get("implementation")
+                for k in ("Tumor|ABSOLUTE", "Leukocytes|LF", "Lymphoid|EpiDISH"):
+                    r[f"repaired rho {k}"] = (rep.get(k) or {}).get("rho")
+            g = (rp.get("genuine_bayesprism_tcga") or {}).get(arm) if m == "bayesprism" else None
+            if g:
+                r["repaired_implementation"] = g["implementation"]
+                for k in ("Tumor|ABSOLUTE", "Leukocytes|LF", "Lymphoid|EpiDISH"):
+                    r[f"repaired rho {k}"] = g[k]["rho"]
+            rows.append(r)
+    out = config.PROJECT_ROOT / "docs" / "supplementary" / "evaluation_matrix.csv"
+    pd.DataFrame(rows).to_csv(out, index=False)
+    return out
+
+
 def main() -> int:
     o = build()
     OUT.write_text(json.dumps(o, indent=2, default=float))
     write_doc(o)
+    csv = write_supplementary_csv(o)
+    print(f"wrote {csv.relative_to(config.PROJECT_ROOT)}")
     print(f"join checks: {o['n_join_checks'] - o['n_join_disagreements']} of {o['n_join_checks']} agree")
     print(f"gaps: {len(o['gaps'])}; implementation mismatches: {len(o['implementation_mismatches'])}")
     print(f"wrote {OUT.relative_to(config.PROJECT_ROOT)} and {DOC.relative_to(config.PROJECT_ROOT)}")

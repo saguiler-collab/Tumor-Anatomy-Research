@@ -1154,6 +1154,114 @@ via ACS values."
   without reloading; both test orders pass.
 - **Docs:** `docs/METHOD_REPAIRS.md`; OPEN_DEFECTS D31-D35.
 
+### 2.34 Verification, continued; the claims ledger with prior-work checks (2026-10-07 afternoon)
+**User:** "resume with the verification. Make sure it is good though and we have verified evident, original
+research that will be critical for developing deconvolution methods that are optimal".
+- **Heavy tier** (resumed 08:37):
+  - `tcga_gbm_frozen` finished in 4.6 h.
+    - Statistics: the only differences are Bayesian hierarchical now running (D20) and a new provenance
+      field.
+    - Estimates: all 1,848 registered rows identical (max |diff| 0.0), plus 154 new rows; the key column is
+      renamed `sample_id` → `sample`.
+    - Explained in `verify_rerun.EXPLAINED`.
+  - `tcga_lgg_frozen` running. About 1.5-2 days remain for the whole tier.
+- **Harness:**
+  - New verdict REPRODUCED + NEW ROWS: a keyed comparison of CSVs, given only if every registered row is
+    present and identical; tested with the changed-row and lost-row negatives.
+  - The report re-compares moved-aside re-run copies under the current rules.
+- **Baselines of outputs created after the snapshot** (`results/verification/new_outputs_baseline/`, with
+  hashes): CPTAC primary and S2, the evaluation matrix. Fast pass 3's re-run is then a second-run
+  reproducibility check.
+- **`docs/CLAIMS_LEDGER.md`** (`scripts/build_claims_ledger.py`; numbers from artefacts, status from the
+  harness):
+  - claims L1-L8, each with verification status, controls, caveats, prior work, what is new, and what it
+    means for method design;
+  - acceptance tests 1-8 for a new method (tumour bars 0.77 TCGA-GBM, 0.85 CPTAC).
+  - Status now: L1 and L8 verified with explained differences; L4 verified; L2, L3, L5, L6 and L7 partly
+    verified, until fast pass 3.
+- **Prior-work checks** (targeted web searches; "not found" reported as such):
+  - Li et al. 2026 Genome Biology ([4], already cited) selects methods by reproducibility criteria
+    without a measured truth. Our L2 tests such criteria against DNA.
+  - The BayesPrism paper and Varn 2022 used Ivy GAP anatomy qualitatively.
+  - The DWLS solver error is public (issue #12), with no cause or fix; ours are new.
+  - Dissociation bias is known (Slyper 2020); robustness has been studied on synthetic data only
+    (Xu 2025).
+  - References [57]-[59] added (Crossref; Varn's DOI checked directly after a bad search hit).
+
+### 2.35 Completing the research for write-up (2026-10-07 14:45 onward; user: "Go on, even when the mac is unplugged advance. We must complete this project's research to be one that can be written to a great extent")
+- **Power policy changed by the user.** The verification runs on battery too.
+  - The AC gate (added 14:44 when the Mac was unplugged) was removed.
+  - A `caffeinate -i -s -w <lane pid>` keeps the Mac awake until the lane ends.
+- **Figure 1 built** (`fig_design`, `docs/figures/Figure_design`): inputs, the methods and controls, Test 1
+  (anatomy) and Test 2 (independent truths), and Q1-Q3 with their answers read from artefacts.
+  - Q3 gives both reference builds (frozen 0/24; donor-level 5/27, none robustly), per D23.
+  - The figure index now has 16 of 16.
+- **E3 registered, 15:16:26** (`prespecified/identifiability_e3_gene_resampling.md`, stamped from stat)
+  before any subset fit.
+  - Genuine `unmix` on 10 random halves of the marker genes, per cohort; D3 stability; H1-E3 over E2's 6
+    units with E2's reading rule.
+  - Running (`scripts/identifiability_e3.py`, `/tmp/e3_run.log`).
+  - `extension_tcga.run` gained an optional `genes_keep` (default: unchanged behaviour).
+- **Ledger:** L2 now carries the extended panel (17 methods: rho 0.285, CI -0.24 to 0.70; reproduced in the
+  fast tier). L4 carries E3.
+- **E3 DONE (about 16:30):** H1-E3 rho +0.714, p 0.068 → **INCONCLUSIVE**; 12 units
+  +0.46; D3 vs D1 +0.60.
+  - Gene resampling rates the GBM lymphoid total stable (0.89), though it
+    is wrong. The loss scale is the informative perturbation, so R4 must be stated for it.
+  - Written into manuscript §4.12, EXTENSION_IDENTIFIABILITY E3, the blueprint R4, ledger L4 and
+    acceptance test 4.
+  - Added as fast verification step `identifiability_e3`, with a baseline saved.
+- **Discussion beat 6** (generated): CPTAC, nuclei, instrument agreement and implementation, cited [19],
+  [54]-[59]. Both doc checkers CLEAN.
+- **The LGG frozen arm verified** (10,733 s). As GBM: all 6,120 registered rows identical; Bayesian
+  hierarchical added (0.541, D20); provenance field new. In `EXPLAINED`.
+  - Report totals: 58 REPRODUCED, 2 NEW FIELDS, 2 NEW ROWS, 5 DIFFERS (all explained).
+- **Write-up materials (16:20):**
+  - **Blueprint §4b:** a current list of 11 limitations. The manuscript's Limitations beat now points
+    there, not to the superseded PAPER_OUTLINE §9.
+  - **`docs/supplementary/evaluation_matrix.csv`:** 60 method × arm rows with every truth's rho and n,
+    registered and repaired; written by `evaluation_matrix.py`.
+  - **INTRODUCTION_OUTLINE ¶5 item 4:** the prior qualitative uses of anatomy ([19], [57]), synthetic
+    robustness ([58]) and dissociation bias ([59]).
+- The verification is in its GBM donor-level arm (started 16:12).
+
+### 2.36 "verify ts": an independent check of the claims and the timestamps (2026-10-07 ~16:20-17:00)
+- **Registration timestamps.** New: `scripts/audit_registrations.py` → `docs/REGISTRATION_AUDIT.md`.
+  - **8 of 9 rules provably precede** the data they govern.
+    - Margins: constraints +2.9 days; T > B prediction +94.4 min (git 43fbe99); E2 +19.9 min; atlas
+      +13 min; Klemm +5.3 min; CPTAC primary +10.7 min; CPTAC S2 +2.5 min; E3 +2.2 min.
+  - **GIMiCC is not provable here.** `sed -i` reset its file birth on 2026-10-03, and its first git
+    record (971aeb3, 14:52) postdates its runs (12:55). Its precedence rests on the session record.
+    Disclosed in ledger L3.
+- **The anatomic constraints were never changed.** The working file is byte-identical to its only commit,
+  8d12559 (2026-09-03 12:16). Its freeze hash 2d1fb47c... equals the first scoring run's (2026-09-05) and the
+  OSF deposit's (2026-09-10). Ledger L1 now states the sequence exactly: git first, OSF later.
+- **"95 minutes" corrected to 94** (23:37:27 → 01:11:52) in the manuscript generator (3 places),
+  `anatomy_vs_biology.py` and the blueprint. Its fast step will show an explained text difference on
+  re-run.
+- **The verification report's explanations are now checked mechanically** (`EXPLAINED_PATTERNS`,
+  `explanation_check`, against full difference lists recomputed from the moved-aside copies). The check
+  found two gaps in my own notes, now fixed:
+  - **registered_pipeline:** 17 of 27 differences in `anatomic_report.json` are summary statistics moved
+    by the two timing-dependent rows: run-panel ACS-vs-ABSOLUTE +0.165 on 11 methods (DWLS excluded as
+    partial), synthetic arm 0.828, median real ACS 0.862. The archived file carries the pre-D21 sign,
+    -0.081. The note had said "confined to bayesprism and dwls". D35 updated.
+  - **TCGA frozen arms:** a 13th difference, a new `reference = 'frozen'` provenance field, now named.
+  - All 34 + 13 + 13 differences now match their stated causes.
+- **Figure 1 corrected:** "15 registered methods (14 scored on every constraint)", not 14. The extension
+  count of 9 is confirmed (7 TCGA extension packages, plus Linseed and BayesPrism in its authors'
+  configuration).
+- Both doc checkers CLEAN; verify_rerun tests 8/8.
+- **D18 watchdog reinstated for the verification** (17:16, `scratchpad/r_budget_watchdog.sh`).
+  - The documented external mitigation: BayesPrism 2,700 s, quanTIseq 900 s, orphaned snow workers swept.
+    Every kill is logged in `/tmp/verify.status`. It exits with the lane.
+  - Why: the GBM donor-level arm's genuine BayesPrism started 3 snow workers (orphaned to ppid 1), and
+    `_run_bounded`'s timeout cannot fire for them (D18). The registered h5ad runs fell back to the
+    stand-in under this regime, so reproducing them needs the same regime.
+- **Expected on the donor-level arms:** genuine DWLS can now reuse the MAST signature that today's repaired
+  run cached for the TCGA gene space. It may finish within its 2,400 s budget, where the registered run
+  timed out. That would be a D35-class (cache and clock) difference, to be checked and explained.
+
 ## 3 · Corrections made this session (do not repeat)
 - **The §4.10 extension table printed B-above-T shares without denominators**, against Appendix D's
   own rule. On the raw/X arm most methods return no lymphocytes for most samples: FARDEEP's "100%"

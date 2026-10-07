@@ -120,7 +120,7 @@ def main() -> int:
     # by design, and the title named the wrong one for the method it pointed at.
     #
     # "No method recovers" is both safer and stronger: it is the categorical, pre-registered
-    # finding (0 of 12 in each cohort, against a criterion registered 95 minutes before its
+    # finding (0 of 12 in each cohort, against a criterion registered 94 minutes before its
     # data existed), it covers BOTH failure modes, and it cannot be attacked on the MuSiC
     # point because it makes no claim about any single method.
     A("**Anatomic Concordance Detects Broken Bulk-RNA Deconvolution: No Method Recovers "
@@ -1616,6 +1616,22 @@ def main() -> int:
               f"{s1['lgg']['linear_nnls']:.3f} (LGG), on identical inputs without the cell-size conversion. "
               f"[1] measured level error on simulated mixtures; this arm measures rank agreement on real "
               f"tumours. The two criteria differ, so this is reported as a contrast, not a refutation.\n")
+        _e3 = J("identifiability_e3.json")
+        if _e3.get("H1_E3_primary"):
+            _h3, _u3 = _e3["H1_E3_primary"], _e3["units"]
+            A(f"**A second perturbation (E3, registered 2026-10-07 before it was run; "
+              f"`prespecified/identifiability_e3_gene_resampling.md`).** Re-fitting the same package on {_e3['k']} "
+              f"random halves of the marker genes, gene-resampling stability ranks the six units in the same "
+              f"direction as agreement with DNA, but not significantly: rho = {_h3['rho']:+.2f} (exact one-sided "
+              f"p = {_h3['p_one_sided']:.3f}; reading: {_h3['reading']}). The two perturbations agree only partly "
+              f"across units (rho = {_e3['C1_d3_vs_d1_descriptive']['rho']:+.2f}). The difference is the lymphoid total: "
+              f"gene resampling rates it stable ({_u3['Lymphoid|gbm']['d3_stability']:.2f} in GBM, "
+              f"{_u3['Lymphoid|lgg']['d3_stability']:.2f} in LGG) although it does not track DNA, where the loss scale "
+              f"flagged it ({_u3['Lymphoid|gbm']['d1_stability_e2']:.2f}, {_u3['Lymphoid|lgg']['d1_stability_e2']:.2f}). "
+              f"Stability is therefore a property of the perturbation as well as of the compartment, and the loss "
+              f"scale is the informative one here. Subset fits kept the tumour signal (median rho "
+              f"{_e3['controls']['subset_fit_tumour_rho']['gbm']['median']:.2f} GBM, "
+              f"{_e3['controls']['subset_fit_tumour_rho']['lgg']['median']:.2f} LGG).\n")
         A("> **[ FIGURE 11 HERE ]** \u2014 `docs/figures/Figure_identifiability.pdf`. Truth-free stability "
           "(A, within one package; B, across the registered methods) against agreement with DNA truth, per "
           "compartment and cohort.\n")
@@ -1850,7 +1866,7 @@ def main() -> int:
       "Without a control a score cannot be shown to measure "
       "anything. The margin over them is what licenses every claim made here.\n")
     A(">   \u2022 **A pre-registered prediction with a named falsifier and a timestamp.** The "
-      "T > B prediction was committed 95 minutes before the data that tested it existed, "
+      "T > B prediction was committed 94 minutes before the data that tested it existed (23:37:27 and 01:11:52), "
       "together with the outcome that would have withdrawn it. Deconvolution benchmarks are "
       "not usually pre-registered at all.\n")
     A("> **And the finding is consequential rather than merely negative.** Immune composition "
@@ -1871,7 +1887,7 @@ def main() -> int:
       "both references: none of twelve on the frozen signature; a few on the donor-level "
       "reference, of which the one consistent success (Bisque) is its reference's composition "
       "returned by the package's own declared assumption (Jew et al. 2020, Methods), shown on "
-      "planted truth. The prediction was registered 95 minutes before the data existed and "
+      "planted truth. The prediction was registered 94 minutes before the data existed and "
       "named its own falsifier. GBM is discovery; LGG is the registered replication in a "
       "different tumour type at 3.4x the sample size.\n")
     A("> **2c · A third instrument, at the protein level.** The pre-registered IMC test (§4.11) "
@@ -1950,9 +1966,38 @@ def main() -> int:
         A("> **5 · What would settle the open question.** More comparable methods. The power "
           "ceiling here is twelve, and no reanalysis widens it.\n")
 
+    _cw6, _em6 = J("cptac_wgs_purity.json").get("all_cases", {}), J("evaluation_matrix.json")
+    _ext6 = J("extension/agreement_extended.json").get("registered_plus_extension", {})
+    if _cw6 and _em6.get("instrument_agreement"):
+        _ia6 = _em6["instrument_agreement"]
+        _t6 = [v["tumour"]["spearman"] for v in _ia6.values() if "tumour" in v]
+        _ra6 = _em6.get("repaired_agreement", {})
+        A(f"> **6 · Added 2026-10-07: an independent cohort, the implementations, and what a lab should do.** "
+          f"(a) In CPTAC [54], against whole-genome purity [55][56] on the bulk RNA's own aliquots, the methods "
+          f"recover tumour content (median rho {_cw6['frozen']['S2_3']['median_rho']:.2f}), the frozen-signature "
+          f"ranking transfers from TCGA ({_cw6['frozen']['S2_4_ranking_transfer']['spearman']:.2f}), and anatomy "
+          f"again does not rank them ({_cw6['frozen']['S2_5_acs_vs_wgs_accuracy']['spearman']:+.2f}) -- §4.13, a "
+          f"secondary analysis. (b) Single-nucleus composition from the same tissue is not a per-sample truth for "
+          f"tumour content (rho {_cw6['S2_1_nuclei_truth_vs_wgs']['registered']['all_scored']['rho']:.2f} against "
+          f"whole-genome purity), beyond the dissociation biases already known [59]. (c) Two independent DNA "
+          f"instruments order the methods alike ({min(_t6):.2f}-{max(_t6):.2f}), so accuracy is a reproducible "
+          f"property, and benchmarks against DNA in a similar tissue are a sound basis for choosing a method; "
+          f"anatomy-consistent output, used as supporting evidence before [19][57], is not. (d) Implementation is "
+          f"as large a factor as method: repairing this project's own broken implementations (OPEN_DEFECTS "
+          f"D31-D34) raised tumour accuracy by up to 0.6 and left every registered reading in place (§4.14; the "
+          f"registered ranking test after the repairs: "
+          + (f"{_ra6['gbm|frozen']['repaired_spearman']:+.2f} and {_ra6['gbm|h5ad']['repaired_spearman']:+.2f}"
+             if _ra6.get("gbm|frozen") and _ra6.get("gbm|h5ad") else "see §4.14")
+          + (f"; with the genuine extension packages, {_ext6['n']} methods, {_ext6['rho']:+.2f}" if _ext6 else "")
+          + "). Robustness studies of deconvolution have so far used simulated mixtures [58]; the claims, their "
+          "verification and the acceptance tests a new method should pass are in `docs/CLAIMS_LEDGER.md`.\n")
+        A("> WRITE: one paragraph for (a)-(b) and one for (c)-(d). Keep (a) labelled secondary. The point for "
+          "practitioners: validate against a DNA purity, run the published package, and never take plausibility "
+          "as accuracy.\n")
+
     A("## Limitations\n")
-    A("> WRITE: all ten from `docs/PAPER_OUTLINE.md` \u00a79, in the body. None in a "
-      "footnote.\n")
+    A("> WRITE: all eleven from `docs/MANUSCRIPT_BLUEPRINT.md` \u00a74b (current; it supersedes "
+      "`docs/PAPER_OUTLINE.md` \u00a79), in the body. None in a footnote.\n")
 
 
     A("The two that a reviewer will find first: the **GBM per-type arm is n = 56** (most TCGA-GBM "

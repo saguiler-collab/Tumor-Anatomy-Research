@@ -203,6 +203,17 @@ ascatNgs record deposits no page range, so none is given.
 | **[54]** | L.-B. Wang, A. Karpova, M. A. Gritsenko, J. E. Kyle, S. Cao, Y. Li, *et al.*, "Proteogenomic and metabolomic characterization of human glioblastoma," *Cancer Cell*, vol. 39, no. 4, pp. 509–528.e20, 2021, doi: 10.1016/j.ccell.2021.01.006. | Crossref |
 | **[55]** | P. Van Loo, S. H. Nordgard, O. C. Lingjærde, H. G. Russnes, I. H. Rye, W. Sun, *et al.*, "Allele-specific copy number analysis of tumors," *Proc. Natl. Acad. Sci. U.S.A.*, vol. 107, no. 39, pp. 16910–16915, 2010, doi: 10.1073/pnas.1009843107. | Crossref |
 | **[56]** | K. M. Raine, P. Van Loo, D. C. Wedge, D. Jones, A. Menzies, A. P. Butler, *et al.*, "ascatNgs: identifying somatically acquired copy-number alterations from whole-genome sequencing data," *Curr. Protoc. Bioinformatics*, vol. 56, no. 1, 2016, doi: 10.1002/cpbi.17. | Crossref |
+
+## Prior work for the claims ledger (added 2026-10-07)
+
+Found by the targeted literature checks behind `docs/CLAIMS_LEDGER.md`. Each was resolved against Crossref when
+added; for Varn et al. the DOI was checked directly, because a bibliographic search returned an unrelated record.
+
+| | reference | status |
+|---|---|---|
+| **[57]** | F. S. Varn, K. C. Johnson, J. Martinek, J. T. Huse, M. P. Nasrallah, P. Wesseling, *et al.*, "Glioma progression is shaped by genetic evolution and microenvironment interactions," *Cell*, vol. 185, no. 12, pp. 2184–2199.e16, 2022, doi: 10.1016/j.cell.2022.04.038. | Crossref |
+| **[58]** | S. Xu, D. Chen, X. Wang, and S. Li, "Robustness and resilience of computational deconvolution methods for bulk RNA sequencing data," *Brief. Bioinform.*, vol. 26, no. 3, p. bbaf264, 2025, doi: 10.1093/bib/bbaf264. | Crossref |
+| **[59]** | M. Slyper, C. B. M. Porter, O. Ashenberg, J. Waldman, E. Drokhlyansky, I. Wakiro, *et al.*, "A single-cell and single-nucleus RNA-Seq toolbox for fresh and frozen human tumors," *Nat. Med.*, vol. 26, no. 5, pp. 792–802, 2020, doi: 10.1038/s41591-020-0844-1. | Crossref |
 ---
 
 ## Where each source is load-bearing
@@ -274,6 +285,8 @@ itself.
 **Update 2026-10-03 (later):** [52] (GIMiCC, Pike et al. 2024) added and resolved against Crossref (all nine authors, journal, volume 12, issue 1, article 170, published 2024-10-28); Europe PMC agrees (PMID 39468647, PMC11514818), and the full text was read there. [53] (Klemm et al. 2020, flow cytometry of brain-tumour immune cells) added and resolved against Crossref; its statement on the lymphocyte compartment was read in the PMC author manuscript (PMC8558904). The list now has 53 entries.
 
 **Update 2026-10-06:** [54] (Wang et al. 2021, CPTAC glioblastoma), [55] (Van Loo et al. 2010, ASCAT) and [56] (Raine et al. 2016, ascatNgs) added and resolved against Crossref (title, first six authors, journal, volume, issue, pages where deposited, year). The list now has 56 entries.
+
+**Update 2026-10-07:** [57] (Varn et al. 2022), [58] (Xu et al. 2025) and [59] (Slyper et al. 2020) added for the claims ledger's prior-work checks and resolved against Crossref. The ledger also relies on [4] (Li et al. 2026), [19] (BayesPrism), [25] (GBMDeconvoluteR) and [47] (DREAM), already listed. The list now has 59 entries.
 
 **Update 2026-10-01:** the list now has 44 entries; every one is read from a PDF on disk or
 resolved against Crossref (the nine former `cited` entries were resolved today), and [10] was

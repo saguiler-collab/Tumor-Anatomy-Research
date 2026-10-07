@@ -2877,11 +2877,17 @@ changes.
 | every other method, both controls | -- | **identical**: ACS, CI, null distribution |
 
 - DWLS likely finished this time because its signature build was cached.
-- **It moves a reported number, too.** The synthetic-yardstick arm of the registered agreement test (arm 1)
-  depends on the pseudobulk benchmark, which includes both methods. It reads rho 0.637 on 14 methods in
-  the registered run, and 0.828 on 13 in the re-run, where genuine DWLS left samples unestimated. Both
-  clear the 0.60 bar, so the reading stands, but the magnitude depends on which implementation happened to
-  run.
+- **It moves reported numbers, too.** Found by checking every difference, not just the first 12, on
+  2026-10-07.
+  - The synthetic-yardstick arm of the agreement test (arm 1) reads rho 0.637 on 14 methods in the
+    registered run, and 0.828 on 13 in the re-run.
+  - The run's own ACS-versus-ABSOLUTE agreement (arm 2) becomes +0.165 on 11 methods. Genuine DWLS covered
+    26 of 57 pairs, so it was excluded as partially covered.
+    - The registered value is +0.081 on 12, from `yardstick_agreement.py`.
+    - The archived run file still carries the pre-D21 sign, -0.081.
+  - The median real ACS moves from 0.854 to 0.862.
+  - No reading changes (0.828 and 0.637 both clear the 0.60 bar; 0.165 and 0.081 both fall short). But the
+    magnitudes depend on which implementation happened to run.
 - The re-run also rewrote three tracked outputs outside `results/`: `RESULTS.md`, the `release/` bundle
   (17 files) and a new 85 MB `results_archive/2026-10-07T0556/`. All three are restored to the committed,
   registered versions. Tonight's copies are in the same verification folder (`tracked_files_as_rerun/`

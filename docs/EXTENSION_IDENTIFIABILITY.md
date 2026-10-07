@@ -481,3 +481,28 @@ replaced (GIMiCC level 3).
   - Which methylation instrument is right is itself open. The two barely agree per sample (T share
     rho 0.08 / 0.11), and they disagree on T versus B in LGG (WHY_B_OVER_T §7n).
 
+## E3 · Gene-resampling stability (registered 2026-10-07 15:16:26, before it was run)
+
+Rule: `prespecified/identifiability_e3_gene_resampling.md`. Script: `scripts/identifiability_e3.py`. Artefact:
+`results/identifiability_e3.json`.
+
+- **Method.** Genuine DESeq2 `unmix` at E2's pre-declared setting, re-fit on 10 random halves of the
+  marker genes (807 of 1615), GBM and LGG. D3 stability is the mean
+  pairwise Spearman correlation between the subset fits.
+- **Controls pass.**
+  - E2's truth agreement is read as reported (Tumor 0.7801 / 0.5916).
+  - The subset fits keep the tumour signal: median rho 0.76
+    (GBM) and 0.60 (LGG).
+- **H1-E3 (primary, 6 units):** rho +0.714, exact one-sided p 0.068. **INCONCLUSIVE**:
+  the same direction as E2, not significant.
+  - Secondary, 12 units: rho +0.462 (p 0.066).
+  - The two perturbations agree only partly across units: rho +0.60.
+- **What differs is the lymphoid total.** Gene resampling rates it stable: 0.89
+  (GBM) and 0.76 (LGG). Yet it does not track DNA:
+  -0.20 and -0.18. The loss scale
+  flagged it: 0.71 and 0.49.
+- **Reading for the paper.** Truth-free stability depends on the perturbation, not only on the compartment.
+  - The loss-scale perturbation is the informative one here, and E2's claim should be stated for it
+    specifically.
+  - Gene resampling alone would pass a compartment the DNA says is not determined.
+
