@@ -1,10 +1,13 @@
 # Data inventory -- every public dataset this study touches
 
-*Generated 2026-10-07 by `scripts/build_data_inventory.py`. Do not edit by hand: every size, hash, consumer and citation check below is measured each run. `docs/supplementary/data_inventory_full.csv` is the same content in one row per dataset; Supplementary Table S7 is its compact form (`scripts/build_supplementary.py`).*
+*Generated 2026-10-08 by `scripts/build_data_inventory.py`. Do not edit by hand: every size, hash, consumer and citation check below is measured each run. `docs/supplementary/data_inventory_full.csv` is the same content in one row per dataset; Supplementary Table S7 is its compact form (`scripts/build_supplementary.py`).*
 
 **How to read the checks.** *read by* lists scripts that were opened and found to contain the token that reads the dataset. *source check* compares the local copy with the public server: identical byte size, or, where one side is stored decompressed, the sha256 of the decompressed content on both sides. *citation* is the DOI's Crossref record compared with the first author and year claimed here; the verifier is shown rejecting a known conflation before any citation is trusted.
 
-**Open problems: none.** Every listed file is present, every consumer still reads what it is said to read, every checked copy matches its source, and every citation matches its DOI.
+## Open problems
+
+- D06: citation 10.1093/nar/gkaa1087 has no matching [n] entry in docs/REFERENCES.md -- add it there before citing this dataset
+- D12: citation 10.1016/j.cell.2013.09.034 has no matching [n] entry in docs/REFERENCES.md -- add it there before citing this dataset
 
 ## Summary
 

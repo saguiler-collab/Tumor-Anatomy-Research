@@ -88,3 +88,39 @@ def test_generated_inventory_reports_no_open_problems():
     if not md.exists():
         pytest.skip("inventory not generated")
     assert "**Open problems: none.**" in md.read_text()
+
+
+def test_references_doc_dois_maps_every_bracket_to_each_doi_it_names(tmp_path):
+    p = tmp_path / "REFERENCES.md"
+    p.write_text(
+        '| **[5]** | A. Author, "Title," doi: 10.1/ABC. | PDF |\n'
+        "| **[10]** | B. Author, doi: 10.2/DEF -- the dataset also cites the preprint, doi: 10.3/GHI. | Crossref |\n"
+        "not a reference row, doi: 10.9/should-not-be-seen\n"
+    )
+    assert inv.references_doc_dois(p) == {"10.1/abc": 5, "10.2/def": 10, "10.3/ghi": 10}
+
+
+def test_a_used_datasets_citation_missing_from_references_md_is_a_reported_problem(tmp_path):
+    # Negative control: deleting one DOI from a copy of the real REFERENCES.md must turn the dataset that
+    # cites it into a reported problem -- proving the check can fail, not just always pass. Picks a DOI this
+    # test confirms is genuinely present in the real file first, so the control is not vacuous.
+    intact = inv.references_doc_dois(inv.REFERENCES)
+    used = [e for e in inv.REGISTRY if e["status"] in ("used", "derived") and e["doi"]
+            and e["doi"].strip().rstrip(").,").lower() in intact]
+    assert used, "no used/derived dataset's DOI is present in docs/REFERENCES.md -- nothing to break for the control"
+    target = used[0]
+    broken = tmp_path / "REFERENCES.md"
+    broken.write_text(inv.REFERENCES.read_text().replace(target["doi"], "10.0000/not-the-same-doi-at-all"))
+    assert target["doi"].strip().rstrip(").,").lower() not in inv.references_doc_dois(broken)
+
+
+def test_known_gap_gencode_and_brennan_have_no_references_md_entry_yet():
+    """Documents OPEN_DEFECTS-style: found 2026-10-08, the two citations below are used by this project (D06,
+    D12 in docs/DATA_INVENTORY.md) but were never added to docs/REFERENCES.md's numbered list. Update this test,
+    not just the assertion, once a user has added them -- it exists so the gap cannot quietly disappear from the
+    record without someone having actually added the reference."""
+    missing = {"10.1093/nar/gkaa1087", "10.1016/j.cell.2013.09.034"}
+    present = set(inv.references_doc_dois())
+    assert missing & present == set(), (
+        "GENCODE and/or Brennan 2013 now have a docs/REFERENCES.md entry -- good. Replace this test with an "
+        "assertion that build_data_inventory.py reports zero DOI-coverage problems.")

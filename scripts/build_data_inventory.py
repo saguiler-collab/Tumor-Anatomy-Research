@@ -55,6 +55,7 @@ CACHE = ROOT / "docs" / "supplementary" / "data_inventory_cache.json"
 OUT_MD = ROOT / "docs" / "DATA_INVENTORY.md"
 OUT_CSV = ROOT / "docs" / "supplementary" / "data_inventory_full.csv"   # S7 is built from it
 MANUSCRIPT = ROOT / "docs" / "MANUSCRIPT.md"
+REFERENCES = ROOT / "docs" / "REFERENCES.md"
 LARGE = 600 * 1024 ** 2
 UA = "anatomy-test-data-inventory/1.0 (research provenance check)"
 
@@ -820,6 +821,23 @@ def crossref(doi: str) -> dict | None:
             "checked": dt.date.today().isoformat()}
 
 
+def references_doc_dois(path: Path = REFERENCES) -> dict[str, int]:
+    """DOI -> bracket number, from every `| **[n]** | ... doi: ... |` row of docs/REFERENCES.md. A row naming two
+    DOIs (a dataset cited to a published paper and the preprint it also credits) maps both to the same number.
+
+    This never writes to REFERENCES.md and never decides what belongs in it -- it only reads what is already
+    there, so that a USED dataset whose citation never made it into that list is reported as a problem rather
+    than silently missed (found 2026-10-08: two citations, GENCODE and Brennan 2013, had this gap)."""
+    out: dict[str, int] = {}
+    for line in path.read_text().splitlines():
+        m = re.match(r"\|\s*\*\*\[(\d+)\]\*\*\s*\|", line)
+        if not m:
+            continue
+        for doi in re.findall(r"doi:\s*([^\s,|]+)", line):
+            out[doi.strip().rstrip(').,').lower()] = int(m.group(1))
+    return out
+
+
 def _fold(s: str) -> str:
     s = unicodedata.normalize("NFKD", s or "").encode("ascii", "ignore").decode().lower()
     return re.sub(r"[^a-z]", "", s)
@@ -919,6 +937,7 @@ def main() -> int:
                   f"{cache['crossref'][d].get('year', '?')}", flush=True)
             time.sleep(1.0)                 # polite pacing
 
+    ref_dois = references_doc_dois()
     rows, problems = [], []
     for e in REGISTRY:
         measured = [measure_file(f, cache, args.hash_large) for f in e["files"]]
@@ -967,6 +986,14 @@ def main() -> int:
         for d, ok, why in cites:
             if not ok and cache["crossref"].get(d):
                 problems.append(f"{e['id']}: citation {d}: {why}")
+        # A dataset actually read by an analysis needs a bibliography entry somewhere the paper draws from.
+        # "considered" / "on disk, unused" / "duplicate" datasets are not held to this -- nothing cites what
+        # nothing reads.
+        if e["status"] in ("used", "derived"):
+            for d in [e["doi"], *[x[0] for x in e.get("extra_dois", [])]]:
+                if d and d.strip().rstrip(').,').lower() not in ref_dois:
+                    problems.append(f"{e['id']}: citation {d} has no matching [n] entry in "
+                                    f"docs/REFERENCES.md -- add it there before citing this dataset")
 
     control_results = []
     for d, fa, yr in CONTROL_CONFLATIONS:
@@ -1021,8 +1048,9 @@ def write_md(rows: list[dict], problems: list[str], controls: list[dict]) -> Non
         L += ["## Open problems", ""] + [f"- {p}" for p in problems] + [""]
     else:
         L += ["**Open problems: none.** Every listed file is present, every consumer still "
-              "reads what it is said to read, every checked copy matches its source, and "
-              "every citation matches its DOI.", ""]
+              "reads what it is said to read, every checked copy matches its source, every "
+              "citation matches its DOI, and every used or derived dataset's citation has a "
+              "matching numbered entry in `docs/REFERENCES.md`.", ""]
     L += ["## Summary", "",
           "| id | dataset | status | accession | used for |",
           "|---|---|---|---|---|"]
