@@ -352,6 +352,45 @@ def keep_registered(st: dict, rec: dict, snap: Path) -> list[str]:
     return moved
 
 
+#: Written by scripts/freeze_results.py (docs/CORE_CLOSEOUT.md). Once it exists, no re-run may change a frozen file.
+FREEZE_MANIFEST = config.PROJECT_ROOT / "docs" / "results_freeze_manifest.tsv"
+
+
+def copy_before_run(st: dict) -> dict[str, Path]:
+    """After the freeze: copies of a step's declared outputs as they stand before it runs."""
+    if not FREEZE_MANIFEST.exists():
+        return {}
+    pre = {}
+    for o in st["outputs"]:
+        if "=>" in o or not (RES / o).exists():
+            continue
+        dest = VDIR / "pre_run" / st["id"] / o
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(RES / o, dest)
+        pre[o] = dest
+    return pre
+
+
+def keep_frozen(st: dict, pre: dict[str, Path]) -> list[str]:
+    """After the freeze, put back the pre-run bytes of every output the re-run changed, whatever its verdict (a
+    reproduced JSON still differs in its timestamp). The re-run's copy goes to rerun_outputs/<step>/; the verdict,
+    computed against the snapshot, is unchanged."""
+    import filecmp  # noqa: PLC0415
+    kept = []
+    for o, copy in pre.items():
+        cur = RES / o
+        if cur.exists() and filecmp.cmp(cur, copy, shallow=False):
+            continue
+        dest = VDIR / "rerun_outputs" / st["id"] / o
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if cur.exists() and not dest.exists():          # keep_registered may already have moved the re-run copy
+            shutil.move(str(cur), str(dest))
+        shutil.copy2(copy, cur)
+        kept.append(o)
+    shutil.rmtree(VDIR / "pre_run" / st["id"], ignore_errors=True)
+    return kept
+
+
 # ------------------------------------------------------------------------------------ running
 def load_state() -> dict:
     return json.loads(STATE.read_text()) if STATE.exists() else {}
@@ -377,6 +416,7 @@ def take_snapshot(label: str) -> None:
 def run_step(st: dict, snap: Path) -> dict:
     VDIR.joinpath("logs").mkdir(parents=True, exist_ok=True)
     log = VDIR / "logs" / f"{st['id']}.log"
+    pre = copy_before_run(st)
     t0 = time.time()
     with open(log, "w") as fh:
         fh.write(" ".join(st["cmd"]) + "\n\n"); fh.flush()
@@ -385,6 +425,8 @@ def run_step(st: dict, snap: Path) -> dict:
     rec = {"tier": st["tier"], "exit": r.returncode, "seconds": secs, "log": str(log.relative_to(config.PROJECT_ROOT)),
            "outputs": {o: compare_output(o, snap) for o in st["outputs"]}}
     rec["kept_registered"] = keep_registered(st, rec, snap)
+    if pre:
+        rec["kept_frozen"] = keep_frozen(st, pre)
     text = log.read_text(errors="ignore")
     if st["verdict"] == "no_disagrees":
         rec["verdict"] = "AGREES" if (r.returncode == 0 and "DISAGREES" not in text) else "DISAGREES"

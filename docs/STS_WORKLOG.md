@@ -1505,8 +1505,11 @@ docs, `ivygap/{data/reference.py, deconv/r_bridge.py, bench/run_benchmark.py}`, 
 - **Core close-out: 8/8 PASS** (`python3 scripts/check_core_closeout.py`; defined in `docs/CORE_CLOSEOUT.md`).
   - The results are frozen (`docs/RESULTS_FREEZE.md`; `--freeze` reports 0 changed).
   - Every paper-facing figure and table is regenerated from the frozen run.
-  - Commit and push follow this entry.
-- **Running in the background after the commit:** `verify_rerun.py --tier heavy --only extension_tcga`, then
+  - **Committed and pushed as `e908c55`** (branch and `main`).
+  - Follow-up: after the freeze, `verify_rerun` copies each step's declared outputs before it runs, and reverts
+    any byte change, whatever the verdict (a reproduced JSON still differs in its timestamp). The re-run copy
+    goes to `rerun_outputs/<step>/` (`keep_frozen`, tested). Full pytest: 480 passed, 1 skipped.
+- **Running since 21:03, detached** (`scratchpad/step7_extension.sh`; status lines in `/tmp/verify.status`): `verify_rerun.py --tier heavy --only extension_tcga`, then
   `--report`. It changes no frozen file: its outputs are declared, and `keep_registered` restores any that differ.
   Afterwards run `check_core_closeout.py --freeze` and commit the report.
 - **The user writes the report.** The AI drafts no report, abstract, application or bibliography text (§2.37).

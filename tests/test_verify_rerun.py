@@ -140,3 +140,30 @@ def test_shared_blank_cells_reproduce_but_a_moved_blank_still_differs(tmp_path):
     assert vr.compare_csv(a, b)["status"] == "REPRODUCED"
     assert vr.compare_csv(a, c)["status"] == "DIFFERS"
 
+
+def test_after_the_freeze_a_rerun_never_changes_a_frozen_file(tmp_path, monkeypatch):
+    # A reproduced JSON still differs in bytes (its timestamp). Once the results are frozen, the pre-run bytes go back
+    # and the re-run copy is kept aside. Before the freeze, nothing is reverted.
+    res, snap = tmp_path / "results", tmp_path / "snap"
+    for d in (res, snap):
+        d.mkdir()
+        (d / "out.json").write_text('{"rho": 0.5, "written_utc": "2026-10-06"}')
+    monkeypatch.setattr(vr, "RES", res)
+    monkeypatch.setattr(vr, "VDIR", res / "verification")
+    monkeypatch.setattr(vr.config, "PROJECT_ROOT", tmp_path)
+    rewrite = [sys.executable, "-c", f"open({str(res / 'out.json')!r}, 'w').write("
+               "'{\"rho\": 0.5, \"written_utc\": \"2026-10-08\"}')"]
+    step = {"id": "s", "cmd": rewrite, "outputs": ["out.json"], "verdict": None, "tier": "fast"}
+
+    monkeypatch.setattr(vr, "FREEZE_MANIFEST", tmp_path / "absent.tsv")       # not frozen: the re-run stays
+    rec = vr.run_step(step, snap)
+    assert rec["outputs"]["out.json"]["status"] == "REPRODUCED" and "2026-10-08" in (res / "out.json").read_text()
+
+    (res / "out.json").write_text('{"rho": 0.5, "written_utc": "2026-10-06"}')
+    (tmp_path / "manifest.tsv").write_text("path\tbytes\tsha256\n")
+    monkeypatch.setattr(vr, "FREEZE_MANIFEST", tmp_path / "manifest.tsv")     # frozen: the bytes go back
+    rec = vr.run_step(step, snap)
+    assert rec["outputs"]["out.json"]["status"] == "REPRODUCED" and rec["kept_frozen"] == ["out.json"]
+    assert "2026-10-06" in (res / "out.json").read_text()
+    assert "2026-10-08" in (res / "verification" / "rerun_outputs" / "s" / "out.json").read_text()
+
