@@ -2999,6 +2999,11 @@ methods where the registered run had 12; the extra one was `bayesian_hierarchica
   `remeasure_method.py` does the same, and treats an `--e2-s2` ablation as non-default. `run_recide.py` does the
   same (`estimates_path`, tested), before its verification re-run. `cdseq_anatomic`'s files under `results/cdseq/`
   are now declared outputs.
+  - **The first version of the ReCIDE rule had a bug of its own.** It returned a relative path when `--out` was
+    relative, as the harness passes it. The report's `relative_to(PROJECT_ROOT)` then failed at the last line of a
+    93-minute run (2026-10-08 02:09; `recide_anatomic` NOT WRITTEN).
+  - The test had checked the returned path, not the call that failed. Fixed: `--out` is made absolute
+    (`run_recide.absolute`), and the test now runs `relative_to`. Re-run from 02:44.
 
 **The lesson of D36-D38.** Three overwrites in one day had one shape: a script wrote a shared or registered path that
 its caller never declared. The harness now declares every file the TCGA and extension steps write. A whole-tree

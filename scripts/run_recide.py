@@ -110,11 +110,18 @@ def call_recide(counts, genes: list[str], cells, cmeta, bulk: pd.DataFrame, n_co
 DEFAULT_OUT = str(config.RESULTS_DIR / "extension" / "recide_anatomic.json")
 
 
+def absolute(out: Path) -> Path:
+    """--out as an absolute path under the project: a relative --out (the verification harness passes one) made
+    `relative_to(PROJECT_ROOT)` fail after a 93-minute run on 2026-10-08."""
+    return out if out.is_absolute() else config.PROJECT_ROOT / out
+
+
 def estimates_path(out: Path) -> Path:
     """Only the default run writes the shared estimates file; a run that names its own report (--out) keeps its
     estimates beside it, so a verification re-run cannot overwrite the registered estimates (OPEN_DEFECTS D38's rule,
-    applied here 2026-10-07)."""
-    return (config.RESULTS_DIR / "extension" / "ivygap_recide.csv" if str(out) == DEFAULT_OUT
+    applied here 2026-10-07). Always absolute, under the project."""
+    out = absolute(out)
+    return (config.RESULTS_DIR / "extension" / "ivygap_recide.csv" if out.resolve() == Path(DEFAULT_OUT).resolve()
             else out.with_suffix(".csv"))
 
 
@@ -127,7 +134,7 @@ def main() -> int:
     ap.add_argument("--budget", type=int, default=None, help="seconds; default: no limit")
     ap.add_argument("--out", default=DEFAULT_OUT)
     a = ap.parse_args()
-    out = Path(a.out); out.parent.mkdir(parents=True, exist_ok=True)
+    out = absolute(Path(a.out)); out.parent.mkdir(parents=True, exist_ok=True)
 
     matrix = json.loads((config.RESULTS_DIR / "run_provenance.json").read_text())["matrix"]
     gene_rec = json.loads((config.BENCH_DIR / "signature_genes.json").read_text())

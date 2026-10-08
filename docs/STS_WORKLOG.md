@@ -1519,7 +1519,10 @@ docs, `ivygap/{data/reference.py, deconv/r_bridge.py, bench/run_benchmark.py}`, 
 - **Step 8 began 00:11** (5 supplementary re-fits):
   - `cdseq_anatomic`: all 6 outputs REPRODUCED.
   - `unmix_s2_anatomy`: REPRODUCED.
-  - `recide_anatomic`: running since about 00:41, unbudgeted.
+  - `recide_anatomic`: failed at 02:09 (exit 1, NOT WRITTEN) on the last line of a 93-minute run. My D38 fix to
+    `run_recide.py` returned a relative path, and the report's `relative_to` failed. ReCIDE's own work had
+    finished. Fixed (absolute path, and the test now runs the failing call); re-run from 02:44 (step 9,
+    `scratchpad/step9_recide_retry.sh`).
   - Both `reference_sensitivity` runs DIFFER, which is **D39**: the archived results (2026-09-15) used that day's
     657-gene log-build marker space, and the analysis was never recomputed after the registered leaderboard moved
     to raw counts (651 genes).

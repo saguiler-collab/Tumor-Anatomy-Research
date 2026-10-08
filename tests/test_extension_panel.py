@@ -102,6 +102,15 @@ def test_a_recide_run_with_its_own_report_keeps_its_estimates_beside_it():
     import run_recide                                                        # noqa: PLC0415
     shared = run_recide.estimates_path(Path(run_recide.DEFAULT_OUT))
     assert shared.name == "ivygap_recide.csv" and shared.parent.name == "extension"
+    # the harness passes a RELATIVE --out; the path must still resolve under the project, because the report records
+    # it relative to PROJECT_ROOT (that call failed after a 93-minute run on 2026-10-08)
+    from ivygap import config                                                # noqa: PLC0415
     rerun = run_recide.estimates_path(Path("results/verification/rerun_outputs/recide_anatomic.json"))
-    assert rerun == Path("results/verification/rerun_outputs/recide_anatomic.csv")
+    assert rerun == config.PROJECT_ROOT / "results/verification/rerun_outputs/recide_anatomic.csv"
+    assert str(rerun.relative_to(config.PROJECT_ROOT)) == "results/verification/rerun_outputs/recide_anatomic.csv"
+    # a relative --out that names the registered report is the registered run (when the suite has not redirected
+    # RESULTS_DIR to a temporary tree, the registered report lies under the project)
+    default = Path(run_recide.DEFAULT_OUT)
+    if default.is_relative_to(config.PROJECT_ROOT):
+        assert run_recide.estimates_path(default.relative_to(config.PROJECT_ROOT)) == shared
 
