@@ -69,7 +69,7 @@ that association **does not replicate** in lower-grade glioma, and is reported a
 |---|---|---|
 | published ground-truth benchmarks | Mann-Whitney **p = 0.50**; DWLS top-tier there, 14th of 14 here | `benchmark_concordance.json` |
 | imaging mass cytometry, **pre-registered** | **p = 0.0090**, wrong direction | `imc_anchored_test.json` |
-| reference atlas | only **+0.3655 to +0.5099** of the ordering survives | `reference_sensitivity_*.json` |
+| reference atlas | the ordering survives one constituent dataset (**+0.8867**) and not the other (**+0.0098**); magnitudes unstable (D39) | `reference_sensitivity_*.json` |
 | marker-set size | ACS moves **0.3846 → 0.6923** on nothing else | `imc_anchored_robustness.json` |
 
 **Two mechanism results that explain why.**

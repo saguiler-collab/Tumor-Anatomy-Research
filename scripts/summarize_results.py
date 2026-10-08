@@ -949,16 +949,28 @@ def reference_sensitivity_section(results_dir: Path) -> str:
         out.append(f"| **GBmap_linear vs Darmanis** | **different** | **same (linear)** | "
                    f"**{rd:+.4f}** |")
         out.append("")
+        # The words follow the numbers (results freeze v2, OPEN_DEFECTS D39): the sentence written for
+        # 0.5099 / 0.3655 ("about half of it survives") was false once the analysis was recomputed on the
+        # registered marker set.
+        def _moves(a, b):
+            return "rises" if b > a else "falls"
+
+        def _kept(r):
+            return "nearly preserved" if r >= 0.8 else "partly preserved" if r >= 0.4 else "lost"
         out.append(f"**The conclusion holds; the magnitude does not.** Changing expression "
                    f"space while holding the atlas costs almost nothing — **{rs:.4f}**, the "
                    f"highest agreement anywhere in this project, above even a change of "
                    f"sequencing platform. So the log transform is not what moved the ordering, "
-                   f"and the atlas remains the dominant factor. But once both sides are "
-                   f"linear, Neftel rises from "
-                   f"{n['spearman_between_orderings']:.4f} to **{rn:.4f}** and Darmanis from "
-                   f"{d['spearman_between_orderings']:.4f} to **{rd:.4f}**. **The claim that "
-                   f"the ordering collapses under a change of atlas is withdrawn.** About half "
-                   f"of it survives.")
+                   f"and the atlas remains the dominant factor. Once both sides are linear and "
+                   f"scored on the registered marker set, Neftel "
+                   f"{_moves(n['spearman_between_orderings'], rn)} from "
+                   f"{n['spearman_between_orderings']:.4f} to **{rn:.4f}** and Darmanis "
+                   f"{_moves(d['spearman_between_orderings'], rd)} from "
+                   f"{d['spearman_between_orderings']:.4f} to **{rd:.4f}**: the ordering is "
+                   f"{_kept(rn)} under one constituent dataset and {_kept(rd)} under the other. "
+                   f"**Whether the ordering survives a change of atlas depends on the atlas**, "
+                   f"and the magnitudes are unstable: on the superseded 657-gene marker set they "
+                   f"were mid-range for both (OPEN_DEFECTS D39; results freeze v2).")
         out.append("")
         out.append("*Internal control:* quanTIseq ignores the supplied reference and uses its "
                    "built-in TIL10 signature. Across the log and linear arms its ACS is "

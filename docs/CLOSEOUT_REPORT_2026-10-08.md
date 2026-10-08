@@ -146,3 +146,14 @@ Each is logged in `docs/OPEN_DEFECTS.md` or the worklog, with a test where code 
 | `2c85320` | 10-08 08:28 | verification complete: 75 of 75 steps, every difference explained |
 
 All are on `anatomy-test-full-database`, and `main` has been fast-forwarded to each.
+
+## Addendum: decisions taken (2026-10-08, results freeze v2)
+
+| decision | what changed |
+|---|---|
+| **D39: "Freeze v2, current numbers"** | The two 651-gene reference-sensitivity results became the registered artefacts: ordering agreement **0.8867** (Neftel) and **0.0098** (Darmanis). Wording that followed the old numbers was corrected in the manuscript builder and the RESULTS.md renderer. Live documents updated; history documents marked superseded; the statistics checker pins both values. |
+| **"Merge the new rows"** | The extension panel's per-sample estimates for ARIC, FARDEEP, LinDeconSeq and RNA-Sieve (616 GBM and 2,040 LGG rows) were appended to the donor-level tables. The registered rows are byte-identical. `lymphoid_pooled_tnk.json` was re-run on them: it gains the extension methods, each flagged, and every registered number is unchanged. |
+
+**Freeze v2** (`docs/RESULTS_FREEZE.md`) records exactly 5 changed files against v1, each with its reason; v1 is kept.
+The freeze check passes against v2.
+

@@ -188,12 +188,14 @@ Rebuilding the same atlas from its own counts to break a confound (D16):
 |---|---|---|---|
 | GBmap_10x vs GBmap_SS2 | same | same | +0.8170 |
 | GBmap_log vs GBmap_linear | same | different | **+0.9161** (shared genes) / **+0.6852** (per-arm) |
-| GBmap_linear vs Neftel | different | same | **+0.5099** |
-| GBmap_linear vs Darmanis | different | same | **+0.3655** |
+| GBmap_linear vs Neftel | different | same | **+0.8867** |
+| GBmap_linear vs Darmanis | different | same | **+0.0098** |
+
+*The two atlas rows are on the registered 651-gene marker set (results freeze v2, OPEN_DEFECTS D39). The values first reported here came from the superseded 657-gene set; D39 records both.*
 
 Changing platform costs little. Changing expression space costs little **when both arms share a
 gene space** and appreciably more when each reference nominates its own (0.9161 → 0.6852), which
-is itself a symptom of §2d. **Changing the atlas leaves about half the ordering** — and the
+is itself a symptom of §2d. **Changing the atlas can preserve the ordering or destroy it, depending on the atlas** (D39) — and the
 atlas rows have not been rerun per-arm, so they are compared like-for-like only on the shared
 space. And the registered primary outcome compares two rankings that
 **both** use GBmap — the ACS arm deconvolves against it, the accuracy arm builds its mixtures

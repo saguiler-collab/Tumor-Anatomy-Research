@@ -529,7 +529,7 @@ EXPLAINED = {
         "selected on the log-layer build; the registered leaderboard was rebuilt on raw counts on 2026-09-21 with 651 "
         "genes, and this analysis was never recomputed. The re-run uses the registered 651-gene space (648 shared with "
         "Neftel, against 654): every method's ACS in both arms moves, and the ordering agreement rises from 0.5099 to "
-        "0.8867 (ranks moved 10 -> 7). Sample counts and implementations are unchanged (OPEN_DEFECTS D39)"),
+        "0.8867 (ranks moved 10 -> 7). Sample counts and implementations are unchanged (OPEN_DEFECTS D39; adopted as registered in results freeze v2)"),
     "reference_sensitivity_darmanis": (
         "the same cause as reference_sensitivity_neftel: the archived artefact used the superseded 657-gene marker "
         "space; on the registered 651-gene space (647 shared with Darmanis, against 651) the ordering agreement falls "

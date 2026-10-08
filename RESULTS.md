@@ -369,8 +369,8 @@ Every number above rests on one single-cell atlas. Two independent alternative r
 
 | comparison | Spearman between ACS orderings | methods whose rank moves |
 |---|---|---|
-| GBmap vs **Darmanis** (5 types, 4 donors) | **+0.138** *(superseded: +0.3655)* | 10 of 13 |
-| GBmap vs **Neftel** (4 types, 20 donors) | **+0.038** *(superseded: +0.5099)* | 12 of 13 |
+| GBmap vs **Darmanis** (5 types, 4 donors) | **+0.138** *(superseded: +0.0098)* | 10 of 13 |
+| GBmap vs **Neftel** (4 types, 20 donors) | **+0.038** *(superseded: +0.8867)* | 12 of 13 |
 | **Darmanis vs Neftel** | **+0.710** | — |
 | GBmap 5-type vs GBmap 4-type *(same atlas, different roster)* | **+0.908** | — |
 
@@ -398,11 +398,11 @@ Rebuilding the same atlas, the same cells, the same seed and the same gene space
 | GBmap_10x vs GBmap_SS2 | same | same (log) | **+0.817** |
 | **GBmap_log vs GBmap_linear** | **same** | **DIFFERENT** | **+0.9161** |
 | GBmap_log vs Neftel | different | different | +0.038 |
-| **GBmap_linear vs Neftel** | **different** | **same (linear)** | **+0.5099** |
+| **GBmap_linear vs Neftel** | **different** | **same (linear)** | **+0.8867** |
 | GBmap_log vs Darmanis | different | different | +0.138 |
-| **GBmap_linear vs Darmanis** | **different** | **same (linear)** | **+0.3655** |
+| **GBmap_linear vs Darmanis** | **different** | **same (linear)** | **+0.0098** |
 
-**The conclusion holds; the magnitude does not.** Changing expression space while holding the atlas costs almost nothing — **0.9161**, the highest agreement anywhere in this project, above even a change of sequencing platform. So the log transform is not what moved the ordering, and the atlas remains the dominant factor. But once both sides are linear, Neftel rises from 0.0379 to **0.5099** and Darmanis from 0.1384 to **0.3655**. **The claim that the ordering collapses under a change of atlas is withdrawn.** About half of it survives.
+**The conclusion holds; the magnitude does not.** Changing expression space while holding the atlas costs almost nothing — **0.9161**, the highest agreement anywhere in this project, above even a change of sequencing platform. So the log transform is not what moved the ordering, and the atlas remains the dominant factor. Once both sides are linear and scored on the registered marker set, Neftel rises from 0.0379 to **0.8867** and Darmanis falls from 0.1384 to **0.0098**: the ordering is nearly preserved under one constituent dataset and lost under the other. **Whether the ordering survives a change of atlas depends on the atlas**, and the magnitudes are unstable: on the superseded 657-gene marker set they were mid-range for both (OPEN_DEFECTS D39; results freeze v2).
 
 *Internal control:* quanTIseq ignores the supplied reference and uses its built-in TIL10 signature. Across the log and linear arms its ACS is **0.6000 in both — delta exactly 0.0000**, while 13 of the other 14 methods moved. The arms differed in the reference and in nothing else.
 

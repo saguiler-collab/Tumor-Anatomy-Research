@@ -1397,12 +1397,18 @@ def main() -> int:
               f"`prespecified/immune_failure_factors.md`.\n")
         rn, rd = J("reference_sensitivity_gbmap_linear_vs_neftel.json"), J("reference_sensitivity_gbmap_linear_vs_darmanis.json")
         if rn and rd:
-            A(f"**The ACS ordering is only partly stable to a change of reference.** Rebuilt from linear "
-              f"GBmap counts, the ACS ordering of {rn.get('n_methods')} methods correlates "
-              f"rho = {rn.get('spearman_between_orderings')} with the ordering under a reference built from the "
-              f"Neftel 2019 data alone and {rd.get('spearman_between_orderings')} under Darmanis 2017 alone: about "
-              f"half of the ranking survives. Both datasets are constituents of GBmap, so this bounds the "
-              f"effect of how the reference is assembled, not of a fully independent atlas. (The log-layer "
+            def _kept(r):                                       # words follow the number, never the reverse
+                return "nearly preserved" if r >= 0.8 else "partly preserved" if r >= 0.4 else "lost"
+            A(f"**The ACS ordering is only partly stable to a change of reference.** On the registered marker "
+              f"set ({rn.get('n_shared_genes')} and {rd.get('n_shared_genes')} genes shared), the ACS ordering of "
+              f"{rn.get('n_methods')} methods under linear GBmap correlates rho = {rn.get('spearman_between_orderings')} "
+              f"with the ordering under a reference built from the Neftel 2019 data alone and "
+              f"{rd.get('spearman_between_orderings')} under Darmanis 2017 alone: the ranking is "
+              f"{_kept(rn.get('spearman_between_orderings'))} with one and {_kept(rd.get('spearman_between_orderings'))} "
+              f"with the other. The magnitudes are themselves unstable: on the superseded 657-gene marker set they were "
+              f"different numbers, both mid-range (OPEN_DEFECTS D39; results freeze v2). Both datasets are "
+              f"constituents of GBmap, so this bounds the effect of how the reference is assembled, not of a fully "
+              f"independent atlas. (The log-layer "
               f"comparisons, rho = "
               f"{J('reference_sensitivity_neftel.json').get('spearman_between_orderings')} and "
               f"{J('reference_sensitivity_darmanis.json').get('spearman_between_orderings')}, are the D16-confounded "

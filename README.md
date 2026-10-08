@@ -37,7 +37,8 @@ claim.
 > But the ordering fails four ways: against published ground-truth benchmarks (Mann-Whitney
 > **p = 0.50**); against **imaging mass cytometry** in a **pre-registered** test that failed in
 > the direction named in advance as most damaging (**p = 0.0090**); across reference atlases
-> (only **+0.3655 to +0.5099** survives); and it moves **0.31 on marker-set size alone** — about
+> (on the registered marker set it is nearly preserved under one constituent dataset, **+0.8867**, and
+> lost under the other, **+0.0098**; OPEN_DEFECTS D39); and it moves **0.31 on marker-set size alone** — about
 > three-quarters of the range it is used to rank fifteen methods across. It also cannot resolve
 > its own top: a **four-way tie at 0.9846**, with MuSiC's win resting on one pair out of 57.
 >

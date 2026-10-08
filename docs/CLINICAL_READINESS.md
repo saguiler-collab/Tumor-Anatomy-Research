@@ -244,7 +244,8 @@ p ≤ 0.0008), and C1's direction across four patients (§5c).
 rankings **that share a reference atlas**. §5d shows the ACS ordering is substantially a
 property of GBmap: holding the atlas and changing the sequencing platform preserves it
 (rho 0.817) or the expression space (0.9161), while changing the atlas with both controlled
-leaves only about half of it (0.5099 against Neftel, 0.3655 against Darmanis). So the agreement
+preserves it against one constituent dataset and destroys it against the other (0.8867 against
+Neftel, 0.0098 against Darmanis, on the registered marker set; results freeze v2, OPEN_DEFECTS D39). So the agreement
 the study was built to test holds *on GBmap*, and what it measures is narrower than "anatomy
 tracks truth". *(Corrected 2026-09-15: the earlier figure of 0.221 was confounded with
 expression space — see OPEN_DEFECTS D16.)*

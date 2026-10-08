@@ -106,6 +106,14 @@ def canonical() -> list[tuple[str, float | None, float | None, int, str]]:
          mx.get("kendall_tau"), None, 4, r"(?:tau|Kendall)"),
         ("Spearman, log X vs raw/X leaderboards",
          mx.get("spearman"), None, 4, r"Spearman"),
+        # Reference sensitivity on the registered marker set (results freeze v2, OPEN_DEFECTS D39). The superseded values
+        # are the 2026-09-15 artefacts', computed on the 657-gene log-build marker set.
+        ("ACS ordering agreement, GBmap (linear) vs Neftel",
+         _dig(_j("reference_sensitivity_gbmap_linear_vs_neftel.json") or {}, "spearman_between_orderings"), 0.5099, 4,
+         r"Neftel"),
+        ("ACS ordering agreement, GBmap (linear) vs Darmanis",
+         _dig(_j("reference_sensitivity_gbmap_linear_vs_darmanis.json") or {}, "spearman_between_orderings"), 0.3655, 4,
+         r"Darmanis"),
     ]
 
 

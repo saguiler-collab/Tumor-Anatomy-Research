@@ -49,3 +49,16 @@ def test_pytest_evidence_rejects_a_failing_run_a_stale_run_and_an_unmarked_log(t
 
     log.write_text("471 passed in 250.0s\n")                                # no START line: not evidence
     assert not cc.pytest_evidence(log, code_mtime=0)[0]
+
+
+def test_a_versioned_freeze_refuses_an_unexplained_change():
+    previous = {"results/a.json": (10, "h1"), "results/b.csv": (5, "h2"), "results/gone.json": (3, "h3")}
+    current = [("results/a.json", 10, "h1"), ("results/b.csv", 6, "h9"), ("results/new.csv", 7, "h4")]
+    rows, unexplained = fr.version_changes(previous, current, {"results/b.csv": "recomputed (D39)"})
+    assert {(p, k) for p, k, _ in rows} == {("results/b.csv", "changed"), ("results/new.csv", "added"),
+                                            ("results/gone.json", "removed")}
+    assert sorted(unexplained) == ["results/gone.json", "results/new.csv"]       # no reason given: refused
+    rows, unexplained = fr.version_changes(previous, current, {"results/b.csv": "x", "results/new.csv": "y",
+                                                                "results/gone.json": "z"})
+    assert unexplained == [] and all(w != "NO REASON GIVEN" for _, _, w in rows)
+

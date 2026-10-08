@@ -78,6 +78,8 @@ depending on what A18 finds.
 - **D14** — the ordering is reference-dependent. A18 has now answered *how* dependent: about
   half survives an independent atlas (0.3655–0.5099), not almost none. That is a limitation to
   state, no longer an alarm.
+
+  > ⚠ SUPERSEDED by results freeze v2 (2026-10-08, OPEN_DEFECTS D39): these values were computed on the superseded 657-gene marker set. On the registered 651-gene set the ordering agreement is **+0.8867** (Neftel) and **+0.0098** (Darmanis): preserved under one constituent dataset, lost under the other. Kept here as the record of what was reported.
 - **D12** — the cell-size conversion has never been applied, and **D16 showed the obvious fix
   is not enough**: the totals the code would pass are sums of log values, worth ~43% of the
   true correction. A19's two-problem framing decides what the paper says the study measures;

@@ -58,6 +58,8 @@ atlas** (C4, corrected). Against two independent references built from other gro
 those groups' own labels, Spearman is **+0.5099** (Neftel) and **+0.3655** (Darmanis). An earlier
 version of this correction reported 0.038 and 0.138 and called the ordering "collapsed" — that
 was confounded with expression space and is **withdrawn**. Changing sequencing platform within
+
+> ⚠ SUPERSEDED by results freeze v2 (2026-10-08, OPEN_DEFECTS D39): these values were computed on the superseded 657-gene marker set. On the registered 651-gene set the ordering agreement is **+0.8867** (Neftel) and **+0.0098** (Darmanis): preserved under one constituent dataset, lost under the other. Kept here as the record of what was reported.
 one atlas costs 0.183; changing expression space costs 0.084; changing the atlas costs about
 half. A leaderboard computed against a single reference must be reported with that dependence
 stated.
@@ -210,6 +212,8 @@ Rebuilding GBmap from its own counts and repeating the comparisons:
 | GBmap_log vs GBmap_linear | same | DIFFERENT | **+0.9161** |
 | GBmap_linear vs Neftel | different | same (linear) | **+0.5099** |
 | GBmap_linear vs Darmanis | different | same (linear) | **+0.3655** |
+
+> ⚠ SUPERSEDED by results freeze v2 (2026-10-08, OPEN_DEFECTS D39): these values were computed on the superseded 657-gene marker set. On the registered 651-gene set the ordering agreement is **+0.8867** (Neftel) and **+0.0098** (Darmanis): preserved under one constituent dataset, lost under the other. Kept here as the record of what was reported.
 
 **The direction of C4 stands and its strength is reduced.** Expression space costs almost
 nothing (0.9161), so the atlas is the driver — but with the confound removed, **about half the
@@ -561,6 +565,8 @@ it **substantially determines the ordering that the study reports**:
 
 - with expression space controlled, only **+0.5099** (Neftel) and **+0.3655** (Darmanis) of the
   ACS ordering survives a change of atlas (**C4**);
+
+> ⚠ SUPERSEDED by results freeze v2 (2026-10-08, OPEN_DEFECTS D39): these values were computed on the superseded 657-gene marker set. On the registered 651-gene set the ordering agreement is **+0.8867** (Neftel) and **+0.0098** (Darmanis): preserved under one constituent dataset, lost under the other. Kept here as the record of what was reported.
 - an independent group, using **imaging mass cytometry** on matched tissue, scored GBmap-derived
   markers at **r = 0.06** for immune cells — near chance, and worst of the four approaches they
   tested (**C10**);

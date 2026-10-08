@@ -42,5 +42,9 @@ Every step in `scripts/verify_rerun.py` is core, except those in its `SUPPLEMENT
   R call rewrites, tests included.
 - **How it is checked:** `check_core_closeout.py --freeze` re-hashes them. Any later run that touches a frozen file
   shows up there.
+- **Versions:** a later version (`freeze_results.py --version N --previous ... --changes ...`) lists every file
+  that changed since the previous one, with its reason, and refuses to write if any change is unexplained.
+  Freeze v2 (2026-10-08) adopts D39's results and the extension panel's new per-sample rows; v1 is kept as
+  `docs/RESULTS_FREEZE_v1.md`.
 - **Limitation:** `results/` is not in git, so the manifest is the only record of those files. On a fresh clone they
   cannot be re-checked.

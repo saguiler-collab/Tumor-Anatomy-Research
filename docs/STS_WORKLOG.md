@@ -2,7 +2,7 @@
 
 Started 2026-09-30 when the project moved from CJSJ to **Regeneron STS**. Maintained so that
 nothing is lost when the conversation is compacted. **Update it after every major result.**
-Last updated: 2026-10-08 08:45 EDT (§5: verification complete, 75/75 steps; D39 open for the user; §2.37 AI-use record; §2.38 the core close-out: D36-D38, repairs default, verification complete, results frozen, 8/8 core PASS; §5).
+Last updated: 2026-10-08 09:40 EDT (§5: results freeze v2, D39 resolved; verification complete, 75/75 steps; §2.37 AI-use record; §2.38 the core close-out: D36-D38, repairs default, verification complete, results frozen, 8/8 core PASS; §5).
 
 ---
 
@@ -1501,6 +1501,19 @@ METHOD_LIMITATIONS (§6), SUBMISSION_CHECKLIST, FIGURES, supplementary S5/S6}`, 
 docs, `ivygap/{data/reference.py, deconv/r_bridge.py, bench/run_benchmark.py}`, several scripts/tests.
 
 ## 5 · Next, in order
+**(2026-10-08 09:40) Results freeze v2 (user decisions: "Freeze v2, current numbers"; "Merge the new rows"):**
+- **Five files changed against v1**, each with its reason (`docs/RESULTS_FREEZE.md`):
+  - the 2 reference-sensitivity results, now on the 651-gene registered set (D39 resolved): Neftel 0.8867,
+    Darmanis 0.0098;
+  - the 2 donor-level extension tables, with 616 + 2,040 rows appended and the registered rows byte-identical;
+  - `lymphoid_pooled_tnk.json`: extension methods added and flagged; registered numbers unchanged.
+- **Wording that followed the old numbers was corrected** in `build_manuscript.py` and `summarize_results.py`:
+  "about half survives" and "Darmanis rises". README, ENDPOINT, PAPER_OUTLINE and CLINICAL_READINESS updated;
+  history documents marked superseded.
+- **`check_doc_statistics.py` pins both statistics.** `freeze_results.py` gained versioned freezes that refuse
+  unexplained changes (tested).
+- v1 is kept as `docs/RESULTS_FREEZE_v1.md` and `docs/results_freeze_manifest_v1.tsv`. Both doc checkers are CLEAN.
+
 **(2026-10-08 08:45) Everything that was left has run. The verification is complete: 75 of 75 steps re-run.**
 - **Report totals.** 74 REPRODUCED; 4 REPRODUCED + NEW ROWS; 2 REPRODUCED + NEW FIELDS; 5 NEW (each reproduced its
   first run); 2 PASSED; 1 AGREES.
