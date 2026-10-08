@@ -2,7 +2,7 @@
 
 Started 2026-09-30 when the project moved from CJSJ to **Regeneron STS**. Maintained so that
 nothing is lost when the conversation is compacted. **Update it after every major result.**
-Last updated: 2026-10-07 21:40 EDT (§5: steps 7 and 8 running; §2.37 AI-use record; §2.38 the core close-out: D36-D38, repairs default, verification complete, results frozen, 8/8 core PASS; §5).
+Last updated: 2026-10-08 00:20 EDT (§5: step 7 reproduced, step 8 running; §2.37 AI-use record; §2.38 the core close-out: D36-D38, repairs default, verification complete, results frozen, 8/8 core PASS; §5).
 
 ---
 
@@ -1501,6 +1501,23 @@ METHOD_LIMITATIONS (§6), SUBMISSION_CHECKLIST, FIGURES, supplementary S5/S6}`, 
 docs, `ivygap/{data/reference.py, deconv/r_bridge.py, bench/run_benchmark.py}`, several scripts/tests.
 
 ## 5 · Next, in order
+**(2026-10-08 00:20) Step 7 done; step 8 running:**
+- **The `extension_tcga` re-fit reproduced the registered extension panel, all four arms** (exit 0, 11,226 s).
+  - The 4 summaries are REPRODUCED.
+  - The frozen per-sample tables are REPRODUCED: same rows, merged in another order.
+  - The donor-level per-sample tables are REPRODUCED + NEW ROWS.
+  - Freeze check: 0 changed. `keep_registered` and `keep_frozen` restored the frozen bytes; the re-run copies are in
+    `results/verification/rerun_outputs/extension_tcga/`.
+- **It closes the gap logged in §3** ("raw/X per-sample estimates for FARDEEP/LinDeconSeq/ARIC/RNA-Sieve need an
+  atlas re-run").
+  - The re-run copies of `estimates_full{,_lgg}_h5ad_extension.csv` add ARIC, FARDEEP, LinDeconSeq and RNA-Sieve:
+    616 GBM rows and 2,040 LGG rows. Their summaries equal the registered ones.
+  - They stay outside the frozen tree. Merging them into `results/` would be a post-freeze change, so it waits for
+    the user's say.
+- **Report totals:** 67 REPRODUCED, 4 REPRODUCED + NEW ROWS, 2 NEW FIELDS, 5 NEW, 2 PASSED, 1 AGREES; 6 DIFFERS (the
+  explained core ones). Ledger and audit rebuilt.
+- **Step 8 began 00:11** (5 supplementary re-fits).
+
 **(2026-10-07 21:40) What is left is running (user: "Still run what's left to do"):**
 - **Step 7:** the `extension_tcga` re-fit, detached since 21:03 (`scratchpad/step7_extension.sh`). The GBM frozen arm
   finished at 21:23; the LGG frozen arm and both donor-level arms follow (MIXTURE and ReCIDE are slow).
