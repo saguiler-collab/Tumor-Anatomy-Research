@@ -31,6 +31,7 @@ keeping, marked RESOLVED at the top.
 | **D32** this project's DWLS reimplementation caps weights relative to the LARGEST weight; the package caps relative to the SMALLEST | **FIXED (2026-10-07); the default since that evening (`IVYGAP_REPAIRED=0` gives the registered path); re-runs done (docs/METHOD_REPAIRS.md).** The inverted cap leaves weights unbounded, so near-zero genes decide the fit (GBM donor-level: 37% endothelial on average; LGG donor-level: 1 of 510 samples finite). The published algorithm, reimplemented, reproduces the package to 5e-11 given its dampening constant. |
 | **D33** quanTIseq was dropped from every TCGA arm before its immune estimates were saved | **FIXED in the repaired runner (2026-10-07).** The yardstick scores only the Tumor column; quanTIseq models no tumour (by design), so 'only 0 finite estimates' removed it and its leukocyte, T, B and NK estimates were never scored. `scripts/repaired_methods.py` scores every compartment a method models. |
 | **D34** two Python 'reimplementations' are stand-ins for different algorithms, and METHODS.md called them faithful | **OPEN, documented 2026-10-07 -- labelling, not arithmetic.** The SCDC stand-in reweights genes by Huber residuals; published SCDC weights them by cross-subject variance (as MuSiC does). The BayesPrism stand-in is a reference-shrinking heuristic, not its Gibbs sampler (its docstring says so). On the frozen signature, MuSiC, SCDC, SCDC ENSEMBLE, Bisque and BayesPrism cannot run as published (no cells), so every frozen-arm number for them is a stand-in's. Measured cost: BayesPrism stand-in 0.16 vs genuine 0.72 (GBM donor-level). |
+| **D39** the reference-sensitivity results (D14/D16) were computed on a superseded marker space | **OPEN, measured 2026-10-08 by the supplementary re-fits; registered values stand, disclosed.** The archived artefacts (2026-09-15) used the leaderboard's 657-gene marker space of that day (log-layer build). The registered leaderboard moved to raw counts on 2026-09-21 (651 genes), and the analysis was never recomputed. On the registered space the ordering agreement is Neftel **0.8867** (archived 0.5099) and Darmanis **0.0098** (archived 0.3655). Qualitative reading unchanged: the ordering depends on the reference. Magnitudes not reproducible. |
 | **D37** the verification re-runs rewrote the registered per-sample purity tables unseen | **FIXED and restored 2026-10-07.** `absolute_purity_yardstick.py` also writes `results/absolute_purity_per_sample{,_lgg}.csv`, which the harness did not declare, so `keep_registered` did not restore them after the TCGA frozen re-runs (13:13, 16:12). The re-run copies add one column, `bayesian_hierarchical` (it runs in the frozen arms since D20); every shared column is identical. Fast pass 3 caught it: `failure_factors` counts methods from this table (12 -> 13) and DIFFERED. Restored byte-identical from the snapshot; the four per-sample tables are now declared outputs. |
 | **D38** the repaired genuine-DWLS run wrote its estimates over the registered ones | **FIXED and restored 2026-10-07.** `remeasure_dwls.py` always wrote `results/estimates/ivygap_dwls_genuine.csv`, whatever `--out` said, so the repaired run (07:38) replaced the registered estimates (73 failed samples, 584 NaN cells) with the rescaled solve. No reader had run since. Restored from the snapshot; the repaired estimates now sit beside their report in `results/repaired/`. `remeasure_dwls.py` and `remeasure_method.py` write the shared paths only on a default run. |
 | **D36** Extension E3's gene-subset fits overwrote the registered DESeq2 `unmix` rows of the shared extension per-sample files | **FIXED and restored 2026-10-07; nothing downstream had read them.** `identifiability_e3.py` called `extension_tcga.run` with `genes_keep`, which merged each half-gene fit into `results/extension/estimates_full{,_lgg}_extension.csv` (15:16-15:42). Only the `unmix` rows changed (max difference 0.23 GBM, 0.32 LGG); the other four methods matched the snapshot exactly. Both files are restored byte-identical from `results_snapshot_20261006`, and the overwritten copies are kept. The two readers (`lymphoid_pooled_tnk`, `gimicc_secondary`) last ran before the overwrite, and their outputs are byte-identical to the snapshot. `evaluation_matrix` reads a different file. Fixed: a gene-subset fit never writes the shared file (`shares_per_sample_file`, tested). |
@@ -3002,4 +3003,40 @@ methods where the registered run had 12; the extra one was `bayesian_hierarchica
 **The lesson of D36-D38.** Three overwrites in one day had one shape: a script wrote a shared or registered path that
 its caller never declared. The harness now declares every file the TCGA and extension steps write. A whole-tree
 comparison with the snapshot is the check that found the third.
+
+## D39 · The reference-sensitivity results were computed on a superseded marker space
+
+**Found 2026-10-08 ~00:40 by the supplementary re-fits** ("Still run what's left to do"):
+`reference_sensitivity_neftel` and `reference_sensitivity_darmanis` DIFFERED in 107 and 90 fields.
+
+**Cause, established.**
+- `scripts/reference_sensitivity.py` scores both arms on the leaderboard's own marker space,
+  `results/benchmark/signature_genes.json`.
+- The archived artefacts were written on 2026-09-15 (19:09 and 19:15). That day's marker space was the log-layer build:
+  657 genes, as in `results_archive/2026-09-20T1415`.
+- The registered leaderboard was rebuilt on raw counts on 2026-09-21 (651 genes; D16, resolved by the registered
+  pipeline's re-run). The reference-sensitivity analysis was not recomputed afterwards.
+- The re-run uses the registered 651-gene file. Its bytes equal the registered copy.
+- Every difference falls in the per-method ACS, CI and null p of both arms, the shared-gene count, and the three
+  ordering statistics. Nothing else changed: sample counts and implementations are the same. Checked mechanically
+  (`explanation_check`: all 107 and all 90).
+
+**The numbers.**
+
+| comparison | shared genes (archived -> re-run) | ordering agreement, Spearman | ranks moved | largest move |
+|---|---|---|---|---|
+| GBmap (linear) vs Neftel | 654 -> 648 | **0.5099 -> 0.8867** | 10 -> 7 | 7.5 -> 4.5 |
+| GBmap (linear) vs Darmanis | 651 -> 647 | **0.3655 -> 0.0098** | 10 -> 12 | 7.5 -> 10.0 |
+
+**What it means.**
+- The qualitative reading in `docs/MANUSCRIPT.md` holds: "the ACS ordering is only partly stable to a change of
+  reference". On the registered gene space it is nearly preserved with one alternative reference (Neftel) and
+  destroyed with the other (Darmanis).
+- The magnitudes do not reproduce. A 1% change in the marker set (6 of about 650 genes) moves them by 0.38 and
+  0.36, so neither registered number is a stable property. Report reference sensitivity as large and
+  unpredictable, not as a single rho.
+- **Registered values stand under the freeze** (`docs/RESULTS_FREEZE.md`). The re-run artefacts on the registered
+  gene space are in `results/verification/rerun_outputs/reference_sensitivity_{neftel,darmanis}/`.
+- Whether the write-up quotes the registered-gene-space numbers is the user's decision. Doing so would be a
+  versioned post-freeze change.
 

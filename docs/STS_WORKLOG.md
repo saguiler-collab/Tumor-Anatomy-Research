@@ -2,7 +2,7 @@
 
 Started 2026-09-30 when the project moved from CJSJ to **Regeneron STS**. Maintained so that
 nothing is lost when the conversation is compacted. **Update it after every major result.**
-Last updated: 2026-10-08 00:20 EDT (§5: step 7 reproduced, step 8 running; §2.37 AI-use record; §2.38 the core close-out: D36-D38, repairs default, verification complete, results frozen, 8/8 core PASS; §5).
+Last updated: 2026-10-08 01:00 EDT (§5: step 7 reproduced, step 8 running, D39; §2.37 AI-use record; §2.38 the core close-out: D36-D38, repairs default, verification complete, results frozen, 8/8 core PASS; §5).
 
 ---
 
@@ -1516,7 +1516,19 @@ docs, `ivygap/{data/reference.py, deconv/r_bridge.py, bench/run_benchmark.py}`, 
     the user's say.
 - **Report totals:** 67 REPRODUCED, 4 REPRODUCED + NEW ROWS, 2 NEW FIELDS, 5 NEW, 2 PASSED, 1 AGREES; 6 DIFFERS (the
   explained core ones). Ledger and audit rebuilt.
-- **Step 8 began 00:11** (5 supplementary re-fits).
+- **Step 8 began 00:11** (5 supplementary re-fits):
+  - `cdseq_anatomic`: all 6 outputs REPRODUCED.
+  - `unmix_s2_anatomy`: REPRODUCED.
+  - `recide_anatomic`: running since about 00:41, unbudgeted.
+  - Both `reference_sensitivity` runs DIFFER, which is **D39**: the archived results (2026-09-15) used that day's
+    657-gene log-build marker space, and the analysis was never recomputed after the registered leaderboard moved
+    to raw counts (651 genes).
+  - On the registered space the ordering agreement is Neftel 0.8867 (archived 0.5099) and Darmanis 0.0098
+    (archived 0.3655). Same reading, unstable magnitudes.
+  - Explained in the harness and checked mechanically (107 and 90 differences). Registered values stand under the
+    freeze. **Open question for the user:** quote the registered-gene-space numbers in the write-up (a versioned
+    post-freeze change)?
+- Full pytest after the D39 explanations: 482 passed, 1 skipped.
 
 **(2026-10-07 21:40) What is left is running (user: "Still run what's left to do"):**
 - **Step 7:** the `extension_tcga` re-fit, detached since 21:03 (`scratchpad/step7_extension.sh`). The GBM frozen arm

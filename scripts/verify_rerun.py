@@ -488,6 +488,10 @@ EXPLAINED_PATTERNS = {
     "tcga_gbm_frozen": r"bayesian_hierarchical|equal_footing|reference = 'frozen'",
     "tcga_lgg_frozen": r"bayesian_hierarchical|equal_footing|reference = 'frozen'",
     "anatomy_vs_biology": r"registered_status",
+    "reference_sensitivity_neftel": r"arm_a_gbmap|arm_b_alternative|n_shared_genes|spearman_between_orderings|"
+                                    r"n_ranks_moved|largest_rank_move",
+    "reference_sensitivity_darmanis": r"arm_a_gbmap|arm_b_alternative|n_shared_genes|spearman_between_orderings|"
+                                      r"n_ranks_moved|largest_rank_move",
 }
 #: Where a step's re-run copies were moved by hand rather than by keep_registered.
 MOVED_DIRS = {"registered_pipeline": "registered_pipeline_20261007"}
@@ -519,6 +523,16 @@ EXPLAINED = {
         "a deliberate text correction: the `registered_status` sentence now says the prediction was committed 94 "
         "minutes (2026-09-17 23:37:27 to 2026-09-18 01:11:52) before the LGG methylation existed, where it said 95, a "
         "rounding up (corrected 2026-10-07 in the 'verify ts' pass). No number the analysis computes changes."),
+    "reference_sensitivity_neftel": (
+        "the archived artefact (2026-09-15) was computed on the leaderboard's marker space of that day, 657 genes "
+        "selected on the log-layer build; the registered leaderboard was rebuilt on raw counts on 2026-09-21 with 651 "
+        "genes, and this analysis was never recomputed. The re-run uses the registered 651-gene space (648 shared with "
+        "Neftel, against 654): every method's ACS in both arms moves, and the ordering agreement rises from 0.5099 to "
+        "0.8867 (ranks moved 10 -> 7). Sample counts and implementations are unchanged (OPEN_DEFECTS D39)"),
+    "reference_sensitivity_darmanis": (
+        "the same cause as reference_sensitivity_neftel: the archived artefact used the superseded 657-gene marker "
+        "space; on the registered 651-gene space (647 shared with Darmanis, against 651) the ordering agreement falls "
+        "from 0.3655 to 0.0098 (ranks moved 10 -> 12, largest move 7.5 -> 10). OPEN_DEFECTS D39"),
 }
 
 
