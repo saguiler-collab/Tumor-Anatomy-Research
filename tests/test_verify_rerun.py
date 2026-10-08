@@ -105,3 +105,38 @@ def test_csv_with_added_rows_is_named_but_a_changed_or_lost_row_still_differs(tm
     lost = added.iloc[1:]
     lost.to_csv(tmp_path / "d.csv", index=False)
     assert vr.compare_csv(tmp_path / "a.csv", tmp_path / "d.csv")["status"] == "DIFFERS"
+
+
+def test_steps_run_on_the_registered_code_path_and_importing_changes_nothing(tmp_path, monkeypatch):
+    # The registered artefacts were made with the repairs off. A step must see IVYGAP_REPAIRED=0 unless the caller set
+    # it, and importing the harness must not change the importer's environment (the first version did, and switched
+    # the repairs off for every test that ran after it).
+    import os
+    import subprocess
+    assert vr.STEP_ENV == {"IVYGAP_REPAIRED": os.environ.get("IVYGAP_REPAIRED", "0")}
+    probe = [sys.executable, "-c", "import os; print('SEEN', os.environ.get('IVYGAP_REPAIRED'))"]
+    monkeypatch.setattr(vr, "VDIR", tmp_path / "verification")
+    monkeypatch.setattr(vr.config, "PROJECT_ROOT", tmp_path)          # run_step records the log relative to it
+    monkeypatch.setattr(vr, "keep_registered", lambda st, rec, snap: [])
+    monkeypatch.setattr(vr, "STEP_ENV", {"IVYGAP_REPAIRED": "0"})
+    monkeypatch.delenv("IVYGAP_REPAIRED", raising=False)
+    rec = vr.run_step({"id": "probe", "cmd": probe, "outputs": [], "verdict": "exit0", "tier": "fast"}, tmp_path)
+    assert rec["verdict"] == "PASSED"
+    assert "SEEN 0" in (tmp_path / "verification" / "logs" / "probe.log").read_text()
+    assert "IVYGAP_REPAIRED" not in os.environ                       # the parent's environment is untouched
+    assert subprocess.run([sys.executable, "-c", "import sys; sys.path.insert(0, 'scripts'); import verify_rerun, os; "
+                           "print(os.environ.get('IVYGAP_REPAIRED'))"], capture_output=True, text=True,
+                          cwd=Path(__file__).resolve().parent.parent,
+                          env={k: v for k, v in os.environ.items()}).stdout.strip() == "None"
+
+
+def test_shared_blank_cells_reproduce_but_a_moved_blank_still_differs(tmp_path):
+    # A table with the same NaN cells on both sides is identical. It read DIFFERS because the relative scale of a
+    # NaN cell was NaN. A blank that moves must still differ.
+    a = tmp_path / "a.csv"; b = tmp_path / "b.csv"; c = tmp_path / "c.csv"
+    a.write_text("case,x,y\nC1,0.5,\nC2,0.25,1.0\n")
+    b.write_text("case,x,y\nC1,0.5,\nC2,0.25,1.0\n")
+    c.write_text("case,x,y\nC1,0.5,1.0\nC2,0.25,\n")
+    assert vr.compare_csv(a, b)["status"] == "REPRODUCED"
+    assert vr.compare_csv(a, c)["status"] == "DIFFERS"
+

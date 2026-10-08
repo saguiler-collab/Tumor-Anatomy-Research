@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -53,6 +54,11 @@ from compare_artefacts import DEFAULT_IGNORE, compare, flatten  # noqa: E402
 
 PY = sys.executable
 RES = config.RESULTS_DIR
+#: The registered results were made before the method repairs became the default (2026-10-07). Every re-run step
+#: runs on the code path that made them (IVYGAP_REPAIRED=0) unless the caller set the variable itself. It is set in
+#: each step's environment, not in os.environ, so importing this module changes nothing for the importer: the
+#: first version did, and switched the repairs off for every test that ran after it was imported.
+STEP_ENV = {"IVYGAP_REPAIRED": os.environ.get("IVYGAP_REPAIRED", "0")}
 VDIR = RES / "verification"
 STATE = VDIR / "state.json"
 REPORT_JSON = VDIR / "verification_rerun.json"
@@ -166,17 +172,22 @@ STEPS = [
       ["anatomic/anatomic_report.json", "anatomic/implementation_report.json", "anatomic/acs_leaderboard.csv",
        "clinical_missingness_audit.json"],
       note="the registered pipeline end to end (reference, benchmark, anatomic ACS, controls)"),
+    # absolute_purity_per_sample*.csv declared 2026-10-07 (D37): the re-runs rewrote them unseen, adding a column
     S("tcga_gbm_frozen", "heavy", ["PY", sc("absolute_purity_yardstick.py"), "--cohort", "gbm", "--reference", "frozen"],
-      ["absolute_purity_yardstick.json", "estimates_full.csv"]),
+      ["absolute_purity_yardstick.json", "estimates_full.csv", "absolute_purity_per_sample.csv"]),
     S("tcga_lgg_frozen", "heavy", ["PY", sc("absolute_purity_yardstick.py"), "--cohort", "lgg", "--reference", "frozen"],
-      ["absolute_purity_yardstick_lgg.json", "estimates_full_lgg.csv"]),
+      ["absolute_purity_yardstick_lgg.json", "estimates_full_lgg.csv", "absolute_purity_per_sample_lgg.csv"]),
     S("tcga_gbm_h5ad", "heavy", ["PY", sc("absolute_purity_yardstick.py"), "--cohort", "gbm", "--reference", "h5ad"],
-      ["absolute_purity_yardstick_h5ad.json", "estimates_full_h5ad.csv"]),
+      ["absolute_purity_yardstick_h5ad.json", "estimates_full_h5ad.csv", "absolute_purity_per_sample_h5ad.csv"]),
     S("tcga_lgg_h5ad", "heavy", ["PY", sc("absolute_purity_yardstick.py"), "--cohort", "lgg", "--reference", "h5ad"],
-      ["absolute_purity_yardstick_lgg_h5ad.json", "estimates_full_lgg_h5ad.csv"]),
+      ["absolute_purity_yardstick_lgg_h5ad.json", "estimates_full_lgg_h5ad.csv", "absolute_purity_per_sample_lgg_h5ad.csv"]),
     S("extension_tcga", "heavy", ["PY", sc("extension_tcga.py")],
       ["extension/tcga_gbm_frozen.json", "extension/tcga_lgg_frozen.json", "extension/tcga_gbm_h5ad.json",
-       "extension/tcga_lgg_h5ad.json"]),
+       "extension/tcga_lgg_h5ad.json",
+       # the per-sample file every extension method shares: declared so that a re-fit is compared and, if it differs,
+       # the registered file restored, instead of being changed unseen (D36)
+       "extension/estimates_full_extension.csv", "extension/estimates_full_lgg_extension.csv",
+       "extension/estimates_full_h5ad_extension.csv", "extension/estimates_full_lgg_h5ad_extension.csv"]),
     S("cdseq_anatomic", "heavy", ["PY", sc("cdseq_anatomic.py")], ["cdseq_anatomic.json"]),
     S("reference_sensitivity_neftel", "heavy", ["PY", sc("reference_sensitivity.py"), "--baseline", "gbmap_linear",
       "--reference", "neftel"], ["reference_sensitivity_gbmap_linear_vs_neftel.json"]),
@@ -193,10 +204,13 @@ STEPS = [
 ]
 BY_ID = {s["id"]: s for s in STEPS}
 
-#: Heavy re-fits of supplementary analyses, not re-run in the 2026-10-07 verification by the user's decision ("core steps
-#: only"): their downstream analyses reproduced from the saved fits in the fast and medium tiers, and re-running them
-#: mostly repeats the BayesPrism/DWLS 2,400 s timeouts (OPEN_DEFECTS D35). Run them with --include-supplementary.
+#: Heavy re-fits of supplementary analyses, not re-run in the 2026-10-07 verification by the user's decisions ("core steps
+#: only"; then, for the extension panel's re-fit, "you completing the project NOW"): their downstream analyses reproduced
+#: from the saved fits in the fast and medium tiers (extension_agreement, bayesprism_verdict, evaluation_matrix), and
+#: re-running them mostly repeats the BayesPrism/DWLS 2,400 s timeouts (OPEN_DEFECTS D35), for hours. Run them with
+#: --include-supplementary, or one at a time with --only.
 SUPPLEMENTARY = {
+    "extension_tcga": "extension panel re-fit, four TCGA arms; its statistics reproduced from the saved fits",
     "cdseq_anatomic": "reference-free arm (supports R1)",
     "reference_sensitivity_neftel": "reference sensitivity (D14)",
     "reference_sensitivity_darmanis": "reference sensitivity (D14)",
@@ -289,7 +303,9 @@ def compare_csv(old: Path, new: Path) -> dict:
     d = np.where(both_nan, 0.0, np.abs(x - y))
     if np.isnan(d).any():
         return {"status": "DIFFERS", "why": "NaN pattern differs", "n_nan_mismatch": int(np.isnan(d).sum())}
-    rel = d / np.maximum(1.0, np.abs(x))
+    # fmax, not maximum: where both cells are NaN (d = 0) the scale must not be NaN, or one shared blank cell made
+    # an identical table DIFFER (found 2026-10-07 on cptac/wgs_purity_per_sample.csv)
+    rel = d / np.fmax(1.0, np.abs(x))
     m = float(rel.max()) if rel.size else 0.0
     status = "REPRODUCED" if m <= 1e-9 else "NUMERICAL NOISE" if m <= 1e-6 else "DIFFERS"
     return {"status": status, "cells": int(x.size), "max_relative_difference": m,
@@ -364,7 +380,7 @@ def run_step(st: dict, snap: Path) -> dict:
     t0 = time.time()
     with open(log, "w") as fh:
         fh.write(" ".join(st["cmd"]) + "\n\n"); fh.flush()
-        r = subprocess.run(st["cmd"], cwd=ROOT, stdout=fh, stderr=subprocess.STDOUT)
+        r = subprocess.run(st["cmd"], cwd=ROOT, stdout=fh, stderr=subprocess.STDOUT, env={**os.environ, **STEP_ENV})
     secs = round(time.time() - t0, 1)
     rec = {"tier": st["tier"], "exit": r.returncode, "seconds": secs, "log": str(log.relative_to(config.PROJECT_ROOT)),
            "outputs": {o: compare_output(o, snap) for o in st["outputs"]}}
@@ -385,8 +401,8 @@ def run_tier(tier: str, force: bool, only: list[str] | None, include_supplementa
             continue
         if st["id"] in state and not force:
             print(f"skip {st['id']} (done)"); continue
-        if st["id"] in SUPPLEMENTARY and not include_supplementary:
-            print(f"skip {st['id']} (supplementary; --include-supplementary to run)"); continue
+        if st["id"] in SUPPLEMENTARY and not (include_supplementary or only):      # naming it in --only runs it
+            print(f"skip {st['id']} (supplementary; --include-supplementary or --only to run)"); continue
         print(f"run  {st['id']} ...", flush=True)
         state[st["id"]] = run_step(st, snap)
         STATE.write_text(json.dumps(state, indent=2))

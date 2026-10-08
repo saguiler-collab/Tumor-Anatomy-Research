@@ -38,6 +38,14 @@ from ivygap.deconv.extension import EXTENSION_SPECS, build_extension_methods  # 
 OUT = config.RESULTS_DIR / "extension"
 
 
+def shares_per_sample_file(genes_keep: list[str] | None) -> bool:
+    """Whether a call may write the per-sample file that every extension method shares: not while an ablation override
+    is set, and not for a gene-subset fit. On 2026-10-07 Extension E3's half-gene unmix fits were merged over the
+    registered all-gene ones (OPEN_DEFECTS D36; restored from the 2026-10-06 snapshot)."""
+    ablation = any(os.environ.get(k) for k in ("IVYGAP_UNMIX_SHIFT", "IVYGAP_UNMIX_POWER"))
+    return not ablation and genes_keep is None
+
+
 def run(cohort: str, reference: str, methods: list[str], return_estimates: bool = False,
         genes_keep: list[str] | None = None) -> dict:
     """`genes_keep`, when given, restricts the marker genes to that subset (Extension E3's gene resampling,
@@ -128,9 +136,8 @@ def run(cohort: str, reference: str, methods: list[str], return_estimates: bool 
               + (f" | L1 to prior {rec['L1_cohort_mean_to_reference_prior']}" if prior is not None else ""))
     # The per-sample file is SHARED by every extension method. Until 2026-10-02 each call overwrote it
     # with only its own methods, and the unmix ablation stored override settings under the method's
-    # name. Now: never written while an ablation override is set, and merged by method otherwise.
-    ablation = any(os.environ.get(k) for k in ("IVYGAP_UNMIX_SHIFT", "IVYGAP_UNMIX_POWER"))
-    if frames and not ablation:
+    # name. Now: never written while an ablation override is set or for a gene subset (D36), merged by method otherwise.
+    if frames and shares_per_sample_file(genes_keep):
         path = OUT / f"estimates_full{tag}_extension.csv"
         new = pd.concat(frames)
         if path.exists():
@@ -138,7 +145,7 @@ def run(cohort: str, reference: str, methods: list[str], return_estimates: bool 
             new = pd.concat([old[~old["method"].isin(new["method"].unique())], new])
         new.to_csv(path, index=False)
     elif frames:
-        print("    (ablation override set: per-sample file NOT written)")
+        print("    (ablation override or gene subset: shared per-sample file NOT written)")
     if return_estimates:
         res["_estimates"] = ests
         res["_inputs"] = {"bulk": sub, "signature": ref.subset_genes(genes).profile,

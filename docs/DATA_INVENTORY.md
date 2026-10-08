@@ -1,6 +1,6 @@
 # Data inventory -- every public dataset this study touches
 
-*Generated 2026-10-06 by `scripts/build_data_inventory.py`. Do not edit by hand: every size, hash, consumer and citation check below is measured each run. `docs/supplementary/data_inventory_full.csv` is the same content in one row per dataset; Supplementary Table S7 is its compact form (`scripts/build_supplementary.py`).*
+*Generated 2026-10-07 by `scripts/build_data_inventory.py`. Do not edit by hand: every size, hash, consumer and citation check below is measured each run. `docs/supplementary/data_inventory_full.csv` is the same content in one row per dataset; Supplementary Table S7 is its compact form (`scripts/build_supplementary.py`).*
 
 **How to read the checks.** *read by* lists scripts that were opened and found to contain the token that reads the dataset. *source check* compares the local copy with the public server: identical byte size, or, where one side is stored decompressed, the sha256 of the decompressed content on both sides. *citation* is the DOI's Crossref record compared with the first author and year claimed here; the verifier is shown rejecting a known conflation before any citation is trusted.
 
@@ -78,7 +78,7 @@
 - **Used for:** Tumour and structure assignment, the donor-tumour join, the clinical table (survival is BLOCKED: no event indicator), and the per-sub-block ISH values used by the no-deconvolution constraint check.
 - **Citation:** Puchalski RB, et al. Science 360:660-663 (2018), doi:10.1126/science.aaf2666
   - Crossref 10.1126/science.aaf2666: verified (matches)
-- **Manuscript sections mentioning it** (keyword scan for 'survival', 'ISH'; a mention, not proof of use): Title; Abstract; II. Methods; III. Statistical Analysis, Data Analysis and Measurements; 4.1; 4.3; 4.4; 4.7; 4.9; 4.10; 4.11; 4.12; V. Discussion; Limitations; References
+- **Manuscript sections mentioning it** (keyword scan for 'survival', 'ISH'; a mention, not proof of use): Title; Abstract; II. Methods; III. Statistical Analysis, Data Analysis and Measurements; 4.1; 4.3; 4.4; 4.7; 4.9; 4.10; 4.11; 4.12; 4.14; V. Discussion; Limitations; References
 - **Read by:** `ivygap/data/portal_metadata.py`; `ivygap/data/clinical.py`; `scripts/fetch_ivygap_ish.py`
 
 | local file | size | sha256 (first 12) | check |
@@ -121,7 +121,7 @@
 - **Used for:** Validation cohort: per-sample Tumor fraction against ABSOLUTE purity (154 samples), the lymphoid ordering against methylation, model fit, extension panel.
 - **Citation:** Goldman MJ, et al. Nat Biotechnol 38:675-678 (2020) [Xena], doi:10.1038/s41587-020-0546-8
   - Crossref 10.1038/s41587-020-0546-8: verified (matches)
-- **Manuscript sections mentioning it** (keyword scan for 'TCGA-GBM', 'glioblastoma cohort'; a mention, not proof of use): 4.10; 4.12; Limitations; Acknowledgements
+- **Manuscript sections mentioning it** (keyword scan for 'TCGA-GBM', 'glioblastoma cohort'; a mention, not proof of use): 4.10; 4.12; 4.13; Limitations; Acknowledgements
 - **Read by:** `scripts/build_tcga_bulk.py`
 
 | local file | size | sha256 (first 12) | check |
@@ -140,7 +140,7 @@
 - **Used for:** Independent second cohort (534 samples; 510 matched to methylation, 496 to ABSOLUTE) for every TCGA analysis.
 - **Citation:** Goldman MJ, et al. Nat Biotechnol 38:675-678 (2020) [Xena], doi:10.1038/s41587-020-0546-8
   - Crossref 10.1038/s41587-020-0546-8: verified (matches)
-- **Manuscript sections mentioning it** (keyword scan for 'LGG', 'lower-grade'; a mention, not proof of use): Title; Abstract; II. Methods; III. Statistical Analysis, Data Analysis and Measurements; 4.2; 4.3; 4.4; 4.5; 4.6; 4.8; 4.9; 4.10; 4.11; 4.12; V. Discussion; Acknowledgements
+- **Manuscript sections mentioning it** (keyword scan for 'LGG', 'lower-grade'; a mention, not proof of use): Title; Abstract; II. Methods; III. Statistical Analysis, Data Analysis and Measurements; 4.2; 4.3; 4.4; 4.5; 4.6; 4.8; 4.9; 4.10; 4.11; 4.12; 4.14; V. Discussion; Acknowledgements
 - **Read by:** `scripts/build_tcga_bulk.py`
 
 | local file | size | sha256 (first 12) | check |
@@ -175,7 +175,7 @@
 - **Used for:** Per-cell-type lymphoid truth (T / NK / B) through EpiDISH -- the methylation side of the headline lymphoid comparison (cohort-level only; see D23).
 - **Citation:** Goldman MJ, et al. Nat Biotechnol 38:675-678 (2020) [Xena], doi:10.1038/s41587-020-0546-8
   - Crossref 10.1038/s41587-020-0546-8: verified (matches)
-- **Manuscript sections mentioning it** (keyword scan for 'methylation', 'EpiDISH'; a mention, not proof of use): Title; Abstract; II. Methods; 4.3; 4.4; 4.11; 4.12; V. Discussion; Limitations; Acknowledgements; References
+- **Manuscript sections mentioning it** (keyword scan for 'methylation', 'EpiDISH'; a mention, not proof of use): Title; Abstract; II. Methods; 4.3; 4.4; 4.11; 4.12; 4.13; 4.14; V. Discussion; Limitations; Acknowledgements; References
 - **Read by:** `scripts/extract_epidish_probes.py`; `scripts/extract_gimicc_cpgs.py`
 
 | local file | size | sha256 (first 12) | check |
@@ -193,7 +193,7 @@
 - **Used for:** As D07, for LGG.
 - **Citation:** Goldman MJ, et al. Nat Biotechnol 38:675-678 (2020) [Xena], doi:10.1038/s41587-020-0546-8
   - Crossref 10.1038/s41587-020-0546-8: verified (matches)
-- **Manuscript sections mentioning it** (keyword scan for 'methylation', 'EpiDISH'; a mention, not proof of use): Title; Abstract; II. Methods; 4.3; 4.4; 4.11; 4.12; V. Discussion; Limitations; Acknowledgements; References
+- **Manuscript sections mentioning it** (keyword scan for 'methylation', 'EpiDISH'; a mention, not proof of use): Title; Abstract; II. Methods; 4.3; 4.4; 4.11; 4.12; 4.13; 4.14; V. Discussion; Limitations; Acknowledgements; References
 - **Read by:** `scripts/extract_epidish_probes.py`; `scripts/extract_gimicc_cpgs.py`
 
 | local file | size | sha256 (first 12) | check |
@@ -211,7 +211,7 @@
 - **Used for:** The DNA ground truth for tumour content, sharing no input with any RNA method (147 GBM / 496 LGG complete cases); ploidy, genome doublings and subclonal fraction as candidate failure factors.
 - **Citation:** Carter SL, et al. Nat Biotechnol 30:413-421 (2012), doi:10.1038/nbt.2203
   - Crossref 10.1038/nbt.2203: verified (matches)
-- **Manuscript sections mentioning it** (keyword scan for 'ABSOLUTE', 'purity'; a mention, not proof of use): Abstract; II. Methods; 4.1; 4.3; 4.4; 4.5; 4.6; 4.9; 4.10; 4.11; 4.12; Acknowledgements
+- **Manuscript sections mentioning it** (keyword scan for 'ABSOLUTE', 'purity'; a mention, not proof of use): Abstract; II. Methods; 4.1; 4.3; 4.4; 4.5; 4.6; 4.9; 4.10; 4.11; 4.12; 4.13; 4.14; V. Discussion; Acknowledgements
 - **Read by:** `scripts/absolute_purity_yardstick.py`; `scripts/absolute_join_audit.py`; `scripts/gimicc_truth.py`; `scripts/failure_factors.py`
 
 | local file | size | sha256 (first 12) | check |
@@ -246,7 +246,7 @@
 - **Used for:** Aggregate immune truth for the pre-registered immune arm (P1/P2 over-call test).
 - **Citation:** Thorsson V, et al. Immunity 48:812-830 (2018), doi:10.1016/j.immuni.2018.03.023
   - Crossref 10.1016/j.immuni.2018.03.023: verified (matches)
-- **Manuscript sections mentioning it** (keyword scan for 'leukocyte', 'Thorsson', 'immune arm'; a mention, not proof of use): II. Methods; 4.4; 4.11; 4.12; V. Discussion; Acknowledgements
+- **Manuscript sections mentioning it** (keyword scan for 'leukocyte', 'Thorsson', 'immune arm'; a mention, not proof of use): II. Methods; 4.4; 4.11; 4.12; 4.14; V. Discussion; Acknowledgements
 - **Read by:** `scripts/immune_arm.py`
 
 | local file | size | sha256 (first 12) | check |
@@ -281,6 +281,7 @@
 - **Used for:** The first per-sample, same-tissue truth in the study (prespecified/cptac_per_sample_truth.md): each method's bulk estimate against single-nucleus composition from the same material. Its whole-genome purity is the per-sample DNA truth of the secondary analysis (prespecified/cptac_wgs_purity_secondary.md).
 - **Citation:** Wang LB, et al. Cancer Cell 39:509-528 (2021), doi:10.1016/j.ccell.2021.01.006
   - Crossref 10.1016/j.ccell.2021.01.006: verified (matches)
+- **Manuscript sections mentioning it** (keyword scan for 'CPTAC', 'single-nucleus'; a mention, not proof of use): 4.13; 4.14; V. Discussion
 - **Read by:** `scripts/fetch_cptac_gbm.py`; `scripts/cptac_per_sample.py`; `scripts/cptac_wgs_purity.py`
 
 | local file | size | sha256 (first 12) | check |
@@ -401,7 +402,7 @@
 - **Used for:** A constraint check with no deconvolution anywhere in the chain: CD44 / BIRC5 ISH support C1 and C7.
 - **Citation:** Puchalski RB, et al. Science 360:660-663 (2018), doi:10.1126/science.aaf2666
   - Crossref 10.1126/science.aaf2666: verified (matches)
-- **Manuscript sections mentioning it** (keyword scan for 'ISH', 'in-situ'; a mention, not proof of use): Title; Abstract; II. Methods; III. Statistical Analysis, Data Analysis and Measurements; 4.1; 4.3; 4.4; 4.7; 4.9; 4.10; 4.11; 4.12; V. Discussion; Limitations; References
+- **Manuscript sections mentioning it** (keyword scan for 'ISH', 'in-situ'; a mention, not proof of use): Title; Abstract; II. Methods; III. Statistical Analysis, Data Analysis and Measurements; 4.1; 4.3; 4.4; 4.7; 4.9; 4.10; 4.11; 4.12; 4.14; V. Discussion; Limitations; References
 - **Read by:** `scripts/ish_constraint_check.py`
 
 | local file | size | sha256 (first 12) | check |
@@ -418,7 +419,7 @@
 - **Used for:** Direct check of the lymphoid truth by IDH status (prespecified/klemm_t_vs_b.md): cohort-mean T, B and NK as % of CD45+ in 17 IDH-mutant and 40 IDH-wildtype gliomas, measured from the figure's vector geometry and validated against two numbers printed in the paper.
 - **Citation:** Klemm F, et al. Cell 181:1643-1660 (2020), doi:10.1016/j.cell.2020.05.007
   - Crossref 10.1016/j.cell.2020.05.007: verified (matches)
-- **Manuscript sections mentioning it** (keyword scan for 'Klemm', 'flow cytometry'; a mention, not proof of use): Title; I. Introduction; 4.4; 4.12
+- **Manuscript sections mentioning it** (keyword scan for 'Klemm', 'flow cytometry'; a mention, not proof of use): Title; I. Introduction; 4.4; 4.12; 4.14
 - **Read by:** `scripts/klemm_figure1f.py`
 
 | local file | size | sha256 (first 12) | check |
@@ -473,7 +474,7 @@
 - **Used for:** Turns D07/D08 into per-cell-type lymphoid fractions (RPC mode); a blood reference applied to brain tumour, so used for lymphoid sub-composition only.
 - **Citation:** Teschendorff AE, et al. BMC Bioinformatics 18:105 (2017), doi:10.1186/s12859-017-1511-5
   - Crossref 10.1186/s12859-017-1511-5: verified (matches)
-- **Manuscript sections mentioning it** (keyword scan for 'EpiDISH'; a mention, not proof of use): Title; II. Methods; 4.4; 4.12; V. Discussion; References
+- **Manuscript sections mentioning it** (keyword scan for 'EpiDISH'; a mention, not proof of use): Title; II. Methods; 4.4; 4.12; 4.14; V. Discussion; References
 - **Read by:** `scripts/methylation_celltypes.py`; `scripts/extract_epidish_probes.py`
 
 ### D22 · BayesPrism's bundled gene annotation (gene groups and gene types, GENCODE v22)
@@ -486,7 +487,7 @@
 - **Used for:** The authors' own gene filtering in the authors'-workflow BayesPrism runs on TCGA (post-registration extension).
 - **Citation:** Chu T, et al. Nat Cancer 3:505-517 (2022), doi:10.1038/s43018-022-00356-3
   - Crossref 10.1038/s43018-022-00356-3: verified (matches)
-- **Manuscript sections mentioning it** (keyword scan for 'BayesPrism'; a mention, not proof of use): 4.5; 4.7; 4.10; 4.12; V. Discussion
+- **Manuscript sections mentioning it** (keyword scan for 'BayesPrism'; a mention, not proof of use): 4.5; 4.7; 4.10; 4.12; 4.13; 4.14; V. Discussion
 - **Read by:** `R/run_bayesprism_authors.R`; `R/run_bayesprism_authors.R`
 
 | local file | size | sha256 (first 12) | check |
@@ -503,7 +504,7 @@
 - **Used for:** The second methylation truth for the lymphoid ordering (post-registration, prespecified/gimicc_truth_confirmation.md): GIMiCC run on the TCGA 450K betas (D07/D08), restricted to its 4,022 library CpGs by scripts/extract_gimicc_cpgs.py.
 - **Citation:** Pike SC, et al. Acta Neuropathol Commun 12:170 (2024), doi:10.1186/s40478-024-01874-0
   - Crossref 10.1186/s40478-024-01874-0: verified (matches)
-- **Manuscript sections mentioning it** (keyword scan for 'GIMiCC'; a mention, not proof of use): Title; 4.4; 4.12; V. Discussion; Limitations
+- **Manuscript sections mentioning it** (keyword scan for 'GIMiCC'; a mention, not proof of use): Title; 4.4; 4.12; 4.13; 4.14; V. Discussion; Limitations
 - **Read by:** `R/run_gimicc.R`; `scripts/extract_gimicc_cpgs.py`; `scripts/gimicc_truth.py`
 
 | local file | size | sha256 (first 12) | check |
@@ -519,7 +520,7 @@
 - **Accession:** signature_matrix.tsv, cell_size_factors.csv, tcga_benchmark/*
 - **Version:** frozen 2026-07-12T03:36:26Z; sha256 recorded in PROVENANCE.json
 - **Used for:** The registered signature; yardstick 1 (500 pseudobulk mixtures, NNLS and SVR only), which shares GBmap with the ACS arm.
-- **Manuscript sections mentioning it** (keyword scan for 'frozen signature'; a mention, not proof of use): II. Methods; 4.4; 4.10; V. Discussion
+- **Manuscript sections mentioning it** (keyword scan for 'frozen signature'; a mention, not proof of use): II. Methods; 4.4; 4.10; 4.13; 4.14; V. Discussion
 - **Read by:** `ivygap/config.py`
 
 | local file | size | sha256 (first 12) | check |

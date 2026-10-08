@@ -11,9 +11,13 @@ Started 2026-10-07, at the user's request: "fix the broken methods and ensure th
   seeing which methods win would void the main result.
 - **Registered artefacts are never overwritten.** Repaired results go to `results/repaired/` and are
   reported beside the registered ones.
-- **Every repair is behind `IVYGAP_REPAIRED=1`** (`ivygap/config.py`, `REPAIRED_METHODS`). This lets the
-  2026-10-06 verification re-run reproduce the archived results with the code that made them.
-  - Checked: that run's genuine-DWLS process started at 23:32:10, before the first repair edit (23:49:45).
+- **The repairs are the default since 2026-10-07** (`ivygap/config.py`, `REPAIRED_METHODS`; user: "Yes, switch the
+  defaults"). The genuine DWLS, BayesPrism and quanTIseq packages also run to completion with no time budget
+  (`r_bridge.UNBUDGETED_WHEN_REPAIRED`), so which implementation fills a row no longer depends on the clock (D35).
+  - `IVYGAP_REPAIRED=0` restores the registered code path and its 2,400 s budgets. `scripts/verify_rerun.py` sets
+    it, so a verification re-run reproduces the archived results with the code that made them.
+  - Until the switch the repairs were opt-in (`IVYGAP_REPAIRED=1`). Checked for the 2026-10-06 verification: its
+    genuine-DWLS process started at 23:32:10, before the first repair edit (23:49:45).
 
 **Where every method stands against every truth:** `docs/EVALUATION_MATRIX.md`
 (`scripts/evaluation_matrix.py`). Its recomputed tumour correlations equal the registered ones in 51 of 51

@@ -383,7 +383,10 @@ OWN_COVERAGE: dict[str, frozenset[str]] = {
     "quantiseq": frozenset({"T_cell", "NK_cell", "B_cell", "Macrophage_Microglia"}),
 }
 
-R_METHOD_TIMEOUTS: dict[str, int] = {
+#: The budgets of the registered runs (2026-09 to 2026-10-06), still used on the registered code path
+#: (IVYGAP_REPAIRED=0, which a verification re-run sets). In the registered anatomy run BayesPrism and DWLS overran
+#: 2,400 s by 5 and 16 s and fell back to this project's versions (OPEN_DEFECTS D35).
+REGISTERED_R_METHOD_TIMEOUTS: dict[str, int] = {
     # 40 minutes. Measured: DWLS's signature build completed in 1,625 s at best on this
     # data, so the budget clears a successful run with room, and bounds the case where
     # the condition-number search does not converge.
@@ -396,6 +399,14 @@ R_METHOD_TIMEOUTS: dict[str, int] = {
     # matching the 1e9 s budget the re-measurement scripts pass.
     "mixture": 10**9,
 }
+#: With the repairs on (config.REPAIRED_METHODS, the default since 2026-10-07; user: "Yes, switch the defaults"), these
+#: genuine packages run to completion: no fallback to this project's version at a time budget, so which implementation
+#: fills a row no longer depends on the clock (D35). Measured: each has completed unbudgeted on this project's data
+#: (docs/METHOD_REPAIRS.md); BayesPrism takes hours on this 2-core machine.
+UNBUDGETED = 10**9
+UNBUDGETED_WHEN_REPAIRED = ("dwls", "bayesprism", "quantiseq")
+R_METHOD_TIMEOUTS: dict[str, int] = dict(REGISTERED_R_METHOD_TIMEOUTS) | (
+    {m: UNBUDGETED for m in UNBUDGETED_WHEN_REPAIRED} if config.REPAIRED_METHODS else {})
 DEFAULT_R_TIMEOUT = 3600
 
 

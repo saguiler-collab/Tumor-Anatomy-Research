@@ -55,6 +55,10 @@ Breaking one invalidates results rather than merely making them untidy.
 
 ## Evidence required before calling something done
 
+**The project's own close-out is defined in `docs/CORE_CLOSEOUT.md`**: eight core items, each with its evidence.
+`python3 scripts/check_core_closeout.py` must print 8/8 PASS. After the results freeze,
+`python3 scripts/check_core_closeout.py --freeze` must report 0 changed files.
+
 An exit code is not evidence. As applicable:
 
 - File presence, schema, dimensions, hashes, provenance.
@@ -76,6 +80,10 @@ An exit code is not evidence. As applicable:
   writing nothing). Until that is diagnosed the validation that actually runs is
   `pytest tests/`, plus `scripts/independent_verification.py` and
   `scripts/check_doc_numbers.py --against-current` for the stage-level checks.
+- **The method repairs are the default since 2026-10-07** (`config.REPAIRED_METHODS`; `docs/METHOD_REPAIRS.md`):
+  the corrected DWLS paths, and the genuine DWLS, BayesPrism and quanTIseq packages unbudgeted, so no fallback
+  depends on the clock. BayesPrism then takes hours here. `IVYGAP_REPAIRED=0` gives the registered code path and
+  budgets; `scripts/verify_rerun.py` sets it so that re-runs reproduce the registered artefacts.
 - Add new work under explicit versioned paths. Label superseded work as superseded
   through additive documentation rather than deleting it.
 - Do not commit, push, open a pull request, publish or deploy unless explicitly asked.

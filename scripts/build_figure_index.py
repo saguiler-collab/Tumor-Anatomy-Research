@@ -9,6 +9,9 @@ from artefacts so a caption cannot drift from the figure beside it.
 from __future__ import annotations
 
 import json
+import re
+import sys
+from datetime import datetime
 
 import pandas as pd
 
@@ -21,6 +24,23 @@ FIGDIR = config.PROJECT_ROOT / "docs" / "figures"
 def J(n):
     p = config.RESULTS_DIR / n
     return json.loads(p.read_text()) if p.exists() else {}
+
+
+def provenance() -> dict[str, str]:
+    """Figure name -> the script and function that draws it, read from the figure scripts' source (not typed here).
+
+    The STS rules (Appendix 3; Appendix 4, p.34) require every graphic to be credited where it appears, with how it was
+    made, and AI-made graphics to be marked as such; this records the facts that credit needs."""
+    out: dict[str, str] = {}
+    for script in ("build_paper_figures.py", "build_stats_figures.py"):
+        src = (config.PROJECT_ROOT / "scripts" / script).read_text()
+        for m in re.finditer(r"^def (fig_\w+)\(.*?(?=^def |\Z)", src, re.S | re.M):
+            for name in re.findall(r'save\(fig, "(Figure_\w+)"\)', m.group(0)):
+                out[name] = f"scripts/{script}::{m.group(1)}"
+            if 'save(fig, f"Figure_purity_scatter{' in m.group(0):       # named per cohort: _gbm, _lgg
+                for suffix in ("_gbm", "_lgg"):
+                    out[f"Figure_purity_scatter{suffix}"] = f"scripts/{script}::{m.group(1)}"
+    return out
 
 
 def main() -> int:
@@ -359,6 +379,9 @@ def main() -> int:
          "who skips the body: what was measured, on how many samples, by what test.*\n",
          "*Each figure is available as PNG (300 dpi, for drafts and review) and PDF (vector, "
          "for submission) in `docs/figures/`.*\n", "---\n"]
+    import matplotlib                                                  # noqa: PLC0415
+    made_by = provenance()
+    versions = f"Python {sys.version.split()[0]}, matplotlib {matplotlib.__version__}"
     n_ok = 0
     for i, (key, title, caption) in enumerate(figs, 1):
         if not (FIGDIR / f"{key}.png").exists():
@@ -369,6 +392,10 @@ def main() -> int:
         L.append(f"![Figure {i}](figures/{key}.png)\n")
         L.append(f"**Figure {i}.** *{title}* {caption}\n")
         L.append(f"<sub>`docs/figures/{key}.png` · `docs/figures/{key}.pdf`</sub>\n")
+        L.append(f"<sub>**Provenance:** drawn by `{made_by.get(key, 'UNKNOWN: no figure function saves this name')}` "
+                 f"({versions}), rendered {datetime.fromtimestamp((FIGDIR / f'{key}.png').stat().st_mtime):%Y-%m-%d}, "
+                 f"from the artefacts under `results/`. The plotting code was generated with Claude Code (Anthropic); "
+                 f"see `~/STS_AI_LOG/AI_CONTRIBUTION_INVENTORY.md`.</sub>\n")
     OUT.write_text("\n".join(L) + "\n")
     print(f"wrote {OUT.relative_to(config.PROJECT_ROOT)} — {n_ok} of {len(figs)} figures present")
     return 0

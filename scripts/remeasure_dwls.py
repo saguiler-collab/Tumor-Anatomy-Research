@@ -135,7 +135,11 @@ def main() -> int:
         frame = pd.DataFrame(np.vstack(rows), index=data.samples,
                              columns=list(data.cell_types))
         frame.index.name = "sample_id"
-        out_csv = Path("results/estimates/ivygap_dwls_genuine.csv")
+        # The estimates go beside the report they belong to; only the registered run (the default --out) writes the
+        # registered path. Until 2026-10-07 every run wrote it, so the repaired run overwrote the registered estimates
+        # (OPEN_DEFECTS D38).
+        registered = args.out == ap.get_default("out")
+        out_csv = Path("results/estimates/ivygap_dwls_genuine.csv") if registered else Path(args.out).with_suffix(".csv")
         out_csv.parent.mkdir(parents=True, exist_ok=True)
         frame.to_csv(out_csv)
 

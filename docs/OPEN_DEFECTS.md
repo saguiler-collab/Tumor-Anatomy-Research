@@ -27,10 +27,13 @@ keeping, marked RESOLVED at the top.
 | **D21** the orthogonal yardstick's rho was published with its sign inverted | **FIXED 2026-09-23.** `absolute_purity` is a correlation, not an error metric; the agreement stage negated it. -0.0810 published where the data give +0.0810. Conclusion (NULL RESULT) unchanged; the sign was not. |
 | **D22** every genuine-package re-measurement ran on GBmap's LOG layer while the leaderboard ran on counts | **FIXED 2026-09-30; re-runs IN PROGRESS.** `remeasure_method.py` never passed `matrix=`, so `build_from_h5ad` defaulted to `X` (log1p). All five artefacts predate the raw/X rebuild; bisque 0.9231 and epic 0.9846 equal their `acs_log` bit for bit. On raw/X both reproduce the leaderboard exactly (0.7077, 0.7692). MANUSCRIPT 4.7's deltas were cross-matrix. An eighth equivalence condition now blocks on any layer mismatch. |
 | **D23** the lymphoid headline ("0 of 12, in either cohort") is reference-specific, and the manuscript omits the arm that disagrees | **OPEN, high — a reporting defect; the measurements are correct.** **2026-10-03:** the truth itself was tested -- corroborated in GBM (GIMiCC, every control passing; two atlases; flow cytometry), contested in LGG (GIMiCC puts B above T; registered reading INCONCLUSIVE). **2026-10-06:** flow cytometry of 17 IDH-mutant gliomas [53] puts T 21-fold above B -- LGG supported on direct measurement. Under the raw/X donor-level reference 3 of 14 (GBM) and 2 of 13 (LGG) order T above B. Measured 2026-09-30: Bisque's agreement is its reference's own donor-mean composition returned by construction (L1 0.087 / 0.081 over all 8 types; every other method 0.68-1.40); and methylation's PER-SAMPLE lymphoid split fails a reference-free positive control, so per-sample framing is unsupported. |
-| **D31** the genuine DWLS package fails on 73 of 122 Ivy GAP samples: its first step hands quadprog an unscaled problem | **FIXED behind `IVYGAP_REPAIRED` (2026-10-07); re-runs queued.** quadprog reports "constraints are inconsistent" on CPM-scale inputs for a feasible, well-conditioned problem (kappa 11.7). Dividing signature and bulk by one constant changes no DWLS solution: 73/122 failures become 0/122; identical to 3e-16 where both solve (`tests/test_dwls_conditioning.py`). |
-| **D32** this project's DWLS reimplementation caps weights relative to the LARGEST weight; the package caps relative to the SMALLEST | **FIXED behind `IVYGAP_REPAIRED` (2026-10-07); re-runs queued.** The inverted cap leaves weights unbounded, so near-zero genes decide the fit (GBM donor-level: 37% endothelial on average; LGG donor-level: 1 of 510 samples finite). The published algorithm, reimplemented, reproduces the package to 5e-11 given its dampening constant. |
+| **D31** the genuine DWLS package fails on 73 of 122 Ivy GAP samples: its first step hands quadprog an unscaled problem | **FIXED (2026-10-07); the default since that evening (`IVYGAP_REPAIRED=0` gives the registered path); re-runs done (docs/METHOD_REPAIRS.md).** quadprog reports "constraints are inconsistent" on CPM-scale inputs for a feasible, well-conditioned problem (kappa 11.7). Dividing signature and bulk by one constant changes no DWLS solution: 73/122 failures become 0/122; identical to 3e-16 where both solve (`tests/test_dwls_conditioning.py`). |
+| **D32** this project's DWLS reimplementation caps weights relative to the LARGEST weight; the package caps relative to the SMALLEST | **FIXED (2026-10-07); the default since that evening (`IVYGAP_REPAIRED=0` gives the registered path); re-runs done (docs/METHOD_REPAIRS.md).** The inverted cap leaves weights unbounded, so near-zero genes decide the fit (GBM donor-level: 37% endothelial on average; LGG donor-level: 1 of 510 samples finite). The published algorithm, reimplemented, reproduces the package to 5e-11 given its dampening constant. |
 | **D33** quanTIseq was dropped from every TCGA arm before its immune estimates were saved | **FIXED in the repaired runner (2026-10-07).** The yardstick scores only the Tumor column; quanTIseq models no tumour (by design), so 'only 0 finite estimates' removed it and its leukocyte, T, B and NK estimates were never scored. `scripts/repaired_methods.py` scores every compartment a method models. |
 | **D34** two Python 'reimplementations' are stand-ins for different algorithms, and METHODS.md called them faithful | **OPEN, documented 2026-10-07 -- labelling, not arithmetic.** The SCDC stand-in reweights genes by Huber residuals; published SCDC weights them by cross-subject variance (as MuSiC does). The BayesPrism stand-in is a reference-shrinking heuristic, not its Gibbs sampler (its docstring says so). On the frozen signature, MuSiC, SCDC, SCDC ENSEMBLE, Bisque and BayesPrism cannot run as published (no cells), so every frozen-arm number for them is a stand-in's. Measured cost: BayesPrism stand-in 0.16 vs genuine 0.72 (GBM donor-level). |
+| **D37** the verification re-runs rewrote the registered per-sample purity tables unseen | **FIXED and restored 2026-10-07.** `absolute_purity_yardstick.py` also writes `results/absolute_purity_per_sample{,_lgg}.csv`, which the harness did not declare, so `keep_registered` did not restore them after the TCGA frozen re-runs (13:13, 16:12). The re-run copies add one column, `bayesian_hierarchical` (it runs in the frozen arms since D20); every shared column is identical. Fast pass 3 caught it: `failure_factors` counts methods from this table (12 -> 13) and DIFFERED. Restored byte-identical from the snapshot; the four per-sample tables are now declared outputs. |
+| **D38** the repaired genuine-DWLS run wrote its estimates over the registered ones | **FIXED and restored 2026-10-07.** `remeasure_dwls.py` always wrote `results/estimates/ivygap_dwls_genuine.csv`, whatever `--out` said, so the repaired run (07:38) replaced the registered estimates (73 failed samples, 584 NaN cells) with the rescaled solve. No reader had run since. Restored from the snapshot; the repaired estimates now sit beside their report in `results/repaired/`. `remeasure_dwls.py` and `remeasure_method.py` write the shared paths only on a default run. |
+| **D36** Extension E3's gene-subset fits overwrote the registered DESeq2 `unmix` rows of the shared extension per-sample files | **FIXED and restored 2026-10-07; nothing downstream had read them.** `identifiability_e3.py` called `extension_tcga.run` with `genes_keep`, which merged each half-gene fit into `results/extension/estimates_full{,_lgg}_extension.csv` (15:16-15:42). Only the `unmix` rows changed (max difference 0.23 GBM, 0.32 LGG); the other four methods matched the snapshot exactly. Both files are restored byte-identical from `results_snapshot_20261006`, and the overwritten copies are kept. The two readers (`lymphoid_pooled_tnk`, `gimicc_secondary`) last ran before the overwrite, and their outputs are byte-identical to the snapshot. `evaluation_matrix` reads a different file. Fixed: a gene-subset fit never writes the shared file (`shares_per_sample_file`, tested). |
 | **D35** which implementation fills two registered leaderboard rows depends on the wall clock | **OPEN, measured 2026-10-07 by the verification re-run; registered values stand, disclosed.** In the registered run, BayesPrism (2,405 s) and DWLS (2,416 s) overran their 2,400 s budgets by 5 and 16 s and fell back to the Python versions (ACS 0.800, 0.723). Re-run with identical code, both genuine packages finished: BayesPrism 0.815, DWLS 0.70 on 26 of 57 pairs (73 samples fail in quadprog, D31). Every other method reproduced exactly. |
 | **D30** the CPTAC DNA control ran GIMiCC on a fifth of its library: one complete-case rule across samples with bimodal probe coverage | **OPEN, handled -- it invalidated the primary CPTAC control.** Five of 18 methylation samples cover 54-67% of the 4,022 library CpGs, so dropping any CpG missing in any sample kept 769. GIMiCC purity on those agreed with whole-genome purity at rho 0.15; re-run on the 13 complete samples (3,775 CpGs) it agreed at 0.92 (cptac_wgs_purity_secondary.md, S2.2). The primary reading stays INCONCLUSIVE; the nuclei truth failed against DNA as well (S2.1). |
 | **D29** the declared NK marker panel labels non-immune brain nuclei NK (NCAM1/CD56) | **OPEN, handled -- affects the CPTAC truth only.** In CPTAC snRNA, NCAM1 alone (log1p-CPM 5.5-6.1; NKG7 about 0, CD45 about 0.2) made 898 non-leukocyte nuclei 'NK'. Sensitivity truth S1 (NK panel without NCAM1) is reported beside the registered truth (cptac_per_sample_truth.md, Addendum 2). The Abdelfattah atlas had no NK-labelled cluster. |
@@ -2900,6 +2903,101 @@ changes.
   is updated).
 - **Fix direction.** Decide the implementation by a declared rule, not by a clock. The repaired runs
   (`docs/METHOD_REPAIRS.md`) already run the genuine packages unbudgeted and record any fallback reason.
+  - **Done, 2026-10-07 evening:** with the repairs on (now the default), DWLS, BayesPrism and quanTIseq run
+    unbudgeted (`r_bridge.UNBUDGETED_WHEN_REPAIRED`). The registered path (`IVYGAP_REPAIRED=0`) keeps the
+    2,400 s budgets so that a verification re-run reproduces the registered rows.
 - **The harness now keeps registered artefacts in place.** Any differing re-run output is moved aside
   and the registered one restored, with the difference kept in `state.json` (`keep_registered`, tested).
+
+## D36 · Extension E3's gene-subset fits overwrote the registered unmix rows of the shared extension files
+
+**Severity: a data-integrity defect in two intermediate files. Contained: nothing downstream had read them. Found
+2026-10-07 ~19:10 while checking the extension files before the verification's last step.**
+
+**What happened.**
+- `scripts/identifiability_e3.py` (Extension E3) fits DESeq2 `unmix` on 10 random halves of the marker genes, through
+  `extension_tcga.run(..., genes_keep=...)`.
+- `run` merges every call's per-sample estimates into the file all extension methods share:
+  `results/extension/estimates_full_extension.csv` (GBM, frozen) and `estimates_full_lgg_extension.csv` (LGG,
+  frozen).
+- Its guard (from the 2026-10-02 fix, see the STS worklog §3) skipped the write only under an ablation override. A
+  gene subset was not covered.
+- So each subset fit replaced the registered all-gene `unmix` rows (154 GBM, 510 LGG). The last write was subset 10's,
+  at 15:24 for GBM and 15:42 for LGG.
+
+**Measured against the 2026-10-06 snapshot.**
+
+| file | rows | `unmix` rows | other methods (ARIC, FARDEEP, LinDeconSeq, MIXTURE) |
+|---|---|---|---|
+| `estimates_full_extension.csv` | 770 = snapshot | changed, max difference 0.233 | identical |
+| `estimates_full_lgg_extension.csv` | 2,550 = snapshot | changed, max difference 0.323 | identical |
+| the two donor-level files | = snapshot | identical | identical |
+
+**Repaired.**
+- Both files are restored byte-identical from `results_snapshot_20261006/extension/`.
+- The overwritten copies are kept in `results/verification/rerun_outputs/e3_overwrite_20261007/`, with `MOVED.json`.
+
+**Why no reported number moved.**
+- Only two scripts read these files: `lymphoid_pooled_tnk.py` (last run 2026-10-01) and `gimicc_secondary.py` (last
+  run 2026-10-06 19:52). Both outputs are byte-identical to the snapshot.
+- `evaluation_matrix.py` reads the registered `results/estimates_full*.csv`, not the extension files.
+- E3 reads its own fits in `results/identifiability/e3/`, and E2's truth agreement from its JSON (not refit).
+- The summaries `results/extension/tcga_*.json` were never rewritten (file times 2026-10-02/03).
+
+**Fixed.** `extension_tcga.shares_per_sample_file(genes_keep)`: the shared file is written only for an all-gene fit
+with no ablation override (`tests/test_extension_panel.py::test_a_gene_subset_fit_never_writes_the_shared_per_sample_file`).
+
+**Lesson, the same as the 2026-10-02 one.** A function that writes a shared file must be checked for every new way it is
+called, not only for the call it was written for.
+
+## D37 · The verification re-runs rewrote the registered per-sample purity tables unseen
+
+**Found 2026-10-07 ~19:50 by fast pass 3.** `failure_factors_gbm` and `failure_factors_lgg` DIFFERED. The cause was 13
+methods where the registered run had 12; the extra one was `bayesian_hierarchical`.
+
+- **Cause.**
+  - `absolute_purity_yardstick.py` writes three files: the summary JSON, `estimates_full*.csv` and
+    `absolute_purity_per_sample*.csv`.
+  - The harness declared only the first two, so `keep_registered` restored those after the TCGA frozen re-runs and
+    left the per-sample tables as re-run.
+  - The re-run tables carry `bayesian_hierarchical`, which runs in the frozen arms since the D20 fix. Every shared
+    column is identical (max difference 0.0).
+- **Reach.** Seven verification steps read these tables.
+  - `failure_factors` counts every column and DIFFERED. The harness kept the registered outputs.
+  - The other six reproduced.
+  - `build_stats_figures.py` reads them too, but no figure had been rebuilt since.
+- **Repaired.**
+  - Both tables are restored byte-identical from the snapshot. The re-run copies are kept in
+    `results/verification/rerun_outputs/d37_per_sample_20261007/`.
+  - All four per-sample tables are now declared outputs of their steps.
+  - The seven reading steps are re-run on the restored tables (see `docs/VERIFICATION_RERUN.md`).
+- **The sweep that followed.** Every file in `results/` was compared with the snapshot. Ten differed:
+  - three R console logs;
+  - six JSONs the harness classes REPRODUCED or REPRODUCED + NEW FIELDS;
+  - one real overwrite, D38.
+
+## D38 · The repaired genuine-DWLS run wrote its estimates over the registered ones
+
+**Found 2026-10-07 ~19:55 by the sweep above.**
+
+- **What happened.**
+  - `remeasure_dwls.py` wrote its estimates to `results/estimates/ivygap_dwls_genuine.csv` whatever `--out` said.
+  - The repaired run (`--out results/repaired/ivygap_dwls_genuine_rescaled.json`, 07:38) therefore replaced the
+    registered estimates with the rescaled solve: the 73 samples that had failed in quadprog (584 NaN cells) gained
+    values.
+- **Reach: none.**
+  - The three scripts that read `results/estimates/ivygap_*.csv` (`method_completeness`, `uncertainty_conformal`,
+    `cdseq_matched_comparison`) are not verification steps and had not run since.
+  - `evaluation_matrix` reads the repaired report, not this file.
+- **Repaired.**
+  - The registered estimates are restored byte-identical from the snapshot.
+  - The repaired estimates are at `results/repaired/ivygap_dwls_genuine_rescaled.csv`. The repaired report gains
+    `estimates_now_at` and `estimates_note`; no other field changed.
+  - The overwritten state is kept in `results/verification/rerun_outputs/d38_dwls_estimates_20261007/`.
+- **Fixed.** `remeasure_dwls.py` writes the registered path only on its default run, and otherwise beside `--out`.
+  `remeasure_method.py` does the same, and treats an `--e2-s2` ablation as non-default.
+
+**The lesson of D36-D38.** Three overwrites in one day had one shape: a script wrote a shared or registered path that
+its caller never declared. The harness now declares every file the TCGA and extension steps write. A whole-tree
+comparison with the snapshot is the check that found the third.
 

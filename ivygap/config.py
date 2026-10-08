@@ -298,12 +298,14 @@ R_SOCKET_CLUSTER_CORES: int | None = None
 
 RANDOM_SEED = 0
 
-# REPAIRED METHODS (docs/METHOD_REPAIRS.md; OPEN_DEFECTS D31, D32). Off by default so that the 2026-10-06
-# verification re-run reproduces the archived results with the code that made them. A repaired run sets
-# IVYGAP_REPAIRED=1 in its environment and writes under versioned paths; the registered artefacts are never
-# overwritten. The R bridges read the same variable.
+# REPAIRED METHODS (docs/METHOD_REPAIRS.md; OPEN_DEFECTS D31, D32, D35). ON by default since 2026-10-07 (user: "Yes,
+# switch the defaults", once the verification re-run had reproduced the archived results with the code that made them):
+# the repaired DWLS paths, and the genuine DWLS, BayesPrism and quanTIseq packages run to completion with no time budget
+# (deconv/r_bridge.py), so no fallback depends on the clock. IVYGAP_REPAIRED=0 restores the registered code path and
+# budgets; scripts/verify_rerun.py sets it, so a verification re-run still reproduces the archived results. The registered
+# artefacts are never overwritten. The R bridges read the same variable.
 import os as _os                                                      # noqa: E402
-REPAIRED_METHODS = _os.environ.get("IVYGAP_REPAIRED", "0") == "1"
+REPAIRED_METHODS = _os.environ.get("IVYGAP_REPAIRED", "1") == "1"
 
 # Gene-space construction
 MIN_GENES_SHARED = 500              # abort if bulk and signature overlap less than this

@@ -175,9 +175,10 @@ signature <- signature[shared, , drop = FALSE]
 # the first step failed on 73 of 122 samples as run and on 0 of 122 rescaled; where both
 # solve, full solutions agree to 3e-16 (tests/test_dwls_conditioning.py).
 #
-# Applied when IVYGAP_REPAIRED=1 (ivygap/config.py REPAIRED_METHODS); off by default until the 2026-10-06
-# verification re-run has reproduced the archived results with the code that made them.
-if (identical(Sys.getenv("IVYGAP_REPAIRED", "0"), "1")) {
+# Applied unless IVYGAP_REPAIRED=0 (ivygap/config.py REPAIRED_METHODS): on by default since 2026-10-07, after the
+# verification re-run had reproduced the archived results with the code that made them. IVYGAP_REPAIRED=0 gives the
+# registered code path, which scripts/verify_rerun.py uses.
+if (identical(Sys.getenv("IVYGAP_REPAIRED", "1"), "1")) {
   dwls_scale <- max(signature)
   signature <- signature / dwls_scale
   bulk_mat <- bulk_mat / dwls_scale

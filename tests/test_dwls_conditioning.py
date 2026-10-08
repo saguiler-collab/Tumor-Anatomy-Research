@@ -73,7 +73,7 @@ def test_quadprog_failure_is_real_and_rescaling_removes_it_without_changing_any_
 def test_the_bridge_applies_the_rescaling():
     src = (ROOT / "R" / "run_dwls.R").read_text()
     assert "signature <- signature / dwls_scale" in src and "bulk_mat <- bulk_mat / dwls_scale" in src
-    assert 'Sys.getenv("IVYGAP_REPAIRED", "0"), "1"' in src           # opt-in until the verification finishes
+    assert 'Sys.getenv("IVYGAP_REPAIRED", "1"), "1"' in src           # on by default; IVYGAP_REPAIRED=0 = registered
 
 
 def test_repaired_reimplementation_reproduces_the_package_given_its_dampening_constant(monkeypatch):

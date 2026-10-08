@@ -15,6 +15,8 @@ and be measuring nothing.
 
 from __future__ import annotations
 
+import re
+
 from pathlib import Path
 
 import numpy as np
@@ -501,9 +503,11 @@ def test_implementation_disclosure_names_every_python_reimplementation(
             assert rec["fallback_reason"], f"{tool} gives no reason for running as Python"
             continue
 
-        assert rec["implementation"] in (
-            "python-reimplementation", "R:MuSiC", "R:DWLS", "R:BisqueRNA", "R:SCDC")
-        if rec["implementation"] == "python-reimplementation":
+        # A repaired reimplementation names its variant in brackets, e.g. "python-reimplementation (published
+        # dampening)" (OPEN_DEFECTS D32; on by default since 2026-10-07). It still never reads as the package.
+        python = re.fullmatch(r"python-reimplementation( \([a-z ]+\))?", rec["implementation"]) is not None
+        assert python or rec["implementation"] in ("R:MuSiC", "R:DWLS", "R:BisqueRNA", "R:SCDC"), rec["implementation"]
+        if python:
             assert rec["fallback_reason"], \
                 f"{tool} fell back to Python without recording why"
 

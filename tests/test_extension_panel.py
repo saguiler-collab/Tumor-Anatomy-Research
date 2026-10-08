@@ -78,3 +78,18 @@ def test_every_extension_method_carries_a_verified_doi():
     # or article number). The DOI is what a reader can resolve; it is required.
     for name, spec in EXTENSION_SPECS.items():
         assert re.fullmatch(r"10\.\d{4,9}/\S+", spec.doi or ""), f"{name}: missing or malformed DOI"
+
+
+def test_a_gene_subset_fit_never_writes_the_shared_per_sample_file(monkeypatch):
+    # D36: Extension E3 called extension_tcga.run with genes_keep and merged its half-gene unmix fits over the
+    # registered all-gene rows of results/extension/estimates_full*_extension.csv. A subset fit is not the registered fit.
+    import sys
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import extension_tcga                                                    # noqa: PLC0415
+    for v in ("IVYGAP_UNMIX_SHIFT", "IVYGAP_UNMIX_POWER"):
+        monkeypatch.delenv(v, raising=False)
+    assert extension_tcga.shares_per_sample_file(None)
+    assert not extension_tcga.shares_per_sample_file(["GFAP", "OLIG2"])
+    assert not extension_tcga.shares_per_sample_file([])
+    monkeypatch.setenv("IVYGAP_UNMIX_SHIFT", "1")
+    assert not extension_tcga.shares_per_sample_file(None)

@@ -156,6 +156,22 @@
       <td>Puchalski RB, et al. Science 360:660-663 (2018), doi:10.1126/science.aaf2666</td>
     </tr>
     <tr>
+      <td>D32</td>
+      <td>Flow-cytometry immune composition of brain tumours by IDH status (Klemm et al. 2020, Figure 1F)</td>
+      <td>Cell (Elsevier); article PDF and supplements placed locally by the user (gitignored); doi:10.1016/j.cell.2020.05.007 -- Figure 1F (PDF page 3); Table S1 (mmc1.pdf, cohort); Table S2 (mmc2.pdf, gating definitions)</td>
+      <td>article PDF sha256 df824704317a2f84ec9a49e9d8ebff648789cd59b95ce6800f93f58f612b6503</td>
+      <td>Direct check of the lymphoid truth by IDH status (prespecified/klemm_t_vs_b.md): cohort-mean T, B and NK as % of CD45+ in 17 IDH-mutant and 40 IDH-wildtype gliomas, measured from the figure's vector geometry and validated against two numbers printed in the paper.</td>
+      <td>Klemm F, et al. Cell 181:1643-1660 (2020), doi:10.1016/j.cell.2020.05.007</td>
+    </tr>
+    <tr>
+      <td>D33</td>
+      <td>CPTAC glioblastoma: bulk RNA-seq and single-nucleus RNA-seq from the same cryopulverised tissue (18 tumours), plus methylation</td>
+      <td>NCI Genomic Data Commons, project CPTAC-3 (open access); GDC CPTAC-3, primary site Brain; the 18 cases with snRNA-seq (list in data/external/cptac_gbm/MANIFEST.json): CellRanger filtered counts (17), GDC Seurat tables (17), STAR counts (18), methylation beta values (18); per case, the tumor_purity and tumor_ploidy of the one open AscatNGS whole-genome 'Allele-specific Copy Number Segment' record (18), and the percent_tumor_nuclei of the analysed samples' slides (24 slides)</td>
+      <td>70 files, md5-verified at download (2026-10-06) against GDC's records; AscatNGS and slide fields read from the GDC API on 2026-10-06 (data release in wgs_ascat_purity.provenance.json)</td>
+      <td>The first per-sample, same-tissue truth in the study (prespecified/cptac_per_sample_truth.md): each method's bulk estimate against single-nucleus composition from the same material. Its whole-genome purity is the per-sample DNA truth of the secondary analysis (prespecified/cptac_wgs_purity_secondary.md).</td>
+      <td>Wang LB, et al. Cancer Cell 39:509-528 (2021), doi:10.1016/j.ccell.2021.01.006</td>
+    </tr>
+    <tr>
       <td>D19</td>
       <td>GBMDeconvoluteR marker sets (Ajaib immune, Ruiz-Moreno level-3 immune, Neftel four-state) and Ajaib's published imaging-mass-cytometry correlations</td>
       <td>GBMDeconvoluteR source repository (vendored); Ajaib et al. 2023 paper; Ajaib_et_al_2022_GBM_Immune_markers.rds, Moreno_et_al_2022_lvl3_immune_markers.rds, Neftel_et_al_2019_four_state_neoplastic_markers.rds</td>
@@ -186,6 +202,14 @@
       <td>BayesPrism 2.2.3 as installed (packageVersion, read 2026-10-01); source vendored in pipeline_packages / repos/BayesPrism-main</td>
       <td>The authors' own gene filtering in the authors'-workflow BayesPrism runs on TCGA (post-registration extension).</td>
       <td>Chu T, et al. Nat Cancer 3:505-517 (2022), doi:10.1038/s43018-022-00356-3</td>
+    </tr>
+    <tr>
+      <td>D31</td>
+      <td>GIMiCC reference libraries (glioma-specific hierarchical DNA-methylation deconvolution)</td>
+      <td>Bioconductor ExperimentHub; github.com/SalasLab/GIMiCC; EH9483 (GIMiCC_Library.rda, 15 layer libraries); EH9482 (Capper_example_betas.rda, the reproduction control)</td>
+      <td>GIMiCC 0.99.1 @26cb8a15 (the user's copy, byte-identical); ExperimentHub cache sha256 EH9483 bdfbf2849ed6513c3afa84560f24b4b49d74245e20cd2f2a15ea59395a0bdb14, EH9482 47da7b0f14925d16fe17ac2e3fc975083e663142e1026ec0d00ab7dcc030e140 (both added 2024-04-02)</td>
+      <td>The second methylation truth for the lymphoid ordering (post-registration, prespecified/gimicc_truth_confirmation.md): GIMiCC run on the TCGA 450K betas (D07/D08), restricted to its 4,022 library CpGs by scripts/extract_gimicc_cpgs.py.</td>
+      <td>Pike SC, et al. Acta Neuropathol Commun 12:170 (2024), doi:10.1186/s40478-024-01874-0</td>
     </tr>
     <tr>
       <td>D23</td>

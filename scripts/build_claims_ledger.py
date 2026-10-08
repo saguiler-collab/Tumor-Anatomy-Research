@@ -43,6 +43,9 @@ def verification(artefact: str) -> tuple[str, str]:
             if o.split("=>")[0] != artefact and o.split("=>")[-1] != artefact:
                 continue
             rec = state.get(st["id"])
+            if rec is None and st["id"] in vr.SUPPLEMENTARY:
+                return "SAVED FIT", (f"step `{st['id']}`: {vr.SUPPLEMENTARY[st['id']]}; the re-fit was not re-run, by "
+                                     f"decision (docs/CORE_CLOSEOUT.md)")
             if rec is None:
                 return "PENDING", f"step `{st['id']}` ({st['tier']}) not yet re-run"
             res = vr._reclassify(vr._recompare_moved(st["id"], o, rec["outputs"].get(o, {})))
@@ -64,9 +67,10 @@ def claim_status(arts: list[str]) -> str:
         return "NOT VERIFIED"
     if any(s in ("PENDING", "FIRST RUN") for s in ss):
         return "PARTLY VERIFIED (re-runs pending)"
+    saved = " (some inputs from saved fits, not re-run by decision)" if "SAVED FIT" in ss else ""
     if any(s == "DIFFERS, EXPLAINED" for s in ss):
-        return "VERIFIED, with explained differences"
-    return "VERIFIED"
+        return "VERIFIED, with explained differences" + saved
+    return "VERIFIED" + saved
 
 
 def build() -> list[dict]:
@@ -286,7 +290,9 @@ def main() -> int:
          "verification finishes.*", "",
          "**How to read it.** VERIFIED: every artefact behind the claim was re-produced from code and matched the "
          "registered one (or added only fields or rows). VERIFIED, with explained differences: a difference occurred "
-         "and its cause is diagnosed and recorded. PARTLY VERIFIED: some artefacts await their re-run. Prior work was "
+         "and its cause is diagnosed and recorded. 'Some inputs from saved fits': a supplementary re-fit was not re-run by "
+         "decision (docs/CORE_CLOSEOUT.md), and the statistics computed from its saved fits reproduced. PARTLY VERIFIED: "
+         "some artefacts await their re-run. Prior work was "
          "checked by targeted searches on 2026-10-07 (queries at the end); 'not found' means not found, not proven "
          "absent.", "", "| claim | kind | verification |", "|---|---|---|"]
     for c in claims:

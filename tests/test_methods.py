@@ -327,9 +327,17 @@ def test_r_methods_have_a_bounded_wall_clock_budget():
     buildSignatureMatrixMAST without completing, and its cost is dominated by a
     condition-number search that neither subsampling nor changing the DE method bounds.
     """
+    from ivygap import config
     from ivygap.deconv import r_bridge
 
-    assert r_bridge.timeout_for("dwls") <= r_bridge.DEFAULT_R_TIMEOUT
+    # The registered code path (IVYGAP_REPAIRED=0) keeps the bounded budget the registered runs used.
+    assert r_bridge.REGISTERED_R_METHOD_TIMEOUTS["dwls"] <= r_bridge.DEFAULT_R_TIMEOUT
+    # With the repairs on (the default since 2026-10-07), the genuine packages that were cut off at a budget run to
+    # completion by a declared rule, so the implementation no longer depends on the clock (OPEN_DEFECTS D35).
+    for m in ("dwls", "bayesprism", "quantiseq"):
+        expected = r_bridge.UNBUDGETED if config.REPAIRED_METHODS else r_bridge.REGISTERED_R_METHOD_TIMEOUTS.get(
+            m, r_bridge.DEFAULT_R_TIMEOUT)
+        assert r_bridge.timeout_for(m) == expected
     # the budget must clear the methods measured to complete, by a wide margin
     for method, observed_seconds in (("music", 95), ("scdc", 90), ("bisque", 30)):
         assert r_bridge.timeout_for(method) > observed_seconds * 5
@@ -361,7 +369,7 @@ def test_a_timeout_is_reported_as_a_budget_not_a_method_failure():
                   f"R package and was stopped; this is a wall-clock limit, not a "
                   f"failure of the method")
     assert "budget" in reason and "not a failure of the method" in reason
-    assert str(2400) in reason
+    assert str(r_bridge.timeout_for("dwls")) in reason        # 2400 on the registered path; unbudgeted when repaired
 
 
 def test_a_disabled_r_path_is_disclosed_not_hidden():

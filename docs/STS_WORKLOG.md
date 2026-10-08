@@ -2,7 +2,7 @@
 
 Started 2026-09-30 when the project moved from CJSJ to **Regeneron STS**. Maintained so that
 nothing is lost when the conversation is compacted. **Update it after every major result.**
-Last updated: 2026-10-07 08:45 EDT (§2.33, §5).
+Last updated: 2026-10-07 21:00 EDT (§2.37 AI-use record; §2.38 the core close-out: D36-D38, repairs default, verification complete, results frozen, 8/8 core PASS; §5).
 
 ---
 
@@ -1262,6 +1262,92 @@ research that will be critical for developing deconvolution methods that are opt
   run cached for the TCGA gene space. It may finish within its 2,400 s budget, where the registered run
   timed out. That would be a D35-class (cache and clock) difference, to be checked and explained.
 
+### 2.37 The AI-use record (2026-10-07 ~18:00-18:45)
+- **The Regeneron STS 2027 rules on generative AI were read** (Official Rules, Appendix 4, p.34; p.9; p.31).
+  - AI-written code is allowed, with an explicit statement of which code is AI-generated and a log of the
+    prompts.
+  - The research report, the application answers, the conclusions and the bibliography must be the student's own.
+- **Standing rule from now on:** the AI does not draft report, abstract, application, conclusion or bibliography text
+  for the user. The prose documents in this repository were drafted by the AI, so they are not to be copied into
+  competition materials.
+- **New: `scripts/export_ai_log.py`.** It writes to `~/STS_AI_LOG/`, outside the repository and never committed:
+  - `PROMPT_LOG.md`: every typed prompt and every answer to an AI question, verbatim, US Eastern;
+  - `AI_CONTRIBUTION_INVENTORY.md`: the AI's tool calls and edited files per session, and AI co-authored commits
+    from git;
+  - checksummed raw copies of the session transcripts.
+  - The first export holds 3 sessions (2026-08-23 to 2026-10-07): 230 prompts, 4 answered questions; 218 of 219
+    commits carry the AI co-author trailer.
+- **Transcript retention.** Claude Code deletes transcripts after `cleanupPeriodDays` (default 30). The 2026-09-02
+  session was 34 days old when it was copied. Re-run the script to refresh; it never replaces a copy with a smaller
+  one.
+
+### 2.38 Completing the project (2026-10-07 ~19:00 onward; user: "you completing the project NOW so I can start writing the report")
+- **Verification, finished early by decision.** The heavy tier now stops when it reaches `extension_tcga`, after
+  `tcga_lgg_h5ad` (`scratchpad/stop_after_lgg_h5ad.sh`, replacing the cdseq stop).
+  - `extension_tcga` joins `SUPPLEMENTARY` in `verify_rerun.py`: its statistics reproduced from the saved fits in the
+    fast tier (`extension_agreement`, `bayesprism_verdict`). The re-fit would take hours.
+  - Run it later with `--only extension_tcga`; naming a supplementary step in `--only` now runs it.
+  - `verify_rerun.py` sets `IVYGAP_REPAIRED=0` by default, so every re-run step uses the registered code path.
+- **D36 found and fixed.** E3's gene-subset fits had overwritten the registered DESeq2 `unmix` rows of
+  `results/extension/estimates_full{,_lgg}_extension.csv`.
+  - Restored byte-identical from the 2026-10-06 snapshot.
+  - Nothing downstream had read them; both readers' outputs equal the snapshot.
+  - Guarded by `extension_tcga.shares_per_sample_file`, with a test.
+- **The repairs are now the default** (user decision, 2026-10-07: "Yes, switch the defaults").
+  - `config.REPAIRED_METHODS` and `R/run_dwls.R` default to on.
+  - `r_bridge` runs genuine DWLS, BayesPrism and quanTIseq unbudgeted when repaired.
+  - The registered path is `IVYGAP_REPAIRED=0`, with `REGISTERED_R_METHOD_TIMEOUTS`.
+  - Tests updated: `test_methods` (both budget regimes), `test_dwls_conditioning` (default on).
+  - Docs updated: METHOD_REPAIRS, OPEN_DEFECTS (D31, D32, D35), CLAUDE.md.
+- **A side effect of tonight's harness change, found by the full pytest and fixed.**
+  - `verify_rerun.py` first set `IVYGAP_REPAIRED=0` in `os.environ` at import. The suite imports it, and
+    `test_data.py` reloads `config`, so every later test ran with the repairs off.
+  - One budget test caught the mismatch (1 failed, 472 passed, 1 skipped, 33 min).
+  - Now `STEP_ENV` is passed to each step's subprocess, so importing the harness changes nothing. It is tested in
+    `test_verify_rerun.py`, and the failing combination (test_data + test_methods + test_verify_rerun) passes,
+    59/59.
+- **Verification result:** `tcga_lgg_h5ad` REPRODUCED both outputs exactly (7,992 s). The heavy tier stopped at
+  `extension_tcga` before it wrote anything (`results/extension/` file times unchanged). Fast pass 3 started 19:45.
+- **"Core" defined (user):** `docs/CORE_CLOSEOUT.md` sets out eight items and their evidence;
+  `scripts/check_core_closeout.py` reads it (negative controls in `tests/test_core_closeout.py`).
+- **The results freeze:** `scripts/freeze_results.py` writes `docs/RESULTS_FREEZE.md` and
+  `docs/results_freeze_manifest.tsv`. It runs after every figure and table has been regenerated from the frozen run.
+- **New: `docs/SOFTWARE_INVENTORY.md`** (`scripts/build_software_inventory.py`): 23 R packages, each with its
+  installed version and source (GitHub packages to the commit), 13 Python packages and 3 vendored folders.
+  - It contains no citations. The user asked for an annotated bibliography; the AI may not write one under the STS
+    2027 rules (p.31, p.34). The inventory says what to look up: `citation("pkg")` in R.
+- **`extension_tcga`'s outputs** now include the 4 shared per-sample CSVs, so a later re-fit is compared and
+  restored (D36's lesson).
+- **D37 and D38: two more undeclared overwrites, found and restored** (OPEN_DEFECTS).
+  - **D37:** fast pass 3 flagged `failure_factors` (12 -> 13 methods). The TCGA frozen re-runs had rewritten
+    `absolute_purity_per_sample{,_lgg}.csv`, which the harness did not declare. The copies add a
+    `bayesian_hierarchical` column; shared columns are identical.
+  - **D38:** a whole-tree comparison of `results/` with the snapshot found that the repaired genuine-DWLS run
+    (07:38) had written over `results/estimates/ivygap_dwls_genuine.csv`. No reader had run since.
+  - Both are restored byte-identical, with the overwritten copies kept. The writers are fixed, the outputs
+    declared, and the 7 steps that read the purity tables are re-run on the restored inputs.
+  - The other 9 differing files are 3 R logs and 6 JSONs the harness classes REPRODUCED or NEW FIELDS.
+- **The verification is complete (20:12, report rebuilt 20:20).**
+  - All 69 core steps were re-run; none failed. 61 outputs REPRODUCED, 2 REPRODUCED + NEW FIELDS, 2 REPRODUCED +
+    NEW ROWS, 5 NEW (each reproduced its first run in `new_outputs_baseline`), 1 AGREES, 2 PASSED.
+  - 6 DIFFERS, all explained and checked difference by difference: `registered_pipeline` 34 (D35),
+    `tcga_*_frozen` 13 + 13 (D20 additions), `anatomy_vs_biology` 1 (94 minutes).
+  - `failure_factors` reproduces once D37 is restored.
+  - Not re-run, by decision: 6 supplementary re-fits.
+- **A harness bug fixed:** `compare_csv` called an identical table DIFFERS when the same cell was blank on both
+  sides, because the relative scale of a NaN was NaN. It now uses `fmax`, with a test in which a moved blank still
+  differs.
+- **Freeze and close-out.** All 16 figures, S1-S9, the figure index, both inventories, the manuscript facts, the
+  ledger (all 8 claims VERIFIED) and the audit (8 PRECEDES, GIMiCC disclosed) were regenerated from the frozen run.
+  - `docs/RESULTS_FREEZE.md` records 677 files (364.2 MB). R console logs are excluded: the tests rewrite them.
+  - The tests change no frozen file (checked before and after the run).
+  - `check_core_closeout.py`: 8/8 PASS.
+- **AI-use log.** It now includes the student's feedback when declining a proposed action (1 note). Tool output
+  that only quotes such a notice is not counted, with a test.
+- **The figure index records provenance per figure:** the drawing script and function, the Python and matplotlib
+  versions, the render date, and that the plotting code is AI-generated. The STS rules require graphics to be
+  credited and AI-made ones marked.
+
 ## 3 · Corrections made this session (do not repeat)
 - **The §4.10 extension table printed B-above-T shares without denominators**, against Appendix D's
   own rule. On the raw/X arm most methods return no lymphocytes for most samples: FARDEEP's "100%"
@@ -1415,6 +1501,33 @@ METHOD_LIMITATIONS (§6), SUBMISSION_CHECKLIST, FIGURES, supplementary S5/S6}`, 
 docs, `ivygap/{data/reference.py, deconv/r_bridge.py, bench/run_benchmark.py}`, several scripts/tests.
 
 ## 5 · Next, in order
+**(2026-10-07 21:00) Current state, read this first:**
+- **Core close-out: 8/8 PASS** (`python3 scripts/check_core_closeout.py`; defined in `docs/CORE_CLOSEOUT.md`).
+  - The results are frozen (`docs/RESULTS_FREEZE.md`; `--freeze` reports 0 changed).
+  - Every paper-facing figure and table is regenerated from the frozen run.
+  - Commit and push follow this entry.
+- **Running in the background after the commit:** `verify_rerun.py --tier heavy --only extension_tcga`, then
+  `--report`. It changes no frozen file: its outputs are declared, and `keep_registered` restores any that differ.
+  Afterwards run `check_core_closeout.py --freeze` and commit the report.
+- **The user writes the report.** The AI drafts no report, abstract, application or bibliography text (§2.37).
+  - Sources: `docs/DATA_INVENTORY.md` and `docs/SOFTWARE_INVENTORY.md`.
+  - Figures and their provenance: `docs/FIGURES.md`.
+  - Verified claims: `docs/CLAIMS_LEDGER.md`.
+
+**(2026-10-07 19:30) Earlier state:**
+- **The research is complete and frozen.** No analysis is pending. The user is writing the report, and the AI does
+  not draft its prose (§2.37).
+- **Verification:**
+  - The heavy tier is finishing `tcga_lgg_h5ad`. It stops at `extension_tcga`; fast pass 3 and `--report` then run
+    automatically (`scratchpad/finish_lane2.sh`).
+  - When it ends: regenerate `docs/CLAIMS_LEDGER.md` and `docs/REGISTRATION_AUDIT.md`, run both doc checkers, and
+    commit the report as a follow-up.
+- **The repairs are the default; D36 is fixed** (§2.38). The full pytest runs after the switch.
+- **Optional, not needed for the write-up:**
+  - `verify_rerun.py --only extension_tcga` (hours);
+  - SCDC ENSEMBLE's second reference (memory-heavy);
+  - the CPTAC authors' curated labels.
+
 **(2026-10-07 08:45) Current state, read this first:**
 - **All method repairs DONE** (§2.33; `docs/METHOD_REPAIRS.md`, `docs/EVALUATION_MATRIX.md`).
   - Every previously broken or missing method-arm has estimates.

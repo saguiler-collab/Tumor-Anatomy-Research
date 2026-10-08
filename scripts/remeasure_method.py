@@ -188,6 +188,7 @@ def main() -> int:
                          "settings on the inputs built once; writes only under "
                          "results/identifiability/.")
     args = ap.parse_args()
+    out_given = args.out is not None          # the shared estimate paths are for default runs only (D38)
     M = args.method
     # DO NOT OVERWRITE A SUCCESS WITH A FAILURE. On 2026-09-19 this script wrote a
     # watchdog-killed failure record over a valid measurement (bayesprism acs 0.8154) and
@@ -538,8 +539,12 @@ def main() -> int:
         # Extension estimates are kept OUT of results/estimates/: method_completeness.py and
         # cdseq_matched_comparison.py glob `ivygap_*.csv` there, and an extension method must
         # never be swept into a registered-panel analysis.
-        out_csv = Path(f"results/extension/ivygap_{M}.csv" if is_extension(M)
-                       else f"results/estimates/ivygap_{M}_genuine.csv")
+        # ... and a run that names its own report (--out), or an ablation, keeps its estimates beside that report:
+        # until 2026-10-07 every run wrote the shared paths, which is how a repaired run overwrote registered
+        # estimates (OPEN_DEFECTS D38).
+        out_csv = (Path(args.out).with_suffix(".csv") if (out_given or args.e2_s2) else
+                   Path(f"results/extension/ivygap_{M}.csv" if is_extension(M)
+                        else f"results/estimates/ivygap_{M}_genuine.csv"))
         out_csv.parent.mkdir(parents=True, exist_ok=True)
         frame.to_csv(out_csv)
 
