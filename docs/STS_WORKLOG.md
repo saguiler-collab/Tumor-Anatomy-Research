@@ -2,7 +2,7 @@
 
 Started 2026-09-30 when the project moved from CJSJ to **Regeneron STS**. Maintained so that
 nothing is lost when the conversation is compacted. **Update it after every major result.**
-Last updated: 2026-10-08 01:00 EDT (§5: step 7 reproduced, step 8 running, D39; §2.37 AI-use record; §2.38 the core close-out: D36-D38, repairs default, verification complete, results frozen, 8/8 core PASS; §5).
+Last updated: 2026-10-08 08:45 EDT (§5: verification complete, 75/75 steps; D39 open for the user; §2.37 AI-use record; §2.38 the core close-out: D36-D38, repairs default, verification complete, results frozen, 8/8 core PASS; §5).
 
 ---
 
@@ -1501,6 +1501,30 @@ METHOD_LIMITATIONS (§6), SUBMISSION_CHECKLIST, FIGURES, supplementary S5/S6}`, 
 docs, `ivygap/{data/reference.py, deconv/r_bridge.py, bench/run_benchmark.py}`, several scripts/tests.
 
 ## 5 · Next, in order
+**(2026-10-08 08:45) Everything that was left has run. The verification is complete: 75 of 75 steps re-run.**
+- **Report totals.** 74 REPRODUCED; 4 REPRODUCED + NEW ROWS; 2 REPRODUCED + NEW FIELDS; 5 NEW (each reproduced its
+  first run); 2 PASSED; 1 AGREES.
+  - 9 DIFFERS, every one explained and checked difference by difference: D35 (34), D20 additions (13 + 13), the
+    94-minute correction (1), D39 (107 + 90), and ReCIDE's path and console fields (2).
+  - No step failed; no step is unrun.
+- **The supplementary re-fits.**
+  - `cdseq_anatomic` (6 outputs) and `unmix_s2_anatomy`: REPRODUCED.
+  - `recide_anatomic`: ACS, CI, null p, pairs and estimates (1,098 cells) identical. It needed a retry: my D38 fix
+    returned a relative path (fixed, `ea07427`). The retry took 5.6 h, slowed by the Mac sleeping and Low Power Mode,
+    which the user turned off.
+  - Both `reference_sensitivity` runs: D39 (superseded marker space). Registered values stand, and the question to
+    the user is open.
+- **The extension panel re-fit reproduced all four arms.** It closes the raw/X per-sample gap; the added rows are in
+  `rerun_outputs/`.
+- **Harness fixes found by these runs:**
+  - CSV comparison ignores row order (keyed rows);
+  - `explanation_check` reads `new=>registered` outputs.
+  Both are tested.
+- Ledger 8/8 VERIFIED; audit 8 PRECEDES, 1 disclosed. The freeze held after every step (0 changed).
+- Full pytest: 483 passed, 1 skipped.
+- **Open user decision:** whether the write-up quotes D39's registered-gene-space numbers (a versioned post-freeze
+  change).
+
 **(2026-10-08 00:20) Step 7 done; step 8 running:**
 - **The `extension_tcga` re-fit reproduced the registered extension panel, all four arms** (exit 0, 11,226 s).
   - The 4 summaries are REPRODUCED.

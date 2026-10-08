@@ -492,6 +492,7 @@ EXPLAINED_PATTERNS = {
                                     r"n_ranks_moved|largest_rank_move",
     "reference_sensitivity_darmanis": r"arm_a_gbmap|arm_b_alternative|n_shared_genes|spearman_between_orderings|"
                                       r"n_ranks_moved|largest_rank_move",
+    "recide_anatomic": r"differs: (estimates|r_stdout_tail):",
 }
 #: Where a step's re-run copies were moved by hand rather than by keep_registered.
 MOVED_DIRS = {"registered_pipeline": "registered_pipeline_20261007"}
@@ -533,6 +534,12 @@ EXPLAINED = {
         "the same cause as reference_sensitivity_neftel: the archived artefact used the superseded 657-gene marker "
         "space; on the registered 651-gene space (647 shared with Darmanis, against 651) the ordering agreement falls "
         "from 0.3655 to 0.0098 (ranks moved 10 -> 12, largest move 7.5 -> 10). OPEN_DEFECTS D39"),
+    "recide_anatomic": (
+        "no result differs. Two fields name things, not results: `estimates`, the path of the estimates file, which a "
+        "run with its own --out now keeps beside its report (D38's rule, so the registered ivygap_recide.csv is never "
+        "overwritten; the re-run estimates equal the registered ones); and `r_stdout_tail`, the last lines of "
+        "ReCIDE's console progress messages, which vary between runs. ACS, CI, null p, pairs, tumours and unestimated "
+        "samples reproduce exactly"),
 }
 
 
@@ -548,7 +555,11 @@ def explanation_check(sid: str, outputs: list[str]) -> str:
     for o in outputs:
         if not o.endswith(".json"):
             continue
-        new_p, old_p = base / o, snapshot_dir() / o
+        if "=>" in o:                                   # written beside the registered file: the re-run copy is the
+            left, right = o.split("=>")                 # left path, the registered one the right
+            new_p, old_p = RES / left, snapshot_dir() / right
+        else:
+            new_p, old_p = base / o, snapshot_dir() / o
         if not (new_p.exists() and old_p.exists()):
             return f"cannot check: re-run copy of {o} not found"
         d = compare(json.loads(old_p.read_text()), json.loads(new_p.read_text()), 1e-9, DEFAULT_IGNORE)

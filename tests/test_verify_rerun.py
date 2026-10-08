@@ -176,3 +176,19 @@ def test_the_same_rows_in_another_order_reproduce_but_a_changed_value_still_diff
     assert vr.compare_csv(a, b)["status"] == "REPRODUCED"
     assert vr.compare_csv(a, c)["status"] == "DIFFERS"
 
+
+def test_the_explanation_check_reads_outputs_written_beside_the_registered_file(tmp_path, monkeypatch):
+    # "new=>registered" outputs (ReCIDE, unmix S2) keep the re-run copy at the left path; the check must compare it
+    # with the registered file at the right path, and still catch a difference outside the stated cause.
+    res, snap = tmp_path / "results", tmp_path / "snap"
+    (res / "verification" / "rerun_outputs").mkdir(parents=True); (snap / "extension").mkdir(parents=True)
+    (snap / "extension" / "r.json").write_text('{"acs": 0.8, "estimates": "a.csv"}')
+    (res / "verification" / "rerun_outputs" / "r.json").write_text('{"acs": 0.8, "estimates": "b.csv"}')
+    monkeypatch.setattr(vr, "RES", res); monkeypatch.setattr(vr, "VDIR", res / "verification")
+    monkeypatch.setattr(vr, "snapshot_dir", lambda: snap)
+    monkeypatch.setitem(vr.EXPLAINED_PATTERNS, "s", r"differs: estimates:")
+    out = "verification/rerun_outputs/r.json=>extension/r.json"
+    assert vr.explanation_check("s", [out]).startswith("checked: all 1")
+    (res / "verification" / "rerun_outputs" / "r.json").write_text('{"acs": 0.7, "estimates": "b.csv"}')
+    assert vr.explanation_check("s", [out]).startswith("UNEXPLAINED")
+
