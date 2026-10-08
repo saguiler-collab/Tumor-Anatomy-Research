@@ -188,7 +188,11 @@ STEPS = [
        # the registered file restored, instead of being changed unseen (D36)
        "extension/estimates_full_extension.csv", "extension/estimates_full_lgg_extension.csv",
        "extension/estimates_full_h5ad_extension.csv", "extension/estimates_full_lgg_h5ad_extension.csv"]),
-    S("cdseq_anatomic", "heavy", ["PY", sc("cdseq_anatomic.py")], ["cdseq_anatomic.json"]),
+    # cdseq_anatomic.py also writes its input and estimates under results/cdseq/: declared so a re-run cannot change
+    # them unseen (D36-D38; after the freeze, keep_frozen reverts any byte change)
+    S("cdseq_anatomic", "heavy", ["PY", sc("cdseq_anatomic.py")],
+      ["cdseq_anatomic.json", "cdseq/cdseq_input.csv", "cdseq/cdseq_T8_gep.csv", "cdseq/cdseq_T8_prop.csv",
+       "cdseq/estimates_gbm_marker_enrichment.csv", "cdseq/estimates_gbmap_profile_correlation.csv"]),
     S("reference_sensitivity_neftel", "heavy", ["PY", sc("reference_sensitivity.py"), "--baseline", "gbmap_linear",
       "--reference", "neftel"], ["reference_sensitivity_gbmap_linear_vs_neftel.json"]),
     S("reference_sensitivity_darmanis", "heavy", ["PY", sc("reference_sensitivity.py"), "--baseline", "gbmap_linear",
@@ -294,6 +298,19 @@ def compare_csv(old: Path, new: Path) -> dict:
     if list(a.columns) != list(b.columns) or len(a) != len(b):
         keyed = _keyed_rows(a, b)
         return keyed or {"status": "DIFFERS", "why": f"shape/columns differ: {a.shape} vs {b.shape}"}
+    res = _compare_aligned(a, b)
+    if res["status"] == "DIFFERS":
+        # The same rows in another order are the same table: a merge that appends re-fitted methods reorders a shared
+        # per-sample file (found 2026-10-07 on extension/estimates_full_extension.csv, identical after sorting).
+        keyed = _keyed_rows(a, b)
+        if keyed and keyed["new_rows"] == 0 and not keyed["renamed_key_columns"]:
+            return {"status": "REPRODUCED", "why": "the same rows in a different order",
+                    "cells": int(a.select_dtypes("number").size)}
+    return res
+
+
+def _compare_aligned(a: pd.DataFrame, b: pd.DataFrame) -> dict:
+    """Two tables of the same shape, compared row by row in their stored order."""
     num = a.select_dtypes("number").columns
     txt = [c for c in a.columns if c not in num]
     if txt and not a[txt].astype(str).equals(b[txt].astype(str)):

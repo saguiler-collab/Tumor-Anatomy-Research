@@ -2,7 +2,7 @@
 
 Started 2026-09-30 when the project moved from CJSJ to **Regeneron STS**. Maintained so that
 nothing is lost when the conversation is compacted. **Update it after every major result.**
-Last updated: 2026-10-07 21:00 EDT (§2.37 AI-use record; §2.38 the core close-out: D36-D38, repairs default, verification complete, results frozen, 8/8 core PASS; §5).
+Last updated: 2026-10-07 21:40 EDT (§5: steps 7 and 8 running; §2.37 AI-use record; §2.38 the core close-out: D36-D38, repairs default, verification complete, results frozen, 8/8 core PASS; §5).
 
 ---
 
@@ -1501,7 +1501,26 @@ METHOD_LIMITATIONS (§6), SUBMISSION_CHECKLIST, FIGURES, supplementary S5/S6}`, 
 docs, `ivygap/{data/reference.py, deconv/r_bridge.py, bench/run_benchmark.py}`, several scripts/tests.
 
 ## 5 · Next, in order
-**(2026-10-07 21:00) Current state, read this first:**
+**(2026-10-07 21:40) What is left is running (user: "Still run what's left to do"):**
+- **Step 7:** the `extension_tcga` re-fit, detached since 21:03 (`scratchpad/step7_extension.sh`). The GBM frozen arm
+  finished at 21:23; the LGG frozen arm and both donor-level arms follow (MIXTURE and ReCIDE are slow).
+- **Step 8, queued behind it** (`scratchpad/step8_supplementary.sh`): the five supplementary re-fits, one at a time:
+  `cdseq_anatomic`, `reference_sensitivity_neftel`, `reference_sensitivity_darmanis`, `unmix_s2_anatomy`,
+  `recide_anatomic`. Then report, ledger, audit and the freeze check (`/tmp/freeze_after_step8.log`).
+- **Guards for these runs.**
+  - `run_recide.py` writes its estimates beside `--out` (D38's rule).
+  - `cdseq_anatomic`'s five files under `results/cdseq/` are declared outputs.
+  - `keep_frozen` reverts byte changes to declared outputs.
+  - `results_snapshot_frozen_20261007/` holds a hash-verified copy of all 621 frozen results files, for anything
+    undeclared.
+- **When step 8 ends:**
+  - read `docs/VERIFICATION_RERUN.md`;
+  - if the freeze check lists changed files, record why, then restore them from the frozen copy;
+  - run `check_core_closeout.py` (8/8) and `--freeze` (0 changed);
+  - commit the report, ledger and audit.
+- Full pytest after the two fixes: 481 passed, 1 skipped.
+
+**(2026-10-07 21:00) Earlier state:**
 - **Core close-out: 8/8 PASS** (`python3 scripts/check_core_closeout.py`; defined in `docs/CORE_CLOSEOUT.md`).
   - The results are frozen (`docs/RESULTS_FREEZE.md`; `--freeze` reports 0 changed).
   - Every paper-facing figure and table is regenerated from the frozen run.

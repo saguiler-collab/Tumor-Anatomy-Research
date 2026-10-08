@@ -2995,7 +2995,9 @@ methods where the registered run had 12; the extra one was `bayesian_hierarchica
     `estimates_now_at` and `estimates_note`; no other field changed.
   - The overwritten state is kept in `results/verification/rerun_outputs/d38_dwls_estimates_20261007/`.
 - **Fixed.** `remeasure_dwls.py` writes the registered path only on its default run, and otherwise beside `--out`.
-  `remeasure_method.py` does the same, and treats an `--e2-s2` ablation as non-default.
+  `remeasure_method.py` does the same, and treats an `--e2-s2` ablation as non-default. `run_recide.py` does the
+  same (`estimates_path`, tested), before its verification re-run. `cdseq_anatomic`'s files under `results/cdseq/`
+  are now declared outputs.
 
 **The lesson of D36-D38.** Three overwrites in one day had one shape: a script wrote a shared or registered path that
 its caller never declared. The harness now declares every file the TCGA and extension steps write. A whole-tree

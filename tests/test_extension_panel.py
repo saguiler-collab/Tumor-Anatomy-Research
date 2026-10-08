@@ -93,3 +93,15 @@ def test_a_gene_subset_fit_never_writes_the_shared_per_sample_file(monkeypatch):
     assert not extension_tcga.shares_per_sample_file([])
     monkeypatch.setenv("IVYGAP_UNMIX_SHIFT", "1")
     assert not extension_tcga.shares_per_sample_file(None)
+
+
+def test_a_recide_run_with_its_own_report_keeps_its_estimates_beside_it():
+    # D38's rule: only the default run writes the shared estimates file results/extension/ivygap_recide.csv.
+    import sys
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import run_recide                                                        # noqa: PLC0415
+    shared = run_recide.estimates_path(Path(run_recide.DEFAULT_OUT))
+    assert shared.name == "ivygap_recide.csv" and shared.parent.name == "extension"
+    rerun = run_recide.estimates_path(Path("results/verification/rerun_outputs/recide_anatomic.json"))
+    assert rerun == Path("results/verification/rerun_outputs/recide_anatomic.csv")
+

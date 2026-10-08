@@ -107,6 +107,17 @@ def call_recide(counts, genes: list[str], cells, cmeta, bulk: pd.DataFrame, n_co
     return est, elapsed, proc.stdout[-3000:], None
 
 
+DEFAULT_OUT = str(config.RESULTS_DIR / "extension" / "recide_anatomic.json")
+
+
+def estimates_path(out: Path) -> Path:
+    """Only the default run writes the shared estimates file; a run that names its own report (--out) keeps its
+    estimates beside it, so a verification re-run cannot overwrite the registered estimates (OPEN_DEFECTS D38's rule,
+    applied here 2026-10-07)."""
+    return (config.RESULTS_DIR / "extension" / "ivygap_recide.csv" if str(out) == DEFAULT_OUT
+            else out.with_suffix(".csv"))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -114,7 +125,7 @@ def main() -> int:
     # No budget by default (user directive 2026-10-01: "I don't want no budget"). The 6-h default
     # that stood here killed the first real run at 06:05 on 2026-10-02 after ~9 h of work.
     ap.add_argument("--budget", type=int, default=None, help="seconds; default: no limit")
-    ap.add_argument("--out", default=str(config.RESULTS_DIR / "extension" / "recide_anatomic.json"))
+    ap.add_argument("--out", default=DEFAULT_OUT)
     a = ap.parse_args()
     out = Path(a.out); out.parent.mkdir(parents=True, exist_ok=True)
 
@@ -155,7 +166,7 @@ def main() -> int:
     data = DeconvolutionInput(bulk=bulk, references=(ref.subset_genes(genes),), manifest=meta.loc[anat])
     # A sample ReCIDE could not estimate stays NaN -- never zero-filled into a fake composition.
     frame = finalize_estimates(est.to_numpy(), data, covered=None, returns_cell_fractions=False)
-    est_csv = config.RESULTS_DIR / "extension" / "ivygap_recide.csv"
+    est_csv = estimates_path(out)
     frame.to_csv(est_csv)
     res = acs_score(frame, meta.loc[anat], method="recide", n_permutations=10000, n_boot=2000).summary()
     report.update({"acs": round(float(res["acs"]), 4),

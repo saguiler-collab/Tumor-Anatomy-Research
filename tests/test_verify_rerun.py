@@ -167,3 +167,12 @@ def test_after_the_freeze_a_rerun_never_changes_a_frozen_file(tmp_path, monkeypa
     assert "2026-10-06" in (res / "out.json").read_text()
     assert "2026-10-08" in (res / "verification" / "rerun_outputs" / "s" / "out.json").read_text()
 
+
+def test_the_same_rows_in_another_order_reproduce_but_a_changed_value_still_differs(tmp_path):
+    a = tmp_path / "a.csv"; b = tmp_path / "b.csv"; c = tmp_path / "c.csv"
+    a.write_text("method,sample,Tumor\nmixture,S1,0.5\naric,S1,0.25\naric,S2,0.75\n")
+    b.write_text("method,sample,Tumor\naric,S1,0.25\naric,S2,0.75\nmixture,S1,0.5\n")      # reordered only
+    c.write_text("method,sample,Tumor\naric,S1,0.25\naric,S2,0.70\nmixture,S1,0.5\n")      # reordered and changed
+    assert vr.compare_csv(a, b)["status"] == "REPRODUCED"
+    assert vr.compare_csv(a, c)["status"] == "DIFFERS"
+

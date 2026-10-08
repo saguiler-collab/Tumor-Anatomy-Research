@@ -28,6 +28,9 @@ Every step in `scripts/verify_rerun.py` is core, except those in its `SUPPLEMENT
 - their downstream statistics reproduced from the saved fits in the fast and medium tiers;
 - the user's decisions of 2026-10-07: "core steps only", then "you completing the project NOW";
 - run any of them with `--only <step>`.
+- **After the close-out they were run anyway** (user, 2026-10-07: "Still run what's left to do"), queued behind
+  one another on the registered path. Their verdicts update `docs/VERIFICATION_RERUN.md`; no core item depends
+  on them, and they cannot change a frozen file.
 
 ## The results freeze
 
