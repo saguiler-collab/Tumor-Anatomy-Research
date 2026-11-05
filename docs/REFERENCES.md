@@ -82,7 +82,7 @@ this project and have no external source (`docs/METHODS.md`).
 |---|---|---|
 | **[21]** | C. Neftel, J. Laffy, M. G. Filbin, *et al.*, "An Integrative Model of Cellular States, Plasticity, and Genetics for Glioblastoma," *Cell*, vol. 178, no. 4, pp. 835–849.e21, Aug. 2019, doi: 10.1016/j.cell.2019.06.024. | Crossref |
 | **[22]** | S. Darmanis, S. A. Sloan, D. Croote, *et al.*, "Single-Cell RNA-Seq Analysis of Infiltrating Neoplastic Cells at the Migrating Front of Human Glioblastoma," *Cell Rep.*, vol. 21, no. 5, pp. 1399–1410, Oct. 2017, doi: 10.1016/j.celrep.2017.10.030. | Crossref |
-| **[23]** | A. Mossi Albiach, J. Janusauskas, J. Kjaer, *et al.*, "Futile wound healing drives mesenchymal-like cell phenotypes in human glioblastoma," *bioRxiv*, 2023, doi: 10.1101/2023.09.01.555882. | Crossref |
+| **[23]** | A. Mossi Albiach, J. Janusauskas, J. K. Jacobsen, *et al.*, "Futile wound healing drives mesenchymal-like cell phenotypes in human glioblastoma," *bioRxiv*, 2023, doi: 10.1101/2023.09.01.555882. | Crossref |
 | **[24]** | K. Siletti, R. Hodge, A. Mossi Albiach, *et al.*, "Transcriptomic diversity of cell types across the adult human brain," *Science*, vol. 382, no. 6667, p. eadd7046, Oct. 2023, doi: 10.1126/science.add7046. | Crossref |
 
 ---
@@ -120,7 +120,7 @@ Each was obtained and deliberately not evaluated, with the reason recorded
 
 | | reference | status |
 |---|---|---|
-| **[33]** | L. C. Gaspard-Boulinc, T. Gautier, S. Guilloux, *et al.*, "Cell-type deconvolution methods for spatial transcriptomics," *Nat. Rev. Genet.*, vol. 26, pp. 828–846, Dec. 2025, doi: 10.1038/s41576-025-00845-y. | PDF |
+| **[33]** | L. C. Gaspard-Boulinc, L. Gortana, T. Walter, *et al.*, "Cell-type deconvolution methods for spatial transcriptomics," *Nat. Rev. Genet.*, vol. 26, pp. 828–846, Dec. 2025, doi: 10.1038/s41576-025-00845-y. | PDF |
 | **[34]** | F. Liu, H. Qian, and J. Ma, "DNA Methylation-Based Cell Type Deconvolution Reveals the Distinct Cell Composition in Brain Tumor Microenvironment," *bioRxiv*, 2025, doi: 10.1101/2025.01.19.633794. | PDF |
 | **[35]** | X. Li, G. Gibson, and P. Qiu, "Gene representation in scRNA-seq is correlated with common motifs at the 3′ end of transcripts," *Front. Bioinform.*, vol. 3, p. 1120290, 2023, doi: 10.3389/fbinf.2023.1120290. | PDF |
 
@@ -277,6 +277,8 @@ itself.
 ---
 
 ## Verification record
+
+**Update 2026-11-04:** every DOI in this list was re-resolved against Crossref (60 of 60 found; title, journal, listed authors, volume, issue, pages and year compared). Two entries had wrong co-authors despite their earlier `Crossref` and `PDF` statuses, and are corrected: [23] "J. Kjaer" is Jesper Kjaer Jacobsen; [33] "T. Gautier, S. Guilloux" are L. Gortana and T. Walter. So the earlier statement that every entry was verified was too strong. The PDFs were not reopened in this pass. This list is AI-written and must not be used as an STS bibliography.
 
 **Update 2026-10-02:** [45] (DESeq2, Love et al. 2014) and [46]–[49] (DECEPTICON, the DREAM challenge, omnideconv, the DLPFC benchmark) added and resolved against Crossref; the list now has 49 entries.
 
