@@ -16,6 +16,7 @@ Output goes outside the repository by default, so that nothing personal is commi
 
     python3 scripts/export_ai_log.py                  # writes ~/STS_AI_LOG/
     python3 scripts/export_ai_log.py --out <dir>
+    python3 scripts/export_ai_log.py --mask-profanity # profane words shown as [expletive], and the log's header says so
 """
 from __future__ import annotations
 
@@ -44,10 +45,17 @@ NOT_TYPED = ("<task-notification>", "<local-command-stdout>", "Caveat: The messa
              "This session is being continued from a previous conversation", "[Request interrupted")
 FILE_TOOLS = {"Write", "Edit", "NotebookEdit", "MultiEdit"}
 CODE_DIRS = ("ivygap/", "scripts/", "R/", "tests/")
+# --mask-profanity only; "tf" is matched in lowercase alone, so that TF (transcription factor) in pasted text is kept
+PROFANITY = re.compile(r"\b(?:(?i:f+u+c+k\w*|\w*sh+i+t+s?)|tf)\b")
+MASK = "[expletive]"
 
 
 def local(ts: str) -> datetime:
     return datetime.fromisoformat(ts.replace("Z", "+00:00")).astimezone(TZ)
+
+
+def mask_profanity(text: str) -> tuple[str, int]:
+    return PROFANITY.subn(MASK, text)
 
 
 def text_of(content) -> str:
@@ -176,7 +184,9 @@ def git_inventory() -> list[str]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", type=Path, default=Path.home() / "STS_AI_LOG")
-    out = ap.parse_args().out.expanduser()
+    ap.add_argument("--mask-profanity", action="store_true")
+    args = ap.parse_args()
+    out = args.out.expanduser()
     out.mkdir(parents=True, exist_ok=True)
     sessions = sorted((read_session(p) for p in backup(out)), key=lambda s: s["first"] or "")
     sessions = [s for s in sessions if s["first"]]
@@ -208,7 +218,12 @@ def main() -> int:
             else:
                 P += [f"**{local(t):%Y-%m-%d %H:%M}** -- answers to the AI's questions", ""]
                 P += [f"- Q: {q}\n  - **A: {a}**" for q, a in x.items()] + [""]
-    (out / "PROMPT_LOG.md").write_text("\n".join(P) + "\n")
+    head, body = P[:3], "\n".join(P[3:]) + "\n"
+    if args.mask_profanity:
+        body, masked = mask_profanity(body)
+        head[2] = (head[2][:-1] + f" {masked} profane words are shown as {MASK}; every other word is as typed, and the "
+                   f"raw transcripts are unchanged.*")
+    (out / "PROMPT_LOG.md").write_text("\n".join(head) + "\n" + body)
 
     I = ["# AI contribution inventory", "",
          f"*Exported {made} by `scripts/export_ai_log.py`. Facts only: counts of what the AI did, read from the "

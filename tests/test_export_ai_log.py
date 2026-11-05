@@ -37,3 +37,15 @@ def test_feedback_on_a_declined_action_is_kept_and_other_tool_results_are_not():
                      "this tool use. The user provided the following reason for the rejection:  Step 2 ..."}])
     assert eal.rejection_feedback(quoted) is None          # output that quotes the notice is not the student's words
     assert eal.rejection_feedback(_user("plain text")) is None
+
+
+def test_masking_replaces_profanity_and_counts_it():
+    words = ["tf", "dogsh" + "hit", "bull" + "shit", "FU" + "CKS"]          # assembled, so not spelled out in the repo
+    masked, n = eal.mask_profanity(" and ".join(words))
+    assert n == 4
+    assert masked == " and ".join([eal.MASK] * 4)
+
+
+def test_masking_leaves_other_words_alone():
+    clean = "TF binding in the class of Swedish shitake samples; push it, then Hitchcock's tfidf"
+    assert eal.mask_profanity(clean) == (clean, 0)
